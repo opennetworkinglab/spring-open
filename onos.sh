@@ -284,7 +284,7 @@ function create-zk-conf {
   
   if [ -z "${myid}" ]; then
     local filename=`basename ${ONOS_CONF}`
-    revert-confs "[ERROR in ${filename}] zookeeper.hosts must have hostname \"${ONOS_HOST_NAME}\" or IP address"
+    revert-confs "[ERROR] In ${filename}, zookeeper.hosts must have hostname \"${ONOS_HOST_NAME}\" or IP address"
   fi
   
   if [ -f "${ZK_MY_ID}" ]; then
@@ -386,11 +386,6 @@ function create-ramcloud-conf {
   fi
   echo "ramcloud.coordinatorIp=${RC_COORD_PROTOCOL}:host=${RC_COORD_IP}" > ${temp_hc}
   echo "ramcloud.coordinatorPort=port=${RC_COORD_PORT}" >> ${temp_hc}
-
-  # FIXME remove these when old start-up script is removed.
-  echo "# Following lines is not used by ONOS core or onos.sh" >> ${temp_hc}
-  echo "ramcloud.serverIp=${RC_SERVER_PROTOCOL}:host=${RC_SERVER_IP}" >> ${temp_hc}
-  echo "ramcloud.serverPort=port=${RC_SERVER_PORT}" >> ${temp_hc}
 
   mv ${temp_hc} ${RAMCLOUD_CONF}
 
