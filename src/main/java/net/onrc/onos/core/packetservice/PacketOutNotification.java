@@ -3,6 +3,8 @@ package net.onrc.onos.core.packetservice;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import net.onrc.onos.core.topology.NetworkGraph;
+
 import com.google.common.collect.Multimap;
 
 /**
@@ -51,11 +53,12 @@ public abstract class PacketOutNotification implements Serializable {
      * calculate that list, given the list of edge ports controlled by this
      * instance.
      *
-     * @param localSwitches the map of locally-controlled edge ports
+     * @param localPorts the map of locally-controlled ports
+     * @param networkGraph an instance of the global network graph
      * @return a multimap of ports that the packet should be sent out,
      * in the form
      * {@code {dpid1 => {portnum1, portnum2, ...}, dpid2 => {portnum1}, ...}}
      */
     public abstract Multimap<Long, Short> calculateOutPorts(
-            Multimap<Long, Short> localEdgePorts);
+            Multimap<Long, Short> localPorts, NetworkGraph networkGraph);
 }

@@ -15,7 +15,6 @@ public interface Switch {
 
     public Port getPort(Long number);
 
-
     // Graph traversal API
     // XXX What is the Definition of neighbor? Link exist in both direction or one-way is sufficient to be a neighbor, etc.
     public Iterable<Switch> getNeighbors();

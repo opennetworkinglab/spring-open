@@ -67,8 +67,14 @@ public class PacketModule implements IOFMessageListener, IPacketService,
 
         @Override
         public void entryAdded(PacketOutNotification value) {
+            Multimap<Long, Short> localPorts = HashMultimap.create();
+            for (IOFSwitch sw : floodlightProvider.getSwitches().values()) {
+                for (OFPhysicalPort port : sw.getEnabledPorts()) {
+                    localPorts.put(sw.getId(), port.getPortNumber());
+                }
+            }
             Multimap<Long, Short> outPorts = value.calculateOutPorts(
-                    findLocalEdgePorts());
+                    localPorts, networkGraph);
             sendPacketToSwitches(outPorts, value.getPacketData());
         }
 
@@ -164,6 +170,8 @@ public class PacketModule implements IOFMessageListener, IPacketService,
         }
 
         if (networkGraphSwitch == null || inPort == null) {
+            // We can't send packets for switches or ports that aren't in the
+            // network graph yet
             return Command.CONTINUE;
         }
 
@@ -219,21 +227,6 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                 packetOutEventHandler,
                 Long.class,
                 PacketOutNotification.class);
-    }
-
-    private Multimap<Long, Short> findLocalEdgePorts() {
-        Multimap<Long, Short> edgePorts = HashMultimap.create();
-        Map<Long, IOFSwitch> localSwitches = floodlightProvider.getSwitches();
-        for (IOFSwitch sw : localSwitches.values()) {
-            for (OFPhysicalPort localPort : sw.getEnabledPorts()) {
-                Port globalPort =
-                        networkGraph.getPort(sw.getId(), (long) localPort.getPortNumber());
-                if (globalPort.getOutgoingLink() == null) {
-                    edgePorts.put(sw.getId(), localPort.getPortNumber());
-                }
-            }
-        }
-        return edgePorts;
     }
 
     private void sendPacketToSwitches(Multimap<Long, Short> outPorts,

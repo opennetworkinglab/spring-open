@@ -1,5 +1,7 @@
 package net.onrc.onos.core.packetservice;
 
+import net.onrc.onos.core.topology.NetworkGraph;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
@@ -13,6 +15,12 @@ public class SinglePacketOutNotification extends PacketOutNotification {
     private final int address;
     private final long outSwitch;
     private final short outPort;
+
+    protected SinglePacketOutNotification() {
+        address = 0;
+        outSwitch = 0;
+        outPort = 0;
+    }
 
     /**
      * Class constructor.
@@ -60,10 +68,11 @@ public class SinglePacketOutNotification extends PacketOutNotification {
     }
 
     @Override
-    public Multimap<Long, Short> calculateOutPorts(Multimap<Long, Short> localSwitches) {
+    public Multimap<Long, Short> calculateOutPorts(
+            Multimap<Long, Short> localPorts, NetworkGraph networkGraph) {
         Multimap<Long, Short> outPorts = HashMultimap.create();
 
-        if (localSwitches.containsEntry(outSwitch, outPort)) {
+        if (localPorts.containsEntry(outSwitch, outPort)) {
             outPorts.put(outSwitch, outPort);
         }
 
