@@ -337,7 +337,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
     }
 
     @Override
-    public String getBGPdRestIp() {
+    public String getBgpdRestIp() {
         return bgpdRestIp;
     }
 

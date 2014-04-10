@@ -33,7 +33,7 @@ public class BgpRouteResourceSynch extends ServerResource {
         String mask = (String) getRequestAttributes().get("mask");
         String nexthop = (String) getRequestAttributes().get("nexthop");
 
-        String bgpdRestIp = bgpRoute.getBGPdRestIp();
+        String bgpdRestIp = bgpRoute.getBgpdRestIp();
 
         // bgpdRestIp includes port number, e.g. 1.1.1.1:8080
         RestClient.post("http://" + bgpdRestIp + "/wm/bgp/" + routerId + "/" + prefix + "/"
@@ -65,7 +65,7 @@ public class BgpRouteResourceSynch extends ServerResource {
 
         StringBuilder reply = new StringBuilder();
 
-        String bgpdRestIp = bgpRoute.getBGPdRestIp();
+        String bgpdRestIp = bgpRoute.getBgpdRestIp();
 
         RestClient.delete("http://" + bgpdRestIp + "/wm/bgp/" + routerId + "/" + prefix + "/"
                 + mask + "/" + nextHop);

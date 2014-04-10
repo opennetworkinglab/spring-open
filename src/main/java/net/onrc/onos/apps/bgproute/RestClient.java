@@ -12,18 +12,30 @@ import org.apache.commons.httpclient.ConnectTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A simple HTTP client. It is used to make REST calls to the BGPd process.
+ */
 public final class RestClient {
     private static final Logger log = LoggerFactory.getLogger(RestClient.class);
 
+    /**
+     * Default constructor.
+     */
     private RestClient() {
         // Private constructor to prevent instantiation
     }
 
-    public static String get(String str) {
+    /**
+     * Issues a HTTP GET request to the specified URL.
+     *
+     * @param strUrl the URL to make the request to
+     * @return a String containing any data returned by the server
+     */
+    public static String get(String strUrl) {
         StringBuilder response = new StringBuilder();
 
         try {
-            URL url = new URL(str);
+            URL url = new URL(strUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(2 * 1000); // 2 seconds
             conn.setRequestMethod("GET");
@@ -36,7 +48,7 @@ public final class RestClient {
             }
 
             if (!conn.getContentType().equals("application/json")) {
-                log.warn("The content received from {} is not json", str);
+                log.warn("The content received from {} is not json", strUrl);
             }
 
             BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -60,10 +72,15 @@ public final class RestClient {
         return response.toString();
     }
 
-    public static void post(String str) {
+    /**
+     * Issues a HTTP POST request to the specified URL.
+     *
+     * @param strUrl the URL to make the request to
+     */
+    public static void post(String strUrl) {
 
         try {
-            URL url = new URL(str);
+            URL url = new URL(strUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestMethod("POST");
@@ -84,10 +101,15 @@ public final class RestClient {
         }
     }
 
-    public static void delete(String str) {
+    /**
+     * Issues a HTTP DELETE request to the specified URL.
+     *
+     * @param strUrl the URL to make the request to
+     */
+    public static void delete(String strUrl) {
 
         try {
-            URL url = new URL(str);
+            URL url = new URL(strUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("DELETE");
             conn.setRequestProperty("Accept", "application/json");

@@ -3,6 +3,12 @@ package net.onrc.onos.apps.bgproute;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * Implements a patricia tree. See {@link IPatriciaTrie} for a description of
+ * how the tree works and its usage.
+ *
+ * @param <V> the type of objects that will be stored in the tree
+ */
 public class PatriciaTrie<V> implements IPatriciaTrie<V> {
     private final byte[] maskBits = {(byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0, (byte) 0xf0,
             (byte) 0xf8, (byte) 0xfc, (byte) 0xfe, (byte) 0xff};
@@ -11,6 +17,14 @@ public class PatriciaTrie<V> implements IPatriciaTrie<V> {
 
     private Node top;
 
+    /**
+     * Class constructor which takes the maximum length of strings that can be
+     * stored in the tree. This is used as a sanity check to prevent
+     * excessively long strings from being added, as this could slow down
+     * lookups.
+     *
+     * @param maxPrefixLength the maximum length of prefixes
+     */
     public PatriciaTrie(int maxPrefixLength) {
         this.maxPrefixLength = maxPrefixLength;
     }

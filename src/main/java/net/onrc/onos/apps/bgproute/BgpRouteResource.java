@@ -61,7 +61,7 @@ public class BgpRouteResource extends ServerResource {
 
             // the dest here refers to router-id
             // bgpdRestIp includes port number, such as 1.1.1.1:8080
-            String bgpdRestIp = bgpRoute.getBGPdRestIp();
+            String bgpdRestIp = bgpRoute.getBgpdRestIp();
             String url = "http://" + bgpdRestIp + "/wm/bgp/" + dest;
 
             // Doesn't actually do anything with the response

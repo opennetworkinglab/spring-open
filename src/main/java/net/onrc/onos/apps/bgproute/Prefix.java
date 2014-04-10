@@ -6,18 +6,47 @@ import java.util.Arrays;
 
 import com.google.common.net.InetAddresses;
 
+/**
+ * Represents an IP prefix.
+ * <p/>
+ * It is made up of an IP address and a number of significant bits in the
+ * prefix (i.e. the size of the network part of the address).
+ * E.g. {@code 192.168.0.0/16}.
+ * <p/>
+ * Currently only IPv4 is supported, so a prefix length can be up to 32 bits.
+ */
 public class Prefix {
-    private static final int MAX_BYTES = 4;
+    /**
+     * The length of addresses this class can represent prefixes of, in bytes.
+     */
+    public static final int ADDRESS_LENGTH = 4;
 
     private final int prefixLength;
     private final byte[] address;
 
-    //For verifying the arguments and pretty printing
+    // For verifying the arguments and pretty printing
     private final InetAddress inetAddress;
 
+    /**
+     * Class constructor, taking an byte array representing and IP address and
+     * a prefix length.
+     * <p/>
+     * The valid values for addr and prefixLength are bounded by
+     * {@link #ADDRESS_LENGTH}.
+     * <p/>
+     * A valid addr array satisfies
+     * {@code addr.length == }{@value #ADDRESS_LENGTH}.
+     * <p/>
+     * A valid prefixLength satisfies
+     * {@code (prefixLength > 0 && prefixLength <=} {@link Byte#SIZE}
+     * {@code * }{@value #ADDRESS_LENGTH}{@code )}.
+     *
+     * @param addr a byte array representing the address
+     * @param prefixLength length of the prefix of the specified address
+     */
     public Prefix(byte[] addr, int prefixLength) {
-        if (addr == null || addr.length != MAX_BYTES ||
-                prefixLength < 0 || prefixLength > MAX_BYTES * Byte.SIZE) {
+        if (addr == null || addr.length != ADDRESS_LENGTH ||
+                prefixLength < 0 || prefixLength > ADDRESS_LENGTH * Byte.SIZE) {
             throw new IllegalArgumentException();
         }
 
@@ -31,12 +60,19 @@ public class Prefix {
         }
     }
 
+    /**
+     * Class constructor, taking an address in String format and a prefix
+     * length. The address must be in dot-notation form (e.g. {@code 0.0.0.0}).
+     *
+     * @param strAddress a String representing the address
+     * @param prefixLength length of the prefix of the specified address
+     */
     public Prefix(String strAddress, int prefixLength) {
         byte[] addr = null;
         addr = InetAddresses.forString(strAddress).getAddress();
 
-        if (addr == null || addr.length != MAX_BYTES ||
-                prefixLength < 0 || prefixLength > MAX_BYTES * Byte.SIZE) {
+        if (addr == null || addr.length != ADDRESS_LENGTH ||
+                prefixLength < 0 || prefixLength > ADDRESS_LENGTH * Byte.SIZE) {
             throw new IllegalArgumentException();
         }
 
@@ -55,7 +91,7 @@ public class Prefix {
         byte[] result = new byte[addressValue.length];
 
         if (prefixLengthValue == 0) {
-            for (int i = 0; i < MAX_BYTES; i++) {
+            for (int i = 0; i < ADDRESS_LENGTH; i++) {
                 result[i] = 0;
             }
 
@@ -66,7 +102,7 @@ public class Prefix {
 
         //Set all bytes after the end of the prefix to 0
         int lastByteIndex = (prefixLengthValue - 1) / Byte.SIZE;
-        for (int i = lastByteIndex; i < MAX_BYTES; i++) {
+        for (int i = lastByteIndex; i < ADDRESS_LENGTH; i++) {
             result[i] = 0;
         }
 
@@ -85,10 +121,20 @@ public class Prefix {
         return result;
     }
 
+    /**
+     * Gets the length of the prefix of the address.
+     *
+     * @return the prefix length
+     */
     public int getPrefixLength() {
         return prefixLength;
     }
 
+    /**
+     * Gets the address.
+     *
+     * @return the address as a byte array
+     */
     public byte[] getAddress() {
         return Arrays.copyOf(address, address.length);
     }
@@ -118,6 +164,11 @@ public class Prefix {
         return inetAddress.getHostAddress() + "/" + prefixLength;
     }
 
+    /**
+     * Print the prefix to a String showing the bits of the address.
+     *
+     * @return the bit-string of the prefix
+     */
     public String printAsBits() {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < address.length; i++) {
