@@ -24,7 +24,7 @@ public interface IEventChannel<K, V> {
      * @return true if the key and value types of the channel match,
      * otherwise false.
      */
-    boolean verifyKeyValueTypes(Class typeK, Class typeV);
+    boolean verifyKeyValueTypes(Class<?> typeK, Class<?> typeV);
 
     /**
      * Add event channel listener.

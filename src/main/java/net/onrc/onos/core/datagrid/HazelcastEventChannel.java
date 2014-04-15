@@ -8,6 +8,9 @@ import java.util.concurrent.TimeUnit;
 
 import net.onrc.onos.core.util.serializers.KryoFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -23,6 +26,9 @@ import com.hazelcast.core.IMap;
  * @param <V> The class type of the value.
  */
 public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
+    private static final Logger log =
+            LoggerFactory.getLogger(HazelcastEventChannel.class);
+
     private final HazelcastInstance hazelcastInstance; // The Hazelcast instance
     private final String channelName;        // The event channel name
     private final Class<K> typeK;            // The class type of the key
@@ -68,8 +74,8 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
      * otherwise false.
      */
     @Override
-    public boolean verifyKeyValueTypes(Class typeKToVerify,
-                                       Class typeVToVerify) {
+    public boolean verifyKeyValueTypes(Class<?> typeKToVerify,
+                                       Class<?> typeVToVerify) {
         return (typeK.equals(typeKToVerify)) && (typeV.equals(typeVToVerify));
     }
 
@@ -178,7 +184,7 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
         byte[] buffer = new byte[MAX_BUFFER_SIZE];
         Kryo kryo = kryoFactory.newKryo();
         Output output = new Output(buffer, -1);
-        kryo.writeObject(output, value);
+        kryo.writeClassAndObject(output, value);
         byte[] valueBytes = output.toBytes();
         kryoFactory.deleteKryo(kryo);
 
@@ -309,7 +315,15 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             byte[] valueBytes = event.getValue();
             Kryo kryo = kryoFactory.newKryo();
             Input input = new Input(valueBytes);
-            V value = (V) kryo.readObject(input, typeV);
+
+            Object objValue = kryo.readClassAndObject(input);
+            V value;
+            try {
+                value = typeV.cast(objValue);
+            } catch (ClassCastException e) {
+                log.error("Received notification value cast failed", e);
+                return;
+            }
 
             //
             // Deliver the notification
@@ -339,7 +353,15 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             byte[] valueBytes = event.getValue();
             Kryo kryo = kryoFactory.newKryo();
             Input input = new Input(valueBytes);
-            V value = (V) kryo.readObject(input, typeV);
+
+            Object objValue = kryo.readClassAndObject(input);
+            V value;
+            try {
+                value = typeV.cast(objValue);
+            } catch (ClassCastException e) {
+                log.error("Received notification value cast failed", e);
+                return;
+            }
 
             //
             // Deliver the notification
@@ -369,7 +391,15 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             byte[] valueBytes = event.getValue();
             Kryo kryo = kryoFactory.newKryo();
             Input input = new Input(valueBytes);
-            V value = (V) kryo.readObject(input, typeV);
+
+            Object objValue = kryo.readClassAndObject(input);
+            V value;
+            try {
+                value = typeV.cast(objValue);
+            } catch (ClassCastException e) {
+                log.error("Received notification value cast failed", e);
+                return;
+            }
 
             //
             // Deliver the notification
