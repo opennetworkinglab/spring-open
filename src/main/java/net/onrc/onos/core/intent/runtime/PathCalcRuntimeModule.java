@@ -68,8 +68,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
 
         public void flushLog() {
             log("finish");
-            for (PerfLog log : logData) {
-                log.logThis();
+            for (PerfLog perfLog : logData) {
+                perfLog.logThis();
             }
             logData.clear();
         }

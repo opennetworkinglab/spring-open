@@ -32,7 +32,7 @@ public class StandaloneRegistry implements IFloodlightModule,
 
     protected IRestApiService restApi;
 
-    protected String controllerId = null;
+    protected String registeredControllerId = null;
     protected Map<String, ControlChangeCallback> switchCallbacks;
 
     //
@@ -43,7 +43,7 @@ public class StandaloneRegistry implements IFloodlightModule,
     @Override
     public void requestControl(long dpid, ControlChangeCallback cb)
             throws RegistryException {
-        if (controllerId == null) {
+        if (registeredControllerId == null) {
             throw new RuntimeException(
                     "Must register a controller before calling requestControl");
         }
@@ -81,29 +81,29 @@ public class StandaloneRegistry implements IFloodlightModule,
 
     @Override
     public String getControllerId() {
-        return controllerId;
+        return registeredControllerId;
     }
 
     @Override
     public void registerController(String controllerId)
             throws RegistryException {
-        if (this.controllerId != null) {
+        if (registeredControllerId != null) {
             throw new RegistryException(
-                    "Controller already registered with id " + this.controllerId);
+                    "Controller already registered with id " + registeredControllerId);
         }
-        this.controllerId = controllerId;
+        registeredControllerId = controllerId;
     }
 
     @Override
     public Collection<String> getAllControllers() throws RegistryException {
         List<String> l = new ArrayList<String>();
-        l.add(controllerId);
+        l.add(registeredControllerId);
         return l;
     }
 
     @Override
     public String getControllerForSwitch(long dpid) throws RegistryException {
-        return (switchCallbacks.get(HexString.toHexString(dpid)) != null) ? controllerId : null;
+        return (switchCallbacks.get(HexString.toHexString(dpid)) != null) ? registeredControllerId : null;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class StandaloneRegistry implements IFloodlightModule,
         for (String strSwitch : switchCallbacks.keySet()) {
             log.debug("Switch _{}", strSwitch);
             List<ControllerRegistryEntry> list = new ArrayList<ControllerRegistryEntry>();
-            list.add(new ControllerRegistryEntry(controllerId, 0));
+            list.add(new ControllerRegistryEntry(registeredControllerId, 0));
 
             switches.put(strSwitch, list);
         }

@@ -46,10 +46,10 @@ public class FlowEntryMatch {
         /**
          * Enable the matching for a given value.
          *
-         * @param value the value to set.
+         * @param newValue the value to set.
          */
-        public void enableMatch(T value) {
-            this.value = value;
+        public void enableMatch(T newValue) {
+            this.value = newValue;
             this.enabled = true;
         }
 
@@ -152,11 +152,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on input switch port.
      *
-     * @param inPort the input switch port value to enable for matching.
+     * @param newInPort the input switch port value to enable for matching.
      */
     @JsonProperty("inPort")
-    public void enableInPort(Port inPort) {
-        this.inPort = new Field<Port>(inPort);
+    public void enableInPort(Port newInPort) {
+        this.inPort = new Field<Port>(newInPort);
     }
 
     /**
@@ -195,11 +195,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on source MAC address.
      *
-     * @param srcMac the source MAC address value to enable for matching.
+     * @param newSrcMac the source MAC address value to enable for matching.
      */
     @JsonProperty("srcMac")
-    public void enableSrcMac(MACAddress srcMac) {
-        this.srcMac = new Field<MACAddress>(srcMac);
+    public void enableSrcMac(MACAddress newSrcMac) {
+        this.srcMac = new Field<MACAddress>(newSrcMac);
     }
 
     /**
@@ -238,11 +238,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on destination MAC address.
      *
-     * @param dstMac the destination MAC address value to enable for matching.
+     * @param newDstMac the destination MAC address value to enable for matching.
      */
     @JsonProperty("dstMac")
-    public void enableDstMac(MACAddress dstMac) {
-        this.dstMac = new Field<MACAddress>(dstMac);
+    public void enableDstMac(MACAddress newDstMac) {
+        this.dstMac = new Field<MACAddress>(newDstMac);
     }
 
     /**
@@ -281,12 +281,12 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on Ethernet frame type.
      *
-     * @param ethernetFrameType the Ethernet frame type value to enable for
+     * @param newEthernetFrameType the Ethernet frame type value to enable for
      *                          matching.
      */
     @JsonProperty("ethernetFrameType")
-    public void enableEthernetFrameType(Short ethernetFrameType) {
-        this.ethernetFrameType = new Field<Short>(ethernetFrameType);
+    public void enableEthernetFrameType(Short newEthernetFrameType) {
+        this.ethernetFrameType = new Field<Short>(newEthernetFrameType);
     }
 
     /**
@@ -325,11 +325,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on VLAN ID.
      *
-     * @param vlanId the VLAN ID value to enable for matching.
+     * @param newVlanId the VLAN ID value to enable for matching.
      */
     @JsonProperty("vlanId")
-    public void enableVlanId(Short vlanId) {
-        this.vlanId = new Field<Short>(vlanId);
+    public void enableVlanId(Short newVlanId) {
+        this.vlanId = new Field<Short>(newVlanId);
     }
 
     /**
@@ -368,11 +368,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on VLAN priority.
      *
-     * @param vlanPriority the VLAN priority value to enable for matching.
+     * @param newVlanPriority the VLAN priority value to enable for matching.
      */
     @JsonProperty("vlanPriority")
-    public void enableVlanPriority(Byte vlanPriority) {
-        this.vlanPriority = new Field<Byte>(vlanPriority);
+    public void enableVlanPriority(Byte newVlanPriority) {
+        this.vlanPriority = new Field<Byte>(newVlanPriority);
     }
 
     /**
@@ -411,11 +411,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on source IPv4 prefix.
      *
-     * @param srcIPv4Net the source IPv4 prefix value to enable for matching.
+     * @param newSrcIPv4Net the source IPv4 prefix value to enable for matching.
      */
     @JsonProperty("srcIPv4Net")
-    public void enableSrcIPv4Net(IPv4Net srcIPv4Net) {
-        this.srcIPv4Net = new Field<IPv4Net>(srcIPv4Net);
+    public void enableSrcIPv4Net(IPv4Net newSrcIPv4Net) {
+        this.srcIPv4Net = new Field<IPv4Net>(newSrcIPv4Net);
     }
 
     /**
@@ -454,12 +454,12 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on destination IPv4 prefix.
      *
-     * @param dstIPv4Net the destination IPv4 prefix value to enable for
+     * @param newDstIPv4Net the destination IPv4 prefix value to enable for
      *                   matching.
      */
     @JsonProperty("dstIPv4Net")
-    public void enableDstIPv4Net(IPv4Net dstIPv4Net) {
-        this.dstIPv4Net = new Field<IPv4Net>(dstIPv4Net);
+    public void enableDstIPv4Net(IPv4Net newDstIPv4Net) {
+        this.dstIPv4Net = new Field<IPv4Net>(newDstIPv4Net);
     }
 
     /**
@@ -498,11 +498,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on IP protocol.
      *
-     * @param ipProto the IP protocol value to enable for matching.
+     * @param newIpProto the IP protocol value to enable for matching.
      */
     @JsonProperty("ipProto")
-    public void enableIpProto(Byte ipProto) {
-        this.ipProto = new Field<Byte>(ipProto);
+    public void enableIpProto(Byte newIpProto) {
+        this.ipProto = new Field<Byte>(newIpProto);
     }
 
     /**
@@ -541,11 +541,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on IP ToS (DSCP field, 6 bits).
      *
-     * @param ipToS the IP ToS value to enable for matching.
+     * @param newIpToS the IP ToS value to enable for matching.
      */
     @JsonProperty("ipToS")
-    public void enableIpToS(Byte ipToS) {
-        this.ipToS = new Field<Byte>(ipToS);
+    public void enableIpToS(Byte newIpToS) {
+        this.ipToS = new Field<Byte>(newIpToS);
     }
 
     /**
@@ -584,11 +584,11 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on source TCP/UDP port.
      *
-     * @param srcTcpUdpPort the source TCP/UDP port to enable for matching.
+     * @param newSrcTcpUdpPort the source TCP/UDP port to enable for matching.
      */
     @JsonProperty("srcTcpUdpPort")
-    public void enableSrcTcpUdpPort(Short srcTcpUdpPort) {
-        this.srcTcpUdpPort = new Field<Short>(srcTcpUdpPort);
+    public void enableSrcTcpUdpPort(Short newSrcTcpUdpPort) {
+        this.srcTcpUdpPort = new Field<Short>(newSrcTcpUdpPort);
     }
 
     /**
@@ -627,12 +627,12 @@ public class FlowEntryMatch {
     /**
      * Enable the matching on destination TCP/UDP port.
      *
-     * @param dstTcpUdpPort the destination TCP/UDP port to enable for
-     *                      matching.
+     * @param newDstTcpUdpPort the destination TCP/UDP port to enable for
+     *                         matching.
      */
     @JsonProperty("dstTcpUdpPort")
-    public void enableDstTcpUdpPort(Short dstTcpUdpPort) {
-        this.dstTcpUdpPort = new Field<Short>(dstTcpUdpPort);
+    public void enableDstTcpUdpPort(Short newDstTcpUdpPort) {
+        this.dstTcpUdpPort = new Field<Short>(newDstTcpUdpPort);
     }
 
     /**

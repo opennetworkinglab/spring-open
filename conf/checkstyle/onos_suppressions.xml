@@ -12,6 +12,10 @@
     <suppress files="org.openflow.*" checks="[_a-zA-Z0-9]*"/>
     <suppress files="net.onrc.onos.core.datastore.serializers.*" checks="[_a-zA-Z0-9]*"/>
 
+    <!-- BigSwitch packet code is designed to use parameter names that override
+         local member names -->
+    <suppress files="net.onrc.onos.core.packet.*" checks="HiddenField"/>
+
     <suppress files=".*" checks="FinalParametersCheck"/>
     <suppress files=".*" checks="MagicNumbersCheck"/>
     <suppress files=".*" checks="DesignForExtensionCheck"/>

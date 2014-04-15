@@ -1202,14 +1202,14 @@ public class LinkDiscoveryManager
     /**
      * Removes links from memory and storage.
      *
-     * @param links The List of @LinkTuple to delete.
+     * @param linksToDelete The List of @LinkTuple to delete.
      */
-    protected void deleteLinks(List<Link> links, String reason) {
+    protected void deleteLinks(List<Link> linksToDelete, String reason) {
         NodePortTuple srcNpt, dstNpt;
 
         lock.writeLock().lock();
         try {
-            for (Link lt : links) {
+            for (Link lt : linksToDelete) {
                 srcNpt = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
                 dstNpt = new NodePortTuple(lt.getDst(), lt.getDstPort());
 

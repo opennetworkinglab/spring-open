@@ -137,12 +137,12 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             //
             // For now, as a shortcut we read it from the datagrid
             //
-            Collection<TopologyEvent> topologyEvents =
+            Collection<TopologyEvent> allTopologyEvents =
                     eventChannel.getAllEntries();
             Collection<EventEntry<TopologyEvent>> collection =
                     new LinkedList<EventEntry<TopologyEvent>>();
 
-            for (TopologyEvent topologyEvent : topologyEvents) {
+            for (TopologyEvent topologyEvent : allTopologyEvents) {
                 EventEntry<TopologyEvent> eventEntry =
                         new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
                                 topologyEvent);

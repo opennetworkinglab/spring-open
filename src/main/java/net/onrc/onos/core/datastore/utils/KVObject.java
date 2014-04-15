@@ -144,11 +144,12 @@ public class KVObject {
      * Deserialize using value and version stored in data store.
      *
      * @param bytes   serialized bytes
-     * @param version version of this {@code bytes}
+     * @param dataStoreVersion version of this {@code bytes}
      * @return true if success
      */
-    public boolean deserialize(final byte[] bytes, final long version) {
-        this.version = version;
+    public boolean deserialize(final byte[] bytes,
+                               final long dataStoreVersion) {
+        version = dataStoreVersion;
         return deserialize(bytes);
     }
 

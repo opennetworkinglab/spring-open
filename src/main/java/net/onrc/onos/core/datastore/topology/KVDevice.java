@@ -143,9 +143,9 @@ public class KVDevice extends KVObject {
         this.isPortIdsModified = true;
     }
 
-    public void addAllToPortIds(final Collection<byte[]> portIds) {
+    public void addAllToPortIds(final Collection<byte[]> newPortIds) {
         // TODO: Should we copy portId, or reference is OK.
-        isPortIdsModified |= this.portIds.addAll(portIds);
+        isPortIdsModified |= portIds.addAll(newPortIds);
     }
 
     /**

@@ -90,7 +90,8 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
 
     private String bgpdRestIp;
     private String routerId;
-    private String configFilename = "config.json";
+    private static final String DEFAULT_CONFIG_FILENAME = "config.json";
+    private String currentConfigFilename = DEFAULT_CONFIG_FILENAME;
 
     private static final short ARP_PRIORITY = 20;
 
@@ -309,11 +310,11 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
 
         String configFilenameParameter = context.getConfigParams(this).get("configfile");
         if (configFilenameParameter != null) {
-            configFilename = configFilenameParameter;
+            currentConfigFilename = configFilenameParameter;
         }
-        log.debug("Config file set to {}", configFilename);
+        log.debug("Config file set to {}", currentConfigFilename);
 
-        readConfiguration(configFilename);
+        readConfiguration(currentConfigFilename);
     }
 
     @Override
@@ -356,7 +357,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
         response = response.replaceAll("\"", "'");
         JSONObject jsonObj = (JSONObject) JSONSerializer.toJSON(response);
         JSONArray ribArray = jsonObj.getJSONArray("rib");
-        String routerId = jsonObj.getString("router-id");
+        String inboundRouterId = jsonObj.getString("router-id");
 
         int size = ribArray.size();
 
@@ -383,7 +384,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
                 continue;
             }
 
-            RibEntry rib = new RibEntry(routerId, nexthop);
+            RibEntry rib = new RibEntry(inboundRouterId, nexthop);
 
             try {
                 ribUpdates.put(new RibUpdate(Operation.UPDATE, p, rib));

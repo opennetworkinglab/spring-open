@@ -50,10 +50,11 @@ public class Prefix {
         }
     }
 
-    private byte[] canonicalizeAddress(byte[] address, int prefixLength) {
-        byte[] result = new byte[address.length];
+    private byte[] canonicalizeAddress(byte[] addressValue,
+                                       int prefixLengthValue) {
+        byte[] result = new byte[addressValue.length];
 
-        if (prefixLength == 0) {
+        if (prefixLengthValue == 0) {
             for (int i = 0; i < MAX_BYTES; i++) {
                 result[i] = 0;
             }
@@ -61,18 +62,18 @@ public class Prefix {
             return result;
         }
 
-        result = Arrays.copyOf(address, address.length);
+        result = Arrays.copyOf(addressValue, addressValue.length);
 
         //Set all bytes after the end of the prefix to 0
-        int lastByteIndex = (prefixLength - 1) / Byte.SIZE;
+        int lastByteIndex = (prefixLengthValue - 1) / Byte.SIZE;
         for (int i = lastByteIndex; i < MAX_BYTES; i++) {
             result[i] = 0;
         }
 
-        byte lastByte = address[lastByteIndex];
+        byte lastByte = addressValue[lastByteIndex];
         byte mask = 0;
         byte msb = (byte) 0x80;
-        int lastBit = (prefixLength - 1) % Byte.SIZE;
+        int lastBit = (prefixLengthValue - 1) % Byte.SIZE;
         for (int i = 0; i < Byte.SIZE; i++) {
             if (i <= lastBit) {
                 mask |= (msb >> i);

@@ -71,12 +71,12 @@ public class FlowEntryErrorState {
     /**
      * Set the values of the error type and code.
      *
-     * @param type the error type to use.
-     * @param code the error code to use.
+     * @param newType the error type to use.
+     * @param newCode the error code to use.
      */
-    public void setValue(short type, short code) {
-        this.type = type;
-        this.code = code;
+    public void setValue(short newType, short newCode) {
+        type = newType;
+        code = newCode;
     }
 
     /**

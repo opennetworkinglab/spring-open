@@ -71,9 +71,9 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
     private static final String SERVICES_PATH = "/"; //i.e. the root of our namespace
     private static final String CONTROLLER_SERVICE_NAME = "controllers";
 
-    protected CuratorFramework client;
+    protected CuratorFramework curatorFrameworkClient;
 
-    protected PathChildrenCache switchCache;
+    protected PathChildrenCache rootSwitchCache;
 
     protected ConcurrentHashMap<String, SwitchLeadershipData> switches;
     protected Map<String, PathChildrenCache> switchPathCaches;
@@ -250,7 +250,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
             throw new RegistryException("Already contesting control for " + dpidStr);
         }
 
-        LeaderLatch latch = new LeaderLatch(client, latchPath, controllerId);
+        LeaderLatch latch = new LeaderLatch(curatorFrameworkClient, latchPath, controllerId);
         SwitchLeaderListener listener = new SwitchLeaderListener(dpidStr);
         latch.addListener(listener);
 
@@ -418,7 +418,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
     }
 
     @Override
-    public Collection<Long> getSwitchesControlledByController(String controllerId) {
+    public Collection<Long> getSwitchesControlledByController(String controller) {
         //TODO remove this if not needed
         throw new RuntimeException("Not yet implemented");
     }
@@ -444,12 +444,12 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
 
             for (ChildData d : entry.getValue().getCurrentData()) {
 
-                String controllerId = new String(d.getData(), Charsets.UTF_8);
+                String childsControllerId = new String(d.getData(), Charsets.UTF_8);
 
                 String[] splitted = d.getPath().split("-");
                 int sequenceNumber = Integer.parseInt(splitted[splitted.length - 1]);
 
-                contendingControllers.add(new ControllerRegistryEntry(controllerId, sequenceNumber));
+                contendingControllers.add(new ControllerRegistryEntry(childsControllerId, sequenceNumber));
             }
 
             Collections.sort(contendingControllers);
@@ -546,9 +546,9 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
 
         //Read the Zookeeper connection string from the config
         Map<String, String> configParams = context.getConfigParams(this);
-        String connectionString = configParams.get("connectionString");
-        if (connectionString != null) {
-            this.connectionString = connectionString;
+        String connectionStringParam = configParams.get("connectionString");
+        if (connectionStringParam != null) {
+            connectionString = connectionStringParam;
         }
         log.info("Setting Zookeeper connection string to {}", this.connectionString);
 
@@ -559,23 +559,23 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         switchPathCaches = new ConcurrentHashMap<String, PathChildrenCache>();
 
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        client = CuratorFrameworkFactory.newClient(this.connectionString,
+        curatorFrameworkClient = CuratorFrameworkFactory.newClient(this.connectionString,
                 SESSION_TIMEOUT, CONNECTION_TIMEOUT, retryPolicy);
 
-        client.start();
-        client = client.usingNamespace(namespace);
+        curatorFrameworkClient.start();
+        curatorFrameworkClient = curatorFrameworkClient.usingNamespace(namespace);
 
         distributedIdCounter = new DistributedAtomicLong(
-                client,
+                curatorFrameworkClient,
                 ID_COUNTER_PATH,
                 new RetryOneTime(100));
 
-        switchCache = new PathChildrenCache(client, switchLatchesPath, true);
-        switchCache.getListenable().addListener(switchPathCacheListener);
+        rootSwitchCache = new PathChildrenCache(curatorFrameworkClient, switchLatchesPath, true);
+        rootSwitchCache.getListenable().addListener(switchPathCacheListener);
 
         //Build the service discovery object
         serviceDiscovery = ServiceDiscoveryBuilder.builder(ControllerService.class)
-                .client(client).basePath(SERVICES_PATH).build();
+                .client(curatorFrameworkClient).basePath(SERVICES_PATH).build();
 
         //We read the list of services very frequently (GUI periodically queries them)
         //so we'll cache them to cut down on Zookeeper queries.
@@ -588,7 +588,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
             serviceCache.start();
 
             //Don't prime the cache, we want a notification for each child node in the path
-            switchCache.start(StartMode.NORMAL);
+            rootSwitchCache.start(StartMode.NORMAL);
         } catch (Exception e) {
             throw new FloodlightModuleException("Error initialising ZookeeperRegistry: "
                     + e.getMessage());
@@ -614,7 +614,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         if (controllerId == null) {
             log.error("Error on startup: unknown ControllerId");
         }
-        clusterLeaderLatch = new LeaderLatch(client,
+        clusterLeaderLatch = new LeaderLatch(curatorFrameworkClient,
                 CLUSTER_LEADER_PATH,
                 controllerId);
         clusterLeaderListener = new ClusterLeaderListener();

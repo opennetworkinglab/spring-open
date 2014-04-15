@@ -445,20 +445,20 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
     /**
      * Set parameters needed for sending messages.
      *
-     * @param context    FloodlightContext used for sending messages.
+     * @param floodlightContext    FloodlightContext used for sending messages.
      *                   If null, FlowPusher uses default context.
      * @param modContext FloodlightModuleContext used for acquiring
      *                   ThreadPoolService and registering MessageListener.
-     * @param factory    Factory object to create OFMessage objects.
+     * @param basicFactory    Factory object to create OFMessage objects.
      * @param damper     Message damper used for sending messages.
      *                   If null, FlowPusher creates its own damper object.
      */
-    public void init(FloodlightContext context,
+    public void init(FloodlightContext floodlightContext,
                      FloodlightModuleContext modContext,
-                     BasicFactory factory,
+                     BasicFactory basicFactory,
                      OFMessageDamper damper) {
-        this.context = context;
-        this.factory = factory;
+        context = floodlightContext;
+        factory = basicFactory;
         this.threadPool = modContext.getServiceImpl(IThreadPoolService.class);
         IFloodlightProviderService flservice
                 = modContext.getServiceImpl(IFloodlightProviderService.class);
