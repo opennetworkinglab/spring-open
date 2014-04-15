@@ -2,21 +2,17 @@ package net.onrc.onos.apps.proxyarp;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.datastore.KVArpCache;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-/*
- * TODO clean out old ARP entries out of the cache periodically. We currently
- * don't do this which means the cache memory size will never decrease. We
- * already have a periodic thread that can be used to do this in
- * ProxyArpManager.
- */
 
 /**
  * Implements a basic ARP cache which maps IPv4 addresses to MAC addresses.
@@ -26,11 +22,11 @@ import org.slf4j.LoggerFactory;
  */
 class ArpCache {
     private static final Logger log = LoggerFactory.getLogger(ArpCache.class);
-
-    private static final long ARP_ENTRY_TIMEOUT = 60000; // ms (1 min)
+    private static long arpEntryTimeoutConfig = 60000; // ms (1 min)
+    private final KVArpCache kvArpCache;
 
     // Protected by locking on the ArpCache object (this)
-    private final Map<InetAddress, ArpCacheEntry> arpCache;
+    private final ConcurrentMap<InetAddress, ArpCacheEntry> arpCache;
 
     /**
      * Represents a MAC address entry with a timestamp in the ARP cache.
@@ -75,16 +71,29 @@ class ArpCache {
          * @return true if the entry has timed out.
          */
         public boolean isExpired() {
-            return System.currentTimeMillis() - timeLastSeen > ARP_ENTRY_TIMEOUT;
+            return System.currentTimeMillis() - timeLastSeen > arpEntryTimeoutConfig;
         }
     }
 
     /**
-     * Class constructor.
+     * Class constructors.
      */
-    ArpCache() {
-        arpCache = new HashMap<InetAddress, ArpCacheEntry>();
+    public ArpCache() {
+        arpCache = new ConcurrentHashMap<InetAddress, ArpCacheEntry>();
+        kvArpCache = new KVArpCache();
     }
+
+    public void setArpEntryTimeoutConfig(long arpEntryTimeout) {
+        if (arpEntryTimeout <= 0) {
+            throw new IllegalArgumentException(Long.toString(arpEntryTimeout));
+        }
+        arpEntryTimeoutConfig(arpEntryTimeout);
+   }
+
+    private static void arpEntryTimeoutConfig(long arpEntryTimeout) {
+        ArpCache.arpEntryTimeoutConfig = arpEntryTimeout;
+        log.debug("Set arpEntryTimeoutConfig {}", ArpCache.arpEntryTimeoutConfig);
+   }
 
     /**
      * Get the MAC address that is mapped to an IP address in the ARP cache.
@@ -124,8 +133,27 @@ class ArpCache {
 
         if (arpEntry != null && arpEntry.getMacAddress().equals(macAddress)) {
             arpEntry.setTimeLastSeen(System.currentTimeMillis());
+            log.debug("The same ArpCache, ip {}, mac {}. Update local cache last seen time only.", ipAddress, macAddress);
         } else {
             arpCache.put(ipAddress, new ArpCacheEntry(macAddress));
+            kvArpCache.forceCreate(ipAddress, macAddress.toBytes());
+            log.debug("Create/Update ip {}, mac {} in ArpCache.", ipAddress, macAddress);
+        }
+    }
+
+    /**
+     * Remove an entry in the ARP cache.
+     *
+     * @param ipAddress  the IP address that will be mapped in the cache
+     */
+    synchronized void remove(InetAddress ipAddress) {
+        ArpCacheEntry entry = arpCache.remove(ipAddress);
+
+        if (entry == null) {
+            log.debug("ArpCache doesn't have the ip key {}.", ipAddress);
+        } else {
+            kvArpCache.forceDelete(ipAddress);
+            log.debug("Remove it in ArpCache and DB, ip {}", ipAddress);
         }
     }
 
@@ -134,7 +162,7 @@ class ArpCache {
      *
      * @return list of all ARP mappings, formatted as a human-readable string
      */
-    synchronized List<String> getMappings() {
+    List<String> getMappings() {
         List<String> result = new ArrayList<String>(arpCache.size());
 
         for (Map.Entry<InetAddress, ArpCacheEntry> entry : arpCache.entrySet()) {
@@ -142,6 +170,24 @@ class ArpCache {
                     + " => "
                     + entry.getValue().getMacAddress().toString()
                     + (entry.getValue().isExpired() ? " : EXPIRED" : " : VALID"));
+        }
+
+        return result;
+    }
+
+    /**
+     * Retrieve a list of all expired IPs in the ARP cache.
+     *
+     * @return list of all expired IPs
+     */
+    List<InetAddress> getExpiredArpCacheIps() {
+        List<InetAddress> result = new ArrayList<InetAddress>();
+
+        for (Entry<InetAddress, ArpCacheEntry> entry : arpCache.entrySet()) {
+            if (entry.getValue().isExpired()) {
+                log.debug("add to the expired ip list, ip {}", entry.getKey());
+                result.add(entry.getKey());
+            }
         }
 
         return result;

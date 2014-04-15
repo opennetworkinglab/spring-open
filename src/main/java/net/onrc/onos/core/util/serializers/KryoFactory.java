@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashSet;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.apps.proxyarp.ArpCacheNotification;
 import net.onrc.onos.apps.proxyarp.ArpReplyNotification;
 import net.onrc.onos.core.devicemanager.OnosDevice;
 import net.onrc.onos.core.intent.ConstrainedShortestPathIntent;
@@ -219,6 +220,7 @@ public class KryoFactory {
         kryo.register(BroadcastPacketOutNotification.class);
         kryo.register(SinglePacketOutNotification.class);
         kryo.register(ArpReplyNotification.class);
+        kryo.register(ArpCacheNotification.class);
 
         return kryo;
     }
