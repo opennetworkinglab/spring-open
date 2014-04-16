@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
@@ -268,21 +270,14 @@ public class DHCP extends BasePacket {
      * @return the clientHardwareAddress
      */
     public byte[] getClientHardwareAddress() {
-        if (this.clientHardwareAddress == null) {
-            return null;
-        }
-        return this.clientHardwareAddress.clone();
+        return ArrayUtils.clone(this.clientHardwareAddress);
     }
 
     /**
      * @param clientHardwareAddress the clientHardwareAddress to set
      */
     public DHCP setClientHardwareAddress(byte[] clientHardwareAddress) {
-        if (clientHardwareAddress == null) {
-            this.clientHardwareAddress = null;
-        } else {
-            this.clientHardwareAddress = clientHardwareAddress.clone();
-        }
+        this.clientHardwareAddress = ArrayUtils.clone(clientHardwareAddress);
         return this;
     }
 

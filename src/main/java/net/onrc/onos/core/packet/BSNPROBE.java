@@ -22,6 +22,7 @@ package net.onrc.onos.core.packet;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.openflow.util.HexString;
 
 /**
@@ -60,34 +61,20 @@ public class BSNPROBE extends BasePacket {
     }
 
     public byte[] getSrcMac() {
-        if (this.srcMac == null) {
-            return null;
-        }
-        return this.srcMac.clone();
+        return ArrayUtils.clone(this.srcMac);
     }
 
     public BSNPROBE setSrcMac(byte[] srcMac) {
-        if (srcMac == null) {
-            this.srcMac = null;
-        } else {
-            this.srcMac = srcMac.clone();
-        }
+        this.srcMac = ArrayUtils.clone(srcMac);
         return this;
     }
 
     public byte[] getDstMac() {
-        if (this.dstMac == null) {
-            return null;
-        }
-        return this.dstMac.clone();
+        return ArrayUtils.clone(this.dstMac);
     }
 
     public BSNPROBE setDstMac(byte[] dstMac) {
-        if (dstMac == null) {
-            this.dstMac = null;
-        } else {
-            this.dstMac = dstMac.clone();
-        }
+        this.dstMac = ArrayUtils.clone(dstMac);
         return this;
     }
 

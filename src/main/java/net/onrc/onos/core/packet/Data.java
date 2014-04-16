@@ -19,6 +19,8 @@ package net.onrc.onos.core.packet;
 
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
@@ -35,40 +37,26 @@ public class Data extends BasePacket {
      * @param data
      */
     public Data(byte[] data) {
-        if (data == null) {
-            this.data = null;
-        } else {
-            this.data = data.clone();
-        }
+        this.data = ArrayUtils.clone(data);
     }
 
     /**
      * @return the data
      */
     public byte[] getData() {
-        if (this.data == null) {
-            return null;
-        }
-        return this.data.clone();
+        return ArrayUtils.clone(this.data);
     }
 
     /**
      * @param data the data to set
      */
     public Data setData(byte[] data) {
-        if (data == null) {
-            this.data = null;
-        } else {
-            this.data = data.clone();
-        }
+        this.data = ArrayUtils.clone(data);
         return this;
     }
 
     public byte[] serialize() {
-        if (this.data == null) {
-            return null;
-        }
-        return this.data.clone();
+        return ArrayUtils.clone(this.data);
     }
 
     @Override

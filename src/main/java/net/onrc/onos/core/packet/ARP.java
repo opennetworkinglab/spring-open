@@ -20,6 +20,8 @@ package net.onrc.onos.core.packet;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
@@ -122,21 +124,14 @@ public class ARP extends BasePacket {
      * @return the senderHardwareAddress
      */
     public byte[] getSenderHardwareAddress() {
-        if (this.senderHardwareAddress == null) {
-            return null;
-        }
-        return this.senderHardwareAddress.clone();
+        return ArrayUtils.clone(this.senderHardwareAddress);
     }
 
     /**
      * @param senderHardwareAddress the senderHardwareAddress to set
      */
     public ARP setSenderHardwareAddress(byte[] senderHardwareAddress) {
-        if (senderHardwareAddress == null) {
-            this.senderHardwareAddress = null;
-        } else {
-            this.senderHardwareAddress = senderHardwareAddress.clone();
-        }
+        this.senderHardwareAddress = ArrayUtils.clone(senderHardwareAddress);
         return this;
     }
 
@@ -144,21 +139,14 @@ public class ARP extends BasePacket {
      * @return the senderProtocolAddress
      */
     public byte[] getSenderProtocolAddress() {
-        if (this.senderProtocolAddress == null) {
-            return null;
-        }
-        return this.senderProtocolAddress.clone();
+        return ArrayUtils.clone(this.senderProtocolAddress);
     }
 
     /**
      * @param senderProtocolAddress the senderProtocolAddress to set
      */
     public ARP setSenderProtocolAddress(byte[] senderProtocolAddress) {
-        if (senderProtocolAddress == null) {
-            this.senderProtocolAddress = null;
-        } else {
-            this.senderProtocolAddress = senderProtocolAddress.clone();
-        }
+        this.senderProtocolAddress = ArrayUtils.clone(senderProtocolAddress);
         return this;
     }
 
@@ -171,21 +159,14 @@ public class ARP extends BasePacket {
      * @return the targetHardwareAddress
      */
     public byte[] getTargetHardwareAddress() {
-        if (this.targetHardwareAddress == null) {
-            return null;
-        }
-        return this.targetHardwareAddress.clone();
+        return ArrayUtils.clone(this.targetHardwareAddress);
     }
 
     /**
      * @param targetHardwareAddress the targetHardwareAddress to set
      */
     public ARP setTargetHardwareAddress(byte[] targetHardwareAddress) {
-        if (targetHardwareAddress == null) {
-            this.targetHardwareAddress = null;
-        } else {
-            this.targetHardwareAddress = targetHardwareAddress.clone();
-        }
+        this.targetHardwareAddress = ArrayUtils.clone(targetHardwareAddress);
         return this;
     }
 
@@ -193,10 +174,7 @@ public class ARP extends BasePacket {
      * @return the targetProtocolAddress
      */
     public byte[] getTargetProtocolAddress() {
-        if (this.targetProtocolAddress == null) {
-            return null;
-        }
-        return this.targetProtocolAddress.clone();
+        return ArrayUtils.clone(this.targetProtocolAddress);
     }
 
     /**
@@ -220,11 +198,7 @@ public class ARP extends BasePacket {
      * @param targetProtocolAddress the targetProtocolAddress to set
      */
     public ARP setTargetProtocolAddress(byte[] targetProtocolAddress) {
-        if (targetProtocolAddress == null) {
-            this.targetProtocolAddress = null;
-        } else {
-            this.targetProtocolAddress = targetProtocolAddress.clone();
-        }
+        this.targetProtocolAddress = ArrayUtils.clone(targetProtocolAddress);
         return this;
     }
 

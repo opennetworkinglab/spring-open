@@ -20,6 +20,8 @@ package net.onrc.onos.core.packet;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * @author shudong.zhou@bigswitch.com
  */
@@ -142,19 +144,15 @@ public class TCP extends BasePacket {
     }
 
     public byte[] getOptions() {
-        if (this.options == null) {
-            return null;
-        }
-        return this.options.clone();
+        return ArrayUtils.clone(this.options);
     }
 
     public TCP setOptions(final byte[] options) {
-        if (options == null) {
-            this.options = null;
+        this.options = ArrayUtils.clone(options);
+        if (this.options == null) {
             this.dataOffset = 0;
         } else {
-            this.options = options.clone();
-            this.dataOffset = (byte) ((20 + options.length + 3) >> 2);
+            this.dataOffset = (byte) ((20 + this.options.length + 3) >> 2);
         }
         return this;
     }

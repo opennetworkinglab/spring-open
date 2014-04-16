@@ -20,6 +20,8 @@ package net.onrc.onos.core.packet;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
@@ -62,21 +64,14 @@ public class LLDPTLV {
      * @return the value
      */
     public byte[] getValue() {
-        if (this.value == null) {
-            return null;
-        }
-        return this.value.clone();
+        return ArrayUtils.clone(this.value);
     }
 
     /**
      * @param value the value to set
      */
     public LLDPTLV setValue(byte[] value) {
-        if (value == null) {
-            this.value = null;
-        } else {
-            this.value = value.clone();
-        }
+        this.value = ArrayUtils.clone(value);
         return this;
     }
 

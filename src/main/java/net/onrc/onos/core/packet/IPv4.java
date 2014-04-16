@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
@@ -266,10 +268,7 @@ public class IPv4 extends BasePacket {
      * @return the options
      */
     public byte[] getOptions() {
-        if (this.options == null) {
-            return null;
-        }
-        return this.options.clone();
+        return ArrayUtils.clone(this.options);
     }
 
     /**
@@ -280,11 +279,7 @@ public class IPv4 extends BasePacket {
             throw new IllegalArgumentException(
                     "Options length must be a multiple of 4");
         }
-        if (options == null) {
-            this.options = null;
-        } else {
-            this.options = options.clone();
-        }
+        this.options = ArrayUtils.clone(options);
         return this;
     }
 
