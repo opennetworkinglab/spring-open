@@ -616,7 +616,6 @@ public class LinkDiscoveryManager
         byte[] ttlValue = new byte[]{0, 0x78};
         // OpenFlow OUI - 00-26-E1
         byte[] dpidTLVValue = new byte[]{0x0, 0x26, (byte) 0xe1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        LLDPTLV dpidTLV = new LLDPTLV().setType((byte) 127).setLength((short) dpidTLVValue.length).setValue(dpidTLVValue);
 
         byte[] dpidArray = new byte[8];
         ByteBuffer dpidBB = ByteBuffer.wrap(dpidArray);
@@ -625,12 +624,15 @@ public class LinkDiscoveryManager
         Long dpid = sw;
         dpidBB.putLong(dpid);
         // set the ethernet source mac to last 6 bytes of dpid
-        System.arraycopy(dpidArray, 2, ofpPort.getHardwareAddress(), 0, 6);
+        byte[] hardwareAddress = new byte[6];
+        System.arraycopy(dpidArray, 2, hardwareAddress, 0, 6);
+        ofpPort.setHardwareAddress(hardwareAddress);
         // set the chassis id's value to last 6 bytes of dpid
         System.arraycopy(dpidArray, 2, chassisId, 1, 6);
         // set the optional tlv to the full dpid
         System.arraycopy(dpidArray, 0, dpidTLVValue, 4, 8);
-
+        LLDPTLV dpidTLV = new LLDPTLV().setType((byte) 127)
+                .setLength((short) dpidTLVValue.length).setValue(dpidTLVValue);
 
         // set the portId to the outgoing port
         portBB.putShort(port);
