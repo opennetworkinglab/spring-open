@@ -30,6 +30,17 @@ public final class SwitchPort {
     }
 
     /**
+     * Constructor for the specified primitive values of a DPID and port.
+     *
+     * @param dpid the long DPID to use
+     * @param port the short port number to use
+     */
+    public SwitchPort(long dpid, short port) {
+        this.dpid = new Dpid(dpid);
+        this.port = new Port(port);
+    }
+
+    /**
      * Get the DPID value of the Switch-Port.
      *
      * @return the DPID value of the Switch-Port.

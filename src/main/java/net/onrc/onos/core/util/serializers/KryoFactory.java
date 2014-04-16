@@ -19,6 +19,7 @@ import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IntentStateList;
 import net.onrc.onos.core.packetservice.BroadcastPacketOutNotification;
+import net.onrc.onos.core.packetservice.PacketOutNotification;
 import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
 import net.onrc.onos.core.topology.DeviceEvent;
 import net.onrc.onos.core.topology.LinkEvent;
@@ -50,7 +51,6 @@ import net.onrc.onos.core.util.IPv6Net;
 import net.onrc.onos.core.util.Port;
 import net.onrc.onos.core.util.Switch;
 // import net.onrc.onos.core.util.SwitchPort;
-
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -217,6 +217,7 @@ public class KryoFactory {
         kryo.register(Date.class);
 
         // ProxyArp-related classes
+        kryo.register(PacketOutNotification.class);
         kryo.register(BroadcastPacketOutNotification.class);
         kryo.register(SinglePacketOutNotification.class);
         kryo.register(ArpReplyNotification.class);

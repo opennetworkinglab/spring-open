@@ -1,7 +1,7 @@
 package net.onrc.onos.core.packetservice;
 
-
-// TODO This class is too generic to be handled by ProxyArpService.
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * Notification to another ONOS instance to send a packet out a single port.
@@ -57,5 +57,16 @@ public class SinglePacketOutNotification extends PacketOutNotification {
      */
     public int getTargetAddress() {
         return address;
+    }
+
+    @Override
+    public Multimap<Long, Short> calculateOutPorts(Multimap<Long, Short> localSwitches) {
+        Multimap<Long, Short> outPorts = HashMultimap.create();
+
+        if (localSwitches.containsEntry(outSwitch, outPort)) {
+            outPorts.put(outSwitch, outPort);
+        }
+
+        return outPorts;
     }
 }

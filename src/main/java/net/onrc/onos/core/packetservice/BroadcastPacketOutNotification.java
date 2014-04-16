@@ -1,7 +1,10 @@
 package net.onrc.onos.core.packetservice;
 
+import java.util.Map;
 
-// TODO This class is too generic to be handled by ProxyArpService.
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 // TODO The generic broadcast packet shouldn't contain an IP address which is
 // only for ARP packets.
 
@@ -69,5 +72,19 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
      */
     public int getTargetAddress() {
         return address;
+    }
+
+    @Override
+    public Multimap<Long, Short> calculateOutPorts(Multimap<Long, Short> localSwitches) {
+        Multimap<Long, Short> outPorts = HashMultimap.create();
+
+        for (Map.Entry<Long, Short> entry : localSwitches.entries()) {
+            if (!entry.getKey().equals(inSwitch) ||
+                    !entry.getValue().equals(inPort)) {
+                outPorts.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return outPorts;
     }
 }
