@@ -45,9 +45,11 @@ public class OnosDeviceManager implements IFloodlightModule,
         IOFMessageListener,
         IOnosDeviceService,
         IEventChannelListener<Long, OnosDevice> {
+
     private static final Logger log = LoggerFactory.getLogger(OnosDeviceManager.class);
-    private static final int CLEANUP_SECOND = 60 * 60;
-    private static final int AGEING_MILLSEC = 60 * 60 * 1000;
+    private static final long DEVICE_CLEANING_INITIAL_DELAY = 30;
+    private int cleanupSecondConfig = 60 * 60;
+    private int agingMillisecConfig = 60 * 60 * 1000;
 
     private CopyOnWriteArrayList<IOnosDeviceListener> deviceListeners;
     private IFloodlightProviderService floodlightProvider;
@@ -120,7 +122,10 @@ public class OnosDeviceManager implements IFloodlightModule,
         return Command.CONTINUE;
     }
 
-    private Command processPacketIn(IOFSwitch sw, OFPacketIn pi, Ethernet eth) {
+    //This "protected" modifier is for unit test.
+    //The above "receive" method couldn't be tested
+    //because of IFloodlightProviderService static final field.
+    protected Command processPacketIn(IOFSwitch sw, OFPacketIn pi, Ethernet eth) {
         long dpid = sw.getId();
         short portId = pi.getInPort();
         Long mac = eth.getSourceMAC().toLong();
@@ -139,8 +144,8 @@ public class OnosDeviceManager implements IFloodlightModule,
                 //There is the same existing device. Update only ActiveSince time.
                 exDev.setLastSeenTimestamp(new Date());
                 if (log.isTraceEnabled()) {
-                    log.debug("In the datagrid, there is the same device."
-                            + "Only update last seen time. dpid {}, port {}, mac {}, ip {}, lastSeenTime {}",
+                    log.trace("In the local cache, there is the same device."
+                            + "Only update last seen time: dpid {}, port {}, mac {}, ip {}, lastSeenTime {}",
                             dpid, portId, srcDevice.getMacAddress(), srcDevice.getIpv4Address(), srcDevice.getLastSeenTimestamp().getTime());
                 }
                 return Command.CONTINUE;
@@ -152,8 +157,8 @@ public class OnosDeviceManager implements IFloodlightModule,
                 //but the packet does not have an ip address.
                 exDev.setLastSeenTimestamp(new Date());
                 if (log.isTraceEnabled()) {
-                    log.debug("In the datagrid, there is the same device with no ip."
-                            + "Keep ip and update last seen time. dpid {}, port {}, mac {}, ip {} lastSeenTime {}",
+                    log.trace("In the local cache, there is the same mac device and got no ip addr packet-in."
+                            + "Only update last seen time. dpid {}, port {}, mac {}, ip {} lastSeenTime {}",
                             dpid, portId, srcDevice.getMacAddress(), exDev.getIpv4Address(), srcDevice.getLastSeenTimestamp().getTime());
                 }
                 return Command.CONTINUE;
@@ -163,7 +168,7 @@ public class OnosDeviceManager implements IFloodlightModule,
         //If the switch port we try to attach a new device already has a link, then stop adding device
         if (networkGraph.getLink(dpid, (long) portId) != null) {
             if (log.isTraceEnabled()) {
-                log.debug("Stop adding OnosDevice {} due to there is a link to: dpid {} port {}",
+                log.trace("Stop adding OnosDevice {} due to there is a link to: dpid {} port {}",
                         srcDevice.getMacAddress(), dpid, portId);
             }
             return Command.CONTINUE;
@@ -172,7 +177,7 @@ public class OnosDeviceManager implements IFloodlightModule,
         addOnosDevice(mac, srcDevice);
 
         if (log.isTraceEnabled()) {
-            log.debug("Add device info in the set. dpid {}, port {}, mac {}, ip {}, lastSeenTime {}",
+            log.trace("Add device info: dpid {}, port {}, mac {}, ip {}, lastSeenTime {}",
                     dpid, portId, srcDevice.getMacAddress(), srcDevice.getIpv4Address(), srcDevice.getLastSeenTimestamp().getTime());
         }
         return Command.CONTINUE;
@@ -188,9 +193,9 @@ public class OnosDeviceManager implements IFloodlightModule,
                 Set<OnosDevice> deleteSet = new HashSet<OnosDevice>();
                 for (OnosDevice dev : mapDevice.values()) {
                     long now = new Date().getTime();
-                    if ((now - dev.getLastSeenTimestamp().getTime() > AGEING_MILLSEC)) {
+                    if ((now - dev.getLastSeenTimestamp().getTime() > agingMillisecConfig)) {
                         if (log.isTraceEnabled()) {
-                            log.debug("Remove device info in the datagrid. dpid {}, port {}, mac {}, ip {}, lastSeenTime {}, diff {}",
+                            log.debug("Remove device info in the datagrid: dpid {}, port {}, mac {}, ip {}, lastSeenTime {}, diff {}",
                                     dev.getSwitchDPID(), dev.getSwitchPort(), dev.getMacAddress(), dev.getIpv4Address(),
                                     dev.getLastSeenTimestamp().getTime(), now - dev.getLastSeenTimestamp().getTime());
                         }
@@ -296,12 +301,12 @@ public class OnosDeviceManager implements IFloodlightModule,
     public void init(FloodlightModuleContext context)
             throws FloodlightModuleException {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-        EXECUTOR_SERVICE.scheduleAtFixedRate(new CleanDevice(), 30, CLEANUP_SECOND, TimeUnit.SECONDS);
-
         deviceListeners = new CopyOnWriteArrayList<IOnosDeviceListener>();
         datagrid = context.getServiceImpl(IDatagridService.class);
         networkGraphService = context.getServiceImpl(INetworkGraphService.class);
         networkGraph = networkGraphService.getNetworkGraph();
+
+        setOnosDeviceManagerProperty(context);
     }
 
     @Override
@@ -310,6 +315,7 @@ public class OnosDeviceManager implements IFloodlightModule,
         eventChannel = datagrid.addListener(DEVICE_CHANNEL_NAME, this,
                 Long.class,
                 OnosDevice.class);
+        EXECUTOR_SERVICE.scheduleAtFixedRate(new CleanDevice(), DEVICE_CLEANING_INITIAL_DELAY, cleanupSecondConfig, TimeUnit.SECONDS);
     }
 
     @Override
@@ -335,21 +341,21 @@ public class OnosDeviceManager implements IFloodlightModule,
     public void entryAdded(OnosDevice dev) {
         Long mac = dev.getMacAddress().toLong();
         mapDevice.put(mac, dev);
-        log.debug("Device added: device mac {}", mac);
+        log.debug("Device added into local Cache: device mac {}", mac);
     }
 
     @Override
     public void entryRemoved(OnosDevice dev) {
         Long mac = dev.getMacAddress().toLong();
         mapDevice.remove(mac);
-        log.debug("Device removed: device mac {}", mac);
+        log.debug("Device removed into local Cache: device mac {}", mac);
     }
 
     @Override
     public void entryUpdated(OnosDevice dev) {
         Long mac = dev.getMacAddress().toLong();
         mapDevice.put(mac, dev);
-        log.debug("Device updated: device mac {}", mac);
+        log.debug("Device updated into local Cache: device mac {}", mac);
     }
 
     @Override
@@ -360,5 +366,20 @@ public class OnosDeviceManager implements IFloodlightModule,
     @Override
     public void deleteOnosDeviceListener(IOnosDeviceListener listener) {
         deviceListeners.remove(listener);
+    }
+
+    private void setOnosDeviceManagerProperty(FloodlightModuleContext context) {
+        Map<String, String> configOptions = context.getConfigParams(this);
+        String cleanupsec = configOptions.get("cleanupsec");
+        String agingmsec = configOptions.get("agingmsec");
+        if (cleanupsec != null) {
+            cleanupSecondConfig = Integer.parseInt(cleanupsec);
+            log.debug("CLEANUP_SECOND is set to {}", cleanupSecondConfig);
+        }
+
+        if (agingmsec != null) {
+            agingMillisecConfig = Integer.parseInt(agingmsec);
+            log.debug("AGEING_MILLSEC is set to {}", agingMillisecConfig);
+        }
     }
 }

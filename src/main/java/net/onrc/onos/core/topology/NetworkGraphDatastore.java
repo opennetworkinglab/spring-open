@@ -1,6 +1,5 @@
 package net.onrc.onos.core.topology;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -18,8 +17,6 @@ import net.onrc.onos.core.topology.PortEvent.SwitchPort;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.net.InetAddresses;
 
 /**
  * The southbound interface to the network graph which allows clients to
@@ -193,16 +190,10 @@ public class NetworkGraphDatastore {
         log.debug("Adding device into DB. mac {}", device.getMac());
 
         KVDevice rcDevice = new KVDevice(device.getMac().toBytes());
-        rcDevice.setLastSeenTime(device.getLastSeenTime());
 
         for (SwitchPort sp : device.getAttachmentPoints()) {
             byte[] portId = KVPort.getPortID(sp.getDpid(), sp.getNumber());
             rcDevice.addPortId(portId);
-        }
-
-        for (InetAddress addr : device.getIpAddresses()) {
-            //It assume only one ip on a device now.
-            rcDevice.setIp(InetAddresses.coerceToInteger(addr));
         }
 
         rcDevice.forceCreate();

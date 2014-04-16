@@ -1,11 +1,8 @@
 package net.onrc.onos.core.topology;
 
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.PortEvent.SwitchPort;
@@ -14,7 +11,7 @@ import net.onrc.onos.core.topology.PortEvent.SwitchPort;
  * Self-contained Device event(s) Object
  * <p/>
  * Device event differ from other events.
- * Device Event represent add/remove of attachmentPoint or ipAddress.
+ * Device Event represent add/remove of attachmentPoint.
  * Not add/remove of the DeviceObject itself.
  * <p/>
  * Multiple attachmentPoints can be specified to batch events into 1 object.
@@ -25,7 +22,6 @@ import net.onrc.onos.core.topology.PortEvent.SwitchPort;
 public class DeviceEvent {
     private final MACAddress mac;
     protected List<SwitchPort> attachmentPoints;
-    protected Set<InetAddress> ipAddresses;
     private long lastSeenTime;
 
     /**
@@ -42,7 +38,6 @@ public class DeviceEvent {
         }
         this.mac = mac;
         this.attachmentPoints = new LinkedList<>();
-        this.ipAddresses = new HashSet<>();
     }
 
     public MACAddress getMac() {
@@ -51,10 +46,6 @@ public class DeviceEvent {
 
     public List<SwitchPort> getAttachmentPoints() {
         return attachmentPoints;
-    }
-
-    public Set<InetAddress> getIpAddresses() {
-        return ipAddresses;
     }
 
     public void setAttachmentPoints(List<SwitchPort> attachmentPoints) {
@@ -66,18 +57,9 @@ public class DeviceEvent {
         this.attachmentPoints.add(0, attachmentPoint);
     }
 
-
-    public boolean addIpAddress(InetAddress addr) {
-        return this.ipAddresses.add(addr);
-    }
-
-    public boolean removeIpAddress(InetAddress addr) {
-        return this.ipAddresses.remove(addr);
-    }
-
     @Override
     public String toString() {
-        return "[DeviceEvent " + mac + " attachmentPoints:" + attachmentPoints + " ipAddr:" + ipAddresses + "]";
+        return "[DeviceEvent " + mac + " attachmentPoints:" + attachmentPoints + "]";
     }
 
     // Assuming mac is unique cluster-wide

@@ -1,6 +1,5 @@
 package net.onrc.onos.core.topology;
 
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,9 +13,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
+import net.onrc.onos.core.datastore.topology.KVDevice;
 import net.onrc.onos.core.datastore.topology.KVLink;
 import net.onrc.onos.core.datastore.topology.KVPort;
 import net.onrc.onos.core.datastore.topology.KVSwitch;
@@ -1034,19 +1035,15 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
      * @param deviceEvent the Device Event with the device to add.
      */
     private void addDevice(DeviceEvent deviceEvent) {
+        log.debug("Adding a device to the Network Graph with mac {}", deviceEvent.getMac());
         Device device = networkGraph.getDeviceByMac(deviceEvent.getMac());
 
         if (device == null) {
-            log.debug("Existing device was not found in networkGraph. New device. mac {}", deviceEvent.getMac());
+            log.debug("Existing device was not found in the NetworkGraph: Adding new device: mac {}", deviceEvent.getMac());
             device = new DeviceImpl(networkGraph, deviceEvent.getMac());
         }
 
         DeviceImpl deviceImpl = getDeviceImpl(device);
-
-        // Update the IP addresses
-        for (InetAddress ipAddr : deviceEvent.getIpAddresses()) {
-            deviceImpl.addIpAddress(ipAddr);
-        }
 
         // Process each attachment point
         boolean attachmentFound = false;
@@ -1077,7 +1074,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
 
         // Update the device in the Network Graph
         if (attachmentFound) {
-            log.debug("Storing the info into networkGraph. mac {}", deviceEvent.getMac());
+            log.debug("Storing the device info into the NetworkGraph: mac {}", deviceEvent.getMac());
             networkGraph.putDevice(device);
             apiAddedDeviceEvents.add(deviceEvent);
         }
@@ -1091,6 +1088,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
      * @param deviceEvent the Device Event with the device to remove.
      */
     private void removeDevice(DeviceEvent deviceEvent) {
+        log.debug("Removing a device to the Network Graph: mac {}", deviceEvent.getMac());
         Device device = networkGraph.getDeviceByMac(deviceEvent.getMac());
         if (device == null) {
             log.warn("Device {} already removed, ignoring", deviceEvent);
@@ -1113,6 +1111,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             deviceImpl.removeAttachmentPoint(port);
         }
 
+        log.debug("Removing the device info into the NetworkGraph: mac {}", deviceEvent.getMac());
         networkGraph.removeDevice(device);
         apiRemovedDeviceEvents.add(deviceEvent);
     }
@@ -1210,13 +1209,12 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             collection.add(eventEntry);
         }
 
-        // TODO Is Device going to be in DB? If so, read from DB.
-        //      for (KVDevice d : KVDevice.getAllDevices()) {
-        //          DeviceEvent devEvent = new DeviceEvent( MACAddress.valueOf(d.getMac()) );
-        //          for (byte[] portId : d.getAllPortIds() ) {
-        //              devEvent.addAttachmentPoint( new SwitchPort( KVPort.getDpidFromKey(portId), KVPort.getNumberFromKey(portId) ));
-        //          }
-        //      }
+         for (KVDevice d : KVDevice.getAllDevices()) {
+              DeviceEvent devEvent = new DeviceEvent(MACAddress.valueOf(d.getMac()));
+              for (byte[] portId : d.getAllPortIds()) {
+                  devEvent.addAttachmentPoint(new SwitchPort(KVPort.getDpidFromKey(portId), KVPort.getNumberFromKey(portId)));
+              }
+         }
 
         for (KVLink l : KVLink.getAllLinks()) {
             LinkEvent linkEvent = new LinkEvent(l.getSrc().dpid,

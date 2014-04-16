@@ -1,7 +1,5 @@
 package net.onrc.onos.core.topology;
 
-import java.net.InetAddress;
-
 import net.floodlightcontroller.util.MACAddress;
 
 /**
@@ -64,14 +62,6 @@ public interface NetworkGraph {
      * @return all links in the network.
      */
     public Iterable<Link> getLinks();
-
-    /**
-     * Get the network devices for a given IP address.
-     *
-     * @param ipAddress the IP address to use.
-     * @return the network devices for the IP address.
-     */
-    public Iterable<Device> getDevicesByIp(InetAddress ipAddress);
 
     /**
      * Get the network device for a given MAC address.

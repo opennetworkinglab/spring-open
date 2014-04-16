@@ -1,0 +1,10 @@
+package device;
+
+option java_package = "net.onrc.onos.core.datastore.serializers";
+option java_outer_classname = "Device";
+
+message DeviceProperty {
+  required bytes mac = 1;
+  repeated bytes portIds = 2;
+  optional bytes value = 3;
+}

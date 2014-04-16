@@ -1,6 +1,5 @@
 package net.onrc.onos.core.topology;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,8 +29,6 @@ import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.net.InetAddresses;
 
 /**
  * The NetworkGraphPublisher subscribes to topology network events from the
@@ -286,10 +283,6 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
         DeviceEvent event = new DeviceEvent(device.getMacAddress());
         event.setAttachmentPoints(spLists);
         event.setLastSeenTime(device.getLastSeenTimestamp().getTime());
-        if (device.getIpv4Address() != null) {
-            InetAddress ip = InetAddresses.fromInteger(device.getIpv4Address());
-            event.addIpAddress(ip);
-        }
         // Does not use vlan info now.
 
         networkGraphDiscoveryInterface.putDeviceDiscoveryEvent(event);

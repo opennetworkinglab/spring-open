@@ -1,8 +1,5 @@
 package net.onrc.onos.core.topology;
 
-import java.net.InetAddress;
-import java.util.Collection;
-
 import net.floodlightcontroller.util.MACAddress;
 
 /**
@@ -20,13 +17,6 @@ public interface Device {
      * @return the device MAC address.
      */
     public MACAddress getMacAddress();
-
-    /**
-     * Get the device IP addresses.
-     *
-     * @return the device IP addresses.
-     */
-    public Collection<InetAddress> getIpAddress();
 
     /**
      * Get the device attachment points.

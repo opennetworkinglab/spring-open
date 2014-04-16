@@ -1,7 +1,6 @@
 package net.onrc.onos.core.datastore.topology;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +11,7 @@ import java.util.TreeSet;
 
 import net.onrc.onos.core.datastore.DataStoreClient;
 import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
+import net.onrc.onos.core.datastore.serializers.Device.DeviceProperty;
 import net.onrc.onos.core.datastore.topology.KVLink.STATUS;
 import net.onrc.onos.core.datastore.utils.ByteArrayComparator;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
  * Device object.
@@ -55,10 +57,6 @@ public class KVDevice extends KVObject {
     private final byte[] mac;
     private TreeSet<byte[]> portIds;
     private transient boolean isPortIdsModified;
-
-    // Assume there is only one ip on a device now.
-    private int ip;
-    private long lastSeenTime;
 
     // Assuming mac is unique cluster-wide
     public static byte[] getDeviceID(final byte[] mac) {
@@ -159,40 +157,38 @@ public class KVDevice extends KVObject {
     public byte[] serialize() {
         Map<Object, Object> map = getPropertyMap();
 
-        map.put(PROP_MAC, mac);
-        if (isPortIdsModified) {
-            byte[][] portIdArray = new byte[portIds.size()][];
-            map.put(PROP_PORT_IDS, portIds.toArray(portIdArray));
-            isPortIdsModified = false;
+        DeviceProperty.Builder dev = DeviceProperty.newBuilder();
+
+        dev.setMac(ByteString.copyFrom(mac));
+        for (byte[] port : portIds) {
+            dev.addPortIds(ByteString.copyFrom(port));
         }
 
-        return serializePropertyMap(DEVICE_KRYO.get(), map);
+        if (!map.isEmpty()) {
+            byte[] propMaps = serializePropertyMap(DEVICE_KRYO.get(), map);
+            dev.setValue(ByteString.copyFrom(propMaps));
+        }
+
+        return dev.build().toByteArray();
     }
 
     @Override
     protected boolean deserialize(final byte[] bytes) {
-        boolean success = deserializePropertyMap(DEVICE_KRYO.get(), bytes);
-        if (!success) {
-            log.error("Deserializing Link: " + this + " failed.");
+
+        try {
+            boolean success = true;
+
+            DeviceProperty dev = DeviceProperty.parseFrom(bytes);
+            for (ByteString portId : dev.getPortIdsList()) {
+                this.addPortId(portId.toByteArray());
+            }
+            byte[] props = dev.getValue().toByteArray();
+            success &= deserializePropertyMap(DEVICE_KRYO.get(), props);
+            return success;
+        } catch (InvalidProtocolBufferException e) {
+            log.error("Deserializing Device: " + this + " failed.", e);
             return false;
         }
-        Map<Object, Object> map = this.getPropertyMap();
-
-        if (this.portIds == null) {
-            this.portIds = new TreeSet<>(
-                    ByteArrayComparator.BYTEARRAY_COMPARATOR);
-        }
-        byte[][] portIdArray = (byte[][]) map.get(PROP_PORT_IDS);
-        if (portIdArray != null) {
-            this.portIds.clear();
-            this.portIds.addAll(Arrays.asList(portIdArray));
-            isPortIdsModified = false;
-        } else {
-            // trigger write on next serialize
-            isPortIdsModified = true;
-        }
-
-        return success;
     }
 
     @Override
@@ -200,21 +196,5 @@ public class KVDevice extends KVObject {
         // TODO output all properties?
         return "[" + this.getClass().getSimpleName()
                 + " " + ByteArrayUtil.toHexStringBuilder(mac, ":") + "]";
-    }
-
-    public int getIp() {
-        return ip;
-    }
-
-    public void setIp(int ip) {
-        this.ip = ip;
-    }
-
-    public long getLastSeenTime() {
-        return lastSeenTime;
-    }
-
-    public void setLastSeenTime(long lastSeenTime) {
-        this.lastSeenTime = lastSeenTime;
     }
 }
