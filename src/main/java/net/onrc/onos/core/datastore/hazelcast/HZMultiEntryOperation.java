@@ -161,7 +161,7 @@ public class HZMultiEntryOperation implements IMultiEntryOperation, IModifiableM
     @Override
     public String toString() {
         return "[HZMultiEntryOperation table=" + table + ", key="
-                + ByteArrayUtil.toHexStringBuffer(key, ":") + ", operation=" + operation
+                + ByteArrayUtil.toHexStringBuilder(key, ":") + ", operation=" + operation
                 + ", status=" + status + ", writeValue=" + writeValue + "]";
     }
 }

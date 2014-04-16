@@ -342,9 +342,9 @@ public final class HZClient implements IKVClient {
     }
 
     private String getCounterName(final IKVTableID tableId, final byte[] key) {
-        StringBuffer buf = new StringBuffer(tableId.getTableName());
+        StringBuilder buf = new StringBuilder(tableId.getTableName());
         buf.append('@');
-        ByteArrayUtil.toHexStringBuffer(key, ":", buf);
+        ByteArrayUtil.toHexStringBuilder(key, ":", buf);
         return buf.toString();
     }
 

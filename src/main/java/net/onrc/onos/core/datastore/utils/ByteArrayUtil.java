@@ -9,31 +9,31 @@ public final class ByteArrayUtil {
     }
 
     /**
-     * Returns a StringBuffer with each byte in {@code bytes}
+     * Returns a StringBuilder with each byte in {@code bytes}
      * converted to a String with {@link Integer#toHexString(int)},
      * separated by {@code sep}.
      *
      * @param bytes byte array to convert
      * @param sep   separator between each bytes
-     * @return {@code bytes} converted to a StringBuffer
+     * @return {@code bytes} converted to a StringBuilder
      */
-    public static StringBuffer toHexStringBuffer(final byte[] bytes,
+    public static StringBuilder toHexStringBuilder(final byte[] bytes,
                                                  final String sep) {
-        return toHexStringBuffer(bytes, sep, new StringBuffer());
+        return toHexStringBuilder(bytes, sep, new StringBuilder());
     }
 
     /**
-     * Returns a StringBuffer with each byte in {@code bytes}
+     * Returns a StringBuilder with each byte in {@code bytes}
      * converted to a String with {@link Integer#toHexString(int)},
      * separated by {@code sep}.
      *
      * @param bytes byte array to convert
      * @param sep   separator between each bytes
-     * @param buf   StringBuffer to append to.
+     * @param buf   StringBuilder to append to.
      * @return {@code buf}
      */
-    public static StringBuffer toHexStringBuffer(final byte[] bytes,
-                                                 final String sep, final StringBuffer buf) {
+    public static StringBuilder toHexStringBuilder(final byte[] bytes,
+                                                 final String sep, final StringBuilder buf) {
         if (bytes == null) {
             return buf;
         }

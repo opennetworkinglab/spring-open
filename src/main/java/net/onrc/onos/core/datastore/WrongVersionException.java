@@ -16,14 +16,14 @@ public class WrongVersionException extends RejectRulesException {
                                  final long expectedVersion, final Throwable cause) {
         // It will be best if {@code cause} has actual version encountered, but
         // doesn't currently.
-        super(ByteArrayUtil.toHexStringBuffer(key, ":") + " on table:"
+        super(ByteArrayUtil.toHexStringBuilder(key, ":") + " on table:"
                 + tableID + " was expected to be version:" + expectedVersion,
                 cause);
     }
 
     public WrongVersionException(final IKVTableID tableID, final byte[] key,
                                  final long expectedVersion, final long encounteredVersion) {
-        super(ByteArrayUtil.toHexStringBuffer(key, ":") + " on table:"
+        super(ByteArrayUtil.toHexStringBuilder(key, ":") + " on table:"
                 + tableID + " was expected to be version:" + expectedVersion
                 + " but found:" + encounteredVersion);
     }

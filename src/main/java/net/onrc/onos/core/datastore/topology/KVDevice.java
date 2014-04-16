@@ -199,7 +199,7 @@ public class KVDevice extends KVObject {
     public String toString() {
         // TODO output all properties?
         return "[" + this.getClass().getSimpleName()
-                + " " + ByteArrayUtil.toHexStringBuffer(mac, ":") + "]";
+                + " " + ByteArrayUtil.toHexStringBuilder(mac, ":") + "]";
     }
 
     public int getIp() {

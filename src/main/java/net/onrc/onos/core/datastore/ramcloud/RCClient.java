@@ -409,11 +409,11 @@ public class RCClient implements IKVClient {
                         op.entry.setVersion(removedVersion);
                         op.status = STATUS.SUCCESS;
                     } catch (JRamCloud.ObjectDoesntExistException | JRamCloud.WrongVersionException e) {
-                        log.error("Failed to remove key:" + ByteArrayUtil.toHexStringBuffer(op.entry.getKey(), "") + " from tableID:" + op.tableId, e);
+                        log.error("Failed to remove key:" + ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), "") + " from tableID:" + op.tableId, e);
                         failExists = true;
                         op.status = STATUS.FAILED;
                     } catch (JRamCloud.RejectRulesException e) {
-                        log.error("Failed to remove key:" + ByteArrayUtil.toHexStringBuffer(op.entry.getKey(), "") + " from tableID:" + op.tableId, e);
+                        log.error("Failed to remove key:" + ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), "") + " from tableID:" + op.tableId, e);
                         failExists = true;
                         op.status = STATUS.FAILED;
                     }
@@ -425,7 +425,7 @@ public class RCClient implements IKVClient {
                         op.entry.setVersion(removedVersion);
                         op.status = STATUS.SUCCESS;
                     } else {
-                        log.error("Failed to remove key:{} from tableID:{}", ByteArrayUtil.toHexStringBuffer(op.entry.getKey(), ""), op.tableId);
+                        log.error("Failed to remove key:{} from tableID:{}", ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), ""), op.tableId);
                         failExists = true;
                         op.status = STATUS.FAILED;
                     }
@@ -583,7 +583,7 @@ public class RCClient implements IKVClient {
         final long version = create(tableId, key, valueBytes.array());
         if (log.isTraceEnabled()) {
             log.trace("Created counter {}-{}={}@{}",
-                    tableId, ByteArrayUtil.toHexStringBuffer(key, ":"),
+                    tableId, ByteArrayUtil.toHexStringBuilder(key, ":"),
                     initialValue, version);
         }
     }
@@ -599,7 +599,7 @@ public class RCClient implements IKVClient {
         final long version = forceCreate(tableId, key, valueBytes.array());
         if (log.isTraceEnabled()) {
             log.trace("set counter {}-{}={}@{}",
-                    tableId, ByteArrayUtil.toHexStringBuffer(key, ":"),
+                    tableId, ByteArrayUtil.toHexStringBuilder(key, ":"),
                     value, version);
         }
     }
@@ -616,7 +616,7 @@ public class RCClient implements IKVClient {
         } catch (JRamCloud.ObjectDoesntExistException e) {
             log.warn("Counter {}-{} was not present",
                     tableId,
-                    ByteArrayUtil.toHexStringBuffer(key, ":"));
+                    ByteArrayUtil.toHexStringBuilder(key, ":"));
             try {
                 // creating counter initialized to 0
                 createCounter(rcTableId, key, 0L);
@@ -624,7 +624,7 @@ public class RCClient implements IKVClient {
                 // someone concurrently created it
                 log.debug("Counter {}-{} seemed to be concurrently created.",
                         tableId,
-                        ByteArrayUtil.toHexStringBuffer(key, ":"));
+                        ByteArrayUtil.toHexStringBuilder(key, ":"));
             }
             try {
                 return rcClient.increment(rcTableId.getTableID(), key, incrementValue);

@@ -14,12 +14,12 @@ public class ObjectDoesntExistException extends RejectRulesException {
 
     public ObjectDoesntExistException(final IKVTableID tableID,
                                       final byte[] key, final Throwable cause) {
-        super(ByteArrayUtil.toHexStringBuffer(key, ":")
+        super(ByteArrayUtil.toHexStringBuilder(key, ":")
                 + " did not exist on table:" + tableID, cause);
     }
 
     public ObjectDoesntExistException(final IKVTableID tableID, final byte[] key) {
-        super(ByteArrayUtil.toHexStringBuffer(key, ":")
+        super(ByteArrayUtil.toHexStringBuilder(key, ":")
                 + " did not exist on table:" + tableID);
     }
 }
