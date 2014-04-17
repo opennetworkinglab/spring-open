@@ -148,8 +148,8 @@
           <property name="severity" value="warning"/>
         </module>
         <module name="MethodLength">
-          <property name="severity" value="warning"/>
-        </module>
+	  <property name="max" value="200"/>
+	</module>
 
         <module name="ParameterNumber"/>
 
