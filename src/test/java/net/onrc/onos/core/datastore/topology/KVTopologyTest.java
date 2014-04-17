@@ -34,6 +34,11 @@ import org.junit.Test;
 
 public class KVTopologyTest {
 
+    static {
+        // configuration to quickly fall back to instance mode for faster test run
+        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
+    }
+
     static final long VERSION_NONEXISTENT = DataStoreClient.getClient().getVersionNonexistant();
 
     private static final byte[] DEVICE2_MAC_SW2P2 = new byte[]{6, 5, 4, 3, 2, 1, 0};

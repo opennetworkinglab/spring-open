@@ -21,6 +21,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class KVSwitchTest {
+
+    static {
+        // configuration to quickly fall back to instance mode for faster test run
+        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
+    }
+
     IKVTable switchTable;
     static final Long dpid1 = 0x1L;
     KVSwitch sw1;

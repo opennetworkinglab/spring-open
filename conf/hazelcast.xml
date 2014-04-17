@@ -96,7 +96,7 @@
         <multicast-port>54327</multicast-port>
       </multicast>
       <tcp-ip enabled="true">
-        <member>localhost</member>
+        <member>localhost:5701</member>
       <!--
         <member>machine2</member>
         <member>machine3:5799</member>

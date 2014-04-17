@@ -26,14 +26,20 @@ import org.junit.Test;
 
 public class AtomicCounterTest {
 
+    static {
+        // configuration to quickly fall back to instance mode for faster test run
+        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
+    }
+
     private static final String TEST_COUNTER = "TestCounter";
     private static final byte[] LONG_ZERO = {0, 0, 0, 0, 0, 0, 0, 0}; // 0L
-    private static final IKVTableID counterID = DataStoreClient.getClient().getTable(TEST_COUNTER).getTableId();
+    private IKVTableID counterID;
 
-    @After
     @Before
+    @After
     public void resetCounter() {
         IKVClient client = DataStoreClient.getClient();
+        counterID = client.getTable(TEST_COUNTER).getTableId();
         client.setCounter(counterID, LONG_ZERO, 0L);
         client.destroyCounter(counterID, LONG_ZERO);
     }
