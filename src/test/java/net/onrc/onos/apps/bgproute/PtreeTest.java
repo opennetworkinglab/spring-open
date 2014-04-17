@@ -25,14 +25,14 @@ public class PtreeTest {
     private Logger log = LoggerFactory.getLogger(PtreeTest.class);
 
     private Ptree ptree;
-    private PatriciaTrie<RibEntry> ooptrie;
+    private PatriciaTree<RibEntry> ooPtree;
 
     private Map<String, byte[]> byteAddresses;
 
     @Before
     public void setUp() throws Exception {
         ptree = new Ptree(32);
-        ooptrie = new PatriciaTrie<RibEntry>(32);
+        ooPtree = new PatriciaTree<RibEntry>(32);
 
         String[] strPrefixes = {
                 "192.168.10.0/24",
@@ -54,7 +54,7 @@ public class PtreeTest {
 
             PtreeNode node = ptree.acquire(byteAddresses.get(prefix), prefixLength);
             // node.rib = new RibEntry("192.168.10.101", "192.168.60.1");
-            ooptrie.put(new Prefix(byteAddresses.get(prefix), prefixLength),
+            ooPtree.put(new Prefix(byteAddresses.get(prefix), prefixLength),
                     new RibEntry("192.168.10.101", "192.168.60.1"));
         }
     }
@@ -200,11 +200,11 @@ public class PtreeTest {
 
     @Test
     public void testIteration() {
-        Iterator<IPatriciaTrie.Entry<RibEntry>> it = ooptrie.iterator();
+        Iterator<IPatriciaTree.Entry<RibEntry>> it = ooPtree.iterator();
 
         while (it.hasNext()) {
-            IPatriciaTrie.Entry<RibEntry> entry = it.next();
-            log.debug("PatriciaTrie prefix {} \t {}", entry.getPrefix(), entry.getPrefix().printAsBits());
+            IPatriciaTree.Entry<RibEntry> entry = it.next();
+            log.debug("PatriciaTree prefix {} \t {}", entry.getPrefix(), entry.getPrefix().printAsBits());
         }
 
         try {

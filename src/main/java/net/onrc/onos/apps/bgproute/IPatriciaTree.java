@@ -13,15 +13,15 @@ import java.util.Iterator;
  * {@code <prefix, next_hop>},
  * e.g. {@code <192.168.1.0/24, 10.0.0.1>}
  * <p/>
- * These updates are stored in the patricia trie, which acts as a map from
+ * These updates are stored in the patricia tree, which acts as a map from
  * {@code prefix} to {@code next_hop}. {@code next_hop} values can be looked up
  * by prefix.
  *
  * @param <V> The class of the data to stored in the patricia tree
  *
- * @see <a href="http://en.wikipedia.org/wiki/Patricia_trie">Patricia tree</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Patricia_tree">Patricia tree</a>
  */
-public interface IPatriciaTrie<V> {
+public interface IPatriciaTree<V> {
     /**
      * Puts a new mapping into the patricia tree.
      *

@@ -4,12 +4,12 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Implements a patricia tree. See {@link IPatriciaTrie} for a description of
+ * Implements a patricia tree. See {@link IPatriciaTree} for a description of
  * how the tree works and its usage.
  *
  * @param <V> the type of objects that will be stored in the tree
  */
-public class PatriciaTrie<V> implements IPatriciaTrie<V> {
+public class PatriciaTree<V> implements IPatriciaTree<V> {
     private final byte[] maskBits = {(byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0, (byte) 0xf0,
             (byte) 0xf8, (byte) 0xfc, (byte) 0xfe, (byte) 0xff};
 
@@ -25,7 +25,7 @@ public class PatriciaTrie<V> implements IPatriciaTrie<V> {
      *
      * @param maxPrefixLength the maximum length of prefixes
      */
-    public PatriciaTrie(int maxPrefixLength) {
+    public PatriciaTree(int maxPrefixLength) {
         this.maxPrefixLength = maxPrefixLength;
     }
 
@@ -224,7 +224,7 @@ public class PatriciaTrie<V> implements IPatriciaTrie<V> {
 
     @Override
     public Iterator<Entry<V>> iterator() {
-        return new PatriciaTrieIterator(top);
+        return new PatriciaTreeIterator(top);
     }
 
     private Node findNode(Prefix prefix) {
@@ -361,7 +361,7 @@ public class PatriciaTrie<V> implements IPatriciaTrie<V> {
         //Creating a new Prefix with a prefix length of common_len
         //Bits are copied from node's up until the common_len'th bit
         //RibEntry is null, because this is an aggregate prefix - it's not
-        //actually been added to the trie.
+        //actually been added to the tree.
 
         byte[] newPrefix = new byte[getByteContainingBit(maxPrefixLength)];
 
@@ -401,15 +401,15 @@ public class PatriciaTrie<V> implements IPatriciaTrie<V> {
         }
 
         public Entry<V> getEntry() {
-            return new PatriciaTrieEntry(prefix, value);
+            return new PatriciaTreeEntry(prefix, value);
         }
     }
 
-    private class PatriciaTrieEntry implements Entry<V> {
+    private class PatriciaTreeEntry implements Entry<V> {
         private final Prefix prefix;
         private final V value;
 
-        public PatriciaTrieEntry(Prefix prefix, V value) {
+        public PatriciaTreeEntry(Prefix prefix, V value) {
             this.prefix = prefix;
             this.value = value;
         }
@@ -425,11 +425,11 @@ public class PatriciaTrie<V> implements IPatriciaTrie<V> {
         }
     }
 
-    private class PatriciaTrieIterator implements Iterator<Entry<V>> {
+    private class PatriciaTreeIterator implements Iterator<Entry<V>> {
         private Node current;
         private boolean started; // initialized to false
 
-        public PatriciaTrieIterator(Node start) {
+        public PatriciaTreeIterator(Node start) {
             current = start;
 
             //If the start is an aggregate node fast forward to find the next valid node

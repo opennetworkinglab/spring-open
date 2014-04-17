@@ -15,7 +15,7 @@ public interface IBgpRouteService extends IFloodlightService {
      *
      * @return the PATRICIA tree.
      */
-    public IPatriciaTrie<RibEntry> getPtree();
+    public IPatriciaTree<RibEntry> getPtree();
 
     /**
      * Gets the IP address of REST server on the BGPd side. This is used to

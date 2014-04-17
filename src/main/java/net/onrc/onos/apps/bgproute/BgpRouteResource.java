@@ -32,14 +32,14 @@ public class BgpRouteResource extends ServerResource {
                 get(IBgpRouteService.class.getCanonicalName());
 
         if (dest == null) {
-            IPatriciaTrie<RibEntry> ptree = bgpRoute.getPtree();
+            IPatriciaTree<RibEntry> ptree = bgpRoute.getPtree();
             output.append("{\n  \"rib\": [\n");
             boolean printed = false;
 
             synchronized (ptree) {
-                Iterator<IPatriciaTrie.Entry<RibEntry>> it = ptree.iterator();
+                Iterator<IPatriciaTree.Entry<RibEntry>> it = ptree.iterator();
                 while (it.hasNext()) {
-                    IPatriciaTrie.Entry<RibEntry> entry = it.next();
+                    IPatriciaTree.Entry<RibEntry> entry = it.next();
 
                     if (printed) {
                         output.append(",\n");

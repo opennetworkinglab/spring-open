@@ -84,8 +84,8 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
     private IRestApiService restApi;
     private IProxyArpService proxyArp;
 
-    private IPatriciaTrie<RibEntry> ptree;
-    private IPatriciaTrie<Interface> interfacePtrie;
+    private IPatriciaTree<RibEntry> ptree;
+    private IPatriciaTree<Interface> interfacePtree;
     private BlockingQueue<RibUpdate> ribUpdates;
 
     private String bgpdRestIp;
@@ -222,10 +222,10 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
             throw new ConfigurationRuntimeException("Error in JSON file", e);
         }
 
-        // Populate the interface Patricia Trie
+        // Populate the interface Patricia Tree
         for (Interface intf : interfaces.values()) {
             Prefix prefix = new Prefix(intf.getIpAddress().getAddress(), intf.getPrefixLength());
-            interfacePtrie.put(prefix, intf);
+            interfacePtree.put(prefix, intf);
         }
     }
 
@@ -260,8 +260,8 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
     public void init(FloodlightModuleContext context)
             throws FloodlightModuleException {
 
-        ptree = new PatriciaTrie<RibEntry>(32);
-        interfacePtrie = new PatriciaTrie<Interface>(32);
+        ptree = new PatriciaTree<RibEntry>(32);
+        interfacePtree = new PatriciaTree<Interface>(32);
 
         ribUpdates = new LinkedBlockingQueue<RibUpdate>();
 
@@ -327,13 +327,13 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
     }
 
     @Override
-    public IPatriciaTrie<RibEntry> getPtree() {
+    public IPatriciaTree<RibEntry> getPtree() {
         return ptree;
     }
 
     @Override
     public void clearPtree() {
-        ptree = new PatriciaTrie<RibEntry>(32);
+        ptree = new PatriciaTree<RibEntry>(32);
     }
 
     @Override
@@ -466,7 +466,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
         } else {
             //Route to non-peer
             log.debug("Route to non-peer {}", dstIpAddress);
-            egressInterface = interfacePtrie.match(
+            egressInterface = interfacePtree.match(
                     new Prefix(dstIpAddress.getAddress(), 32));
             if (egressInterface == null) {
                 log.warn("No outgoing interface found for {}", dstIpAddress.getHostAddress());
@@ -596,7 +596,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
 
             if (ptree.remove(prefix, update.getRibEntry())) {
                 /*
-                 * Only delete flows if an entry was actually removed from the trie.
+                 * Only delete flows if an entry was actually removed from the tree.
                  * If no entry was removed, the <prefix, nexthop> wasn't there so
                  * it's probably already been removed and we don't need to do anything
                  */
@@ -1363,13 +1363,13 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
 
     @Override
     public boolean isInterfaceAddress(InetAddress address) {
-        Interface intf = interfacePtrie.match(new Prefix(address.getAddress(), 32));
+        Interface intf = interfacePtree.match(new Prefix(address.getAddress(), 32));
         return (intf != null && intf.getIpAddress().equals(address));
     }
 
     @Override
     public boolean inConnectedNetwork(InetAddress address) {
-        Interface intf = interfacePtrie.match(new Prefix(address.getAddress(), 32));
+        Interface intf = interfacePtree.match(new Prefix(address.getAddress(), 32));
         return (intf != null && !intf.getIpAddress().equals(address));
     }
 
@@ -1385,7 +1385,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
 
     @Override
     public Interface getOutgoingInterface(InetAddress dstIpAddress) {
-        return interfacePtrie.match(new Prefix(dstIpAddress.getAddress(), 32));
+        return interfacePtree.match(new Prefix(dstIpAddress.getAddress(), 32));
     }
 
     @Override

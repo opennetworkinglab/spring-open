@@ -19,8 +19,8 @@ public class RibEntry {
     /*
      * Store the sequence number information provided on the update here for
      * now. I think this *should* really be in the RibUpdate, and we should
-     * store RibUpdates in the Ptrie. But, that's a bigger change to change
-     * what the Ptrie stores.
+     * store RibUpdates in the Ptree. But, that's a bigger change to change
+     * what the Ptree stores.
      */
     private final long sysUpTime;
     private final long sequenceNum;
