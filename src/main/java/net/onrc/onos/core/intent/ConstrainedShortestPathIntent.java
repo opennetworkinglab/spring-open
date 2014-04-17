@@ -12,10 +12,12 @@ public class ConstrainedShortestPathIntent extends ShortestPathIntent {
     protected ConstrainedShortestPathIntent() {
     }
 
+    // CHECKSTYLE:OFF suppress the warning about too many parameters
     public ConstrainedShortestPathIntent(String id,
                                          long srcSwitch, long srcPort, long srcMac,
                                          long dstSwitch, long dstPort, long dstMac,
                                          double bandwidth) {
+    // CHECKSTYLE:ON
         super(id, srcSwitch, srcPort, srcMac, dstSwitch, dstPort, dstMac);
         this.bandwidth = bandwidth;
     }

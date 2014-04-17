@@ -33,6 +33,7 @@ public interface INetworkGraphListener {
      * @param addedDeviceEvents   the Added Device Events.
      * @param removedDeviceEvents the Removed Device Events.
      */
+    // CHECKSTYLE:OFF suppress warning about too many parameters
     public void networkGraphEvents(Collection<SwitchEvent> addedSwitchEvents,
                                    Collection<SwitchEvent> removedSwitchEvents,
                                    Collection<PortEvent> addedPortEvents,
@@ -41,4 +42,5 @@ public interface INetworkGraphListener {
                                    Collection<LinkEvent> removedLinkEvents,
                                    Collection<DeviceEvent> addedDeviceEvents,
                                    Collection<DeviceEvent> removedDeviceEvents);
+    // CHECKSTYLE:ON
 }

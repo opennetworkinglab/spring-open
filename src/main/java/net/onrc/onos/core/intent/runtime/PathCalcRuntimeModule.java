@@ -283,6 +283,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     // INetworkGraphListener implementations
     // ================================================================================
 
+    // CHECKSTYLE:OFF suppress warning about too many parameters
     @Override
     public void networkGraphEvents(Collection<SwitchEvent> addedSwitchEvents,
                                    Collection<SwitchEvent> removedSwitchEvents,
@@ -292,6 +293,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                                    Collection<LinkEvent> removedLinkEvents,
                                    Collection<DeviceEvent> addedDeviceEvents,
                                    Collection<DeviceEvent> removedDeviceEvents) {
+    // CHECKSTYLE:ON
 
         PerfLogger p = new PerfLogger("networkGraphEvents");
         HashSet<Intent> affectedPaths = new HashSet<>();

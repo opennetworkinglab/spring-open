@@ -1844,10 +1844,13 @@ public class LinkDiscoveryManager
         evTopoSwitch = evHistTopologySwitch.put(evTopoSwitch, actn);
     }
 
+    // CHECKSTYLE:OFF suppress warning about too many parameters
     private void evHistTopoLink(long srcDpid, long dstDpid, short srcPort,
                                 short dstPort, int srcPortState, int dstPortState,
                                 ILinkDiscovery.LinkType linkType,
                                 EvAction actn, String reason) {
+    // CHECKSTYLE:ON
+
         if (evTopoLink == null) {
             evTopoLink = new EventHistoryTopologyLink();
         }
