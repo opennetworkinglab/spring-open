@@ -157,7 +157,8 @@ public class AtomicCounterTest {
             max = Math.max(max, time);
             min = Math.min(min, time);
         }
-        System.err.printf("incrementCounter(th:%d , incs:%d ) N:%d\tavg:%f (ns) min:%d (ns) max:%d (ns)\n",
+        System.err.printf("incrementCounter: th, incs, N, avg(ns), min(ns), max(ns)\n");
+        System.err.printf("incrementCounter: %d, %d, %d, %f, %d, %d\n",
                 num_threads, NUM_INCREMENTS, incrementTimes.size(),
                 sum/(double)incrementTimes.size(), min, max );
     }
