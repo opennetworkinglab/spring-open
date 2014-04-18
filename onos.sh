@@ -67,7 +67,8 @@ ZK_HOME=${ZK_HOME:-~/zookeeper-3.4.5}
 ZK_CONF_FILE=zoo.cfg
 ZK_CONF=${ONOS_CONF_DIR}/${ZK_CONF_FILE}
 ZK_CONF_TEMPLATE=${ONOS_TEMPLATE_DIR}/zoo.cfg.template
-ZK_LOG_DIR=${ONOS_HOME}/onos-logs
+# Adding ONOS_HOST_NAME dir since file name (zookeeper.out) cannot be controlled.
+ZK_LOG_DIR=${ONOS_HOME}/onos-logs/${ONOS_HOST_NAME}
 ZK_LIB_DIR=${ZK_LIB_DIR:-/var/lib/zookeeper}
 ZK_MY_ID=${ZK_LIB_DIR}/myid
 
@@ -78,8 +79,9 @@ RAMCLOUD_HOME=${RAMCLOUD_HOME:-~/ramcloud}
 RAMCLOUD_COORD_LOG=${LOGDIR}/ramcloud.coordinator.${ONOS_HOST_NAME}.log
 RAMCLOUD_SERVER_LOG=${LOGDIR}/ramcloud.server.${ONOS_HOST_NAME}.log
 RAMCLOUD_BRANCH=${RAMCLOUD_BRANCH:-master}
+RAMCLOUD_CONF=${ONOS_CONF_DIR}/ramcloud.conf
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${ONOS_HOME}/lib:${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}
+export LD_LIBRARY_PATH=${ONOS_HOME}/lib:${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}:$LD_LIBRARY_PATH
 
 ## Because the script change dir to $ONOS_HOME, we can set ONOS_LOGBACK and LOGDIR relative to $ONOS_HOME
 ONOS_LOGBACK=${ONOS_LOGBACK:-${ONOS_CONF_DIR}/logback.${ONOS_HOST_NAME}.xml}
@@ -146,6 +148,8 @@ function print_usage {
     Set up ONOS node using ${filename}.
       - generate and replace config file of ZooKeeper.
       - create myid in ZooKeeper datadir.
+      - generate and replace config file for Hazelcast.
+      - generate and replace config file for RAMCloud.
       - generate and replace logback.${ONOS_HOST_NAME}.xml
     If -f option is used, all existing files will be overwritten without confirmation.
  \$ $0 start [single-node|coord-node|server-node|coord-and-server-node]
@@ -351,6 +355,33 @@ function create-hazelcast-conf {
   echo "DONE"
 }
 
+function create-ramcloud-conf {
+  echo -n "Creating ${RAMCLOUD_CONF} ... "
+
+  local temp_hc="${RAMCLOUD_CONF}.tmp"
+  if [ -f ${temp_hc} ]; then
+    rm ${temp_hc}
+  fi
+  touch ${temp_hc}
+
+  if [ -f ${RAMCLOUD_CONF} ]; then
+    mv ${RAMCLOUD_CONF} ${RAMCLOUD_CONF}.bak
+    local filename=`basename ${RAMCLOUD_CONF}`
+    echo -n "backup old file to ${filename}.bak ... "
+  fi
+  echo "ramcloud.coordinatorIp=${RC_COORD_PROTOCOL}:host=${RC_COORD_IP}" > ${temp_hc}
+  echo "ramcloud.coordinatorPort=port=${RC_COORD_PORT}" >> ${temp_hc}
+
+  # FIXME remove these when old start-up script is removed.
+  echo "# Following lines is not used by ONOS core or onos.sh" >> ${temp_hc}
+  echo "ramcloud.serverIp=${RC_SERVER_PROTOCOL}:host=${RC_SERVER_IP}" >> ${temp_hc}
+  echo "ramcloud.serverPort=port=${RC_SERVER_PORT}" >> ${temp_hc}
+
+  mv ${temp_hc} ${RAMCLOUD_CONF}
+
+  echo "DONE"
+}
+
 function create-logback-conf {
   echo -n "Creating ${ONOS_LOGBACK} ... "
   
@@ -399,10 +430,12 @@ function create-confs {
   if [ "$1" == "-f" ]; then
     create-zk-conf
     create-hazelcast-conf
+    create-ramcloud-conf
     create-logback-conf
   else
     create-conf-interactive ${ZK_CONF} create-zk-conf
     create-conf-interactive ${HC_CONF} create-hazelcast-conf
+    create-conf-interactive ${RAMCLOUD_CONF} create-ramcloud-conf
     create-conf-interactive ${ONOS_LOGBACK} create-logback-conf
   fi
   
@@ -437,6 +470,7 @@ function start-zk {
   echo -n "Starting Zookeeper ... "
   
   export ZOO_LOG_DIR=${ZK_LOG_DIR}
+  mkdir -p ${ZK_LOG_DIR}
   if [ -f "${ZK_CONF}" ]; then
     # Run Zookeeper with our configuration
     export ZOOCFG=${ZK_CONF_FILE}
@@ -660,7 +694,10 @@ function start-onos {
   fi
 
   JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datastore.backend=${ONOS_HOST_BACKEND}"
-  
+  if [ "${ONOS_HOST_BACKEND}" = "ramcloud" ]; then
+    JVM_OPTS="${JVM_OPTS} -Dramcloud.config.path=${RAMCLOUD_CONF}"
+  fi
+
   # Run ONOS
   
   echo -n "Starting ONOS controller ..."

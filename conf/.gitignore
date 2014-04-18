@@ -1,2 +1,3 @@
 *.bak
 zoo.cfg
+onos_node.*.conf
