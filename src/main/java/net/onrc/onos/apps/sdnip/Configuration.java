@@ -1,4 +1,4 @@
-package net.onrc.onos.apps.bgproute;
+package net.onrc.onos.apps.sdnip;
 
 import java.util.Collections;
 import java.util.List;

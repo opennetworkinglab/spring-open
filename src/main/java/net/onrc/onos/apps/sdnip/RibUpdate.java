@@ -1,4 +1,4 @@
-package net.onrc.onos.apps.bgproute;
+package net.onrc.onos.apps.sdnip;
 
 /**
  * Represents a route update received from BGPd. An update has an operation

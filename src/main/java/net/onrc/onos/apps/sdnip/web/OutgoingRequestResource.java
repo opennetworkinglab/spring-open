@@ -1,4 +1,7 @@
-package net.onrc.onos.apps.bgproute;
+package net.onrc.onos.apps.sdnip.web;
+
+import net.onrc.onos.apps.sdnip.ISdnIpService;
+import net.onrc.onos.apps.sdnip.RestClient;
 
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
@@ -13,8 +16,8 @@ import org.slf4j.LoggerFactory;
  * not intended to be used during general operation. It is to have a way to
  * influence BGPd's behavior for debugging.
  */
-public class BgpRouteResourceSynch extends ServerResource {
-    private static final Logger log = LoggerFactory.getLogger(BgpRouteResourceSynch.class);
+public class OutgoingRequestResource extends ServerResource {
+    private static final Logger log = LoggerFactory.getLogger(OutgoingRequestResource.class);
 
     /**
      * Handles a REST call to SDN-IP which gives a command to send a new route
@@ -25,15 +28,15 @@ public class BgpRouteResourceSynch extends ServerResource {
     @Post
     public String handlePostMethod() {
 
-        IBgpRouteService bgpRoute = (IBgpRouteService) getContext().getAttributes().
-                get(IBgpRouteService.class.getCanonicalName());
+        ISdnIpService sdnIp = (ISdnIpService) getContext().getAttributes().
+                get(ISdnIpService.class.getCanonicalName());
 
         String routerId = (String) getRequestAttributes().get("routerid");
         String prefix = (String) getRequestAttributes().get("prefix");
         String mask = (String) getRequestAttributes().get("mask");
         String nexthop = (String) getRequestAttributes().get("nexthop");
 
-        String bgpdRestIp = bgpRoute.getBgpdRestIp();
+        String bgpdRestIp = sdnIp.getBgpdRestIp();
 
         // bgpdRestIp includes port number, e.g. 1.1.1.1:8080
         RestClient.post("http://" + bgpdRestIp + "/wm/bgp/" + routerId + "/" + prefix + "/"
@@ -55,8 +58,8 @@ public class BgpRouteResourceSynch extends ServerResource {
      */
     @Delete
     public String handleDeleteMethod() {
-        IBgpRouteService bgpRoute = (IBgpRouteService) getContext().getAttributes().
-                get(IBgpRouteService.class.getCanonicalName());
+        ISdnIpService sdnIp = (ISdnIpService) getContext().getAttributes().
+                get(ISdnIpService.class.getCanonicalName());
 
         String routerId = (String) getRequestAttributes().get("routerid");
         String prefix = (String) getRequestAttributes().get("prefix");
@@ -65,7 +68,7 @@ public class BgpRouteResourceSynch extends ServerResource {
 
         StringBuilder reply = new StringBuilder();
 
-        String bgpdRestIp = bgpRoute.getBgpdRestIp();
+        String bgpdRestIp = sdnIp.getBgpdRestIp();
 
         RestClient.delete("http://" + bgpdRestIp + "/wm/bgp/" + routerId + "/" + prefix + "/"
                 + mask + "/" + nextHop);

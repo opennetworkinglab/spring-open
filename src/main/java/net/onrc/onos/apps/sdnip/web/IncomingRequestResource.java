@@ -1,8 +1,14 @@
-package net.onrc.onos.apps.bgproute;
+package net.onrc.onos.apps.sdnip.web;
 
 import java.util.Iterator;
 
-import net.onrc.onos.apps.bgproute.RibUpdate.Operation;
+import net.onrc.onos.apps.sdnip.ISdnIpService;
+import net.onrc.onos.apps.sdnip.IPatriciaTree;
+import net.onrc.onos.apps.sdnip.Prefix;
+import net.onrc.onos.apps.sdnip.RestClient;
+import net.onrc.onos.apps.sdnip.RibEntry;
+import net.onrc.onos.apps.sdnip.RibUpdate;
+import net.onrc.onos.apps.sdnip.RibUpdate.Operation;
 
 import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
@@ -15,8 +21,8 @@ import org.slf4j.LoggerFactory;
  * REST resource that handles REST calls from BGPd. This is the interface BGPd
  * uses to push RIB entries (routes) to SDN-IP.
  */
-public class BgpRouteResource extends ServerResource {
-    private static final Logger log = LoggerFactory.getLogger(BgpRouteResource.class);
+public class IncomingRequestResource extends ServerResource {
+    private static final Logger log = LoggerFactory.getLogger(IncomingRequestResource.class);
 
     /**
      * Gets the contents of SDN-IP's route table.
@@ -27,12 +33,12 @@ public class BgpRouteResource extends ServerResource {
     public String handleGetMethod() {
         String dest = (String) getRequestAttributes().get("dest");
         StringBuilder output = new StringBuilder(80);
-        IBgpRouteService bgpRoute = (IBgpRouteService) getContext()
+        ISdnIpService sdnIp = (ISdnIpService) getContext()
                 .getAttributes().
-                get(IBgpRouteService.class.getCanonicalName());
+                get(ISdnIpService.class.getCanonicalName());
 
         if (dest == null) {
-            IPatriciaTree<RibEntry> ptree = bgpRoute.getPtree();
+            IPatriciaTree<RibEntry> ptree = sdnIp.getPtree();
             output.append("{\n  \"rib\": [\n");
             boolean printed = false;
 
@@ -61,7 +67,7 @@ public class BgpRouteResource extends ServerResource {
 
             // the dest here refers to router-id
             // bgpdRestIp includes port number, such as 1.1.1.1:8080
-            String bgpdRestIp = bgpRoute.getBgpdRestIp();
+            String bgpdRestIp = sdnIp.getBgpdRestIp();
             String url = "http://" + bgpdRestIp + "/wm/bgp/" + dest;
 
             // Doesn't actually do anything with the response
@@ -81,9 +87,9 @@ public class BgpRouteResource extends ServerResource {
      */
     @Post
     public String handlePostMethod() {
-        IBgpRouteService bgpRoute = (IBgpRouteService) getContext()
+        ISdnIpService sdnIp = (ISdnIpService) getContext()
                 .getAttributes().
-                get(IBgpRouteService.class.getCanonicalName());
+                get(ISdnIpService.class.getCanonicalName());
 
         String strSysuptime = (String) getRequestAttributes().get("sysuptime");
         String strSequence = (String) getRequestAttributes().get("sequence");
@@ -119,7 +125,7 @@ public class BgpRouteResource extends ServerResource {
             RibEntry rib = new RibEntry(routerId, nexthop, sysUpTime,
                     sequenceNum);
 
-            bgpRoute.newRibUpdate(new RibUpdate(Operation.UPDATE, p, rib));
+            sdnIp.newRibUpdate(new RibUpdate(Operation.UPDATE, p, rib));
 
             reply = "[POST: " + prefix + "/" + mask + ":" + nexthop + "]";
             log.info(reply);
@@ -145,9 +151,9 @@ public class BgpRouteResource extends ServerResource {
      */
     @Delete
     public String handleDeleteMethod() {
-        IBgpRouteService bgpRoute = (IBgpRouteService) getContext()
+        ISdnIpService sdnIp = (ISdnIpService) getContext()
                 .getAttributes().
-                get(IBgpRouteService.class.getCanonicalName());
+                get(ISdnIpService.class.getCanonicalName());
 
         String strSysuptime = (String) getRequestAttributes().get("sysuptime");
         String strSequence = (String) getRequestAttributes().get("sequence");
@@ -183,7 +189,7 @@ public class BgpRouteResource extends ServerResource {
 
             RibEntry r = new RibEntry(routerId, nextHop, sysUpTime, sequenceNum);
 
-            bgpRoute.newRibUpdate(new RibUpdate(Operation.DELETE, p, r));
+            sdnIp.newRibUpdate(new RibUpdate(Operation.DELETE, p, r));
 
             replyStringBuilder.append("[DELE: ")
                 .append(prefix)
@@ -194,7 +200,7 @@ public class BgpRouteResource extends ServerResource {
                 .append(']');
         } else {
             // clear the local rib: Ptree
-            bgpRoute.clearPtree();
+            sdnIp.clearPtree();
             replyStringBuilder.append("[DELE-capability: ")
                     .append(capability)
                     .append("; The local RibEntry is cleared!]\n");

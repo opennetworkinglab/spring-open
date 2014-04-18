@@ -1,4 +1,4 @@
-package net.onrc.onos.apps.bgproute;
+package net.onrc.onos.apps.sdnip;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 
@@ -6,7 +6,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
  * The API exported by the main SDN-IP class. This is the interface between the
  * REST handlers and the SDN-IP module.
  */
-public interface IBgpRouteService extends IFloodlightService {
+public interface ISdnIpService extends IFloodlightService {
 
     /**
      * Gets a reference to SDN-IP's PATRICIA tree which stores the route table.
@@ -39,7 +39,7 @@ public interface IBgpRouteService extends IFloodlightService {
     public void clearPtree();
 
     /**
-     * Pass a RIB update to the {@link IBgpRouteService}.
+     * Pass a RIB update to the {@link ISdnIpService}.
      *
      * @param update a {@link RibUpdate} object containing details of the
      * update

@@ -11,7 +11,7 @@ net.floodlightcontroller.core.test.MockFloodlightProvider
 net.floodlightcontroller.core.test.MockThreadPoolService
 net.onrc.onos.core.datagrid.HazelcastDatagrid
 net.onrc.onos.core.flowprogrammer.FlowProgrammer
-net.onrc.onos.apps.bgproute.BgpRoute
+net.onrc.onos.apps.sdnip.SdnIp
 net.onrc.onos.core.registry.ZookeeperRegistry
 net.onrc.onos.core.registry.StandaloneRegistry
 net.onrc.onos.apps.forwarding.Forwarding

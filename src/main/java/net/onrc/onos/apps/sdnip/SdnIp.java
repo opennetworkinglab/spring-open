@@ -1,4 +1,4 @@
-package net.onrc.onos.apps.bgproute;
+package net.onrc.onos.apps.sdnip;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,9 +26,10 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.apps.bgproute.RibUpdate.Operation;
 import net.onrc.onos.apps.proxyarp.IArpRequester;
 import net.onrc.onos.apps.proxyarp.IProxyArpService;
+import net.onrc.onos.apps.sdnip.RibUpdate.Operation;
+import net.onrc.onos.apps.sdnip.web.SdnIpWebRoutable;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.LDUpdate;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
@@ -73,11 +74,11 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.net.InetAddresses;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-public class BgpRoute implements IFloodlightModule, IBgpRouteService,
+public class SdnIp implements IFloodlightModule, ISdnIpService,
         IArpRequester,
         IOFSwitchListener, IConfigInfoService {
 
-    private static final Logger log = LoggerFactory.getLogger(BgpRoute.class);
+    private static final Logger log = LoggerFactory.getLogger(SdnIp.class);
 
     private IFloodlightProviderService floodlightProvider;
     private ILinkDiscoveryService linkDiscoveryService;
@@ -233,7 +234,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
         Collection<Class<? extends IFloodlightService>> l
                 = new ArrayList<Class<? extends IFloodlightService>>();
-        l.add(IBgpRouteService.class);
+        l.add(ISdnIpService.class);
         l.add(IConfigInfoService.class);
         return l;
     }
@@ -242,7 +243,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
         Map<Class<? extends IFloodlightService>, IFloodlightService> m
                 = new HashMap<Class<? extends IFloodlightService>, IFloodlightService>();
-        m.put(IBgpRouteService.class, this);
+        m.put(ISdnIpService.class, this);
         m.put(IConfigInfoService.class, this);
         return m;
     }
@@ -319,7 +320,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
 
     @Override
     public void startUp(FloodlightModuleContext context) {
-        restApi.addRestletRoutable(new BgpRouteWebRoutable());
+        restApi.addRestletRoutable(new SdnIpWebRoutable());
         floodlightProvider.addOFSwitchListener(this);
 
         // Retrieve the RIB from BGPd during startup
@@ -1354,7 +1355,7 @@ public class BgpRoute implements IFloodlightModule, IBgpRouteService,
 
     @Override
     public String getName() {
-        return "BgpRoute";
+        return "SdnIp";
     }
 
     /*

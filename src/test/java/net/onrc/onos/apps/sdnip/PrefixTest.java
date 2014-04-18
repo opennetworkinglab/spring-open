@@ -1,4 +1,4 @@
-package net.onrc.onos.apps.bgproute;
+package net.onrc.onos.apps.sdnip;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
