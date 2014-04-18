@@ -145,7 +145,7 @@ function print_usage {
   local filename=`basename ${ONOS_CONF}`
   local usage="Usage: setup/start/stop ONOS on this server.
  \$ $0 setup [-f]
-    Set up ONOS node using ${filename}.
+    Set up ONOS node using ${ONOS_CONF} .
       - generate and replace config file of ZooKeeper.
       - create myid in ZooKeeper datadir.
       - generate and replace config file for Hazelcast.
@@ -240,8 +240,23 @@ function revert-confs {
 
 function create-zk-conf {
   echo -n "Creating ${ZK_CONF} ... "
-  
-  # creation of zookeeper config
+
+  # Create the ZooKeeper lib directory
+  if [ ! -d ${ZK_LIB_DIR} ]; then
+      local SUDO=${SUDO:-}
+      local whoami=`whoami`
+      {
+          ${SUDO} mkdir ${ZK_LIB_DIR}
+          ${SUDO} chown ${whoami} ${ZK_LIB_DIR}
+      } || {
+          echo "FAILED"
+          echo "[ERROR] Failed to create directory ${ZK_LIB_DIR}."
+          echo "[ERROR] Please retry after setting \"env SUDO=sudo\""
+          exit 1
+      }
+  fi
+
+  # creation of ZooKeeper config
   
   local temp_zk="${ZK_CONF}.tmp"
   if [ -f ${temp_zk} ]; then
@@ -279,7 +294,7 @@ function create-zk-conf {
     } || {
       echo "FAILED"
       echo "[ERROR] Failed to rename ${ZK_MY_ID}."
-      echo "[ERROR] Please retry after setting \"export SUDO=sudo\""
+      echo "[ERROR] Please retry after setting \"env SUDO=sudo\""
       exit 1
     }
   fi
@@ -467,12 +482,12 @@ function zk {
 }
 
 function start-zk {
-  echo -n "Starting Zookeeper ... "
+  echo -n "Starting ZooKeeper ... "
   
   export ZOO_LOG_DIR=${ZK_LOG_DIR}
   mkdir -p ${ZK_LOG_DIR}
   if [ -f "${ZK_CONF}" ]; then
-    # Run Zookeeper with our configuration
+    # Run ZooKeeper with our configuration
     export ZOOCFG=${ZK_CONF_FILE}
     export ZOOCFGDIR=${ONOS_CONF_DIR}
   fi
