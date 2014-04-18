@@ -187,11 +187,11 @@ class Intent
         :intent_id => "#{@freeze}#{@intent_id}",
         :intent_type => @intent_type,
         :intent_op => @intent_op,
-        :srcSwitch => "258".to_s,
-        :srcPort => 65534,
+        :srcSwitch => "00:00:00:00:00:00:02:02".to_s,
+        :srcPort => 1,
         :srcMac => "00:00:c0:#{mac_format(idx)}",
-        :dstSwitch => "514".to_s,
-        :dstPort => 65534,
+        :dstSwitch => "00:00:00:00:00:00:04:02".to_s,
+        :dstPort => 1,
         :dstMac => "00:00:c1:#{mac_format(idx)}"
       }
 puts intent.inspect

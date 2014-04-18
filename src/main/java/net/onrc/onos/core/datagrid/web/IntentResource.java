@@ -19,6 +19,7 @@ import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
+import net.onrc.onos.core.util.Dpid;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
@@ -188,12 +189,15 @@ public class IntentResource extends ServerResource {
         if ((intentOp.equals("remove"))) {
             operation = IntentOperation.Operator.REMOVE;
         }
+        Dpid srcSwitchDpid = new Dpid((String) fields.get("srcSwitch"));
+        Dpid dstSwitchDpid = new Dpid((String) fields.get("dstSwitch"));
+
         if (intentType.equals("shortest_intent_type")) {
             ShortestPathIntent spi = new ShortestPathIntent(applnIntentId,
-                    Long.decode((String) fields.get("srcSwitch")),
+                    srcSwitchDpid.value(),
                     (long) fields.get("srcPort"),
                     MACAddress.valueOf((String) fields.get("srcMac")).toLong(),
-                    Long.decode((String) fields.get("dstSwitch")),
+                    dstSwitchDpid.value(),
                     (long) fields.get("dstPort"),
                     MACAddress.valueOf((String) fields.get("dstMac")).toLong());
             spi.setPathFrozen(pathFrozen);
