@@ -93,7 +93,7 @@ public class PlanInstallRuntime {
             if (map.values().isEmpty()) {
                 result.append("No flow mods installed\n");
             }
-            log.error(result.toString());
+            log.debug(result.toString());
         }
     }
 
@@ -144,12 +144,12 @@ public class PlanInstallRuntime {
                 }
             }
             long step4 = System.nanoTime();
-            log.error("MEASUREMENT: convert: {} ns, push: {} ns, barrierWait: {} ns",
+            log.debug("MEASUREMENT: convert: {} ns, push: {} ns, barrierWait: {} ns",
                     step2 - step1, step3 - step2, step4 - step3);
 
         }
         long end = System.nanoTime();
-        log.error("MEASUREMENT: Install plan: {} ns", (end - start));
+        log.debug("MEASUREMENT: Install plan: {} ns", (end - start));
         FlowModCount.printCount();
 
         // TODO: we assume that the plan installation succeeds for now

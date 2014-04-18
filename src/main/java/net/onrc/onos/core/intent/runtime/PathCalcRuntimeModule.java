@@ -51,7 +51,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         }
 
         public void logThis() {
-            log.error("Time:{}, Step:{}", time, step);
+            log.debug("Time:{}, Step:{}", time, step);
         }
     }
 

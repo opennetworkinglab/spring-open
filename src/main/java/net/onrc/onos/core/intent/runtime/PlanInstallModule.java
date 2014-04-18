@@ -153,7 +153,7 @@ public class PlanInstallModule implements IFloodlightModule {
     }
 
     public static void log(String step) {
-        log.error("Time:{}, Step:{}", System.nanoTime(), step);
+        log.debug("Time:{}, Step:{}", System.nanoTime(), step);
     }
 
     @Override

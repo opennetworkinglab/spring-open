@@ -43,7 +43,7 @@ public class PlanCalcRuntime {
         long step1 = System.nanoTime();
         List<Set<FlowEntry>> plan = buildPhases(flowEntries);
         long step2 = System.nanoTime();
-        log.error("MEASUREMENT: Compute flow entries: {} ns, Build phases: {} ns",
+        log.debug("MEASUREMENT: Compute flow entries: {} ns, Build phases: {} ns",
                 (step1 - start), (step2 - step1));
         return plan;
     }
