@@ -718,7 +718,10 @@ function start-onos {
   fi
 
   # Run ONOS
-  
+
+  # Need to cd ONOS_HOME. onos.properties currently specify hazelcast config path relative to CWD
+  cd ${ONOS_HOME}
+
   echo -n "Starting ONOS controller ..."
   java ${JVM_OPTS} -Dlogback.configurationFile=${ONOS_LOGBACK} -cp ${JAVA_CP} ${MAIN_CLASS} -cf ${ONOS_PROPS} > ${LOGDIR}/${LOGBASE}.stdout 2>${LOGDIR}/${LOGBASE}.stderr &
   
