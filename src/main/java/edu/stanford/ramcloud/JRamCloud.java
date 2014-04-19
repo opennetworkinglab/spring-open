@@ -18,6 +18,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /*
  * This class provides Java bindings for RAMCloud. Right now it is a rather
  * simple subset of what RamCloud.h defines.
@@ -32,8 +35,16 @@ import java.util.LinkedList;
  *      http://developer.android.com/training/articles/perf-jni.html
  */
 public class JRamCloud {
+    private static final Logger log = LoggerFactory.getLogger(JRamCloud.class);
+
     static {
-        System.loadLibrary("edu_stanford_ramcloud_JRamCloud");
+        try {
+            System.loadLibrary("edu_stanford_ramcloud_JRamCloud");
+        } catch (UnsatisfiedLinkError e) {
+            System.err.println("Unable to load JNI binding. Please build RAMCloud Java bindings.");
+            log.error("Unable to load JNI binding. Please build RAMCloud Java bindings.", e);
+            System.exit(-1);
+        }
     }
 
     public static final long VERSION_NONEXISTENT = 0L;
