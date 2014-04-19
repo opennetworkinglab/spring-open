@@ -208,6 +208,7 @@ public class JRamCloud {
         final public long nextHash;
     }
 
+    @Deprecated
     public class TableEnumerator {
         private long tableEnumeratorObjectPointer = 0;
         private long ramCloudObjectPointer = 0;

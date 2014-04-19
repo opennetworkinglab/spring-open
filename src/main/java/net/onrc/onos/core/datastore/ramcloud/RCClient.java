@@ -47,10 +47,27 @@ public class RCClient implements IKVClient {
     // FIXME These constants should be defined by JRamCloud
     public static final int STATUS_OK = 0;
 
-    // FIXME come up with a proper way to retrieve configuration
+    /**
+     * Maximum number of Multi-Read operations which can be executed in
+     * one RPC call.
+     *
+     *  There are multiple factors which determines this limit.
+     *  - RAMCloud RPC size limit of 8MB.
+     *  - JNI implementation store the RPC result on stack.
+     *    (Increasing the stack-size limit will help relaxing this limit.)
+     */
     public static final int MAX_MULTI_READS = Math.max(1, Integer
             .valueOf(System.getProperty("ramcloud.max_multi_reads", "400")));
 
+    /**
+     * Maximum number of Multi-Write operations which can be executed in
+     * one RPC call.
+     *
+     *  There are multiple factors which determines this limit.
+     *  - RAMCloud RPC size limit of 8MB.
+     *  - JNI implementation store the RPC result on stack.
+     *    (Increasing the stack-size limit will help relaxing this limit.)
+     */
     public static final int MAX_MULTI_WRITES = Math.max(1, Integer
             .valueOf(System.getProperty("ramcloud.max_multi_writes", "800")));
 
