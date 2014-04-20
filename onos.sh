@@ -640,9 +640,13 @@ function start-server {
   local coord_addr=`rc-coord-addr`
   local server_addr=`rc-server-addr`
 
+  local masterServiceThreads=$(read-conf ${ONOS_CONF} ramcloud.masterServiceThreads 5)
+  local logCleanerThreads=$(read-conf ${ONOS_CONF}    ramcloud.logCleanerThreads    1)
+  local detectFailures=$(read-conf ${ONOS_CONF}       ramcloud.detectFailures       0)
+
   # Run ramcloud
   echo -n "Starting RAMCloud server ... "
-  ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server -M -L ${server_addr} -C ${coord_addr} --masterServiceThreads 1 --logCleanerThreads 1 --detectFailures 0 > $RAMCLOUD_SERVER_LOG 2>&1 &
+  ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server -M -L ${server_addr} -C ${coord_addr} --masterServiceThreads ${masterServiceThreads} --logCleanerThreads ${logCleanerThreads} --detectFailures ${detectFailures} > $RAMCLOUD_SERVER_LOG 2>&1 &
   echo "STARTED"
 }
 
