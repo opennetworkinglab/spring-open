@@ -101,8 +101,7 @@ def return_file(filename="index.html"):
 @app.route('/topology', methods=['GET'])
 def topology_for_gui():
   try:
-    #url="http://%s:%s/wm/onos/topology/switches/all/json" % (RestIP, RestPort)
-    url="http://%s:%s/wm/onos/ng/switches/json" % (RestIP, RestPort)
+    url="http://%s:%s/wm/onos/topology/switches/json" % (RestIP, RestPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -145,8 +144,7 @@ def topology_for_gui():
         switches[sw_id]['group'] = controllers.index(ctrl) + 1
 
   try:
-    #url = "http://%s:%s/wm/onos/topology/links/json" % (RestIP, RestPort)
-    url = "http://%s:%s/wm/onos/ng/links/json" % (RestIP, RestPort)
+    url = "http://%s:%s/wm/onos/topology/links/json" % (RestIP, RestPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
