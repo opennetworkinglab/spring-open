@@ -89,8 +89,8 @@
     <!-- </module> -->
 
     <module name="SuppressionCommentFilter">
-       <property name="offCommentFormat" value="CHECKSTYLE:OFF"/>
-       <property name="onCommentFormat" value="CHECKSTYLE:ON"/>
+        <property name="offCommentFormat" value="CHECKSTYLE:OFF"/>
+        <property name="onCommentFormat" value="CHECKSTYLE:ON"/>
     </module>
     <module name="TreeWalker">
 
@@ -98,10 +98,10 @@
         <!-- Checks for Javadoc comments.                     -->
         <!-- See http://checkstyle.sf.net/config_javadoc.html -->
         <module name="JavadocMethod">
-          <property name="severity" value="warning"/>
+            <property name="severity" value="warning"/>
         </module>
         <module name="JavadocType">
-          <property name="severity" value="warning"/>
+            <property name="severity" value="warning"/>
         </module>
         <module name="JavadocVariable">
             <!-- Suppress check for private member Javadocs.
@@ -145,11 +145,11 @@
             <!-- ONOS standard usage is 80 columns, but we allow up
              to 120 to not break the build. -->
             <property name="max" value="120"/>
-          <property name="severity" value="warning"/>
+            <property name="severity" value="warning"/>
         </module>
         <module name="MethodLength">
-	  <property name="max" value="200"/>
-	</module>
+            <property name="max" value="200"/>
+        </module>
 
         <module name="ParameterNumber"/>
 
@@ -198,8 +198,8 @@
         <module name="EqualsHashCode"/>
 
         <module name="HiddenField">
-          <property name="ignoreSetter" value="true"/>
-	  <property name="ignoreConstructorParameter" value="true"/>
+            <property name="ignoreSetter" value="true"/>
+            <property name="ignoreConstructorParameter" value="true"/>
         </module>
 
         <module name="IllegalInstantiation"/>
@@ -211,8 +211,8 @@
         <module name="MissingSwitchDefault"/>
 
         <module name="RedundantThrows">
-	   <property name="allowSubclasses" value="true"/>
-	</module>
+            <property name="allowSubclasses" value="true"/>
+        </module>
 
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
@@ -229,7 +229,7 @@
         <module name="InterfaceIsType"/>
 
         <module name="VisibilityModifier">
-          <property name="severity" value="warning"/>
+            <property name="severity" value="warning"/>
         </module>
 
 
