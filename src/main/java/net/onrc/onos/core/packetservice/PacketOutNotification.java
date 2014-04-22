@@ -20,7 +20,7 @@ public abstract class PacketOutNotification implements Serializable {
     private final byte[] packet;
 
     /**
-     * Default constructor.
+     * Default constructor, used for deserialization.
      */
     protected PacketOutNotification() {
         packet = null;

@@ -25,11 +25,14 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
     private final long inSwitch;
     private final short inPort;
 
+    /**
+     * Default constructor, used for deserialization.
+     */
     protected BroadcastPacketOutNotification() {
         super();
-        this.address = -1;
-        this.inSwitch = -1;
-        this.inPort = -1;
+        this.address = 0;
+        this.inSwitch = 0;
+        this.inPort = 0;
     }
 
     /**

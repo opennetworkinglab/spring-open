@@ -16,6 +16,9 @@ public class SinglePacketOutNotification extends PacketOutNotification {
     private final long outSwitch;
     private final short outPort;
 
+    /**
+     * Default constructor, used for deserialization.
+     */
     protected SinglePacketOutNotification() {
         address = 0;
         outSwitch = 0;
