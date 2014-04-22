@@ -89,7 +89,7 @@
   </topic>
 
   <network>
-    <port auto-increment="true">5701</port>
+    <port auto-increment="true">__HC_PORT__</port>
     <join>
 __HC_NETWORK__
       <aws enabled="false">

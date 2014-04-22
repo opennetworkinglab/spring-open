@@ -79,11 +79,11 @@ function list-zk-hosts {
   for host in ${CLUSTER_HOSTS}; do 
     local zk_host_string=$(read-conf ${CLUSTER_CONF} "cluster.${host}.zk.host")
     
-    if [ -z ${zk_host_string} ]; then
+    if [ -z "${zk_host_string}" ]; then
       # falling back to ip
       zk_host_string=$(read-conf ${CLUSTER_CONF} "cluster.${host}.ip")
     fi
-    if [ -z ${zk_host_string} ]; then
+    if [ -z "${zk_host_string}" ]; then
       # falling back to hostname
       zk_host_string=${host}
     fi
@@ -101,12 +101,12 @@ function list-hc-hosts {
   for host in ${CLUSTER_HOSTS}; do 
     local hc_host_string=$(read-conf ${CLUSTER_CONF} "cluster.${host}.hazelcast.ip")
     
-    if [ -z ${hc_host_string} ]; then
+    if [ -z "${hc_host_string}" ]; then
       # falling back to ip
       hc_host_string=$(read-conf ${CLUSTER_CONF} "cluster.${host}.ip")
     fi
     
-    if [ -z ${hc_host_string} ]; then
+    if [ -z "${hc_host_string}" ]; then
       # falling back to hostname
       hc_host_string=${host}
     fi
@@ -124,12 +124,12 @@ function create-pssh-conf {
   # creation of pssh config file
   for host in ${CLUSTER_HOSTS}; do
     local user=$(read-conf ${CLUSTER_CONF} remote.${host}.ssh.user)
-    if [ -z ${user} ]; then
+    if [ -z "${user}" ]; then
       # falling back to common setting
       user=$(read-conf ${CLUSTER_CONF} remote.common.ssh.user)
     fi
     
-    if [ -z ${user} ]; then
+    if [ -z "${user}" ]; then
       echo ${host} >> ${tempfile}
     else
       echo ${user}@${host} >> ${tempfile}
@@ -143,7 +143,7 @@ function create-pssh-conf {
 function create-onos-conf {
   local host_name=${1}
   
-  if [ -z ${host_name} ]; then
+  if [ -z "${host_name}" ]; then
     echo "FAILED"
     echo "[ERROR] invalid hostname ${host_name}"
     exit 1
@@ -241,7 +241,7 @@ function deploy {
     fi
       
     local user=$(read-conf ${CLUSTER_CONF} "remote.${host}.ssh.user")
-    if [ -z ${user} ]; then
+    if [ -z "${user}" ]; then
       # falling back to common setting
       user=$(read-conf ${CLUSTER_CONF} "remote.common.ssh.user")
     fi

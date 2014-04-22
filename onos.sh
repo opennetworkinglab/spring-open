@@ -13,22 +13,16 @@
 # $ZK_HOME         : path of root directory of ZooKeeper (~/zookeeper-3.4.5)
 # $ZK_LIB_DIR      : path of ZooKeeper library (/var/lib/zookeeper)
 # $JVM_OPTS        : JVM options ONOS starts with
+# $ZK_CONF         : path of ZooKeeper config file (~/ONOS/conf/zoo.cfg)
+# $HC_CONF         : path of Hazelcast config file (~/ONOS/conf/hazelcast.xml)
+# $RAMCLOUD_CONF   : path of RAMCloud config file (~/ONOS/conf/ramcloud.conf)
 #####################################################
-
-
-# read-conf {filename} {parameter name} [default value]
-function read-conf {
-  local value=`grep ^${2} ${1} | cut -d "=" -f 2 | sed -e 's/^[ \t]*//'`
-  if [ -z "${value}" ]; then
-    echo $3
-  else
-    echo ${value}
-  fi
-}
 
 ONOS_HOME=${ONOS_HOME:-$(cd `dirname $0`; pwd)}
 ONOS_CONF_DIR=${ONOS_CONF_DIR:-${ONOS_HOME}/conf}
 ONOS_CONF=${ONOS_CONF:-${ONOS_CONF_DIR}/onos_node.`hostname`.conf}
+
+source ${ONOS_HOME}/scripts/common/utils.sh
 
 if [ ! -f ${ONOS_CONF} ]; then
   # falling back to default config file
@@ -52,6 +46,7 @@ RC_COORD_PORT=$(read-conf ${ONOS_CONF}      ramcloud.coordinator.port     12246)
 RC_SERVER_PROTOCOL=$(read-conf ${ONOS_CONF} ramcloud.server.protocol      "fast+udp")
 RC_SERVER_IP=$(read-conf ${ONOS_CONF}       ramcloud.server.ip            ${ONOS_HOST_IP})
 RC_SERVER_PORT=$(read-conf ${ONOS_CONF}     ramcloud.server.port          12242)
+HC_HOST_PORT=$(read-conf ${ONOS_CONF}       hazelcast.host.port           5701)
 HC_TCPIP_MEMBERS=$(read-conf ${ONOS_CONF}   hazelcast.tcp-ip.members)
 HC_MULTICAST_GROUP=$(read-conf ${ONOS_CONF} hazelcast.multicast.group     "224.2.2.3")
 HC_MULTICAST_PORT=$(read-conf ${ONOS_CONF}  hazelcast.multicast.port      54327)
@@ -64,22 +59,21 @@ ONOS_TEMPLATE_DIR=${ONOS_CONF_DIR}/template
 LOGDIR=${ONOS_LOGDIR:-${ONOS_HOME}/onos-logs}
 
 ZK_HOME=${ZK_HOME:-~/zookeeper-3.4.5}
-ZK_CONF_FILE=zoo.cfg
-ZK_CONF=${ONOS_CONF_DIR}/${ZK_CONF_FILE}
+ZK_CONF=${ZK_CONF:-${ONOS_CONF_DIR}/zoo.cfg}
 ZK_CONF_TEMPLATE=${ONOS_TEMPLATE_DIR}/zoo.cfg.template
 # Adding ONOS_HOST_NAME dir since file name (zookeeper.out) cannot be controlled.
 ZK_LOG_DIR=${ONOS_HOME}/onos-logs/${ONOS_HOST_NAME}
 ZK_LIB_DIR=${ZK_LIB_DIR:-/var/lib/zookeeper}
 ZK_MY_ID=${ZK_LIB_DIR}/myid
 
-HC_CONF=${ONOS_CONF_DIR}/hazelcast.xml
+HC_CONF=${HC_CONF:-${ONOS_CONF_DIR}/hazelcast.xml}
 HC_CONF_TEMPLATE=${ONOS_TEMPLATE_DIR}/hazelcast.xml.template
 
 RAMCLOUD_HOME=${RAMCLOUD_HOME:-~/ramcloud}
 RAMCLOUD_COORD_LOG=${LOGDIR}/ramcloud.coordinator.${ONOS_HOST_NAME}.log
 RAMCLOUD_SERVER_LOG=${LOGDIR}/ramcloud.server.${ONOS_HOST_NAME}.log
 RAMCLOUD_BRANCH=${RAMCLOUD_BRANCH:-master}
-RAMCLOUD_CONF=${ONOS_CONF_DIR}/ramcloud.conf
+RAMCLOUD_CONF=${RAMCLOUD_CONF:-${ONOS_CONF_DIR}/ramcloud.conf}
 
 export LD_LIBRARY_PATH=${ONOS_HOME}/lib:${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}:$LD_LIBRARY_PATH
 
@@ -209,21 +203,6 @@ function handle-error {
   exit 1
 }
 
-# revert-file {filename}
-# revert "filename" from "filename.bak" if "filename.tmp" exists.
-function revert-file {
-  local filename=$1
-  local temp="${filename}.tmp"
-  local backup="${filename}.bak"
-  
-  if [ -f "${temp}" ]; then
-    echo -n "reverting ${filename} ... "
-    mv ${backup} ${filename}
-    rm ${temp}
-    echo "DONE"
-  fi
-}
-
 # revert-confs [error message]
 function revert-confs {
   echo -n "ERROR occurred ... "
@@ -240,7 +219,7 @@ function revert-confs {
 
 function create-zk-conf {
   echo -n "Creating ${ZK_CONF} ... "
-
+  
   # Create the ZooKeeper lib directory
   if [ ! -d ${ZK_LIB_DIR} ]; then
       local SUDO=${SUDO:-}
@@ -257,18 +236,7 @@ function create-zk-conf {
   fi
 
   # creation of ZooKeeper config
-  
-  local temp_zk="${ZK_CONF}.tmp"
-  if [ -f ${temp_zk} ]; then
-    rm ${temp_zk}
-  fi
-  touch ${temp_zk}
-
-  if [ -f ${ZK_CONF} ]; then
-    mv ${ZK_CONF} ${ZK_CONF}.bak
-    local filename=`basename ${ZK_CONF}`
-    echo -n "backup old file to ${filename}.bak ... "
-  fi
+  local temp_zk=`begin-conf-creation ${ZK_CONF}`
   
   hostarr=`echo ${ZK_HOSTS} | tr "," " "`
   
@@ -288,6 +256,7 @@ function create-zk-conf {
   fi
   
   if [ -f "${ZK_MY_ID}" ]; then
+    # sudo will be needed if ZK_MY_ID is already created by other (old) script
     local SUDO=${SUDO:-}
     {
       ${SUDO} mv -f ${ZK_MY_ID} ${ZK_MY_ID}.old
@@ -309,16 +278,17 @@ function create-zk-conf {
       for host in ${hostarr}; do
         # TODO: ports might be configurable
         local hostline="server.${i}=${host}:2888:3888"
-        echo $hostline >> "${temp_zk}"
+        echo $hostline
         i=`expr $i + 1`
       done
     elif [[ $line =~ __DATADIR__ ]]; then
-      echo $line | sed -e "s|__DATADIR__|${ZK_LIB_DIR}|" >> ${temp_zk}
+      echo $line | sed -e "s|__DATADIR__|${ZK_LIB_DIR}|"
     else
-      echo $line >> ${temp_zk}
+      echo $line
     fi
-  done < ${ZK_CONF_TEMPLATE}
-  mv ${temp_zk} ${ZK_CONF}
+  done < ${ZK_CONF_TEMPLATE} > ${temp_zk}
+  
+  end-conf-creation ${ZK_CONF}
   
   echo "DONE"
 }
@@ -326,17 +296,7 @@ function create-zk-conf {
 function create-hazelcast-conf {
   echo -n "Creating ${HC_CONF} ... "
   
-  local temp_hc="${HC_CONF}.tmp"
-  if [ -f ${temp_hc} ]; then
-    rm ${temp_hc}
-  fi
-  touch ${temp_hc}
-  
-  if [ -f ${HC_CONF} ]; then
-    mv ${HC_CONF} ${HC_CONF}.bak
-    local filename=`basename ${HC_CONF}`
-    echo -n "backup old file to ${filename}.bak ... "
-  fi
+  local temp_hc=`begin-conf-creation ${HC_CONF}`
   
   # To keep indent of XML file, change IFS
   local IFS=''
@@ -360,12 +320,14 @@ function create-hazelcast-conf {
         echo '</multicast>'
         echo '<tcp-ip enabled="false" />'
       fi
+    elif [[ $line =~ __HC_PORT__ ]]; then
+      echo $line | sed -e "s|__HC_PORT__|${HC_HOST_PORT}|"
     else
       echo "${line}"
     fi
   done < ${HC_CONF_TEMPLATE} > ${temp_hc}
   
-  mv ${temp_hc} ${HC_CONF}
+  end-conf-creation ${HC_CONF}
   
   echo "DONE"
 }
@@ -373,21 +335,12 @@ function create-hazelcast-conf {
 function create-ramcloud-conf {
   echo -n "Creating ${RAMCLOUD_CONF} ... "
 
-  local temp_hc="${RAMCLOUD_CONF}.tmp"
-  if [ -f ${temp_hc} ]; then
-    rm ${temp_hc}
-  fi
-  touch ${temp_hc}
+  local temp_rc=`begin-conf-creation ${RAMCLOUD_CONF}`
+  
+  echo "ramcloud.coordinatorIp=${RC_COORD_PROTOCOL}:host=${RC_COORD_IP}" > ${temp_rc}
+  echo "ramcloud.coordinatorPort=port=${RC_COORD_PORT}" >> ${temp_rc}
 
-  if [ -f ${RAMCLOUD_CONF} ]; then
-    mv ${RAMCLOUD_CONF} ${RAMCLOUD_CONF}.bak
-    local filename=`basename ${RAMCLOUD_CONF}`
-    echo -n "backup old file to ${filename}.bak ... "
-  fi
-  echo "ramcloud.coordinatorIp=${RC_COORD_PROTOCOL}:host=${RC_COORD_IP}" > ${temp_hc}
-  echo "ramcloud.coordinatorPort=port=${RC_COORD_PORT}" >> ${temp_hc}
-
-  mv ${temp_hc} ${RAMCLOUD_CONF}
+  end-conf-creation ${RAMCLOUD_CONF}
 
   echo "DONE"
 }
@@ -396,39 +349,13 @@ function create-logback-conf {
   echo -n "Creating ${ONOS_LOGBACK} ... "
   
   # creation of logback config
-  if [ -f $ONOS_LOGBACK ]; then
-    local logback_file=`basename ${ONOS_LOGBACK}`
-    mv ${ONOS_LOGBACK} ${ONOS_LOGBACK}.bak
-    local filename=`basename ${ONOS_LOGBACK}`
-    echo -n "backup old file to ${filename}.bak ... "
-  fi
-  sed -e "s|__FILENAME__|${ONOS_LOG}|" ${ONOS_LOGBACK_TEMPLATE} > ${ONOS_LOGBACK}
+  local temp_lb=`begin-conf-creation ${ONOS_LOGBACK}`
+  
+  sed -e "s|__FILENAME__|${ONOS_LOG}|" ${ONOS_LOGBACK_TEMPLATE} > ${temp_lb}
+  
+  end-conf-creation ${ONOS_LOGBACK}
   
   echo "DONE"
-}
-
-# create-conf-interactive {filename} {function to create conf}
-function create-conf-interactive {
-  local filepath=$1
-  local filename=`basename ${filepath}`
-  local func=$2
-  
-  if [ -f ${filepath} ]; then
-    # confirmation to overwrite existing config file
-    echo -n "Overwriting ${filename} [Y/n]? "
-    while [ 1 ]; do
-      read key
-      if [ -z "${key}" -o "${key}" == "Y" -o "${key}" == "y" ]; then
-        ${func}
-        break
-      elif [ "${key}" == "N" -o "${key}" == "n" ]; then
-        break
-      fi
-      echo "[Y/n]?"
-    done
-  else
-    ${func}
-  fi
 }
 
 function create-confs {
@@ -437,6 +364,8 @@ function create-confs {
   
   trap handle-error ERR
 
+  echo "Config file : ${ONOS_CONF}"
+  
   if [ "$1" == "-f" ]; then
     create-zk-conf
     create-hazelcast-conf
@@ -476,16 +405,24 @@ function zk {
   esac
 }
 
+function load-zk-cfg {
+  if [ -f "${ZK_CONF}" ]; then
+    local filename=`basename ${ZK_CONF}`
+    local dirname=`dirname ${ZK_CONF}`
+    
+    # Run ZooKeeper with our configuration
+    export ZOOCFG=${filename}
+    export ZOOCFGDIR=${dirname}
+  fi
+}
+
 function start-zk {
   echo -n "Starting ZooKeeper ... "
   
   export ZOO_LOG_DIR=${ZK_LOG_DIR}
   mkdir -p ${ZK_LOG_DIR}
-  if [ -f "${ZK_CONF}" ]; then
-    # Run ZooKeeper with our configuration
-    export ZOOCFG=${ZK_CONF_FILE}
-    export ZOOCFGDIR=${ONOS_CONF_DIR}
-  fi
+  
+  load-zk-cfg
   
   ${ZK_HOME}/bin/zkServer.sh start
 }
@@ -495,10 +432,7 @@ function stop-zk {
 }
 
 function status-zk {
-  if [ -f ${ZK_CONF} ]; then
-    export ZOOCFG=${ZK_CONF_FILE}
-    export ZOOCFGDIR=${ONOS_CONF_DIR}
-  fi
+  load-zk-cfg
   
   ${ZK_HOME}/bin/zkServer.sh status
 }
