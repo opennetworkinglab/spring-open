@@ -367,17 +367,6 @@ public class ProxyArpManager implements IProxyArpService, IOFMessageListener,
         this.onosDeviceService = context.getServiceImpl(IOnosDeviceService.class);
 
         Map<String, String> configOptions = context.getConfigParams(this);
-        Long agingmsec = null;
-        try {
-            agingmsec = Long.parseLong(configOptions.get("agingmsec"));
-        } catch (NumberFormatException e) {
-            log.debug("ArpEntryTimeout related config options were not set. Use default.");
-        }
-
-        arpCache = new ArpCache();
-        if (agingmsec != null) {
-            arpCache.setArpEntryTimeoutConfig(agingmsec);
-        }
 
         try {
             arpCleaningTimerPeriodConfig = Long.parseLong(configOptions.get("cleanupmsec"));
@@ -391,6 +380,20 @@ public class ProxyArpManager implements IProxyArpService, IOFMessageListener,
 
     @Override
     public void startUp(FloodlightModuleContext context) {
+        Map<String, String> configOptions = context.getConfigParams(this);
+
+        Long agingmsec = null;
+        try {
+            agingmsec = Long.parseLong(configOptions.get("agingmsec"));
+        } catch (NumberFormatException e) {
+            log.debug("ArpEntryTimeout related config options were not set. Use default.");
+        }
+
+        arpCache = new ArpCache();
+        if (agingmsec != null) {
+            arpCache.setArpEntryTimeoutConfig(agingmsec);
+        }
+
         this.vlan = configService.getVlan();
         log.info("vlan set to {}", this.vlan);
 
