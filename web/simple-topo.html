@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<style>
+circle {
+  stroke: #333;
+  stroke-width: 1.5px;
+}
+
+text {
+  font: 20px sans-serif;
+  pointer-events: none;
+}
+
+</style>
+<head>
+<title>ONOS Simple Topology GUI</title>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="http://d3js.org/queue.v1.js"></script> 
+<script type="text/javascript" src="js/topo.js"></script>
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+</head>
+<body>
+<!--
+<button id="more">more</button>
+<button id="less">less</button>
+--!>
+<svg width="0.1in" height="0.1in" 
+     viewBox="0 0 4000 2000" version="1.1"
+     xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="Triangle"
+      viewBox="0 -5 10 10" refX="15" refY="-1.5" 
+      markerUnits="strokeWidth"
+      markerWidth="6" markerHeight="6"
+      orient="auto">
+      <path d="M0,-5L10,0L0,5"/>
+    </marker>
+    <marker id="TriangleRed"
+      viewBox="0 -5 10 10" refX="10" refY="-0.2" 
+      markerUnits="strokeWidth"
+      markerWidth="6" markerHeight="6"
+      orient="auto">
+      <path d="M0,-5L10,0L0,5" fill="red" stroke="red"/>
+    </marker>
+  </defs>
+<h1>ONOS Simple Topology GUI</h1>
+<h2>Controller Status</h2>
+<div id="servers"></div>
+<div id="onos-status"></div>
+<h2>Topology View</h2>
+<div id="topology"></div>
+<script type="text/javascript" src="js/ctrl.js"></script>
+<script type="text/javascript">
+controller_status("wm/onos/registry/switches/json"); 
+gui("wm/onos/topology/switches/json","wm/onos/topology/links/json","wm/onos/registry/switches/json"); 
+</script>
+</svg>
+</body>
+</html>
