@@ -83,4 +83,6 @@ public interface NetworkGraph {
      * Release the read lock on the topology.
      */
     public void releaseReadLock();
+
+    public Iterable<Device> getDevices();
 }

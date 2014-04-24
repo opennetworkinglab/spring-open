@@ -105,6 +105,11 @@ public class NetworkGraphImpl implements NetworkGraph {
         return mac2Device.get(address);
     }
 
+    @Override
+    public Iterable<Device> getDevices() {
+        return Collections.unmodifiableCollection(mac2Device.values());
+    }
+
     protected void putDevice(Device device) {
         mac2Device.put(device.getMacAddress(), device);
     }

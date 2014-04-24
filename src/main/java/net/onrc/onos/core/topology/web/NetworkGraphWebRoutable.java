@@ -19,6 +19,7 @@ public class NetworkGraphWebRoutable implements RestletRoutable {
         // Topology API
         router.attach("/switches/json", NetworkGraphSwitchesResource.class);
         router.attach("/links/json", NetworkGraphLinksResource.class);
+        router.attach("/devices/json", NetworkGraphDevicesResource.class);
         // TODO: Move the Shortest Path REST API to the Intent framework
         router.attach("/shortest-path/{src-dpid}/{dst-dpid}/json", NetworkGraphShortestPathResource.class);
 
