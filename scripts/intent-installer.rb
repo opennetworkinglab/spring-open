@@ -1,6 +1,14 @@
 #!/usr/bin/env ruby
 
+begin
 require "rest-client"
+rescue LoadError => e
+  puts "This scripts requires rubygems rest-client."
+  puts "Please install them using gem command. You may need to add sudo."
+  puts " $ gem install rest-client"
+  puts
+  exit -1
+end
 require "optparse"
 
 options = { 
