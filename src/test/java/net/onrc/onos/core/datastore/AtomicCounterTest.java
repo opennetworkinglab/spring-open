@@ -42,6 +42,7 @@ public class AtomicCounterTest {
         counterID = client.getTable(TEST_COUNTER).getTableId();
         client.setCounter(counterID, LONG_ZERO, 0L);
         client.destroyCounter(counterID, LONG_ZERO);
+        counterID = client.getTable(TEST_COUNTER).getTableId();
     }
 
     @Test
