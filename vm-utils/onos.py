@@ -61,6 +61,7 @@ class ONOS( Controller ):
     ofbase = 6633
     restbase = 8080
     jmxbase = 7189
+    hcbase = 5701
 
     fc = 'net.floodlightcontroller.'
 
@@ -194,10 +195,13 @@ class ONOS( Controller ):
         "Stop Zookeeper"
         self.cmd( 'onos.sh zk stop' )
 
+    def getPropsFilename( self, id, path ):
+        return path + '/onos-%s.properties' % id
+        
     def genProperties( self, id, path='/tmp' ):
         "Generate ONOS properties file and return its full pathname"
         defaultProps = self.onosDir + '/conf/onos.properties'
-        propsFile = path + '/onos-%s.properties' % id
+        propsFile = self.getPropsFilename( id, path )
         with open( propsFile, 'w' ) as f:
             with open( defaultProps ) as d:
                 for line in d.readlines():
@@ -216,7 +220,24 @@ class ONOS( Controller ):
                                 f.write( '%s,\\\n' % module )
         return propsFile
 
-    def setVars( self, id, propsFile ):
+    def getConfsFilename( self, id, path ):
+        return path + '/onos-%s.conf' % id
+        
+    def genConfig( self, id, path='/tmp' ):
+        "Generate ONOS node config file and return its full pathname"
+        confsFile = self.getConfsFilename( id, path )
+        with open( confsFile, 'w' ) as f:
+            f.write( 'host.ip = 127.0.0.1\n' )
+            f.write( 'host.backend = ramcloud\n' )
+            f.write( 'hazelcast.host.port = %s\n' % ( self.hcbase + 10 * id ) )
+        return confsFile
+
+    def setVarsGlobal( self, path='/tmp'):
+        logdir = self.logDir
+        self.cmd( 'export ONOS_LOGDIR=%s' % logdir )
+        self.cmd( 'export ZK_LOG_DIR=%s' % logdir )
+
+    def setVarsLocal( self, id, path='/tmp' ):
         """Set and return environment vars
            id: ONOS instance number
            propsFile: properties file name"""
@@ -224,22 +245,29 @@ class ONOS( Controller ):
         logback = self.logbackFile % id
         jmxport = self.jmxbase + id
         logdir = self.logDir
-        self.cmd( 'export ONOS_LOGDIR=%s' % logdir )
         self.cmd( 'export ONOS_LOGBASE=onos-%d.`hostname`' % id)
-        self.cmd( 'export ZOO_LOG_DIR="%s"' % logdir )
         self.cmd( 'export ONOS_LOGBACK="%s"' % logback )
         self.cmd( 'export JMX_PORT=%s' % jmxport )
         self.cmd( 'export JVM_OPTS="-D%s=%s"' % (
             self.proctag, id ) )
+        propsFile = self.getPropsFilename( id, path )
         self.cmd( 'export ONOS_PROPS="%s"' % propsFile )
+        confsFile = self.getConfsFilename( id, path )
+        self.cmd( 'export ONOS_CONF="%s"' % confsFile )
+        self.cmd( 'export HC_CONF="%s/hazelcast.%s.conf"' % ( path, id ) )
 
+    def setupONOS (self, id):
+        propsFile = self.genProperties( id )
+        confFile = self.genConfig( id )
+        self.setVarsLocal( id )
+        self.cmd( 'onos.sh setup -f' )
+        
     def startONOS( self, id ):
         """Start ONOS
            id: new instance number"""
         start = time.time()
+        self.setVarsLocal( id )
         self.stopONOS( id )
-        propsFile = self.genProperties( id )
-        self.setVars( id, propsFile )
         self.cmd( 'onos.sh core startnokill' )
         # start-onos.sh waits for ONOS startup
         elapsed = time.time() - start
@@ -255,6 +283,11 @@ class ONOS( Controller ):
 
     def start( self, *args ):
         "Start ONOS instances"
+        self.setVarsGlobal()
+        # TODO: use onos-cluster.sh to setup/start/stop ONOS cluster
+        for id in self.ids:
+            info( '* Setting up ONOS %s\n' % id )
+            self.setupONOS( id )
         info( '* Starting Zookeeper\n' )
         self.startZookeeper()
         info( '* Starting Ramcloud\n' )

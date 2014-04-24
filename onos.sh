@@ -6,12 +6,13 @@
 # $ONOS_CONF       : path of ONOS node config file (~/ONOS/conf/onos_node.`hostname`.conf or onos_node.conf)
 # $ONOS_PROPS      : path of ONOS properties file (~/ONOS/conf/onos.properties)
 # $ONOS_LOGBACK    : path of logback config file (~/ONOS/conf/logback.`hostname`.xml)
-# $LOGDIR          : path of log output directory (~/ONOS/onos-logs)
-# $LOGBASE         : base name of log output file (onos.`hostname`)
+# $ONOS_LOGDIR     : path of log output directory (~/ONOS/onos-logs)
+# $ONOS_LOGBASE    : base name of log output file (onos.`hostname`)
 # $RAMCLOUD_HOME   : path of root directory of RAMCloud repository (~/ramcloud)
 # $RAMCLOUD_BRANCH : branch name of RAMCloud to use (master)
 # $ZK_HOME         : path of root directory of ZooKeeper (~/zookeeper-3.4.5)
 # $ZK_LIB_DIR      : path of ZooKeeper library (/var/lib/zookeeper)
+# $ZK_LOG_DIR      : path of ZooKeeper log output directory (~/ONOS/onos-logs/zk-`hostname`)
 # $JVM_OPTS        : JVM options ONOS starts with
 # $ZK_CONF         : path of ZooKeeper config file (~/ONOS/conf/zoo.cfg)
 # $HC_CONF         : path of Hazelcast config file (~/ONOS/conf/hazelcast.xml)
@@ -62,7 +63,7 @@ ZK_HOME=${ZK_HOME:-~/zookeeper-3.4.5}
 ZK_CONF=${ZK_CONF:-${ONOS_CONF_DIR}/zoo.cfg}
 ZK_CONF_TEMPLATE=${ONOS_TEMPLATE_DIR}/zoo.cfg.template
 # Adding ONOS_HOST_NAME dir since file name (zookeeper.out) cannot be controlled.
-ZK_LOG_DIR=${ONOS_HOME}/onos-logs/${ONOS_HOST_NAME}
+ZK_LOG_DIR=${ZK_LOG_DIR:-${ONOS_HOME}/onos-logs/zk-${ONOS_HOST_NAME}}
 ZK_LIB_DIR=${ZK_LIB_DIR:-/var/lib/zookeeper}
 ZK_MY_ID=${ZK_LIB_DIR}/myid
 
@@ -123,6 +124,8 @@ JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.ssl=false"
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
 
 JVM_OPTS="$JVM_OPTS -Dhazelcast.logging.type=slf4j"
+
+JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datagrid.HazelcastDatagrid.datagridConfig=${HC_CONF}"
 
 # Uncomment to dump final JVM flags to stdout
 #JVM_OPTS="$JVM_OPTS -XX:+PrintFlagsFinal"
