@@ -69,7 +69,6 @@ public interface IKVClient {
     /**
      * Update an existing Key-Value entry in table, without checking version.
      * <p/>
-     * FIXME remove this method and use forceCreate for this purpose?
      *
      * @param tableId
      * @param key
@@ -77,7 +76,6 @@ public interface IKVClient {
      * @return version after update
      * @throws ObjectDoesntExistException
      */
-    @Deprecated
     public long update(IKVTableID tableId, byte[] key, byte[] value)
             throws ObjectDoesntExistException;
 
