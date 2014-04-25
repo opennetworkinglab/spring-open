@@ -8,6 +8,7 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
+import org.openflow.util.HexString;
 
 public class PortSerializer extends SerializerBase<Port> {
 
@@ -21,6 +22,7 @@ public class PortSerializer extends SerializerBase<Port> {
             throws IOException, JsonProcessingException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("state", "ACTIVE");
+        jsonGenerator.writeStringField("dpid", HexString.toHexString(port.getDpid()));
         jsonGenerator.writeNumberField("number", port.getNumber());
         jsonGenerator.writeStringField("desc", port.getDescription());
         jsonGenerator.writeArrayFieldStart("devices");
