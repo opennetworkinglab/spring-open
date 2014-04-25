@@ -70,7 +70,7 @@ public class NetworkGraphDatastore {
         if (failed) {
             log.error("Adding Switch {} and its ports failed.", sw.getDpid());
             for (WriteOp op : groupOp) {
-                log.debug("Operation:{} for {} - Result:{}", op.getOp(), op.getObject(), op.getStatus());
+                log.debug("Operation:{} for {} - Result:{}", op.getOperation(), op.getObject(), op.getStatus());
 
                 // If we changed the operation from ForceCreate to
                 // Conditional operation (Create/Update) then we should retry here.

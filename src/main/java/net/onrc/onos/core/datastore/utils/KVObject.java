@@ -360,11 +360,6 @@ public class KVObject {
             return obj;
         }
 
-        @Deprecated
-        public OPERATION getOp() {
-            return this.getOperation();
-        }
-
         @Override
         public boolean hasSucceeded() {
             return base.hasSucceeded();
