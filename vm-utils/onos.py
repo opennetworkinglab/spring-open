@@ -75,8 +75,6 @@ class ONOS( Controller ):
     proctag = 'mn-onos-id'
 
     # List of scripts that we need/use
-#    scripts = ( 'start-zk.sh', 'start-ramcloud-coordinator.sh',
-#                'start-ramcloud-server.sh', 'start-onos.sh', 'start-rest.sh' )
     scripts = ( 'onos.sh', 'start-rest.sh' )
 
     def __init__( self, name, n=1, reactive=True, runAsRoot=False, **params):
@@ -154,12 +152,10 @@ class ONOS( Controller ):
     def startRamcloud( self, cpu=.6 ):
         """Start Ramcloud
            cpu: CPU usage limit (in seconds/s)"""
-        # Edit configuration file
-#         self.cmd( "sed -ibak -e 's/host=.*/host=127.0.0.1/' %s/conf/ramcloud.conf" %
-#             self.onosDir)
         # Create a cgroup so Ramcloud doesn't eat all of our CPU
         ramcloud = CPULimitedHost( 'ramcloud', inNamespace=False, period_us=5000 )
         ramcloud.setCPUFrac( cpu / numCores() )
+        info( '\n' )
         ramcloud.cmd( 'export PATH=%s:$PATH' % self.onosDir )
         ramcloud.cmd( 'export ONOS_LOGDIR=%s' % self.logDir )
         for daemon in 'coord', 'server':
@@ -174,16 +170,11 @@ class ONOS( Controller ):
     def stopRamcloud( self ):
         "Stop Ramcloud"
         for daemon in 'coord', 'server':
-            self.ramcloud.cmd( './onos.sh rc-%s stop' % daemon )
+            self.ramcloud.cmd( 'onos.sh rc-%s stop' % daemon )
         self.ramcloud.terminate()
 
     def startZookeeper( self, initcfg=True ):
         "Start Zookeeper"
-#         # Reinitialize configuration file
-#         if initcfg:
-#             cfg = self.zookeeperDir + '/conf/zoo.cfg'
-#             template = self.zookeeperDir + '/conf/zoo_sample.cfg'
-#             copyfile( template, cfg )
         self.cmd( 'onos.sh zk start' )
         pid = self.waitStart( 'Zookeeper', 'zookeeper' )
         self.waitNetstat( pid )
@@ -241,7 +232,6 @@ class ONOS( Controller ):
         """Set and return environment vars
            id: ONOS instance number
            propsFile: properties file name"""
-        # cassdir = self.cassDir % id
         logback = self.logbackFile % id
         jmxport = self.jmxbase + id
         logdir = self.logDir
@@ -269,7 +259,7 @@ class ONOS( Controller ):
         self.setVarsLocal( id )
         self.stopONOS( id )
         self.cmd( 'onos.sh core startnokill' )
-        # start-onos.sh waits for ONOS startup
+        # onos.sh waits for ONOS startup
         elapsed = time.time() - start
         info( '* ONOS %s started in %.2f seconds\n' % ( id, elapsed ) )
 
