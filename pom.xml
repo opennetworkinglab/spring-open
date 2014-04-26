@@ -10,6 +10,12 @@
   <packaging>jar</packaging>
   <name>ONOS</name>
   <url>http://onlab.us/</url>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
   <repositories>
     <repository>
       <id>central</id>
@@ -100,17 +106,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.16</version>
         <configuration>
-          <excludes>
-            <!-- exclude all test cases for now -->
-            <!-- <exclude>**/storage/tests/StorageTest.java</exclude> -->
-            <!-- <exclude>**/test/*</exclude> -->
-          <!--
-            <exclude>**/test/*</exclude>
-            <exclude>**/Test*.java</exclude>
-            <exclude>**/*Test.java</exclude>
-            <exclude>**/*TestCase.java</exclude>
-          -->
-          </excludes>
           <argLine>-XX:MaxPermSize=256m</argLine>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
         </configuration>
@@ -126,7 +121,8 @@
         <executions>
         </executions>
       </plugin>
-      <!--<plugin>
+      <!--
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>1.7</version>
@@ -144,7 +140,8 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>-->
+      </plugin>
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -368,7 +365,7 @@
       </plugins>
     </pluginManagement>
   </build>
-  <!-- for getting visualization reporting   -->
+  <!-- for getting visualization reporting -->
   <reporting>
     <excludeDefaults>true</excludeDefaults>
     <outputDirectory>${project.build.directory}/site</outputDirectory>
@@ -502,6 +499,7 @@
       <version>${hazelcast.version}</version>
     </dependency>
     <dependency>
+      <!-- Required for backend datastore as Hazelcast -->
       <groupId>com.hazelcast</groupId>
       <artifactId>hazelcast-client</artifactId>
       <version>${hazelcast.version}</version>
@@ -523,6 +521,11 @@
       <version>${restlet.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.restlet.jse</groupId>
+      <artifactId>org.restlet.ext.jackson</artifactId>
+      <version>${restlet.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
       <version>1.9.13</version>
@@ -533,10 +536,30 @@
       <version>1.9.13</version>
     </dependency>
     <dependency>
+      <groupId>org.restlet.jse</groupId>
+      <artifactId>org.restlet.ext.simple</artifactId>
+      <version>${restlet.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.simpleframework</groupId>
+      <artifactId>simple</artifactId>
+      <version>4.1.21</version>
+    </dependency>
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.0.13</version>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>16.0.1</version>
     </dependency>
     <dependency>
       <groupId>commons-configuration</groupId>
@@ -547,11 +570,6 @@
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
       <version>2.6</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>16.0.1</version>
     </dependency>
     <dependency>
       <groupId>commons-httpclient</groupId>
@@ -580,80 +598,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Floodlight's dependencies -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.restlet.jse</groupId>
-      <artifactId>org.restlet.ext.jackson</artifactId>
-      <version>${restlet.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.restlet.jse</groupId>
-      <artifactId>org.restlet.ext.simple</artifactId>
-      <version>${restlet.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.simpleframework</groupId>
-      <artifactId>simple</artifactId>
-      <version>4.1.21</version>
-    </dependency>
-    <dependency>
-      <groupId>args4j</groupId>
-      <artifactId>args4j</artifactId>
-      <version>2.0.25</version>
-    </dependency>
-    <dependency>
-      <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
-      <artifactId>concurrentlinkedhashmap-lru</artifactId>
-      <version>1.4</version>
-    </dependency>
-    <dependency>
-      <!-- dependency to old version of netty? -->
-      <groupId>org.jboss.netty</groupId>
-      <artifactId>netty</artifactId>
-      <version>3.2.7.Final</version>
-    </dependency>
-    <!-- Dependency for libraries used for testing -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-core</artifactId>
-        <version>1.3</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-library</artifactId>
-        <version>1.3</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-      <version>3.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <version>${powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-easymock</artifactId>
-      <version>${powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
@@ -679,6 +623,60 @@
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>findbugs</artifactId>
       <version>${findbugs.version}</version>
+    </dependency>
+    <!-- Floodlight's dependencies -->
+    <dependency>
+      <groupId>args4j</groupId>
+      <artifactId>args4j</artifactId>
+      <version>2.0.25</version>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+      <artifactId>concurrentlinkedhashmap-lru</artifactId>
+      <version>1.4</version>
+    </dependency>
+    <dependency>
+      <!-- dependency to old version of netty? -->
+      <groupId>org.jboss.netty</groupId>
+      <artifactId>netty</artifactId>
+      <version>3.2.7.Final</version>
+    </dependency>
+    <!-- Dependency for libraries used for testing -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-library</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <version>${powermock.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-easymock</artifactId>
+      <version>${powermock.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <profiles>
