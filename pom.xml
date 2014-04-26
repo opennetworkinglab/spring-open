@@ -27,6 +27,9 @@
     <powermock.version>1.5.1</powermock.version>
     <restlet.version>2.1.4</restlet.version>
     <cobertura-maven-plugin.version>2.6</cobertura-maven-plugin.version>
+    <!-- Following 2 findbugs version needs to be updated in sync to match the
+         findbugs version used in findbugs-plugin -->
+    <findbugs.version>2.0.2</findbugs.version>
     <findbugs-plugin.version>2.5.3</findbugs-plugin.version>
     <findbugs.effort>Max</findbugs.effort>
     <findbugs.excludeFilterFile>conf/findbugs/exclude.xml</findbugs.excludeFilterFile>
@@ -599,11 +602,6 @@
       <version>4.1.21</version>
     </dependency>
     <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-      <version>4.0.8.Final</version>
-    </dependency>
-    <dependency>
       <groupId>args4j</groupId>
       <artifactId>args4j</artifactId>
       <version>2.0.25</version>
@@ -612,11 +610,6 @@
       <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
       <artifactId>concurrentlinkedhashmap-lru</artifactId>
       <version>1.4</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <version>3.0</version>
     </dependency>
     <dependency>
       <!-- dependency to old version of netty? -->
@@ -662,12 +655,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
       <version>2.4.1</version>
@@ -688,9 +675,10 @@
       <version>2.4.1</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.mojo</groupId>
-      <artifactId>findbugs-maven-plugin</artifactId>
-      <version>${findbugs-plugin.version}</version>
+      <!-- findbugs suppression annotation -->
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>findbugs</artifactId>
+      <version>${findbugs.version}</version>
     </dependency>
   </dependencies>
   <profiles>
