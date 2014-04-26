@@ -21,6 +21,17 @@ public class ShortestPathIntent extends Intent {
     protected ShortestPathIntent() {
     }
 
+    /**
+     * Constructor for ShortestPathIntent.
+     *
+     * @param id Intent ID
+     * @param srcSwitch Source Switch DPID
+     * @param srcPort Source Port
+     * @param srcMac Source Host MAC Address
+     * @param dstSwitch Destination Switch DPID
+     * @param dstPort Destination Port
+     * @param dstMac Destination Host MAC Address
+     */
     public ShortestPathIntent(String id,
                               long srcSwitch, long srcPort, long srcMac,
                               long dstSwitch, long dstPort, long dstMac) {
@@ -33,26 +44,56 @@ public class ShortestPathIntent extends Intent {
         dstMacAddress = dstMac;
     }
 
+    /**
+     * Gets the source Switch DPID.
+     *
+     * @return Source Switch DPID
+     */
     public long getSrcSwitchDpid() {
         return srcSwitchDpid;
     }
 
+    /**
+     * Gets the source Port.
+     *
+     * @return Source Port
+     */
     public long getSrcPortNumber() {
         return srcPortNumber;
     }
 
+    /**
+     * Gets the source Host MAC Address.
+     *
+     * @return Source Host MAC Address
+     */
     public long getSrcMac() {
         return srcMacAddress;
     }
 
+    /**
+     * Gets the destination Switch DPID.
+     *
+     * @return Destination Switch DPID
+     */
     public long getDstSwitchDpid() {
         return dstSwitchDpid;
     }
 
+    /**
+     * Gets the destination Port.
+     *
+     * @return Destination Port
+     */
     public long getDstPortNumber() {
         return dstPortNumber;
     }
 
+    /**
+     * Gets the destination Host MAC Address.
+     *
+     * @return Destination Host MAC Address
+     */
     public long getDstMac() {
         return dstMacAddress;
     }
