@@ -2,6 +2,26 @@
 	http://www.hazelcast.com/schema/config/hazelcast-config-3.0.xsd"
 	xmlns="http://www.hazelcast.com/schema/config"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- Update xsd line, when upgrading Hazelcast version. -->
+
+  <!--
+      Note: When adding some elements to this file,
+      try to follow the schema defined in the xsd when possible.
+  -->
+
+  <properties>
+    <property name="hazelcast.logging.type">slf4j</property>
+    <property name="hazelcast.version.check.enabled">false</property>
+  </properties>
+
+  <network>
+    <port auto-increment="true">__HC_PORT__</port>
+    <join>
+__HC_NETWORK__
+      <aws enabled="false">
+      </aws>
+    </join>
+  </network>
 
   <!-- Configuration of maps used as a data store. -->
   <map name="datastore://*">
@@ -87,18 +107,4 @@
   <topic name="*">
     <global-ordering-enabled>false</global-ordering-enabled>
   </topic>
-
-  <network>
-    <port auto-increment="true">__HC_PORT__</port>
-    <join>
-__HC_NETWORK__
-      <aws enabled="false">
-      </aws>
-    </join>
-  </network>
-
-  <properties>
-    <property name="hazelcast.logging.type">slf4j</property>
-    <property name="hazelcast.version.check.enabled">false</property>
-  </properties>
 </hazelcast>
