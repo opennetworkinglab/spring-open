@@ -260,14 +260,6 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         this.onosDeviceService = context.getServiceImpl(IOnosDeviceService.class);
         this.packetService = context.getServiceImpl(IPacketService.class);
 
-        Map<String, String> configOptions = context.getConfigParams(this);
-
-        try {
-            arpCleaningTimerPeriodConfig = Long.parseLong(configOptions.get("cleanupmsec"));
-        } catch (NumberFormatException e) {
-            log.debug("ArpCleaningTimerPeriod related config options were not set. Use default.");
-        }
-
         arpRequests = Multimaps.synchronizedSetMultimap(HashMultimap
                 .<InetAddress, ArpRequest>create());
     }
@@ -275,6 +267,12 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
     @Override
     public void startUp(FloodlightModuleContext context) {
         Map<String, String> configOptions = context.getConfigParams(this);
+
+        try {
+            arpCleaningTimerPeriodConfig = Long.parseLong(configOptions.get("cleanupmsec"));
+        } catch (NumberFormatException e) {
+            log.debug("ArpCleaningTimerPeriod related config options were not set. Use default.");
+        }
 
         Long agingmsec = null;
         try {
@@ -393,6 +391,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
     @Override
     public void receive(Switch sw, Port inPort, Ethernet eth) {
+
         if (eth.getEtherType() == Ethernet.TYPE_ARP) {
             ARP arp = (ARP) eth.getPayload();
             learnArp(arp);
@@ -700,7 +699,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
     @Override
     public List<String> getMappings() {
-        return new ArrayList<String>();
+        return  arpCache.getMappings();
     }
 
     private void sendArpReplyToWaitingRequesters(InetAddress address,
@@ -736,5 +735,13 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             log.debug("call arpCacheEventChannel.removeEntry, ip {}", expireIp);
             arpCacheEventChannel.removeEntry(expireIp.toString());
         }
+    }
+
+    public long getArpEntryTimeout() {
+        return arpCache.getArpEntryTimeout();
+    }
+
+    public long getArpCleaningTimerPeriod() {
+        return arpCleaningTimerPeriodConfig;
     }
 }

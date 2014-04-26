@@ -95,6 +95,10 @@ class ArpCache {
         log.debug("Set arpEntryTimeoutConfig {}", ArpCache.arpEntryTimeoutConfig);
    }
 
+    public long getArpEntryTimeout() {
+        return ArpCache.arpEntryTimeoutConfig;
+    }
+
     /**
      * Get the MAC address that is mapped to an IP address in the ARP cache.
      *

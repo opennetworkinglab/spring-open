@@ -1,10 +1,13 @@
 package net.onrc.onos.apps.proxyarp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.net.InetAddress;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import net.floodlightcontroller.util.MACAddress;
@@ -73,13 +76,13 @@ public class ArpCacheTest {
     @Test
     public void testGetExpiredArpCacheIps() {
         testUpdate();
-        
+
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             fail();
         }
-        
+
         assertNotNull(arpCache.getExpiredArpCacheIps());
         assertEquals(map.size(), arpCache.getExpiredArpCacheIps().size());
         for(InetAddress ip : arpCache.getExpiredArpCacheIps()) {
@@ -87,4 +90,10 @@ public class ArpCacheTest {
         }
     }
 
+    @Test
+    public void testSetArpEntryTimeoutConfig() {
+        long arpEntryTimeout = 10000;
+        arpCache.setArpEntryTimeoutConfig(arpEntryTimeout);
+        assertEquals(arpEntryTimeout, arpCache.getArpEntryTimeout());
+    }
 }
