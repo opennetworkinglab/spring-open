@@ -1,1 +1,74 @@
-<TODO: Add description about config files here>
+ONOS Configuration files
+========================
+
+This directory contains configuration files related to ONOS execution and
+ONOS development environment. This file explains composition of configuration
+files and purpose of each file.
+
+
+Execution configuration
+=======================
+
+ONOS needs several configuration files, but most of them can be generated
+automatically. All you have to do is to adjust ONOS node configuration file
+to your environment and run "${ONOS_HOME}/onos.sh setup" to generate other
+configuration files. If you want to configure each modules in detail, you
+can modify the generated files manually. Note that generated files may be
+overwritten if you run "${ONOS_HOME}/onos.sh setup" again.
+
+Description of files
+--------------------
+- onos_node.conf
+    ONOS node configuration file. zoo.cfg, ramcloud.conf, hazelcast.xml and
+    logback.`hostname`.xml will be derived from information in this file.
+    If you modify this file, run "${ONOS_HOME}/onos.sh setup" to reflect the
+    change to configuration files. Other than generation of configuration
+    files, this file is also used when ONOS starts up.
+    If file named "onos_node.`hostname`.conf" exists in this directory, that
+    file will be used instead of onos_node.conf.
+
+- onos.properties
+    Java properties read by ONOS process.
+
+- zoo.cfg
+    ZooKeeper configuration file (generated file).
+
+- ramcloud.conf
+    RAMCloud configuration file (generated file).
+
+- hazelcast.xml
+    Hazelcast configuration file (generated file).
+
+- logback.`hostname`.xml
+    Logback configuration file (generated file).
+
+- template/*
+    Templates of configuration files referred during generation of file.
+    DO NOT change or delete these files.
+
+- *.bak
+    Backup files created during generation of configuration files. If you
+    overwrite files by mistake, you can recover them by these backup files.
+
+
+Development environment configuration
+=====================================
+
+In development process, ONOS uses several tools to make development efficient
+or to assure the quality of the code. These files are configuration of those
+development tools. DO NOT change or remove these files without any particular
+reason.
+
+Description of files
+--------------------
+- checkstyle/*
+    Configuration files of Checkstyle, which inspects the codes to find
+    violations to the ONOS coding standard.
+
+- findbugs/*
+    Configuration files of FindBugs, which analyzes the codes to find potential
+    bugs.
+
+- pmd/*
+    Configuration files of PMD, which detects potential programming mistakes
+    or flaws that tends to lead error.
