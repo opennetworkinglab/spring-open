@@ -24,6 +24,7 @@ git checkout master
 git reset --hard 6a3eb98ae14ec6f732f06775220287c7245f5ff0
 # bug fix for MultiWrite, make zookeeper path configurable. (TODO send this patch to upstream)
 git apply ${ONOS_HOME}/ramcloud-build-scripts/ramcloud.patch
+git apply ${ONOS_HOME}/ramcloud-build-scripts/increment_fix.patch
 
 mkdir ${RAMCLOUD_HOME}/private
 cp -vf ${ONOS_HOME}/ramcloud-build-scripts/MakefragPrivateTop ${RAMCLOUD_HOME}/private/MakefragPrivateTop
