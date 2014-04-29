@@ -121,6 +121,8 @@ function list-hc-hosts {
 function create-pssh-conf {
   local tempfile=`begin-conf-creation ${PSSH_CONF}`
   
+  local filename=`basename ${PSSH_CONF}`
+  echo -n "Creating ${filename} ... "
   # creation of pssh config file
   for host in ${CLUSTER_HOSTS}; do
     local user=$(read-conf ${CLUSTER_CONF} remote.${host}.ssh.user)
@@ -137,6 +139,7 @@ function create-pssh-conf {
   done
   
   end-conf-creation ${PSSH_CONF}
+  echo "DONE"
 }
 
 # create-onos-conf {hostname}
@@ -151,6 +154,8 @@ function create-onos-conf {
   
   local onos_conf="${CLUSTER_CONF_DIR}/onos_node.${host_name}.conf"
   local tempfile=`begin-conf-creation ${onos_conf}`
+  local filename=`basename ${onos_conf}`
+  echo -n "Creating ${filename} ... "
 
   cp ${ONOS_CONF_TEMPLATE} ${tempfile}
   
@@ -198,6 +203,8 @@ function create-onos-conf {
   fi
  
   end-conf-creation ${onos_conf}
+  
+  echo "DONE"
 }
 
 # setup -f : force overwrite existing files
@@ -245,7 +252,11 @@ function deploy {
       # falling back to common setting
       user=$(read-conf ${CLUSTER_CONF} "remote.common.ssh.user")
     fi
-      
+    
+    if [ -z "${user}" ]; then
+      user=`whoami`
+    fi
+    
     ${SCP} ${conf} ${user}@${host}:${REMOTE_ONOS_CONF_DIR}
     ${SSH} ${user}@${host} "cd ${REMOTE_ONOS_HOME}; ./onos.sh setup -f"
   done
@@ -267,7 +278,8 @@ function start {
     exit 1
   fi
   
-  ${PSSH} -i -h ${PSSH_CONF} "cd ${REMOTE_ONOS_HOME}; ./onos.sh start"
+  echo "Starting ONOS cluster"
+  ${PSSH} -i -h ${PSSH_CONF} "cd ${REMOTE_ONOS_HOME}; ./onos.sh start 2>&1"
 }
 
 ############################################
@@ -283,7 +295,8 @@ function stop {
     exit 1
   fi
   
-  ${PSSH} -i -h ${PSSH_CONF} "cd ${REMOTE_ONOS_HOME}; ./onos.sh stop"
+  echo "Stopping ONOS cluster"
+  ${PSSH} -i -h ${PSSH_CONF} "cd ${REMOTE_ONOS_HOME}; ./onos.sh stop 2>&1"
 }
 
 ############################################
@@ -299,7 +312,7 @@ function status {
     exit 1
   fi
   
-  ${PSSH} -i -h ${PSSH_CONF} "cd ${REMOTE_ONOS_HOME}; ./onos.sh status"
+  ${PSSH} -i -h ${PSSH_CONF} "cd ${REMOTE_ONOS_HOME}; ./onos.sh status 2>&1"
 }
 
 ############################################
