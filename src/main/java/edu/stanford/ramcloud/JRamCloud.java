@@ -278,9 +278,15 @@ public class JRamCloud {
      * underlying RamCloud C++ object.
      */
     public
+    JRamCloud(String coordinatorLocator, String clusterName)
+    {
+        ramcloudObjectPointer = connect(coordinatorLocator, clusterName);
+    }
+
+    public
     JRamCloud(String coordinatorLocator)
     {
-        ramcloudObjectPointer = connect(coordinatorLocator);
+        this(coordinatorLocator, "main");
     }
 
     /**
@@ -389,7 +395,7 @@ public class JRamCloud {
         return write(tableId, key.getBytes(StandardCharsets.UTF_8), value, rules);
     }
 
-    private static native long connect(String coordinatorLocator);
+    private static native long connect(String coordinatorLocator, String clusterName);
     private static native void disconnect(long ramcloudObjectPointer);
 
     public native long createTable(String name);
@@ -449,6 +455,13 @@ public class JRamCloud {
 
     public static class RejectRulesException extends Exception {
         public RejectRulesException(String message) {
+            super(message);
+        }
+    }
+
+    // TODO Define and support some of ClientException sub-classes.
+    public static class ClientException extends Exception {
+        public ClientException(String message) {
             super(message);
         }
     }

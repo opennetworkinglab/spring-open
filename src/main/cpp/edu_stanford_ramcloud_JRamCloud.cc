@@ -21,6 +21,7 @@
  * - Inner classes in JRamCloud.java should be moved out to be a separate
  *   stand alone class, to eliminate workaround 00024 signature in
  *   C methods.
+ * - Define and support some of ClientException sub-classes.
  *
  */
 
@@ -223,22 +224,27 @@ setRejectRules(JNIEnv* env, jobject jRejectRules, RejectRules& rules)
     } catch (InvalidObjectException& e) {                                      \
         createException(env, jRamCloud, "InvalidObjectException");             \
         return _returnValue;                                                   \
+    } catch (ClientException& e) {                                             \
+        createException(env, jRamCloud, "ClientException");                    \
+        return _returnValue;                                                   \
     }
 
 /*
  * Class:     edu_stanford_ramcloud_JRamCloud
  * Method:    connect
- * Signature: (Ljava/lang/String;)J
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)J
  */
 JNIEXPORT jlong
 JNICALL Java_edu_stanford_ramcloud_JRamCloud_connect(JNIEnv *env,
                                jclass jRamCloud,
-                               jstring coordinatorLocator)
+                               jstring coordinatorLocator,
+                               jstring clusterName)
 {
     JStringGetter locator(env, coordinatorLocator);
+    JStringGetter cluster(env, clusterName);
     RamCloud* ramcloud = NULL;
     try {
-        ramcloud = new RamCloud(locator.string);
+        ramcloud = new RamCloud(locator.string, cluster.string);
     } EXCEPTION_CATCHER((jlong)(NULL));
     return reinterpret_cast<jlong>(ramcloud);
 }

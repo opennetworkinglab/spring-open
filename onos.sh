@@ -166,7 +166,7 @@ function print_usage {
  \$ ${scriptname} {zk|rc-coord|rc-server|core} {start|stop|restart|status}
     Control specific ONOS-related process"
   
-  echo "${usage}"	
+  echo "${usage}"
 }
 
 function rotate-log {
@@ -191,7 +191,11 @@ function kill-processes {
   fi
   for p in ${pids}; do
     if [ x$p != "x" ]; then
-      kill -KILL $p
+      (
+        # Ask process with SIGTERM first, if that did not kill the process
+        # wait 1s and if process still exist, force process to be killed.
+        kill -TERM $p && kill -0 $p && sleep 1 && kill -0 $p && kill -KILL $p
+      ) 2> /dev/null
       echo "Killed existing process (pid: $p)"
     fi
   done
@@ -340,9 +344,12 @@ function create-ramcloud-conf {
   echo -n "Creating ${RAMCLOUD_CONF} ... "
 
   local temp_rc=`begin-conf-creation ${RAMCLOUD_CONF}`
-  
-  echo "ramcloud.coordinatorIp=${RC_COORD_PROTOCOL}:host=${RC_COORD_IP}" > ${temp_rc}
-  echo "ramcloud.coordinatorPort=port=${RC_COORD_PORT}" >> ${temp_rc}
+
+  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+
+  # TODO make ZooKeeper address configurable.
+  echo "ramcloud.locator=zk:localhost:2181" > ${temp_rc}
+  echo "ramcloud.clusterName=${rc_cluster_name}" >> ${temp_rc}
 
   end-conf-creation ${RAMCLOUD_CONF}
 
@@ -440,6 +447,35 @@ function status-zk {
   
   ${ZK_HOME}/bin/zkServer.sh status
 }
+
+function check-zk {
+  # assumption here is that ZK status script is the last command in status-zk.
+  status-zk &> /dev/null
+  local zk_status=$?
+  if [ "$zk_status" -ne 0 ]; then
+    return 1;
+  fi
+  return 0
+}
+
+# wait-zk-or-die {timeout-sec}
+function wait-zk-or-die {
+  local retries=${1:-1}
+  # do-while retries >= 0
+  while true; do
+    check-zk
+    local zk_status=$?
+    if [ "$zk_status" -eq 0 ]; then
+      return 0
+    fi
+    sleep 1;
+    ((retries -= 1))
+    (( retries >= 0 )) || break
+  done
+  echo "ZooKeeper is not running."
+  exit 1
+}
+
 ############################################
 
 
@@ -466,11 +502,6 @@ function stop-backend {
   fi
 }
 
-function deldb {
-# TODO: implement
-  return
-}
-
 
 ### Functions related to RAMCloud coordinator
 function rc-coord-addr {
@@ -484,7 +515,6 @@ function rc-server-addr {
 function rc-coord {
   case "$1" in
     start)
-      deldb
       stop-coord
       start-coord
       ;;
@@ -499,6 +529,10 @@ function rc-coord {
     stop)
       stop-coord
       ;;
+    deldb)
+      stop-backend
+      del-coord-info
+      ;;
     stat*) # <- status
       local n=`pgrep -f obj.${RAMCLOUD_BRANCH}/coordinator | wc -l`
       echo "$n RAMCloud coordinator running"
@@ -510,6 +544,8 @@ function rc-coord {
 }
 
 function start-coord {
+  wait-zk-or-die 1
+
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
   fi
@@ -519,27 +555,92 @@ function start-coord {
   
   local coord_addr=`rc-coord-addr`
 
+  # TODO Configuration for ZK address, port
+  local zk_addr="localhost:2181"
+  # RAMCloud cluster name
+  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  # RAMCloud option deadServerTimeout
+  # (note RC default is 250ms, setting relaxed ONOS default to 1000ms)
+  local rc_coord_deadServerTimeout=$(read-conf ${ONOS_CONF} ramcloud.coordinator.deadServerTimeout 1000)
+
+  # NOTE RAMCloud document suggests to use -L to specify listen address:port,
+  #      but actual RAMCloud code only uses -C argument now.
+  #      (FYI: -C is documented to be deprecated in the document)
+
+  local coord_args="-C ${coord_addr}"
+  coord_args="${coord_args} --externalStorage zk:${zk_addr}"
+  coord_args="${coord_args} --clusterName ${rc_cluster_name}"
+  coord_args="${coord_args} --deadServerTimeout ${rc_coord_deadServerTimeout}"
+
+  # Read environment variables if set
+  coord_args="${coord_args} ${RC_COORDINATOR_OPTS}"
+
+  if [ "${ONOS_HOST_ROLE}" == "single-node" ]; then
+    # Note: Following reset is required, since RC restart is considered node failure,
+    # and tries recovery of server, which will never succeed after restart.
+    echo "Role configured to single-node mode. RAMCloud cluster will be reset on each start-up."
+    coord_args="${coord_args} --reset"
+  fi
+
   # Run ramcloud 
   echo -n "Starting RAMCloud coordinator ... "
-  ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator -L ${coord_addr} > $RAMCLOUD_COORD_LOG 2>&1 &
+  ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator ${coord_args} > $RAMCLOUD_COORD_LOG 2>&1 &
   echo "STARTED"
 }
 
+function del-coord-info {
+  wait-zk-or-die 1
+
+  if [ ! -d ${LOGDIR} ]; then
+    mkdir -p ${LOGDIR}
+  fi
+  if [ -f $RAMCLOUD_COORD_LOG ]; then
+    rotate-log $RAMCLOUD_COORD_LOG
+  fi
+
+  local coord_addr=`rc-coord-addr`
+
+  # TODO Configuration for ZK address, port
+  local zk_addr="localhost:2181"
+  # RAMCloud cluster name
+  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  # RAMCloud option deadServerTimeout
+  # (note RC default is 250ms, setting relaxed ONOS default to 1000ms)
+  local rc_coord_deadServerTimeout=$(read-conf ${ONOS_CONF} ramcloud.coordinator.deadServerTimeout 1000)
+
+  # NOTE RAMCloud document suggests to use -L to specify listen address:port,
+  #      but actual RAMCloud code only uses -C argument now.
+  #      (FYI: -C is documented to be deprecated in the document)
+
+  local coord_args="-C ${coord_addr}"
+  coord_args="${coord_args} --externalStorage zk:${zk_addr}"
+  coord_args="${coord_args} --clusterName ${rc_cluster_name}"
+
+  # Note: --reset will reset ZK stored info and start running as acoordinator.
+  echo -n "Deleting RAMCloud cluster coordination info ... "
+  ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator ${coord_args} --reset &> $RAMCLOUD_COORD_LOG &
+
+  # TODO Assuming 1sec is enough. To be sure monitor log?
+  sleep 1
+  # Silently kill coordinator
+  (pkill -q -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator &> /dev/null)
+
+  echo "DONE"
+}
 
 function stop-coord {
-  kill-processes "RAMCloud coordinator" `pgrep -f obj.${RAMCLOUD_BRANCH}/coordinator`
+  kill-processes "RAMCloud coordinator" `pgrep -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator`
 }
 
 ### Functions related to RAMCloud server
 function rc-server {
   case "$1" in
     start)
-      deldb
       stop-server
       start-server
       ;;
     startifdown)
-      local n=`pgrep -f obj.${RAMCLOUD_BRANCH}/server | wc -l`
+      local n=`pgrep -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server | wc -l`
       if [ $n == 0 ]; then
         start-server
       else
@@ -549,11 +650,12 @@ function rc-server {
     stop)
       stop-server
       ;;
-#    deldb)
-#      deldb
-#      ;;
+    deldb)
+      stop-server
+      del-server-backup
+      ;;
     stat*) # <- status
-      n=`pgrep -f obj.${RAMCLOUD_BRANCH}/server | wc -l`
+      n=`pgrep -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server | wc -l`
       echo "$n RAMCloud server running"
       ;;
     *)
@@ -563,6 +665,8 @@ function rc-server {
 }
 
 function start-server {
+  wait-zk-or-die 1
+
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
   fi
@@ -573,18 +677,48 @@ function start-server {
   local coord_addr=`rc-coord-addr`
   local server_addr=`rc-server-addr`
 
-  local masterServiceThreads=$(read-conf ${ONOS_CONF} ramcloud.masterServiceThreads 5)
-  local logCleanerThreads=$(read-conf ${ONOS_CONF}    ramcloud.logCleanerThreads    1)
-  local detectFailures=$(read-conf ${ONOS_CONF}       ramcloud.detectFailures       0)
+  local masterServiceThreads=$(read-conf ${ONOS_CONF} ramcloud.server.masterServiceThreads 5)
+  local logCleanerThreads=$(read-conf ${ONOS_CONF}    ramcloud.server.logCleanerThreads    1)
+  local detectFailures=$(read-conf ${ONOS_CONF}       ramcloud.server.detectFailures       1)
+
+  # TODO Configuration for ZK address, port
+  local zk_addr="localhost:2181"
+  # RAMCloud cluster name
+  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  # replication factor (-r) config
+  local rc_replicas=$(read-conf ${ONOS_CONF} ramcloud.server.replicas 0)
+  # backup file path (-f) config
+  local rc_datafile=$(read-conf ${ONOS_CONF} ramcloud.server.file "/var/tmp/ramclouddata/backup.${ONOS_HOST_NAME}.log")
+  mkdir -p `dirname ${rc_datafile}`
+
+  local server_args="-L ${server_addr}"
+  server_args="${server_args} --externalStorage zk:${zk_addr}"
+  server_args="${server_args} --clusterName ${rc_cluster_name}"
+  server_args="${server_args} --masterServiceThreads ${masterServiceThreads}"
+  server_args="${server_args} --logCleanerThreads ${logCleanerThreads}"
+  server_args="${server_args} --detectFailures ${detectFailures}"
+  server_args="${server_args} --replicas ${rc_replicas}"
+  server_args="${server_args} --file ${rc_datafile}"
+
+  # Read environment variables if set
+  server_args="${server_args} ${RC_SERVER_OPTS}"
 
   # Run ramcloud
   echo -n "Starting RAMCloud server ... "
-  ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server -M -L ${server_addr} -C ${coord_addr} --masterServiceThreads ${masterServiceThreads} --logCleanerThreads ${logCleanerThreads} --detectFailures ${detectFailures} > $RAMCLOUD_SERVER_LOG 2>&1 &
+  ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server ${server_args} > $RAMCLOUD_SERVER_LOG 2>&1 &
   echo "STARTED"
 }
 
+function del-server-backup {
+  # TODO might want confirmation, since data can be lost
+  echo -n "Removing RAMCloud backup server data ... "
+  local rc_datafile=$(read-conf ${ONOS_CONF} ramcloud.server.file "/var/tmp/ramclouddata/backup.${ONOS_HOST_NAME}.log")
+  rm -f ${rc_datafile}
+  echo "DONE"
+}
+
 function stop-server {
-  kill-processes "RAMCloud server" `pgrep -f obj.${RAMCLOUD_BRANCH}/server`
+  kill-processes "RAMCloud server" `pgrep -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server`
 }
 ############################################
 
@@ -655,7 +789,7 @@ function start-onos {
   # Need to cd ONOS_HOME. onos.properties currently specify hazelcast config path relative to CWD
   cd ${ONOS_HOME}
 
-  echo -n "Starting ONOS controller ..."
+  echo -n "Starting ONOS controller ... "
   java ${JVM_OPTS} -Dlogback.configurationFile=${ONOS_LOGBACK} -cp ${JAVA_CP} ${MAIN_CLASS} -cf ${ONOS_PROPS} > ${LOGDIR}/${LOGBASE}.stdout 2>${LOGDIR}/${LOGBASE}.stderr &
   
   # We need to wait a bit to find out whether starting the ONOS process succeeded
@@ -788,6 +922,10 @@ case "$1" in
     rc-coord $2
     ;;
   rc-s*) # <- rc-server
+    rc-server $2
+    ;;
+  rc)
+    rc-coord $2
     rc-server $2
     ;;
   core)

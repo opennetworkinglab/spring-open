@@ -38,7 +38,11 @@ import edu.stanford.ramcloud.JRamCloud.RejectRulesException;
 import edu.stanford.ramcloud.JRamCloud.TableEnumerator2;
 
 public class RCClient implements IKVClient {
+
     private static final Logger log = LoggerFactory.getLogger(RCClient.class);
+
+    private static final String DEFAULT_LOCATOR = "zk:localhost:2181";
+    private static final String DEFAULT_CLUSTERNAME = "ONOS-RC";
 
     private static final String DB_CONFIG_FILE = "conf/ramcloud.conf";
     public static final Configuration CONFIG = getConfiguration();
@@ -74,7 +78,7 @@ public class RCClient implements IKVClient {
     private static final ThreadLocal<JRamCloud> TLS_RC_CLIENT = new ThreadLocal<JRamCloud>() {
         @Override
         protected JRamCloud initialValue() {
-            return new JRamCloud(getCoordinatorUrl(CONFIG));
+            return new JRamCloud(getLocator(CONFIG), getClusterName(CONFIG));
         }
     };
 
@@ -116,11 +120,35 @@ public class RCClient implements IKVClient {
         }
     }
 
-    public static String getCoordinatorUrl(final Configuration configuration) {
-        final String coordinatorIp = configuration.getString("ramcloud.coordinatorIp", "fast+udp:host=127.0.0.1");
-        final String coordinatorPort = configuration.getString("ramcloud.coordinatorPort", "port=12246");
+    public static String getLocator(final Configuration configuration) {
+
+        final String locator = configuration.getString("ramcloud.locator");
+        if (locator != null) {
+            return locator;
+        }
+
+        // TODO Stop reading obsolete coordinatorIp, etc. once we're ready.
+        final String coordinatorIp = configuration.getString("ramcloud.coordinatorIp");
+        if (coordinatorIp == null) {
+            return DEFAULT_LOCATOR;
+        }
+
+        final String coordinatorPort = configuration.getString("ramcloud.coordinatorPort");
+        if (coordinatorPort == null) {
+            return DEFAULT_LOCATOR;
+        }
+
         final String coordinatorURL = coordinatorIp + "," + coordinatorPort;
         return coordinatorURL;
+    }
+
+    public static String getClusterName(final Configuration configuration) {
+        final String clusterName = configuration.getString("ramcloud.clusterName");
+        if (clusterName != null) {
+            return clusterName;
+        }
+
+        return DEFAULT_CLUSTERNAME;
     }
 
     @Override
