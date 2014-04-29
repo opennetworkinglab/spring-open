@@ -206,7 +206,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             log.trace("Sending broadcast packet to other ONOS instances");
         }
 
-        packetService.broadcastPacket(eth,
+        packetService.broadcastPacketOutEdge(eth,
                 new SwitchPort(sw.getDpid(), inPort.getNumber().shortValue()));
     }
 
@@ -339,8 +339,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     } else {
                         log.debug("Sending packet out from sw {}, outport{}", sw, existingFlow.firstOutPort);
 
-                        packetService.sendPacket(new SwitchPort(
-                                sw.getDpid(), existingFlow.firstOutPort), eth);
+                        packetService.sendPacket(eth, new SwitchPort(
+                                        sw.getDpid(), existingFlow.firstOutPort));
                     }
                 } else {
                     // Flow path has not yet been installed to switches so save the
@@ -458,8 +458,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         for (PacketToPush packet : packets) {
             log.debug("Start packetToPush to sw {}, outPort {}, path {}", packet.dpid, existingFlow.firstOutPort, path);
-            packetService.sendPacket(new SwitchPort(
-                    packet.dpid, existingFlow.firstOutPort), packet.eth);
+            packetService.sendPacket(packet.eth, new SwitchPort(
+                            packet.dpid, existingFlow.firstOutPort));
         }
     }
 

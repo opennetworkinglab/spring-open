@@ -28,27 +28,30 @@ public interface IPacketService extends IFloodlightService {
     // passed around.
     /**
      * Send a packet out a specific port in the network.
-     *
-     * @param switchPort the port to send the packet out
      * @param eth the packet to send
+     * @param switchPort the port to send the packet out
      */
-    public void sendPacket(SwitchPort switchPort, Ethernet eth);
+    public void sendPacket(Ethernet eth, SwitchPort switchPort);
 
     /**
      * Send a packet out multiple ports in the network.
+     * <p/>
+     * NOTE: currently unimplemented.
      *
-     * @param switchPorts a list of ports to send the packet out
      * @param eth the packet to send
+     * @param switchPorts a list of ports to send the packet out
      */
-    public void sendPacket(List<SwitchPort> switchPorts, Ethernet eth);
+    public void sendPacket(Ethernet eth, List<SwitchPort> switchPorts);
 
     /**
      * Broadcast the packet out all edge ports in the network. An edge port is
      * defined as any port that doesn't have a link to another switch.
+     * <p/>
+     * NOTE: currently unimplemented.
      *
      * @param eth the packet to broadcast
      */
-    public void broadcastPacket(Ethernet eth);
+    public void broadcastPacketOutEdge(Ethernet eth);
 
     /**
      * Broadcast the packet out all edge ports in the network, except for the
@@ -63,5 +66,5 @@ public interface IPacketService extends IFloodlightService {
      * @param inSwitchPort the exception port that the packet is not
      * broadcast out
      */
-    public void broadcastPacket(Ethernet eth, SwitchPort inSwitchPort);
+    public void broadcastPacketOutEdge(Ethernet eth, SwitchPort inSwitchPort);
 }

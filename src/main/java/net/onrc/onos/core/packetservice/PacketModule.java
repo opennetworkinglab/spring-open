@@ -99,7 +99,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     }
 
     @Override
-    public void sendPacket(SwitchPort switchPort, Ethernet eth) {
+    public void sendPacket(Ethernet eth, SwitchPort switchPort) {
         SinglePacketOutNotification notification =
                 new SinglePacketOutNotification(eth.serialize(), 0,
                 switchPort.dpid().value(), switchPort.port().value());
@@ -110,19 +110,19 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     }
 
     @Override
-    public void sendPacket(List<SwitchPort> switchPorts, Ethernet eth) {
+    public void sendPacket(Ethernet eth, List<SwitchPort> switchPorts) {
         // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
-    public void broadcastPacket(Ethernet eth) {
+    public void broadcastPacketOutEdge(Ethernet eth) {
         // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
-    public void broadcastPacket(Ethernet eth, SwitchPort inSwitchPort) {
+    public void broadcastPacketOutEdge(Ethernet eth, SwitchPort inSwitchPort) {
         BroadcastPacketOutNotification notification =
                 new BroadcastPacketOutNotification(eth.serialize(), 0,
                 inSwitchPort.dpid().value(), inSwitchPort.port().value());

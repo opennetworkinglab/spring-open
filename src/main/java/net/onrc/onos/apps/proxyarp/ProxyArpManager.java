@@ -464,7 +464,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             }
 
             // We don't know the device so broadcast the request out
-            packetService.broadcastPacket(eth,
+            packetService.broadcastPacketOutEdge(eth,
                     new SwitchPort(dpid, inPort));
         } else {
             // Even if the device exists in our database, we do not reply to
@@ -489,7 +489,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                             " - broadcasting", macAddress);
                 }
 
-                packetService.broadcastPacket(eth,
+                packetService.broadcastPacketOutEdge(eth,
                         new SwitchPort(dpid, inPort));
             } else {
                 for (net.onrc.onos.core.topology.Port portObject : outPorts) {
@@ -509,7 +509,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                     }
 
                     packetService.sendPacket(
-                            new SwitchPort(outSwitch, outPort), eth);
+                            eth, new SwitchPort(outSwitch, outPort));
                 }
             }
         }
@@ -574,7 +574,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         // sendArpRequestToSwitches(ipAddress, eth.serialize());
 
         packetService.sendPacket(
-                new SwitchPort(intf.getDpid(), intf.getPort()), eth);
+                eth, new SwitchPort(intf.getDpid(), intf.getPort()));
     }
 
     //Please leave it for now because this code is needed for SDN-IP. It will be removed soon.
@@ -665,7 +665,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             eth.setVlanID(vlan).setPriorityCode((byte) 0);
         }
 
-        packetService.sendPacket(new SwitchPort(dpid, port), eth);
+        packetService.sendPacket(eth, new SwitchPort(dpid, port));
     }
 
     private String inetAddressToString(byte[] bytes) {
