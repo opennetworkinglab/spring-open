@@ -1,0 +1,12 @@
+{
+    "gui-ip" : "0.0.0.0",
+    "gui-port" : 9000,
+    "onos-ip" : "localhost",
+    "onos-port" : 8080,
+    "controllers": [
+        "onos-vm1", 
+        "onos-vm2", 
+        "onos-vm3", 
+        "onos-vm4"
+    ]
+}
