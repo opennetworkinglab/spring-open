@@ -139,9 +139,10 @@ MVN=${MVN:-mvn -o}
 
 ############# Common functions #############
 function print_usage {
+  local scriptname=`basename $0`
   local filename=`basename ${ONOS_CONF}`
   local usage="Usage: setup/start/stop ONOS on this server.
- \$ $0 setup [-f]
+ \$ ${scriptname} setup [-f]
     Set up ONOS node using ${ONOS_CONF} .
       - generate and replace config file of ZooKeeper.
       - create myid in ZooKeeper datadir.
@@ -149,20 +150,20 @@ function print_usage {
       - generate and replace config file for RAMCloud.
       - generate and replace logback.${ONOS_HOST_NAME}.xml
     If -f option is used, all existing files will be overwritten without confirmation.
- \$ $0 start [single-node|coord-node|server-node|coord-and-server-node]
+ \$ ${scriptname} start [single-node|coord-node|server-node|coord-and-server-node]
     Start ONOS node with specific RAMCloud entities
       - single-node: start ONOS with stand-alone RAMCloud
       - coord-node : start ONOS with RAMCloud coordinator
       - server-node: start ONOS with RAMCloud server
       - coord-and-server-node: start ONOS with RAMCloud coordinator and server
       * Default behavior can be defined by ${filename}
- \$ $0 stop
+ \$ ${scriptname} stop
     Stop all ONOS-related processes
- \$ $0 restart
+ \$ ${scriptname} restart
     Stop and start currently running ONOS-related processes
- \$$0 status
+ \$ ${scriptname} status
     Show status of ONOS-related processes
- \$ $0 {zk|rc-coord|rc-server|core} {start|stop|restart|status}
+ \$ ${scriptname} {zk|rc-coord|rc-server|core} {start|stop|restart|status}
     Control specific ONOS-related process"
   
   echo "${usage}"	

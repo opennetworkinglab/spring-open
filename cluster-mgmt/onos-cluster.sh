@@ -3,12 +3,13 @@
 set -e
 
 ### Env vars used by this script. (default value) ###
-# $ONOS_HOME         : path of root directory of ONOS repository (~/ONOS)
-# $ONOS_CLUSTER_HOME : path of ONOS cluster tools directory (this script's dir)
-# $REMOTE_ONOS_HOME  : path of root directory of ONOS repository in remote hosts (ONOS)
-# $SSH               : command name to access host
-# $PSSH              : command name to access hosts in parallel
-# $SCP               : command name to copy config file to each host
+# $ONOS_HOME           : path of root directory of ONOS repository (~/ONOS)
+# $ONOS_CLUSTER_HOME   : path of ONOS cluster tools directory (this script's dir)
+# $REMOTE_ONOS_HOME    : path of root directory of ONOS repository in remote hosts (ONOS)
+# $ONOS_CLUSTER_LOGDIR : path of log output directory (~/ONOS/cluster-mgmt/logs)
+# $SSH                 : command name to access host
+# $PSSH                : command name to access hosts in parallel
+# $SCP                 : command name to copy config file to each host
 #####################################################
 
 
@@ -21,6 +22,7 @@ CLUSTER_HOME=${ONOS_CLUSTER_HOME:-$(cd `dirname $0`; pwd)}
 CLUSTER_CONF_DIR=${CLUSTER_HOME}/conf
 CLUSTER_CONF=${ONOS_CLUSTER_CONF:-${CLUSTER_CONF_DIR}/onos-cluster.conf}
 CLUSTER_TEMPLATE_DIR=${CLUSTER_CONF_DIR}/template
+CLUSTER_LOGDIR=${ONOS_CLUSTER_LOGDIR:-${CLUSTER_HOME}/logs}
 
 REMOTE_ONOS_HOME=${REMOTE_ONOS_HOME:-ONOS}
 REMOTE_ONOS_CONF_DIR=${REMOTE_ONOS_HOME}/conf
@@ -50,21 +52,23 @@ SCP=${SCP:-scp}
 
 
 ############# Common functions #############
-function print_usage {
-  local filename=`basename ${ONOS_CLUSTER_CONF}`
+function print-usage {
+  local scriptname=`basename $0`
   local usage="Usage: setup/deploy/start/stop/status ONOS cluster.
- \$ $0 setup [-f]
-    Set up ONOS cluster using ${filename}.
+ \$ ${scriptname} setup [-f]
+    Set up ONOS cluster using ${CLUSTER_CONF}.
     If -f option is used, all existing files will be overwritten without confirmation.
- \$ $0 deploy [-f]
+ \$ ${scriptname} deploy [-f]
     Deliver node config files to cluster nodes.
     If -f option is used, all existing files will be overwritten without confirmation.
- \$ $0 start
+ \$ ${scriptname} start
     Start ONOS cluster
- \$ $0 stop
+ \$ ${scriptname} stop
     Stop ONOS cluster
- \$ $0 status
-    Show status of ONOS-cluster"
+ \$ ${scriptname} status
+    Show status of ONOS-cluster
+ \$ ${scriptname} cmd {command to execute}
+    Execute command on all hosts in parallel"
   
   echo "${usage}"	
 }
@@ -238,6 +242,8 @@ function deploy {
     exit 1
   fi
 
+  mkdir -p ${CLUSTER_LOGDIR}
+  
   for host in ${CLUSTER_HOSTS}; do
     local conf=${CLUSTER_CONF_DIR}/onos_node.${host}.conf
     if [ ! -f ${conf} ]; then
@@ -246,19 +252,27 @@ function deploy {
       echo "[ERROR] Try \"${command} setup\" to create files."
       exit 1
     fi
-      
+
+    local filename=`basename ${conf}`
+    echo -n "Copying ${filename} to ${host} ... "
+    
     local user=$(read-conf ${CLUSTER_CONF} "remote.${host}.ssh.user")
     if [ -z "${user}" ]; then
       # falling back to common setting
       user=$(read-conf ${CLUSTER_CONF} "remote.common.ssh.user")
     fi
     
+    local login=
     if [ -z "${user}" ]; then
       user=`whoami`
     fi
     
-    ${SCP} ${conf} ${user}@${host}:${REMOTE_ONOS_CONF_DIR}
-    ${SSH} ${user}@${host} "cd ${REMOTE_ONOS_HOME}; ./onos.sh setup -f"
+    ${SCP} ${conf} ${user}@${host}:${REMOTE_ONOS_CONF_DIR} &> ${CLUSTER_LOGDIR}/deploy.${host}.log
+    echo "DONE"
+    
+    echo -n "Configuring ${host} ... "
+    ${SSH} ${user}@${host} "cd ${REMOTE_ONOS_HOME}; ./onos.sh setup -f; ./build-ramcloud-java-bindings.sh" &>> ${CLUSTER_LOGDIR}/deploy.${host}.log
+    echo "DONE"
   done
  
 # TODO: Replacing per-host ssh command with pssh command below.
@@ -318,6 +332,21 @@ function status {
 ############################################
 
 
+############## Cmd functions ###############
+
+function do-cmd {
+  local cmd=$*
+  
+  if [ -z "${cmd}" ]; then
+    print-usage
+  else
+    ${PSSH} -i -h ${PSSH_CONF} "${cmd}"
+  fi
+}
+
+############################################
+
+
 ################## Main ####################
 case "$1" in
   setup)
@@ -335,7 +364,12 @@ case "$1" in
   stat*) # <- status
     status
     ;;
+  cmd)
+    array=("$@")
+    unset array[0]
+    do-cmd ${array[@]}
+    ;;
   *)
-    print_usage
+    print-usage
     exit 1
 esac
