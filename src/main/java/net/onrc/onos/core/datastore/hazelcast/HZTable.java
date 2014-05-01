@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.onrc.onos.core.datastore.DataStoreClient;
 import net.onrc.onos.core.datastore.IKVTable;
 import net.onrc.onos.core.datastore.IKVTableID;
 import net.onrc.onos.core.datastore.ObjectDoesntExistException;
 import net.onrc.onos.core.datastore.ObjectExistsException;
 import net.onrc.onos.core.datastore.WrongVersionException;
 
+import org.apache.commons.collections.BufferOverflowException;
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +71,7 @@ public class HZTable implements IKVTable, IKVTableID {
         }
 
         public VersionedValue(final byte[] value, final long version) {
-            this.value = ArrayUtils.clone(value);
+            setValue(value);
             this.version = version;
         }
 
@@ -82,6 +84,9 @@ public class HZTable implements IKVTable, IKVTableID {
         }
 
         public void setValue(final byte[] value) {
+            if (value != null && value.length > DataStoreClient.MAX_VALUE_BYTES) {
+                throw new BufferOverflowException("Value must be smaller than 1MB");
+            }
             this.value = ArrayUtils.clone(value);
         }
 
@@ -154,6 +159,9 @@ public class HZTable implements IKVTable, IKVTableID {
         long version;
 
         public Entry(final byte[] key, final byte[] value, final long version) {
+            if (key.length > DataStoreClient.MAX_KEY_BYTES) {
+                throw new BufferOverflowException("Key must be smaller than 64KB");
+            }
             this.key = key.clone();
             this.setValue(value);
             this.setVersion(version);
