@@ -166,7 +166,7 @@ public class OnosDeviceManager implements IFloodlightModule,
         }
 
         //If the switch port we try to attach a new device already has a link, then stop adding device
-        if (networkGraph.getLink(dpid, (long) portId) != null) {
+        if (networkGraph.getOutgoingLink(dpid, (long) portId) != null) {
             if (log.isTraceEnabled()) {
                 log.trace("Stop adding OnosDevice {} due to there is a link to: dpid {} port {}",
                         srcDevice.getMacAddress(), dpid, portId);

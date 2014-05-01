@@ -951,10 +951,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
         assert (link == srcPort.getOutgoingLink());
         if (link == null) {
             link = new LinkImpl(networkGraph, srcPort, dstPort);
-            PortImpl srcPortImpl = getPortImpl(srcPort);
-            PortImpl dstPortImpl = getPortImpl(dstPort);
-            srcPortImpl.setOutgoingLink(link);
-            dstPortImpl.setIncomingLink(link);
+            networkGraph.putLink(link);
 
             // Remove all Devices attached to the Ports
             ArrayList<DeviceEvent> devicesToRemove = new ArrayList<>();
@@ -1019,8 +1016,11 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
         if (link == null) {
             log.warn("Link {} already removed on src Port", linkEvent);
         }
-        getPortImpl(dstPort).setIncomingLink(null);
-        getPortImpl(srcPort).setOutgoingLink(null);
+
+        // TODO should we check that we get the same link from each port?
+        if (link != null) {
+            networkGraph.removeLink(link);
+        }
 
         apiRemovedLinkEvents.add(linkEvent);
     }

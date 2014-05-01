@@ -2,9 +2,7 @@ package net.onrc.onos.core.intent;
 
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkImpl;
-import net.onrc.onos.core.topology.NetworkGraph;
 import net.onrc.onos.core.topology.NetworkGraphImpl;
-import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.SwitchImpl;
 
@@ -15,18 +13,15 @@ import net.onrc.onos.core.topology.SwitchImpl;
  * @author Toshio Koide (t-koide@onlab.us)
  */
 public class MockNetworkGraph extends NetworkGraphImpl {
+    // TODO this class doesn't seem like it should extend NetworkGraphImpl. It
+    // isn't a NetworkGraph, it's more of a NetworkGraphBuilder - methods to
+    // create an populate a fake network graph that's not based on discovery
+    // data from the driver modules.
+    // We may well need a MockNetworkGraph, but that's not what this class is
+    // doing.
+
     public static Long LOCAL_PORT = 0xFFFEL;
     public SwitchImpl sw1, sw2, sw3, sw4;
-
-    class DetachableLinkImpl extends LinkImpl {
-        public DetachableLinkImpl(NetworkGraph graph, Port srcPort, Port dstPort) {
-            super(graph, srcPort, dstPort);
-        }
-
-        public void detachFromGraph() {
-            unsetFromPorts();
-        }
-    }
 
     public Switch addSwitch(Long switchId) {
         SwitchImpl sw = new SwitchImpl(this, switchId);
@@ -34,17 +29,13 @@ public class MockNetworkGraph extends NetworkGraphImpl {
         return sw;
     }
 
-    public Link addLink(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
-        return new DetachableLinkImpl(
-                this,
-                getSwitch(srcDpid).getPort(srcPortNo),
-                getSwitch(dstDpid).getPort(dstPortNo));
-    }
-
     public Link[] addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
         Link[] links = new Link[2];
-        links[0] = addLink(srcDpid, srcPortNo, dstDpid, dstPortNo);
-        links[1] = addLink(dstDpid, dstPortNo, srcDpid, srcPortNo);
+        links[0] = new LinkImpl(this, getPort(srcDpid, srcPortNo), getPort(dstDpid, dstPortNo));
+        links[1] = new LinkImpl(this, getPort(dstDpid, dstPortNo), getPort(srcDpid, srcPortNo));
+
+        putLink(links[0]);
+        putLink(links[1]);
 
         return links;
     }
@@ -92,9 +83,6 @@ public class MockNetworkGraph extends NetworkGraphImpl {
     }
 
     public void removeLink(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
-        DetachableLinkImpl link = (DetachableLinkImpl) getSwitch(srcDpid).getPort(srcPortNo).getOutgoingLink();
-        if (link.getDstSwitch().getDpid().equals(dstDpid) && link.getDstPort().getNumber().equals(dstPortNo)) {
-            link.detachFromGraph();
-        }
+        removeLink(getLink(srcDpid, srcPortNo, dstDpid, dstPortNo));
     }
 }

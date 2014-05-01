@@ -33,13 +33,23 @@ public interface NetworkGraph {
     public Port getPort(Long dpid, Long number);
 
     /**
-     * Get the outgoing link for a switch and a port.
+     * Get the outgoing link from a switch port.
      *
      * @param dpid   the switch DPID.
      * @param number the switch port number.
      * @return the outgoing link if found, otherwise null.
      */
-    public Link getLink(Long dpid, Long number);
+    public Link getOutgoingLink(Long dpid, Long number);
+    // TODO See if we should change <dpid, port_num> pairs to SwitchPort
+
+    /**
+     * Get the incoming link to a switch port.
+     *
+     * @param dpid   the switch DPID.
+     * @param number the switch port number.
+     * @return the incoming link if found, otherwise null.
+     */
+    public Link getIncomingLink(Long dpid, Long number);
 
     /**
      * Get the outgoing link from a switch and a port to another switch and

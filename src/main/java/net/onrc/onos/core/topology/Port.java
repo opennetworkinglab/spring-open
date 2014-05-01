@@ -1,7 +1,10 @@
 package net.onrc.onos.core.topology;
 
-// TODO Everything returned by these interfaces must be either Unmodifiable view,
-// immutable object, or a copy of the original "SB" In-memory Topology.
+import net.onrc.onos.core.util.SwitchPort;
+
+//TODO Everything returned by these interfaces must be either Unmodifiable view,
+//immutable object, or a copy of the original "SB" In-memory Topology.
+
 /**
  * Interface of Port object in Network Graph topology.
  */
@@ -20,6 +23,14 @@ public interface Port {
      * @return port number
      */
     public Long getNumber();
+
+    /**
+     * Gets a {@link SwitchPort} that represents this Port's dpid and port
+     * number.
+     *
+     * @return a SwitchPort representing the Port
+     */
+    public SwitchPort asSwitchPort();
 
     /**
      * Gets the hardware address of this port.

@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.onrc.onos.core.util.SwitchPort;
+
 /**
  * Port Object stored in In-memory Topology.
  * <p/>
@@ -17,8 +19,8 @@ public class PortImpl extends NetworkGraphObject implements Port {
     private Long number;
     private String description;
 
-    protected Link outgoingLink;
-    protected Link incomingLink;
+    private final SwitchPort switchPort;
+
     // These needs to be ConcurrentCollecton if allowing Graph to be accessed Concurrently
     protected Set<Device> devices;
 
@@ -27,6 +29,8 @@ public class PortImpl extends NetworkGraphObject implements Port {
         this.sw = parentSwitch;
         this.number = number;
         this.devices = new HashSet<>();
+
+        switchPort = new SwitchPort(parentSwitch.getDpid(), number.shortValue());
     }
 
     @Override
@@ -37,6 +41,11 @@ public class PortImpl extends NetworkGraphObject implements Port {
     @Override
     public Long getNumber() {
         return number;
+    }
+
+    @Override
+    public SwitchPort asSwitchPort() {
+        return switchPort;
     }
 
     @Override
@@ -61,25 +70,19 @@ public class PortImpl extends NetworkGraphObject implements Port {
 
     @Override
     public Link getOutgoingLink() {
-        return outgoingLink;
+        return graph.getOutgoingLink(switchPort.dpid().value(),
+                (long) switchPort.port().value());
     }
 
     @Override
     public Link getIncomingLink() {
-        return incomingLink;
+        return graph.getIncomingLink(switchPort.dpid().value(),
+                (long) switchPort.port().value());
     }
 
     @Override
     public Iterable<Device> getDevices() {
         return Collections.unmodifiableSet(this.devices);
-    }
-
-    public void setOutgoingLink(Link link) {
-        outgoingLink = link;
-    }
-
-    public void setIncomingLink(Link link) {
-        incomingLink = link;
     }
 
     /**

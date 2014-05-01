@@ -99,7 +99,7 @@ public class SwitchImpl extends NetworkGraphObject implements Switch {
     @Override
     public Iterable<Link> getOutgoingLinks() {
         LinkedList<Link> links = new LinkedList<Link>();
-        for (Port port : getPorts()) {
+        for (Port port : ports.values()) {
             Link link = port.getOutgoingLink();
             if (link != null) {
                 links.add(link);
@@ -111,7 +111,7 @@ public class SwitchImpl extends NetworkGraphObject implements Switch {
     @Override
     public Iterable<Link> getIncomingLinks() {
         LinkedList<Link> links = new LinkedList<Link>();
-        for (Port port : getPorts()) {
+        for (Port port : ports.values()) {
             Link link = port.getIncomingLink();
             if (link != null) {
                 links.add(link);

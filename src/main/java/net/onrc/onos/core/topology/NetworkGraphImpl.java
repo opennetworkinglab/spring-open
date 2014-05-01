@@ -1,8 +1,6 @@
 package net.onrc.onos.core.topology;
 
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
@@ -10,6 +8,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +18,11 @@ public class NetworkGraphImpl implements NetworkGraph {
     private static final Logger log = LoggerFactory.getLogger(NetworkGraphImpl.class);
 
     // DPID -> Switch
-    private ConcurrentMap<Long, Switch> switches;
-    private ConcurrentMap<MACAddress, Device> mac2Device;
+    private final ConcurrentMap<Long, Switch> switches;
+    private final ConcurrentMap<MACAddress, Device> mac2Device;
+
+    private final ConcurrentMap<SwitchPort, Link> outgoingLinks;
+    private final ConcurrentMap<SwitchPort, Link> incomingLinks;
 
     private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private Lock readLock = readWriteLock.readLock();
@@ -31,6 +33,8 @@ public class NetworkGraphImpl implements NetworkGraph {
         // TODO: Does these object need to be stored in Concurrent Collection?
         switches = new ConcurrentHashMap<>();
         mac2Device = new ConcurrentHashMap<>();
+        outgoingLinks = new ConcurrentHashMap<>();
+        incomingLinks = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -63,18 +67,19 @@ public class NetworkGraphImpl implements NetworkGraph {
     }
 
     @Override
-    public Link getLink(Long dpid, Long number) {
-        Port srcPort = getPort(dpid, number);
-        if (srcPort == null) {
-            return null;
-        }
-        return srcPort.getOutgoingLink();
+    public Link getOutgoingLink(Long dpid, Long number) {
+        return outgoingLinks.get(new SwitchPort(dpid, number.shortValue()));
+    }
+
+    @Override
+    public Link getIncomingLink(Long dpid, Long number) {
+        return incomingLinks.get(new SwitchPort(dpid, number.shortValue()));
     }
 
     @Override
     public Link getLink(Long srcDpid, Long srcNumber, Long dstDpid,
                         Long dstNumber) {
-        Link link = getLink(srcDpid, srcNumber);
+        Link link = getOutgoingLink(srcDpid, srcNumber);
         if (link == null) {
             return null;
         }
@@ -89,15 +94,17 @@ public class NetworkGraphImpl implements NetworkGraph {
 
     @Override
     public Iterable<Link> getLinks() {
-        List<Link> linklist = new LinkedList<>();
+        return Collections.unmodifiableCollection(outgoingLinks.values());
+    }
 
-        for (Switch sw : switches.values()) {
-            Iterable<Link> links = sw.getOutgoingLinks();
-            for (Link l : links) {
-                linklist.add(l);
-            }
-        }
-        return linklist;
+    protected void putLink(Link link) {
+        outgoingLinks.put(link.getSrcPort().asSwitchPort(), link);
+        incomingLinks.put(link.getDstPort().asSwitchPort(), link);
+    }
+
+    protected void removeLink(Link link) {
+        outgoingLinks.remove(link.getSrcPort().asSwitchPort(), link);
+        incomingLinks.remove(link.getDstPort().asSwitchPort(), link);
     }
 
     @Override

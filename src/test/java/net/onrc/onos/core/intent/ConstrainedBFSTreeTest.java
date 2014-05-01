@@ -3,7 +3,6 @@ package net.onrc.onos.core.intent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Path;
@@ -58,21 +57,21 @@ public class ConstrainedBFSTreeTest {
 
         assertNotNull(path12);
         assertEquals(1, path12.size());
-        assertEquals(new LinkEvent(graph.getLink(1L, 12L)), path12.get(0));
+        assertEquals(new LinkEvent(graph.getOutgoingLink(1L, 12L)), path12.get(0));
 
         assertNotNull(path13);
         assertEquals(2, path13.size());
         if (path13.get(0).getDst().getDpid() == 2L) {
-            assertEquals(new LinkEvent(graph.getLink(1L, 12L)), path13.get(0));
-            assertEquals(new LinkEvent(graph.getLink(2L, 23L)), path13.get(1));
+            assertEquals(new LinkEvent(graph.getOutgoingLink(1L, 12L)), path13.get(0));
+            assertEquals(new LinkEvent(graph.getOutgoingLink(2L, 23L)), path13.get(1));
         } else {
-            assertEquals(new LinkEvent(graph.getLink(1L, 14L)), path13.get(0));
-            assertEquals(new LinkEvent(graph.getLink(4L, 43L)), path13.get(1));
+            assertEquals(new LinkEvent(graph.getOutgoingLink(1L, 14L)), path13.get(0));
+            assertEquals(new LinkEvent(graph.getOutgoingLink(4L, 43L)), path13.get(1));
         }
 
         assertNotNull(path14);
         assertEquals(1, path14.size());
-        assertEquals(new LinkEvent(graph.getLink(1L, 14L)), path14.get(0));
+        assertEquals(new LinkEvent(graph.getOutgoingLink(1L, 14L)), path14.get(0));
     }
 
     @Test
@@ -96,7 +95,7 @@ public class ConstrainedBFSTreeTest {
         assertNull(path14);
         assertNotNull(path21);
         assertEquals(1, path21.size());
-        assertEquals(new LinkEvent(graph.getLink(2L, 21L)), path21.get(0));
+        assertEquals(new LinkEvent(graph.getOutgoingLink(2L, 21L)), path21.get(0));
     }
 
     @Test
@@ -118,7 +117,7 @@ public class ConstrainedBFSTreeTest {
 
         assertNotNull(path1);
         assertEquals(1, path1.size());
-        assertEquals(new LinkEvent(graph.getLink(1L, 12L)), path1.get(0));
+        assertEquals(new LinkEvent(graph.getOutgoingLink(1L, 12L)), path1.get(0));
 
         PathIntent pathIntent1 = new PathIntent("pi1", path1, 600.0, intent1);
         intentOps.add(Operator.ADD, pathIntent1);
@@ -130,8 +129,8 @@ public class ConstrainedBFSTreeTest {
 
         assertNotNull(path2);
         assertEquals(2, path2.size());
-        assertEquals(new LinkEvent(graph.getLink(1L, 14L)), path2.get(0));
-        assertEquals(new LinkEvent(graph.getLink(4L, 42L)), path2.get(1));
+        assertEquals(new LinkEvent(graph.getOutgoingLink(1L, 14L)), path2.get(0));
+        assertEquals(new LinkEvent(graph.getOutgoingLink(4L, 42L)), path2.get(1));
 
         PathIntent pathIntent2 = new PathIntent("pi2", path2, 600.0, intent2);
         intentOps.add(Operator.ADD, pathIntent2);

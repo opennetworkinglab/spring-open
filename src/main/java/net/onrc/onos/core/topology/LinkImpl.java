@@ -1,5 +1,7 @@
 package net.onrc.onos.core.topology;
 
+import net.onrc.onos.core.util.SwitchPort;
+
 /**
  * Link Object stored in In-memory Topology.
  * <p/>
@@ -7,8 +9,8 @@ package net.onrc.onos.core.topology;
  * but this Object itself will not issue any read/write to the DataStore.
  */
 public class LinkImpl extends NetworkGraphObject implements Link {
-    protected Port srcPort;
-    protected Port dstPort;
+    private SwitchPort srcPort;
+    private SwitchPort dstPort;
 
     protected static final Double DEFAULT_CAPACITY = Double.POSITIVE_INFINITY;
     protected Double capacity = DEFAULT_CAPACITY;
@@ -26,39 +28,28 @@ public class LinkImpl extends NetworkGraphObject implements Link {
      */
     public LinkImpl(NetworkGraph graph, Port srcPort, Port dstPort) {
         super(graph);
-        this.srcPort = srcPort;
-        this.dstPort = dstPort;
-        setToPorts();
+        this.srcPort = srcPort.asSwitchPort();
+        this.dstPort = dstPort.asSwitchPort();
     }
 
     @Override
     public Switch getSrcSwitch() {
-        return srcPort.getSwitch();
+        return graph.getSwitch(srcPort.dpid().value());
     }
 
     @Override
     public Port getSrcPort() {
-        return srcPort;
+        return graph.getPort(srcPort.dpid().value(), (long) srcPort.port().value());
     }
 
     @Override
     public Switch getDstSwitch() {
-        return dstPort.getSwitch();
+        return graph.getSwitch(dstPort.dpid().value());
     }
 
     @Override
     public Port getDstPort() {
-        return dstPort;
-    }
-
-    protected void setToPorts() {
-        ((PortImpl) srcPort).setOutgoingLink(this);
-        ((PortImpl) dstPort).setIncomingLink(this);
-    }
-
-    protected void unsetFromPorts() {
-        ((PortImpl) srcPort).setOutgoingLink(null);
-        ((PortImpl) dstPort).setIncomingLink(null);
+        return graph.getPort(dstPort.dpid().value(), (long) dstPort.port().value());
     }
 
     @Override
