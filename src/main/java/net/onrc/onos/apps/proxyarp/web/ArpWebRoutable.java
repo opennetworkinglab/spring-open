@@ -1,4 +1,4 @@
-package net.onrc.onos.apps.proxyarp;
+package net.onrc.onos.apps.proxyarp.web;
 
 import net.floodlightcontroller.restserver.RestletRoutable;
 

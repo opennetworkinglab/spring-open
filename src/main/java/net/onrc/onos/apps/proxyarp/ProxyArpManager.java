@@ -20,6 +20,7 @@ import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
+import net.onrc.onos.apps.proxyarp.web.ArpWebRoutable;
 import net.onrc.onos.apps.sdnip.Interface;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;

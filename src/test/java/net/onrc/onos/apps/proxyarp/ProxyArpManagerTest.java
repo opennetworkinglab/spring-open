@@ -2,6 +2,7 @@ package net.onrc.onos.apps.proxyarp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -11,12 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketService;
+import net.onrc.onos.apps.proxyarp.web.ArpWebRoutable;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
@@ -185,13 +186,15 @@ public class ProxyArpManagerTest {
 
         //Made tested objects
         arpCache = new ArpCache();
-        arpCacheComparisonList = new ArrayList<String>();
+        arpCache.setArpEntryTimeoutConfig(Long.parseLong(defaultStrCleanupMsec));
         arpCache.update(cachedIp1, cachedMac1);
+        arpCache.update(cachedIp2, cachedMac2);
+
+        arpCacheComparisonList = new ArrayList<String>();
         arpCacheComparisonList.add(cachedStrIp1
                 + " => "
                 + cachedStrMac1
                 + " : VALID");
-        arpCache.update(cachedIp2, cachedMac2);
         arpCacheComparisonList.add(cachedStrIp2
                 + " => "
                 + cachedStrMac2
@@ -247,7 +250,7 @@ public class ProxyArpManagerTest {
         try {
             PowerMock.expectNew(ArpCache.class).andReturn(arpCache);
         } catch (Exception e) {
-            Assert.fail("Exception:" + e.getMessage());
+            fail("Exception:" + e.getMessage());
         }
         PowerMock.replayAll();
         EasyMock.expect(configInfoService.getVlan()).andReturn(vlanId);
@@ -269,6 +272,7 @@ public class ProxyArpManagerTest {
 
     @After
     public void tearDown() throws Exception {
+        arpCache = null;
     }
 
     @Test

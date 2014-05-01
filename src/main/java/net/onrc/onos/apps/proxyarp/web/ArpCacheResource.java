@@ -1,6 +1,8 @@
-package net.onrc.onos.apps.proxyarp;
+package net.onrc.onos.apps.proxyarp.web;
 
 import java.util.List;
+
+import net.onrc.onos.apps.proxyarp.IProxyArpService;
 
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
