@@ -70,6 +70,8 @@ public class PathCalcRuntimeModuleTest {
     private IControllerRegistryService controllerRegistryService;
     private PersistIntent persistIntent;
     private MockNetworkGraph graph;
+    private IEventChannel<Long, IntentOperationList> intentOperationChannel;
+    private IEventChannel<Long, IntentStateList> intentStateChannel;
 
     @SuppressWarnings("unchecked")
     @Before
@@ -81,7 +83,8 @@ public class PathCalcRuntimeModuleTest {
         networkGraphService = createMock(INetworkGraphService.class);
         controllerRegistryService = createMock(IControllerRegistryService.class);
         modContext = createMock(FloodlightModuleContext.class);
-        final IEventChannel eventChannel = createMock(IEventChannel.class);
+        intentOperationChannel = createMock(IEventChannel.class);
+        intentStateChannel = createMock(IEventChannel.class);
         persistIntent = PowerMock.createMock(PersistIntent.class);
 
         PowerMock.expectNew(PersistIntent.class,
@@ -106,14 +109,14 @@ public class PathCalcRuntimeModuleTest {
 
         expect(datagridService.createChannel("onos.pathintent",
                 Long.class, IntentOperationList.class))
-                .andReturn(eventChannel).once();
+                .andReturn(intentOperationChannel).once();
 
         expect(datagridService.addListener(
                 eq("onos.pathintent_state"),
                 anyObject(IEventChannelListener.class),
                 eq(Long.class),
                 eq(IntentStateList.class)))
-                .andReturn(eventChannel).once();
+                .andReturn(intentStateChannel).once();
 
         replay(datagridService);
         replay(networkGraphService);

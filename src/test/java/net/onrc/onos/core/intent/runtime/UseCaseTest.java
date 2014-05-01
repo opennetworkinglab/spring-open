@@ -45,6 +45,10 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
+ * Temporary test cases for the ONS2014 demo.
+ * These test cases should be modified and be moved to appropriate classes
+ * (ex. PathCalcRuntimeModuleTest, PlanInstallModuleTest, etc.)
+ *
  * @author Toshio Koide (t-koide@onlab.us)
  */
 @RunWith(PowerMockRunner.class)
@@ -56,8 +60,8 @@ public class UseCaseTest {
     private INetworkGraphService networkGraphService;
     private IControllerRegistryService controllerRegistryService;
     private PersistIntent persistIntent;
-    @SuppressWarnings("rawtypes")
-    private IEventChannel eventChannel;
+    private IEventChannel<Long, IntentOperationList> intentOperationChannel;
+    private IEventChannel<Long, IntentStateList> intentStateChannel;
 
     private static Long LOCAL_PORT = 0xFFFEL;
 
@@ -72,7 +76,8 @@ public class UseCaseTest {
         networkGraphService = createMock(INetworkGraphService.class);
         controllerRegistryService = createMock(IControllerRegistryService.class);
         modContext = createMock(FloodlightModuleContext.class);
-        eventChannel = createMock(IEventChannel.class);
+        intentOperationChannel = createMock(IEventChannel.class);
+        intentStateChannel = createMock(IEventChannel.class);
         persistIntent = PowerMock.createMock(PersistIntent.class);
 
         PowerMock.expectNew(PersistIntent.class,
@@ -93,14 +98,14 @@ public class UseCaseTest {
         expectLastCall();
 
         expect(datagridService.createChannel("onos.pathintent", Long.class, IntentOperationList.class))
-                .andReturn(eventChannel).once();
+                .andReturn(intentOperationChannel).once();
 
         expect(datagridService.addListener(
                 eq("onos.pathintent_state"),
                 anyObject(IEventChannelListener.class),
                 eq(Long.class),
                 eq(IntentStateList.class)))
-                .andReturn(eventChannel).once();
+                .andReturn(intentStateChannel).once();
 
         replay(datagridService);
         replay(networkGraphService);
