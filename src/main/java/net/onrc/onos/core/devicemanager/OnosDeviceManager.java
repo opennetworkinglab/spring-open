@@ -58,7 +58,7 @@ public class OnosDeviceManager implements IFloodlightModule,
     private IDatagridService datagrid;
     private IEventChannel<Long, OnosDevice> eventChannel;
     private static final String DEVICE_CHANNEL_NAME = "onos.device";
-    private Map<Long, OnosDevice> mapDevice = new ConcurrentHashMap<Long, OnosDevice>();
+    private final Map<Long, OnosDevice> mapDevice = new ConcurrentHashMap<Long, OnosDevice>();
     private ITopologyService topologyService;
     private Topology topology;
 
@@ -67,8 +67,8 @@ public class OnosDeviceManager implements IFloodlightModule,
     }
 
     private class OnosDeviceUpdate implements IUpdate {
-        private OnosDevice device;
-        private OnosDeviceUpdateType type;
+        private final OnosDevice device;
+        private final OnosDeviceUpdateType type;
 
         public OnosDeviceUpdate(OnosDevice device, OnosDeviceUpdateType type) {
             this.device = device;
@@ -110,7 +110,7 @@ public class OnosDeviceManager implements IFloodlightModule,
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
         if (msg.getType().equals(OFType.PACKET_IN) &&
-            (msg instanceof OFPacketIn)) {
+                (msg instanceof OFPacketIn)) {
             OFPacketIn pi = (OFPacketIn) msg;
 
             Ethernet eth = IFloodlightProviderService.bcStore.
@@ -250,14 +250,16 @@ public class OnosDeviceManager implements IFloodlightModule,
      * @param pi  the original packetin
      * @return the entity from the packet
      */
-    private OnosDevice getSourceDeviceFromPacket(Ethernet eth,
-                                                 long swdpid,
-                                                 short port) {
+    protected OnosDevice getSourceDeviceFromPacket(Ethernet eth,
+            long swdpid,
+            short port) {
         byte[] dlAddrArr = eth.getSourceMACAddress();
         long dlAddr = Ethernet.toLong(dlAddrArr);
 
-        // Ignore broadcast/multicast source
-        if ((dlAddrArr[0] & 0x1) != 0) {
+        /*
+         *  Ignore broadcast/multicast source
+         */
+        if (eth.isMulticast() || eth.isBroadcast()) {
             return null;
         }
 
