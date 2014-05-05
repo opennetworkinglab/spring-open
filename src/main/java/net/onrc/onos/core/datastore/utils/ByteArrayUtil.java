@@ -1,6 +1,7 @@
 package net.onrc.onos.core.datastore.utils;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public final class ByteArrayUtil {
 
@@ -50,5 +51,27 @@ public final class ByteArrayUtil {
         }
 
         return buf;
+    }
+
+    /**
+     * Convert {@code value} to Little Endian byte array.
+     *
+     * @param value
+     * @return {@code value} as Little Endian byte array
+     */
+    public static byte[] toLEBytes(final long value) {
+        return ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN)
+                .putLong(value).array();
+    }
+
+    /**
+     * Convert Little Endian byte array to long.
+     *
+     * @param value 8 byte Little Endian byte array
+     * @return {@code value} converted to long
+     */
+    public static long fromLEBytes(final byte[] value) {
+        ByteBuffer counter = ByteBuffer.wrap(value).order(ByteOrder.LITTLE_ENDIAN);
+        return counter.getLong();
     }
 }

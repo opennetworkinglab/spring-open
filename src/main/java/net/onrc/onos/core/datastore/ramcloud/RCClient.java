@@ -510,7 +510,8 @@ public class RCClient implements IKVClient {
         for (int i = 0; i < results.length; ++i) {
             IModifiableMultiEntryOperation op = ops.get(i);
             if (results[i] == null) {
-                log.error("MultiRead error, skipping {}, {}", op.getTableId(), op);
+                // Logging as error gets too noisy when doing speculative read.
+                log.trace("MultiRead error {}, {}", op.getTableId(), op);
                 failExists = true;
                 op.setStatus(STATUS.FAILED);
                 continue;

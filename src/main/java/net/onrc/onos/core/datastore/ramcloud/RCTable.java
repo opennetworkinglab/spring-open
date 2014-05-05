@@ -5,6 +5,7 @@ import net.onrc.onos.core.datastore.IKVTableID;
 import net.onrc.onos.core.datastore.ObjectDoesntExistException;
 import net.onrc.onos.core.datastore.ObjectExistsException;
 import net.onrc.onos.core.datastore.WrongVersionException;
+import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
@@ -53,6 +54,12 @@ public class RCTable implements IKVTable {
 
         void setVersion(long version) {
             this.version = version;
+        }
+
+        @Override
+        public String toString() {
+            return "[Entry key=" + ByteArrayUtil.toHexStringBuilder(key, ":") + ", value="
+                    + ByteArrayUtil.toHexStringBuilder(value, ":") + ", version=" + version + "]";
         }
     }
 
