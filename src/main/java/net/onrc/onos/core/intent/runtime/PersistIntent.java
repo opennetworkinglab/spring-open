@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.onrc.onos.core.datagrid.web.IntentResource;
 import net.onrc.onos.core.datastore.DataStoreClient;
 import net.onrc.onos.core.datastore.IKVTable;
 import net.onrc.onos.core.datastore.ObjectExistsException;
@@ -25,7 +24,7 @@ import com.esotericsoftware.kryo.io.Output;
  * @author nickkaranatsios
  */
 public class PersistIntent {
-    private static final Logger log = LoggerFactory.getLogger(IntentResource.class);
+    private static final Logger log = LoggerFactory.getLogger(PersistIntent.class);
     private long range = 10000L;
     private final IControllerRegistryService controllerRegistry;
     private static final String INTENT_JOURNAL = "G:IntentJournal";
