@@ -544,7 +544,7 @@ function rc-coord {
 }
 
 function start-coord {
-  wait-zk-or-die 1
+  wait-zk-or-die 2
 
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
@@ -665,7 +665,7 @@ function rc-server {
 }
 
 function start-server {
-  wait-zk-or-die 1
+  wait-zk-or-die 2
 
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
