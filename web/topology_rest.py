@@ -1,36 +1,44 @@
 #! /usr/bin/env python
 import os
+import sys
 import json
 from urllib2 import Request, urlopen, URLError, HTTPError
 from flask import Flask, json, Response, render_template, make_response, request
 
-CONFIG_FILE="config.json"
-
-## Global Var for this proxy script setting.
-# "0.0.0.0" means any interface
-GuiIp="0.0.0.0"
-GuiPort=9000
-
-## Global Var for ON.Lab local REST ##
 # The GUI can be accessed at <this_host>:9000/onos-topology.html
-RestIP="localhost"
-RestPort=8080
-ONOS_DEFAULT_HOST="localhost" ;# Has to set if LB=False
-DEBUG=1
+
+WEB_DIR = os.path.dirname(os.path.realpath(__file__))
+
+LOCAL_CONFIG_FILE = os.path.join(WEB_DIR, "config.json")
+DEFAULT_CONFIG_FILE = os.path.join(WEB_DIR, "config.json.default")
 
 app = Flask(__name__)
 
 def read_config():
-  global LB, TESTBED, controllers, core_switches, ONOS_GUI3_HOST, ONOS_GUI3_CONTROL_HOST
-  f = open(CONFIG_FILE)
-  conf = json.load(f)
-  LB = conf['LB']
-  TESTBED = conf['TESTBED']
-  controllers = conf['controllers']
-  core_switches=conf['core_switches']
-  ONOS_GUI3_HOST=conf['ONOS_GUI3_HOST']
-  ONOS_GUI3_CONTROL_HOST=conf['ONOS_GUI3_CONTROL_HOST']
-  f.close()
+  global guiIp, guiPort, onosIp, onosPort, controllers
+
+  if (os.path.isfile(LOCAL_CONFIG_FILE)):
+    confFile = open(LOCAL_CONFIG_FILE)
+  else:
+    print " * Local config file not found - loading default: %s" % DEFAULT_CONFIG_FILE
+    print " * If you want to modify the config, copy %s to %s and make changes there" % (DEFAULT_CONFIG_FILE, LOCAL_CONFIG_FILE)
+    print " "
+    confFile = open(DEFAULT_CONFIG_FILE)
+  
+  conf = json.load(confFile)
+
+  try:
+    guiIp = conf['gui-ip']
+    guiPort = conf['gui-port']
+    onosIp = conf['onos-ip']
+    onosPort = conf['onos-port']
+    controllers = conf['controllers']
+  except KeyError as e:
+    print " Parameters were missing from the config file: %s" % e
+    print " Your may be using an old version - please check your config matches the template in %s" % DEFAULT_CONFIG_FILE
+    sys.exit(1)
+
+  confFile.close()
 
 ## Worker Functions ##
 def log_error(txt):
@@ -44,9 +52,9 @@ def log_error(txt):
 @app.route('/<filename>', methods=['GET'])
 def return_file(filename="index.html"):
   if request.path == "/":
-    fullpath = "./onos-topology.html"
+    fullpath = os.path.join(WEB_DIR, "onos-topology.html")
   else:
-    fullpath = str(request.path)[1:]
+    fullpath = os.path.join(WEB_DIR, str(request.path)[1:])
 
   try:
     open(fullpath)
@@ -103,7 +111,7 @@ def node_id(switch_array, dpid):
 @app.route('/topology', methods=['GET'])
 def topology_for_gui():
   try:
-    url="http://%s:%s/wm/onos/topology/switches/json" % (RestIP, RestPort)
+    url="http://%s:%s/wm/onos/topology/switches/json" % (onosIp, onosPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -130,7 +138,7 @@ def topology_for_gui():
       switches.append(sw)
 
   try:
-    url="http://%s:%s/wm/onos/registry/switches/json" % (RestIP, RestPort)
+    url="http://%s:%s/wm/onos/registry/switches/json" % (onosIp, onosPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -146,7 +154,7 @@ def topology_for_gui():
         switches[sw_id]['group'] = controllers.index(ctrl) + 1
 
   try:
-    url = "http://%s:%s/wm/onos/topology/links/json" % (RestIP, RestPort)
+    url = "http://%s:%s/wm/onos/topology/links/json" % (onosIp, onosPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -176,7 +184,7 @@ def topology_for_gui():
 
 @app.route("/controller_status")
 def controller_status():
-  url= "http://%s:%d/wm/onos/registry/controllers/json" % (RestIP, RestPort)
+  url= "http://%s:%d/wm/onos/registry/controllers/json" % (onosIp, onosPort)
   (code, result) = get_json(url)
   parsedResult = json.loads(result)
 
@@ -197,5 +205,5 @@ def controller_status():
 
 if __name__ == "__main__":
   read_config()
-  app.debug = True
-  app.run(threaded=True, host=GuiIp, port=GuiPort)
+  #app.debug = True
+  app.run(threaded=True, host=guiIp, port=guiPort)
