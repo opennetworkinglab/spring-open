@@ -41,6 +41,7 @@ public final class HZClient implements IKVClient {
 
     // make this path configurable
     private static final String BASE_CONFIG_FILENAME = System.getProperty("net.onrc.onos.core.datastore.hazelcast.baseConfig", "conf/hazelcast.xml");
+    private static final String HAZELCAST_DEFAULT_XML = "conf/hazelcast.default.xml";
     private static boolean useClientMode = Boolean.parseBoolean(System.getProperty("net.onrc.onos.core.datastore.hazelcast.clientMode", "true"));
 
     // Note: xml configuration will overwrite this value if present
@@ -64,7 +65,18 @@ public final class HZClient implements IKVClient {
             baseHzConfig = new FileSystemXmlConfig(hazelcastConfigFileName);
         } catch (FileNotFoundException e) {
             log.error("Error opening Hazelcast XML configuration. File not found: " + hazelcastConfigFileName, e);
-            throw new Error("Cannot find Hazelcast configuration: " + hazelcastConfigFileName, e);
+            // Fallback mechanism to support running unit test without setup.
+            log.error("Falling back to default Hazelcast XML {}", HAZELCAST_DEFAULT_XML);
+            try {
+                baseHzConfig = new FileSystemXmlConfig(HAZELCAST_DEFAULT_XML);
+            } catch (FileNotFoundException e2) {
+                log.error("Error opening fall back Hazelcast XML configuration. "
+                        + "File not found: " + HAZELCAST_DEFAULT_XML, e2);
+
+                // intentionally throwing Exception "e" thrown from non-fallback
+                // Hazelcast configuration loading.
+                throw new Error("Cannot find Hazelcast configuration: " + hazelcastConfigFileName, e);
+            }
         }
 
         // use xml config if present, if not use System.property

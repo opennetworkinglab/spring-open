@@ -33,6 +33,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
     private IRestApiService restApi;
 
     static final String HAZELCAST_CONFIG_FILE = "datagridConfig";
+    private static final String HAZELCAST_DEFAULT_XML = "conf/hazelcast.default.xml";
     private HazelcastInstance hazelcastInstance;
     private Config hazelcastConfig;
 
@@ -44,11 +45,11 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
     private final Map<String, IEventChannel<?, ?>> eventChannels = new HashMap<>();
 
     /**
-     * Initialize the Hazelcast Datagrid operation.
+     * Load the Hazelcast Datagrid configuration file.
      *
      * @param configFilename the configuration filename.
      */
-    public void init(String configFilename) {
+    public void loadHazelcastConfig(String configFilename) {
         /*
         System.setProperty("hazelcast.socket.receive.buffer.size", "32");
         System.setProperty("hazelcast.socket.send.buffer.size", "32");
@@ -60,6 +61,16 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
             hazelcastConfig = new FileSystemXmlConfig(configFilename);
         } catch (FileNotFoundException e) {
             log.error("Error opening Hazelcast XML configuration. File not found: " + configFilename, e);
+
+            // Fallback mechanism to support running unit test without setup.
+            log.error("Falling back to default Hazelcast XML {}", HAZELCAST_DEFAULT_XML);
+            try {
+                hazelcastConfig = new FileSystemXmlConfig(HAZELCAST_DEFAULT_XML);
+            } catch (FileNotFoundException e2) {
+                log.error("Error opening fall back Hazelcast XML configuration. "
+                        + "File not found: " + HAZELCAST_DEFAULT_XML, e2);
+                // XXX probably should throw some exception to kill ONOS instead.
+            }
         }
         /*
         hazelcastConfig.setProperty(GroupProperties.PROP_IO_THREAD_COUNT, "1");
@@ -145,7 +156,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
         // Get the configuration file name and configure the Datagrid
         Map<String, String> configMap = context.getConfigParams(this);
         String configFilename = configMap.get(HAZELCAST_CONFIG_FILE);
-        this.init(configFilename);
+        this.loadHazelcastConfig(configFilename);
     }
 
     /**

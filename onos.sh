@@ -125,8 +125,6 @@ JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
 
 JVM_OPTS="$JVM_OPTS -Dhazelcast.logging.type=slf4j"
 
-JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datagrid.HazelcastDatagrid.datagridConfig=${HC_CONF}"
-
 # Uncomment to dump final JVM flags to stdout
 #JVM_OPTS="$JVM_OPTS -XX:+PrintFlagsFinal"
 
@@ -779,9 +777,21 @@ function start-onos {
     exit 1
   fi
 
+  if [ ! -f ${HC_CONF} ]; then
+    echo "[WARNING] ${HC_CONF} not found."
+    echo "          Run \"\$ $0 setup\" to create."
+    exit 1
+    fi
+
+  # specify hazelcast.xml to datagrid
+  JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datagrid.HazelcastDatagrid.datagridConfig=${HC_CONF}"
+
+  # specify backend config
   JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datastore.backend=${ONOS_HOST_BACKEND}"
   if [ "${ONOS_HOST_BACKEND}" = "ramcloud" ]; then
     JVM_OPTS="${JVM_OPTS} -Dramcloud.config.path=${RAMCLOUD_CONF}"
+  elif [ "${ONOS_HOST_BACKEND}" = "hazelcast" ]; then
+    JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datastore.hazelcast.baseConfig=${HC_CONF}"
   fi
 
   # Run ONOS
