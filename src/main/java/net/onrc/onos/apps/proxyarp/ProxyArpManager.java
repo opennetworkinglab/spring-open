@@ -25,16 +25,15 @@ import net.onrc.onos.apps.sdnip.Interface;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
-import net.onrc.onos.core.devicemanager.IOnosDeviceService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.Device;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.util.HexString;
@@ -44,13 +43,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
+import com.google.common.net.InetAddresses;
 
 public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                                         IPacketListener {
     private static final Logger log = LoggerFactory
             .getLogger(ProxyArpManager.class);
 
-    private static long arpTimerPeriodConfig = 100; // ms
+    private static long arpTimerPeriodConfig = 2000; // ms
     private static int arpRequestTimeoutConfig = 2000; // ms
     private long arpCleaningTimerPeriodConfig = 60 * 1000; // ms (1 min)
 
@@ -67,7 +67,6 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
     private ITopologyService topologyService;
     private Topology topology;
-    private IOnosDeviceService onosDeviceService;
     private IPacketService packetService;
 
     private short vlan;
@@ -84,20 +83,11 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         public void entryAdded(ArpReplyNotification arpReply) {
             log.debug("Received ARP reply notification for ip {}, mac {}",
                     arpReply.getTargetAddress(), arpReply.getTargetMacAddress());
-            //This 4 means ipv4 addr size. Need to change it in the future.
-            ByteBuffer buffer = ByteBuffer.allocate(4);
-            buffer.putInt(arpReply.getTargetAddress());
-            InetAddress addr = null;
-            try {
-                addr = InetAddress.getByAddress(buffer.array());
-            } catch (UnknownHostException e) {
-                log.error("Exception:", e);
-            }
 
-            if (addr != null) {
-                sendArpReplyToWaitingRequesters(addr,
-                        arpReply.getTargetMacAddress());
-            }
+            InetAddress addr = InetAddresses.fromInteger(arpReply.getTargetAddress());
+
+            sendArpReplyToWaitingRequesters(addr,
+                    arpReply.getTargetMacAddress());
         }
 
         @Override
@@ -168,12 +158,13 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
     private static class ArpRequest {
         private final IArpRequester requester;
         private final boolean retry;
-        private boolean sent = false;
         private long requestTime;
 
         public ArpRequest(IArpRequester requester, boolean retry) {
             this.requester = requester;
             this.retry = retry;
+
+            requestTime = System.currentTimeMillis();
         }
 
         public ArpRequest(ArpRequest old) {
@@ -182,8 +173,8 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         }
 
         public boolean isExpired() {
-            return sent
-                    && ((System.currentTimeMillis() - requestTime) > arpRequestTimeoutConfig);
+            return ((System.currentTimeMillis() - requestTime)
+                    > arpRequestTimeoutConfig);
         }
 
         public boolean shouldRetry() {
@@ -193,11 +184,6 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         public void dispatchReply(InetAddress ipAddress,
                                   MACAddress replyMacAddress) {
             requester.arpResponse(ipAddress, replyMacAddress);
-        }
-
-        public void setRequestTime() {
-            this.requestTime = System.currentTimeMillis();
-            this.sent = true;
         }
     }
 
@@ -216,10 +202,6 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         public void arpResponse(InetAddress ipAddress, MACAddress macAddress) {
             ProxyArpManager.this.sendArpReply(arpRequest, dpid, port,
                     macAddress);
-        }
-
-        public ARP getArpRequest() {
-            return arpRequest;
         }
     }
 
@@ -247,7 +229,6 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         dependencies.add(IDatagridService.class);
         dependencies.add(IConfigInfoService.class);
         dependencies.add(ITopologyService.class);
-        dependencies.add(IOnosDeviceService.class);
         dependencies.add(IPacketService.class);
         return dependencies;
     }
@@ -258,7 +239,6 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         this.restApi = context.getServiceImpl(IRestApiService.class);
         this.datagrid = context.getServiceImpl(IDatagridService.class);
         this.topologyService = context.getServiceImpl(ITopologyService.class);
-        this.onosDeviceService = context.getServiceImpl(IOnosDeviceService.class);
         this.packetService = context.getServiceImpl(IPacketService.class);
 
         arpRequests = Multimaps.synchronizedSetMultimap(HashMultimap
@@ -336,9 +316,8 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         SetMultimap<InetAddress, ArpRequest> retryList = HashMultimap
                 .<InetAddress, ArpRequest>create();
 
-        // Have to synchronize externally on the Multimap while using an
-        // iterator,
-        // even though it's a synchronizedMultimap
+        // We must synchronize externally on the Multimap while using an
+        // iterator, even though it's a synchronizedMultimap
         synchronized (arpRequests) {
             Iterator<Map.Entry<InetAddress, ArpRequest>> it = arpRequests
                     .entries().iterator();
@@ -349,19 +328,6 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                 if (request.isExpired()) {
                     log.debug("Cleaning expired ARP request for {}", entry
                             .getKey().getHostAddress());
-
-                    // If the ARP request is expired and then delete the device
-                    HostArpRequester requester = (HostArpRequester) request.requester;
-                    ARP req = requester.getArpRequest();
-                    topology.acquireReadLock();
-                    Device targetDev = topology.getDeviceByMac(MACAddress.valueOf(req.getTargetHardwareAddress()));
-                    topology.releaseReadLock();
-                    if (targetDev != null) {
-                        onosDeviceService.deleteOnosDeviceByMac(MACAddress.valueOf(req.getTargetHardwareAddress()));
-                        if (log.isDebugEnabled()) {
-                            log.debug("RemoveDevice: {} due to no have not recieve the ARP reply", targetDev.getMacAddress());
-                        }
-                    }
 
                     it.remove();
 
