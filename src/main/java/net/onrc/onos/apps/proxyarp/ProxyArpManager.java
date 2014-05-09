@@ -2,7 +2,6 @@ package net.onrc.onos.apps.proxyarp;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -122,13 +121,16 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
         @Override
         public void entryAdded(ArpCacheNotification value) {
-
             try {
-                log.debug("Received entryAdded for ARP cache notification for ip {}, mac {}",
-                    InetAddress.getByAddress(value.getTargetAddress()), value.getTargetMacAddress());
-                arpCache.update(InetAddress.getByAddress(value.getTargetAddress()), MACAddress.valueOf(value.getTargetMacAddress()));
+                InetAddress targetIpAddress =
+                        InetAddress.getByAddress(value.getTargetAddress());
+
+                log.debug("Received entryAdded for ARP cache notification " +
+                        "for ip {}, mac {}", targetIpAddress, value.getTargetMacAddress());
+                arpCache.update(targetIpAddress,
+                        MACAddress.valueOf(value.getTargetMacAddress()));
             } catch (UnknownHostException e) {
-                log.error("Exception : ", e);
+                log.error("Exception: ", e);
             }
         }
 
@@ -139,18 +141,22 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             try {
                 arpCache.remove(InetAddress.getByAddress(value.getTargetAddress()));
             } catch (UnknownHostException e) {
-                log.error("Exception : ", e);
+                log.error("Exception: ", e);
             }
         }
 
         @Override
         public void entryUpdated(ArpCacheNotification value) {
             try {
-                log.debug("Received entryUpdated for ARP cache notification for ip {}, mac {}",
-                        InetAddress.getByAddress(value.getTargetAddress()), value.getTargetMacAddress());
-                arpCache.update(InetAddress.getByAddress(value.getTargetAddress()), MACAddress.valueOf(value.getTargetMacAddress()));
+                InetAddress targetIpAddress =
+                        InetAddress.getByAddress(value.getTargetAddress());
+
+                log.debug("Received entryUpdated for ARP cache notification " +
+                        "for ip {}, mac {}", targetIpAddress, value.getTargetMacAddress());
+                arpCache.update(targetIpAddress,
+                        MACAddress.valueOf(value.getTargetMacAddress()));
             } catch (UnknownHostException e) {
-                log.error("Exception : ", e);
+                log.error("Exception: ", e);
             }
         }
     }
@@ -250,16 +256,19 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         Map<String, String> configOptions = context.getConfigParams(this);
 
         try {
-            arpCleaningTimerPeriodConfig = Long.parseLong(configOptions.get("cleanupmsec"));
+            arpCleaningTimerPeriodConfig =
+                    Long.parseLong(configOptions.get("cleanupmsec"));
         } catch (NumberFormatException e) {
-            log.debug("ArpCleaningTimerPeriod related config options were not set. Use default.");
+            log.debug("ArpCleaningTimerPeriod related config options were " +
+                    "not set. Using default.");
         }
 
         Long agingmsec = null;
         try {
             agingmsec = Long.parseLong(configOptions.get("agingmsec"));
         } catch (NumberFormatException e) {
-            log.debug("ArpEntryTimeout related config options were not set. Use default.");
+            log.debug("ArpEntryTimeout related config options were " +
+                    "not set. Using default.");
         }
 
         arpCache = new ArpCache();
@@ -297,7 +306,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             }
         }, 0, arpTimerPeriodConfig);
 
-        Timer arpCacheTimer = new Timer("arp-clearning");
+        Timer arpCacheTimer = new Timer("arp-cleaning");
         arpCacheTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -375,10 +384,12 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
     private void learnArp(ARP arp) {
         ArpCacheNotification arpCacheNotification = null;
 
-        arpCacheNotification = new ArpCacheNotification(arp.getSenderProtocolAddress(), arp.getSenderHardwareAddress());
+        arpCacheNotification = new ArpCacheNotification(
+                arp.getSenderProtocolAddress(), arp.getSenderHardwareAddress());
 
         try {
-            arpCacheEventChannel.addEntry(InetAddress.getByAddress(arp.getSenderProtocolAddress()).toString(), arpCacheNotification);
+            arpCacheEventChannel.addEntry(InetAddress.getByAddress(
+                    arp.getSenderProtocolAddress()).toString(), arpCacheNotification);
         } catch (UnknownHostException e) {
             log.error("Exception : ", e);
         }
@@ -439,16 +450,15 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             MACAddress macAddress = MACAddress.valueOf(arp.getTargetHardwareAddress());
 
             if (log.isTraceEnabled()) {
-                log.trace("The target Device Record in DB is: {} => {} from ARP request host at {}/{}",
-                        new Object[]{
+                log.trace("The target Device Record in DB is: {} => {} " +
+                        "from ARP request host at {}/{}", new Object[]{
                                 inetAddressToString(arp.getTargetProtocolAddress()),
-                                macAddress,
-                                HexString.toHexString(dpid), inPort});
+                                macAddress, HexString.toHexString(dpid), inPort});
             }
 
             // sendArpReply(arp, sw.getId(), pi.getInPort(), macAddress);
 
-            Iterable<net.onrc.onos.core.topology.Port> outPorts = targetDevice.getAttachmentPoints();
+            Iterable<Port> outPorts = targetDevice.getAttachmentPoints();
 
             if (!outPorts.iterator().hasNext()) {
                 if (log.isTraceEnabled()) {
@@ -459,9 +469,10 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                 packetService.broadcastPacketOutEdge(eth,
                         new SwitchPort(dpid, inPort));
             } else {
-                for (net.onrc.onos.core.topology.Port portObject : outPorts) {
+                for (Port portObject : outPorts) {
 
-                    if (portObject.getOutgoingLink() != null || portObject.getIncomingLink() != null) {
+                    if (portObject.getOutgoingLink() != null ||
+                            portObject.getIncomingLink() != null) {
                         continue;
                     }
 
@@ -544,7 +555,8 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                 eth, new SwitchPort(intf.getDpid(), intf.getPort()));
     }
 
-    //Please leave it for now because this code is needed for SDN-IP. It will be removed soon.
+    // Please leave it for now because this code is needed for SDN-IP.
+    // It will be removed soon.
     /*
     private void sendArpRequestToSwitches(InetAddress dstAddress, byte[] arpRequest) {
         sendArpRequestToSwitches(dstAddress, arpRequest,
@@ -593,11 +605,13 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             return;
         }
 
+        int intAddress = InetAddresses.coerceToInteger(targetAddress);
+
         MACAddress mac = new MACAddress(arp.getSenderHardwareAddress());
 
-        ArpReplyNotification value =
-                new ArpReplyNotification(ByteBuffer.wrap(targetAddress.getAddress()).getInt(), mac);
-        log.debug("ArpReplyNotification ip {}, mac{}", ByteBuffer.wrap(targetAddress.getAddress()).getInt(), mac);
+        ArpReplyNotification value = new ArpReplyNotification(intAddress, mac);
+
+        log.debug("ArpReplyNotification ip {}, mac {}", intAddress, mac);
         arpReplyEventChannel.addTransientEntry(mac.toLong(), value);
     }
 
@@ -666,7 +680,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
     @Override
     public List<String> getMappings() {
-        return  arpCache.getMappings();
+        return arpCache.getMappings();
     }
 
     private void sendArpReplyToWaitingRequesters(InetAddress address,
