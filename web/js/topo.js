@@ -49,6 +49,11 @@ function gui(switch_url, link_url, registry_url){
 	.attr("width", width)
 	.attr("height", height);
 
+    var status_header = svg.append("svg:text")
+        .attr("id", "status_header")
+        .attr("x", 50)
+	.attr("y", 20);
+
     var force = d3.layout.force()
 	.charge(-500)
 	.linkDistance(100)
@@ -71,7 +76,7 @@ function gui(switch_url, link_url, registry_url){
 		init(topodata, nodes, links);
 		path = svg.append("svg:g").selectAll("path").data(links);
 		circle = svg.append("svg:g").selectAll("circle").data(nodes);
-		text = svg.append("svg:g").selectAll("text").data(nodes);
+		text = svg.append("svg:g").selectAll("text.node-label").data(nodes);
 		draw();
 	    });
 	}); 
@@ -85,7 +90,7 @@ function gui(switch_url, link_url, registry_url){
 		    var changed = update(topodata, nodes, links);
 		    path = svg.selectAll("path").data(links)
 		    circle = svg.selectAll("circle").data(nodes);
-		    text = svg.selectAll("text").data(nodes);
+		    text = svg.selectAll("text.node-label").data(nodes);
 		    if ( changed ){
 			draw();
 		    }
@@ -96,11 +101,9 @@ function gui(switch_url, link_url, registry_url){
 
     function draw(){
 	force.stop();
-	svg.append("svg:text")
-	    .attr("x", 50)
-	    .attr("y", 20)
+        svg.select("#status_header")
             .text(function(){return "Switch: " + force.nodes().length + " (Active: " + nr_active_sw()  + ")/ Link: " + force.links().length});
-    
+
 	path.enter().append("svg:path")
 	    .attr("class", function(d) { return "link"; })
 	    .attr("marker-end", function(d) {
@@ -122,6 +125,7 @@ function gui(switch_url, link_url, registry_url){
 	    .call(node_drag);
     
 	text.enter().append("svg:text")
+            .classed("node-label", true)
 	    .attr("x", radius)
 	    .attr("y", ".31em")
 	    .text(function(d) { 
@@ -153,12 +157,6 @@ function gui(switch_url, link_url, registry_url){
 		return "gray"
             }
 	});
-
-        circle.on('mouseover', function(d){
-   	 var nodeSelection = d3.select(this).style({opacity:'0.8'});
-  	  nodeSelection.select("text").style({opacity:'1.0'});
-	});
-
 
 	path.attr("stroke", function(d) {
 	    if(d.type == 1){
