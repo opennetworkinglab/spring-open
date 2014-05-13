@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.Path;
 
 import org.junit.After;
 import org.junit.Before;

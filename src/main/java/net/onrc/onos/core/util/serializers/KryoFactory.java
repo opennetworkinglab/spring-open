@@ -15,6 +15,7 @@ import net.onrc.onos.core.intent.ErrorIntent;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
+import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IntentStateList;
@@ -23,7 +24,6 @@ import net.onrc.onos.core.packetservice.PacketOutNotification;
 import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
 import net.onrc.onos.core.topology.DeviceEvent;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.Path;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.TopologyEvent;
@@ -51,6 +51,7 @@ import net.onrc.onos.core.util.IPv6Net;
 import net.onrc.onos.core.util.Port;
 import net.onrc.onos.core.util.Switch;
 // import net.onrc.onos.core.util.SwitchPort;
+
 
 import com.esotericsoftware.kryo.Kryo;
 

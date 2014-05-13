@@ -11,7 +11,6 @@ import java.util.Collection;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.Path;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 

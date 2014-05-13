@@ -6,7 +6,6 @@ import java.util.LinkedList;
 
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.Path;
 import net.onrc.onos.core.topology.Switch;
 
 /**

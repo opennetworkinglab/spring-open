@@ -1,6 +1,5 @@
 package net.onrc.onos.core.intent;
 
-import net.onrc.onos.core.topology.Path;
 
 /**
  * @author Toshio Koide (t-koide@onlab.us)

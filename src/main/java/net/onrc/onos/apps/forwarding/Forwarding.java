@@ -318,7 +318,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     }
 
                     Boolean isflowEntryForThisSwitch = false;
-                    net.onrc.onos.core.topology.Path path = pathIntent.getPath();
+                    net.onrc.onos.core.intent.Path path = pathIntent.getPath();
 
                     for (Iterator<LinkEvent> i = path.iterator(); i.hasNext();) {
                         LinkEvent le = (LinkEvent) i.next();
@@ -419,7 +419,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         // packets in the meantime and probably don't want to send very old packets.
 
         List<PacketToPush> packets = null;
-        net.onrc.onos.core.topology.Path graphPath = installedPath.getPath();
+        net.onrc.onos.core.intent.Path graphPath = installedPath.getPath();
 
         short outPort;
         if (graphPath.isEmpty()) {
