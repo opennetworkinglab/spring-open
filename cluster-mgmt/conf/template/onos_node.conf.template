@@ -32,6 +32,11 @@ ramcloud.server.ip = __RAMCLOUD_IP__
 # Port number of RAMCloud server (12242 by default)
 ramcloud.server.port = __RAMCLOUD_SERVER_PORT__
 
+# RAMCloud server option replicas (0 by default)
+# This value must be the same cluster wide.
+# On N node cluster, maximum value will be N-1 replicas
+ramcloud.server.replicas = __RAMCLOUD_SERVER_REPLICAS__
+
 # List of hostname/ip[:port] which forms Hazelcast datagrid
 # If this value is empty, Hazelcast will be set to multicast mode.
 # Inversely, if this value is set, multicast settings will be ignored.

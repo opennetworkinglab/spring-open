@@ -162,7 +162,9 @@ function print_usage {
  \$ ${scriptname} status
     Show status of ONOS-related processes
  \$ ${scriptname} {zk|rc-coord|rc-server|core} {start|stop|restart|status}
-    Control specific ONOS-related process"
+    Control specific ONOS-related process
+ \$ ${scriptname} rc deldb
+    Delete data in RAMCloud"
   
   echo "${usage}"
 }
@@ -503,11 +505,21 @@ function stop-backend {
 
 ### Functions related to RAMCloud coordinator
 function rc-coord-addr {
-  echo "${RC_COORD_PROTOCOL}:host=${RC_COORD_IP},port=${RC_COORD_PORT}"
+  local host=${RC_COORD_IP}
+  if [ -z "${host}" ]; then
+    # falling back to 0.0.0.0
+    host="0.0.0.0"
+  fi
+  echo "${RC_COORD_PROTOCOL}:host=${host},port=${RC_COORD_PORT}"
 }
 
 function rc-server-addr {
-  echo "${RC_SERVER_PROTOCOL}:host=${RC_SERVER_IP},port=${RC_SERVER_PORT}"
+  local host=${RC_SERVER_IP}
+  if [ -z "${host}" ]; then
+    # falling back to 0.0.0.0
+    host="0.0.0.0"
+  fi
+  echo "${RC_SERVER_PROTOCOL}:host=${host},port=${RC_SERVER_PORT}"
 }
 
 function rc-coord {
@@ -708,7 +720,18 @@ function start-server {
 }
 
 function del-server-backup {
-  # TODO might want confirmation, since data can be lost
+  echo -n "Delete RAMCloud backup server data [y/N]? "
+  while [ 1 ]; do
+    read key
+    if [ "${key}" == "Y" -o "${key}" == "y" ]; then
+      break
+    elif [ -z "${key}" -o "${key}" == "N" -o "${key}" == "n" ]; then
+      echo "Cancelled."
+      return
+    fi
+    echo "[y/N]? "
+  done
+
   echo -n "Removing RAMCloud backup server data ... "
   local rc_datafile=$(read-conf ${ONOS_CONF} ramcloud.server.file "/var/tmp/ramclouddata/backup.${ONOS_HOST_NAME}.log")
   rm -f ${rc_datafile}
@@ -935,6 +958,7 @@ case "$1" in
     rc-server $2
     ;;
   rc)
+    # TODO make deldb command more organized (clarify when it can work)
     rc-coord $2
     rc-server $2
     ;;

@@ -31,12 +31,13 @@ if [ ! -f ${CLUSTER_CONF} ]; then
   echo "${CLUSTER_CONF} not found."
   exit 1
 fi
-CLUSTER_HOSTS=$(read-conf ${CLUSTER_CONF}       cluster.hosts.names             `hostname` | tr ',' ' ')
-CLUSTER_BACKEND=$(read-conf ${CLUSTER_CONF}     cluster.hosts.backend)
-CLUSTER_RC_PROTOCOL=$(read-conf ${CLUSTER_CONF} cluster.hosts.ramcloud.protocol "fast+udp")
-CLUSTER_HC_NETWORK=$(read-conf ${CLUSTER_CONF}  cluster.hosts.hazelcast.network)
-CLUSTER_HC_ADDR=$(read-conf ${CLUSTER_CONF}     cluster.hosts.hazelcast.multicast.address "224.2.2.3")
-CLUSTER_HC_PORT=$(read-conf ${CLUSTER_CONF}     cluster.hosts.hazelcast.multicast.port    "54327")
+CLUSTER_HOSTS=$(read-conf ${CLUSTER_CONF}              cluster.hosts.names                       `hostname` | tr ',' ' ')
+CLUSTER_BACKEND=$(read-conf ${CLUSTER_CONF}            cluster.hosts.backend)
+CLUSTER_RC_PROTOCOL=$(read-conf ${CLUSTER_CONF}        cluster.hosts.ramcloud.protocol           "fast+udp")
+CLUSTER_RC_SERVER_REPLICAS=$(read-conf ${CLUSTER_CONF} cluster.hosts.ramcloud.server.replicas    "0")
+CLUSTER_HC_NETWORK=$(read-conf ${CLUSTER_CONF}         cluster.hosts.hazelcast.network)
+CLUSTER_HC_ADDR=$(read-conf ${CLUSTER_CONF}            cluster.hosts.hazelcast.multicast.address "224.2.2.3")
+CLUSTER_HC_PORT=$(read-conf ${CLUSTER_CONF}            cluster.hosts.hazelcast.multicast.port    "54327")
 ############################################
 
 
@@ -192,6 +193,7 @@ function create-onos-conf {
   sed -i -e "s|__RAMCLOUD_IP__|${rc_ip}|" ${tempfile}
   sed -i -e "s|__RAMCLOUD_COORD_PORT__|${rc_coord_port}|" ${tempfile}
   sed -i -e "s|__RAMCLOUD_SERVER_PORT__|${rc_server_port}|" ${tempfile}
+  sed -i -e "s|__RAMCLOUD_SERVER_REPLICAS__|${CLUSTER_RC_SV_REPLICAS}|" ${tempfile}
   
   if [ ${CLUSTER_HC_NETWORK} = "tcp-ip" ]; then
     sed -i -e "s|__HAZELCAST_MEMBERS__|${hc_hosts}|" ${tempfile}
