@@ -11,6 +11,7 @@ import static org.junit.Assert.fail;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
 import net.onrc.onos.core.datastore.ObjectDoesntExistException;
@@ -35,7 +36,7 @@ public class HZTableTest {
         System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
     }
 
-    static final String TEST_TABLE_NAME = "TableForUnitTest";
+    static final String TEST_TABLE_NAME = "TableForUnitTest" + UUID.randomUUID();
     HZTable table;
 
     @Before

@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -31,7 +32,7 @@ public class AtomicCounterTest {
         System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
     }
 
-    private static final String TEST_COUNTER = "TestCounter";
+    private static final String TEST_COUNTER = "TestCounter" + UUID.randomUUID();
     private static final byte[] LONG_ZERO = {0, 0, 0, 0, 0, 0, 0, 0}; // 0L
     private IKVTableID counterID;
 
