@@ -94,6 +94,10 @@
           <encoding>UTF-8</encoding>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+            <arg>-Xlint:-serial</arg>
+          </compilerArgs>
         </configuration>
         <executions>
         </executions>
