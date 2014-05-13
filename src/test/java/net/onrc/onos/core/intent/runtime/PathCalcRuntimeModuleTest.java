@@ -19,6 +19,8 @@ import java.util.List;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
+import net.floodlightcontroller.restserver.IRestApiService;
+
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
@@ -29,6 +31,7 @@ import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.MockNetworkGraph;
 import net.onrc.onos.core.intent.ShortestPathIntent;
+import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.DeviceEvent;
 import net.onrc.onos.core.topology.INetworkGraphListener;
@@ -69,6 +72,7 @@ public class PathCalcRuntimeModuleTest {
     private INetworkGraphService networkGraphService;
     private IControllerRegistryService controllerRegistryService;
     private PersistIntent persistIntent;
+    private IRestApiService restApi;
     private MockNetworkGraph graph;
     private IEventChannel<Long, IntentOperationList> intentOperationChannel;
     private IEventChannel<Long, IntentStateList> intentStateChannel;
@@ -86,6 +90,7 @@ public class PathCalcRuntimeModuleTest {
         intentOperationChannel = createMock(IEventChannel.class);
         intentStateChannel = createMock(IEventChannel.class);
         persistIntent = PowerMock.createMock(PersistIntent.class);
+        restApi = createMock(IRestApiService.class);
 
         PowerMock.expectNew(PersistIntent.class,
                 anyObject(IControllerRegistryService.class)).andReturn(persistIntent);
@@ -100,6 +105,8 @@ public class PathCalcRuntimeModuleTest {
         expect(persistIntent.persistIfLeader(eq(1L),
                 anyObject(IntentOperationList.class))).andReturn(true)
                 .anyTimes();
+        expect(modContext.getServiceImpl(IRestApiService.class))
+                .andReturn(restApi).once();
 
         expect(networkGraphService.getNetworkGraph()).andReturn(graph)
                 .anyTimes();
@@ -117,12 +124,14 @@ public class PathCalcRuntimeModuleTest {
                 eq(Long.class),
                 eq(IntentStateList.class)))
                 .andReturn(intentStateChannel).once();
+        restApi.addRestletRoutable(anyObject(IntentWebRoutable.class));
 
         replay(datagridService);
         replay(networkGraphService);
         replay(modContext);
         replay(controllerRegistryService);
         PowerMock.replay(persistIntent, PersistIntent.class);
+        replay(restApi);
     }
 
 
@@ -235,6 +244,7 @@ public class PathCalcRuntimeModuleTest {
         verify(modContext);
         verify(controllerRegistryService);
         PowerMock.verify(persistIntent, PersistIntent.class);
+        verify(restApi);
     }
 
     /**

@@ -14,6 +14,8 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.restserver.IRestApiService;
+
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
@@ -26,6 +28,7 @@ import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
+import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.DeviceEvent;
 import net.onrc.onos.core.topology.INetworkGraphListener;
@@ -82,6 +85,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     private PathIntentMap pathIntents;
     private IControllerRegistryService controllerRegistry;
     private PersistIntent persistIntent;
+    private IRestApiService restApi;
 
     private IEventChannel<Long, IntentOperationList> opEventChannel;
     private final ReentrantLock lock = new ReentrantLock();
@@ -137,6 +141,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         Collection<Class<? extends IFloodlightService>> l = new ArrayList<>(2);
         l.add(IDatagridService.class);
         l.add(INetworkGraphService.class);
+        l.add(IRestApiService.class);
         return l;
     }
 
@@ -145,6 +150,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         datagridService = context.getServiceImpl(IDatagridService.class);
         networkGraphService = context.getServiceImpl(INetworkGraphService.class);
         controllerRegistry = context.getServiceImpl(IControllerRegistryService.class);
+        restApi = context.getServiceImpl(IRestApiService.class);
     }
 
     @Override
@@ -156,6 +162,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         datagridService.addListener(INTENT_STATE_EVENT_CHANNEL_NAME, this, Long.class, IntentStateList.class);
         networkGraphService.registerNetworkGraphListener(this);
         persistIntent = new PersistIntent(controllerRegistry);
+        restApi.addRestletRoutable(new IntentWebRoutable());
     }
 
     // ================================================================================
