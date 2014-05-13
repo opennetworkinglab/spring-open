@@ -2,7 +2,7 @@
 
 # Change this accordingly
 ONOS_HOME=${ONOS_HOME:-${HOME}/ONOS}
-script_name="topology_rest.py"
+script_name="simple_web_server.py"
 
 #######################
 WEBDIR=${ONOS_HOME}/web
@@ -39,8 +39,6 @@ function stop {
     for p in ${pids}; do
 	if [ x$p != "x" ]; then
             dokill $p
-#	    sudo kill -KILL $p
-#	    echo "Killed existing prosess (pid: $p)"
 	fi
     done
 }
@@ -57,10 +55,6 @@ function status {
 function start {
     lotate $REST_LOG 10 
     cd $WEBDIR
-    # Make log dir for iperf log files
-    if [ ! -d  log ]; then
-      mkdir log
-    fi
     $restscript > $REST_LOG 2>&1 &
 }
 
