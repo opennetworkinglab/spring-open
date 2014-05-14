@@ -569,6 +569,8 @@ function start-coord {
   local zk_addr="localhost:2181"
   # RAMCloud cluster name
   local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  # RAMCloud transport timeout
+  local rc_timeout=$(read-conf ${ONOS_CONF} ramcloud.timeout 1000)
   # RAMCloud option deadServerTimeout
   # (note RC default is 250ms, setting relaxed ONOS default to 1000ms)
   local rc_coord_deadServerTimeout=$(read-conf ${ONOS_CONF} ramcloud.coordinator.deadServerTimeout 1000)
@@ -580,6 +582,7 @@ function start-coord {
   local coord_args="-C ${coord_addr}"
   coord_args="${coord_args} --externalStorage zk:${zk_addr}"
   coord_args="${coord_args} --clusterName ${rc_cluster_name}"
+  coord_args="${coord_args} --timeout ${rc_timeout}"
   coord_args="${coord_args} --deadServerTimeout ${rc_coord_deadServerTimeout}"
 
   # Read environment variables if set
@@ -695,6 +698,8 @@ function start-server {
   local zk_addr="localhost:2181"
   # RAMCloud cluster name
   local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  # RAMCloud transport timeout
+  local rc_timeout=$(read-conf ${ONOS_CONF} ramcloud.timeout 1000)
   # replication factor (-r) config
   local rc_replicas=$(read-conf ${ONOS_CONF} ramcloud.server.replicas 0)
   # backup file path (-f) config
@@ -704,6 +709,7 @@ function start-server {
   local server_args="-L ${server_addr}"
   server_args="${server_args} --externalStorage zk:${zk_addr}"
   server_args="${server_args} --clusterName ${rc_cluster_name}"
+  server_args="${server_args} --timeout ${rc_timeout}"
   server_args="${server_args} --masterServiceThreads ${masterServiceThreads}"
   server_args="${server_args} --logCleanerThreads ${logCleanerThreads}"
   server_args="${server_args} --detectFailures ${detectFailures}"
