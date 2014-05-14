@@ -621,7 +621,7 @@ function del-coord-info {
   # TODO Assuming 1sec is enough. To be sure monitor log?
   sleep 1
   # Silently kill coordinator
-  (pkill -q -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator &> /dev/null)
+  (pkill -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator &> /dev/null)
 
   echo "DONE"
 }
