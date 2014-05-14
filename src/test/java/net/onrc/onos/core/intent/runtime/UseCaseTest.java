@@ -25,19 +25,19 @@ import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
-import net.onrc.onos.core.intent.MockNetworkGraph;
+import net.onrc.onos.core.intent.MockTopology;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.DeviceEvent;
-import net.onrc.onos.core.topology.INetworkGraphListener;
-import net.onrc.onos.core.topology.INetworkGraphService;
+import net.onrc.onos.core.topology.ITopologyListener;
+import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.NetworkGraph;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.Topology;
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,10 +57,10 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PathCalcRuntimeModule.class)
 public class UseCaseTest {
-    private NetworkGraph g;
+    private Topology topology;
     private FloodlightModuleContext modContext;
     private IDatagridService datagridService;
-    private INetworkGraphService networkGraphService;
+    private ITopologyService topologyService;
     private IControllerRegistryService controllerRegistryService;
     private PersistIntent persistIntent;
     private IRestApiService restApi;
@@ -72,12 +72,12 @@ public class UseCaseTest {
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
-        MockNetworkGraph graph = new MockNetworkGraph();
-        graph.createSampleTopology1();
-        g = graph;
+        MockTopology topology = new MockTopology();
+        topology.createSampleTopology1();
+        this.topology = topology;
 
         datagridService = createMock(IDatagridService.class);
-        networkGraphService = createMock(INetworkGraphService.class);
+        topologyService = createMock(ITopologyService.class);
         controllerRegistryService = createMock(IControllerRegistryService.class);
         modContext = createMock(FloodlightModuleContext.class);
         intentOperationChannel = createMock(IEventChannel.class);
@@ -90,8 +90,8 @@ public class UseCaseTest {
 
         expect(modContext.getServiceImpl(IDatagridService.class))
                 .andReturn(datagridService).once();
-        expect(modContext.getServiceImpl(INetworkGraphService.class))
-                .andReturn(networkGraphService).once();
+        expect(modContext.getServiceImpl(ITopologyService.class))
+                .andReturn(topologyService).once();
         expect(modContext.getServiceImpl(IControllerRegistryService.class))
                 .andReturn(controllerRegistryService).once();
         expect(persistIntent.getKey()).andReturn(1L).anyTimes();
@@ -100,8 +100,8 @@ public class UseCaseTest {
         expect(modContext.getServiceImpl(IRestApiService.class))
                 .andReturn(restApi).once();
 
-        expect(networkGraphService.getNetworkGraph()).andReturn(g).anyTimes();
-        networkGraphService.registerNetworkGraphListener(anyObject(INetworkGraphListener.class));
+        expect(topologyService.getTopology()).andReturn(topology).anyTimes();
+        topologyService.registerTopologyListener(anyObject(ITopologyListener.class));
         expectLastCall();
 
         expect(datagridService.createChannel("onos.pathintent", Long.class, IntentOperationList.class))
@@ -116,7 +116,7 @@ public class UseCaseTest {
         restApi.addRestletRoutable(anyObject(IntentWebRoutable.class));
 
         replay(datagridService);
-        replay(networkGraphService);
+        replay(topologyService);
         replay(modContext);
         replay(controllerRegistryService);
         PowerMock.replay(persistIntent, PersistIntent.class);
@@ -126,7 +126,7 @@ public class UseCaseTest {
     @After
     public void tearDown() {
         verify(datagridService);
-        verify(networkGraphService);
+        verify(topologyService);
         verify(modContext);
         verify(controllerRegistryService);
         PowerMock.verify(persistIntent, PersistIntent.class);
@@ -258,14 +258,14 @@ public class UseCaseTest {
         runtime1.getPathIntents().changeStates(states);
 
         // link down
-        ((MockNetworkGraph) g).removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
-        ((MockNetworkGraph) g).removeLink(2L, 21L, 1L, 12L);
+        ((MockTopology) topology).removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
+        ((MockTopology) topology).removeLink(2L, 21L, 1L, 12L);
         LinkEvent linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
         LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
         removedLinkEvents.clear();
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
-        runtime1.networkGraphEvents(
+        runtime1.topologyEvents(
                 addedSwitchEvents,
                 removedSwitchEvents,
                 addedPortEvents,

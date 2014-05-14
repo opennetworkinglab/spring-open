@@ -32,8 +32,8 @@ import net.onrc.onos.core.packet.DHCP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.packet.UDP;
-import net.onrc.onos.core.topology.INetworkGraphService;
-import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.Topology;
 
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
@@ -59,8 +59,8 @@ public class OnosDeviceManager implements IFloodlightModule,
     private IEventChannel<Long, OnosDevice> eventChannel;
     private static final String DEVICE_CHANNEL_NAME = "onos.device";
     private Map<Long, OnosDevice> mapDevice = new ConcurrentHashMap<Long, OnosDevice>();
-    private INetworkGraphService networkGraphService;
-    private NetworkGraph networkGraph;
+    private ITopologyService topologyService;
+    private Topology topology;
 
     public enum OnosDeviceUpdateType {
         ADD, DELETE, UPDATE;
@@ -166,7 +166,7 @@ public class OnosDeviceManager implements IFloodlightModule,
         }
 
         //If the switch port we try to attach a new device already has a link, then stop adding device
-        if (networkGraph.getOutgoingLink(dpid, (long) portId) != null) {
+        if (topology.getOutgoingLink(dpid, (long) portId) != null) {
             if (log.isTraceEnabled()) {
                 log.trace("Stop adding OnosDevice {} due to there is a link to: dpid {} port {}",
                         srcDevice.getMacAddress(), dpid, portId);
@@ -292,7 +292,7 @@ public class OnosDeviceManager implements IFloodlightModule,
         List<Class<? extends IFloodlightService>> dependencies =
                 new ArrayList<Class<? extends IFloodlightService>>();
         dependencies.add(IFloodlightProviderService.class);
-        dependencies.add(INetworkGraphService.class);
+        dependencies.add(ITopologyService.class);
         dependencies.add(IDatagridService.class);
         return dependencies;
     }
@@ -303,8 +303,8 @@ public class OnosDeviceManager implements IFloodlightModule,
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         deviceListeners = new CopyOnWriteArrayList<IOnosDeviceListener>();
         datagrid = context.getServiceImpl(IDatagridService.class);
-        networkGraphService = context.getServiceImpl(INetworkGraphService.class);
-        networkGraph = networkGraphService.getNetworkGraph();
+        topologyService = context.getServiceImpl(ITopologyService.class);
+        topology = topologyService.getTopology();
 
         setOnosDeviceManagerProperty(context);
     }

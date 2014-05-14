@@ -15,7 +15,6 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
-
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
@@ -31,8 +30,8 @@ import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.DeviceEvent;
-import net.onrc.onos.core.topology.INetworkGraphListener;
-import net.onrc.onos.core.topology.INetworkGraphService;
+import net.onrc.onos.core.topology.ITopologyListener;
+import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Toshio Koide (t-koide@onlab.us)
  */
-public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntimeService, INetworkGraphListener, IEventChannelListener<Long, IntentStateList> {
+public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntimeService, ITopologyListener, IEventChannelListener<Long, IntentStateList> {
     static class PerfLog {
         private String step;
         private long time;
@@ -80,7 +79,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
 
     private PathCalcRuntime runtime;
     private IDatagridService datagridService;
-    private INetworkGraphService networkGraphService;
+    private ITopologyService topologyService;
     private IntentMap highLevelIntents;
     private PathIntentMap pathIntents;
     private IControllerRegistryService controllerRegistry;
@@ -140,15 +139,15 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         Collection<Class<? extends IFloodlightService>> l = new ArrayList<>(2);
         l.add(IDatagridService.class);
-        l.add(INetworkGraphService.class);
         l.add(IRestApiService.class);
+        l.add(ITopologyService.class);
         return l;
     }
 
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         datagridService = context.getServiceImpl(IDatagridService.class);
-        networkGraphService = context.getServiceImpl(INetworkGraphService.class);
+        topologyService = context.getServiceImpl(ITopologyService.class);
         controllerRegistry = context.getServiceImpl(IControllerRegistryService.class);
         restApi = context.getServiceImpl(IRestApiService.class);
     }
@@ -156,11 +155,11 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     @Override
     public void startUp(FloodlightModuleContext context) {
         highLevelIntents = new IntentMap();
-        runtime = new PathCalcRuntime(networkGraphService.getNetworkGraph());
+        runtime = new PathCalcRuntime(topologyService.getTopology());
         pathIntents = new PathIntentMap();
         opEventChannel = datagridService.createChannel(INTENT_OP_EVENT_CHANNEL_NAME, Long.class, IntentOperationList.class);
         datagridService.addListener(INTENT_STATE_EVENT_CHANNEL_NAME, this, Long.class, IntentStateList.class);
-        networkGraphService.registerNetworkGraphListener(this);
+        topologyService.registerTopologyListener(this);
         persistIntent = new PersistIntent(controllerRegistry);
         restApi.addRestletRoutable(new IntentWebRoutable());
     }
@@ -287,12 +286,12 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     }
 
     // ================================================================================
-    // INetworkGraphListener implementations
+    // ITopologyListener implementations
     // ================================================================================
 
     // CHECKSTYLE:OFF suppress warning about too many parameters
     @Override
-    public void networkGraphEvents(Collection<SwitchEvent> addedSwitchEvents,
+    public void topologyEvents(Collection<SwitchEvent> addedSwitchEvents,
                                    Collection<SwitchEvent> removedSwitchEvents,
                                    Collection<PortEvent> addedPortEvents,
                                    Collection<PortEvent> removedPortEvents,

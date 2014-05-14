@@ -20,7 +20,6 @@ import java.util.List;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.restserver.IRestApiService;
-
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
@@ -29,13 +28,13 @@ import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
-import net.onrc.onos.core.intent.MockNetworkGraph;
+import net.onrc.onos.core.intent.MockTopology;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.DeviceEvent;
-import net.onrc.onos.core.topology.INetworkGraphListener;
-import net.onrc.onos.core.topology.INetworkGraphService;
+import net.onrc.onos.core.topology.ITopologyListener;
+import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
@@ -58,7 +57,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  *         <p/>
  *         Unit tests for the Path Calculation Runtime module (PathCalcRuntimeModule).
  *         These test cases check the results of creating paths, deleting paths, and
- *         rerouting paths.  The network graph, controller registry, and data grid are
+ *         rerouting paths.  The topology, controller registry, and data grid are
  *         mocked out.  The individual tests check the high level intents and the
  *         resulting operation lists to be sure they match the intended APIs.
  */
@@ -69,22 +68,22 @@ public class PathCalcRuntimeModuleTest {
 
     private FloodlightModuleContext modContext;
     private IDatagridService datagridService;
-    private INetworkGraphService networkGraphService;
+    private ITopologyService topologyService;
     private IControllerRegistryService controllerRegistryService;
     private PersistIntent persistIntent;
     private IRestApiService restApi;
-    private MockNetworkGraph graph;
+    private MockTopology topology;
     private IEventChannel<Long, IntentOperationList> intentOperationChannel;
     private IEventChannel<Long, IntentStateList> intentStateChannel;
 
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
-        graph = new MockNetworkGraph();
-        graph.createSampleTopology1();
+        topology = new MockTopology();
+        topology.createSampleTopology1();
 
         datagridService = createMock(IDatagridService.class);
-        networkGraphService = createMock(INetworkGraphService.class);
+        topologyService = createMock(ITopologyService.class);
         controllerRegistryService = createMock(IControllerRegistryService.class);
         modContext = createMock(FloodlightModuleContext.class);
         intentOperationChannel = createMock(IEventChannel.class);
@@ -97,8 +96,8 @@ public class PathCalcRuntimeModuleTest {
 
         expect(modContext.getServiceImpl(IDatagridService.class))
                 .andReturn(datagridService).once();
-        expect(modContext.getServiceImpl(INetworkGraphService.class))
-                .andReturn(networkGraphService).once();
+        expect(modContext.getServiceImpl(ITopologyService.class))
+                .andReturn(topologyService).once();
         expect(modContext.getServiceImpl(IControllerRegistryService.class))
                 .andReturn(controllerRegistryService).once();
         expect(persistIntent.getKey()).andReturn(1L).anyTimes();
@@ -108,10 +107,10 @@ public class PathCalcRuntimeModuleTest {
         expect(modContext.getServiceImpl(IRestApiService.class))
                 .andReturn(restApi).once();
 
-        expect(networkGraphService.getNetworkGraph()).andReturn(graph)
+        expect(topologyService.getTopology()).andReturn(topology)
                 .anyTimes();
-        networkGraphService.registerNetworkGraphListener(
-                anyObject(INetworkGraphListener.class));
+        topologyService.registerTopologyListener(
+                anyObject(ITopologyListener.class));
         expectLastCall();
 
         expect(datagridService.createChannel("onos.pathintent",
@@ -127,7 +126,7 @@ public class PathCalcRuntimeModuleTest {
         restApi.addRestletRoutable(anyObject(IntentWebRoutable.class));
 
         replay(datagridService);
-        replay(networkGraphService);
+        replay(topologyService);
         replay(modContext);
         replay(controllerRegistryService);
         PowerMock.replay(persistIntent, PersistIntent.class);
@@ -240,7 +239,7 @@ public class PathCalcRuntimeModuleTest {
     @After
     public void tearDown() {
         verify(datagridService);
-        verify(networkGraphService);
+        verify(topologyService);
         verify(modContext);
         verify(controllerRegistryService);
         PowerMock.verify(persistIntent, PersistIntent.class);
@@ -494,13 +493,13 @@ public class PathCalcRuntimeModuleTest {
         final List<LinkEvent> addedLinkEvents = new LinkedList<>();
         final List<LinkEvent> removedLinkEvents = new LinkedList<>();
 
-        graph.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
-        graph.removeLink(2L, 21L, 1L, 12L);
+        topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
+        topology.removeLink(2L, 21L, 1L, 12L);
         LinkEvent linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
         LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
-        runtime.networkGraphEvents(
+        runtime.topologyEvents(
                 emptySwitchEvents,
                 emptySwitchEvents,
                 emptyPortEvents,

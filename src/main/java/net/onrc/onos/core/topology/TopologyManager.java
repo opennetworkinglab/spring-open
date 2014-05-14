@@ -29,7 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The "NB" read-only Network Map.
+ * The TopologyManager receives topology updates from the southbound discovery
+ * modules and from other ONOS instances. These updates are processed and
+ * applied to the in-memory topology instance.
  * <p/>
  * - Maintain Invariant/Relationships between Topology Objects.
  * <p/>
@@ -41,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * TODO TBD: This class may delay the requested change to handle event
  * re-ordering. e.g.) Link Add came in, but Switch was not there.
  */
-public class TopologyManager implements NetworkGraphDiscoveryInterface {
+public class TopologyManager implements TopologyDiscoveryInterface {
 
     private static final Logger log = LoggerFactory
             .getLogger(TopologyManager.class);
@@ -50,10 +52,10 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     public static final String EVENT_CHANNEL_NAME = "onos.topology";
     private EventHandler eventHandler = new EventHandler();
 
-    private final NetworkGraphDatastore datastore;
-    private final NetworkGraphImpl networkGraph = new NetworkGraphImpl();
+    private final TopologyDatastore datastore;
+    private final TopologyImpl topology = new TopologyImpl();
     private final IControllerRegistryService registryService;
-    private CopyOnWriteArrayList<INetworkGraphListener> networkGraphListeners;
+    private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
 
     //
     // Local state for keeping track of reordered events.
@@ -98,24 +100,23 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     /**
      * Constructor.
      *
-     * @param registryService       the Registry Service to use.
-     * @param networkGraphListeners the collection of Network Graph Listeners
-     *                              to use.
+     * @param registryService the Registry Service to use.
+     * @param topologyListeners the collection of topology listeners to use.
      */
     public TopologyManager(IControllerRegistryService registryService,
-                           CopyOnWriteArrayList<INetworkGraphListener> networkGraphListeners) {
-        datastore = new NetworkGraphDatastore();
+                           CopyOnWriteArrayList<ITopologyListener> topologyListeners) {
+        datastore = new TopologyDatastore();
         this.registryService = registryService;
-        this.networkGraphListeners = networkGraphListeners;
+        this.topologyListeners = topologyListeners;
     }
 
     /**
-     * Get the Network Graph.
+     * Get the Topology.
      *
-     * @return the Network Graph.
+     * @return the Topology.
      */
-    NetworkGraph getNetworkGraph() {
-        return networkGraph;
+    Topology getTopology() {
+        return topology;
     }
 
     /**
@@ -271,9 +272,9 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             }
 
             //
-            // Lock the Network Graph while it is modified
+            // Lock the topology while it is modified
             //
-            networkGraph.acquireWriteLock();
+            topology.acquireWriteLock();
 
             try {
                 //
@@ -319,15 +320,15 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
 
             } finally {
                 //
-                // Network Graph modifications completed: Release the lock
+                // Topology modifications completed: Release the lock
                 //
-                networkGraph.releaseWriteLock();
+                topology.releaseWriteLock();
             }
 
             //
             // Dispatch the Topology Notification Events to the applications
             //
-            dispatchNetworkGraphEvents();
+            dispatchTopologyEvents();
         }
 
         /**
@@ -382,9 +383,9 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     }
 
     /**
-     * Dispatch Network Graph Events to the listeners.
+     * Dispatch Topology Events to the listeners.
      */
-    private void dispatchNetworkGraphEvents() {
+    private void dispatchTopologyEvents() {
         if (apiAddedSwitchEvents.isEmpty() &&
                 apiRemovedSwitchEvents.isEmpty() &&
                 apiAddedPortEvents.isEmpty() &&
@@ -402,35 +403,35 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             // TODO: Those statements should be removed in the future
             //
             for (SwitchEvent switchEvent : apiAddedSwitchEvents) {
-                log.debug("Dispatch Network Graph Event: ADDED {}", switchEvent);
+                log.debug("Dispatch Topology Event: ADDED {}", switchEvent);
             }
             for (SwitchEvent switchEvent : apiRemovedSwitchEvents) {
-                log.debug("Dispatch Network Graph Event: REMOVED {}", switchEvent);
+                log.debug("Dispatch Topology Event: REMOVED {}", switchEvent);
             }
             for (PortEvent portEvent : apiAddedPortEvents) {
-                log.debug("Dispatch Network Graph Event: ADDED {}", portEvent);
+                log.debug("Dispatch Topology Event: ADDED {}", portEvent);
             }
             for (PortEvent portEvent : apiRemovedPortEvents) {
-                log.debug("Dispatch Network Graph Event: REMOVED {}", portEvent);
+                log.debug("Dispatch Topology Event: REMOVED {}", portEvent);
             }
             for (LinkEvent linkEvent : apiAddedLinkEvents) {
-                log.debug("Dispatch Network Graph Event: ADDED {}", linkEvent);
+                log.debug("Dispatch Topology Event: ADDED {}", linkEvent);
             }
             for (LinkEvent linkEvent : apiRemovedLinkEvents) {
-                log.debug("Dispatch Network Graph Event: REMOVED {}", linkEvent);
+                log.debug("Dispatch Topology Event: REMOVED {}", linkEvent);
             }
             for (DeviceEvent deviceEvent : apiAddedDeviceEvents) {
-                log.debug("Dispatch Network Graph Event: ADDED {}", deviceEvent);
+                log.debug("Dispatch Topology Event: ADDED {}", deviceEvent);
             }
             for (DeviceEvent deviceEvent : apiRemovedDeviceEvents) {
-                log.debug("Dispatch Network Graph Event: REMOVED {}", deviceEvent);
+                log.debug("Dispatch Topology Event: REMOVED {}", deviceEvent);
             }
         }
 
         // Deliver the events
-        for (INetworkGraphListener listener : this.networkGraphListeners) {
+        for (ITopologyListener listener : this.topologyListeners) {
             // TODO: Should copy before handing them over to listener?
-            listener.networkGraphEvents(apiAddedSwitchEvents,
+            listener.topologyEvents(apiAddedSwitchEvents,
                     apiRemovedSwitchEvents,
                     apiAddedPortEvents,
                     apiRemovedPortEvents,
@@ -747,7 +748,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             // Send out notification
             TopologyEvent topologyEvent = new TopologyEvent(deviceEvent);
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
-            log.debug("Put the device info into the cache of the graph. mac {}", deviceEvent.getMac());
+            log.debug("Put the device info into the cache of the topology. mac {}", deviceEvent.getMac());
 
             // Store the new Device Event in the local cache
             // TODO: The implementation below is probably wrong
@@ -775,7 +776,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
         if (datastore.removeDevice(deviceEvent)) {
             // Send out notification
             eventChannel.removeEntry(deviceEvent.getID());
-            log.debug("Remove the device info into the cache of the graph. mac {}", deviceEvent.getMac());
+            log.debug("Remove the device info into the cache of the topology. mac {}", deviceEvent.getMac());
 
             // Cleanup the Device Event from the local cache
             // TODO: The implementation below is probably wrong
@@ -791,15 +792,15 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     }
 
     /**
-     * Add a switch to the Network Graph.
+     * Add a switch to the topology.
      *
      * @param switchEvent the Switch Event with the switch to add.
      */
     private void addSwitch(SwitchEvent switchEvent) {
-        Switch sw = networkGraph.getSwitch(switchEvent.getDpid());
+        Switch sw = topology.getSwitch(switchEvent.getDpid());
         if (sw == null) {
-            sw = new SwitchImpl(networkGraph, switchEvent.getDpid());
-            networkGraph.putSwitch(sw);
+            sw = new SwitchImpl(topology, switchEvent.getDpid());
+            topology.putSwitch(sw);
         } else {
             // TODO: Update the switch attributes
             // TODO: Nothing to do for now
@@ -809,12 +810,12 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     }
 
     /**
-     * Remove a switch from the Network Graph.
+     * Remove a switch from the topology.
      *
      * @param switchEvent the Switch Event with the switch to remove.
      */
     private void removeSwitch(SwitchEvent switchEvent) {
-        Switch sw = networkGraph.getSwitch(switchEvent.getDpid());
+        Switch sw = topology.getSwitch(switchEvent.getDpid());
         if (sw == null) {
             log.warn("Switch {} already removed, ignoring", switchEvent);
             return;
@@ -835,17 +836,17 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             removePort(portEvent);
         }
 
-        networkGraph.removeSwitch(switchEvent.getDpid());
+        topology.removeSwitch(switchEvent.getDpid());
         apiRemovedSwitchEvents.add(switchEvent);
     }
 
     /**
-     * Add a port to the Network Graph.
+     * Add a port to the topology.
      *
      * @param portEvent the Port Event with the port to add.
      */
     private void addPort(PortEvent portEvent) {
-        Switch sw = networkGraph.getSwitch(portEvent.getDpid());
+        Switch sw = topology.getSwitch(portEvent.getDpid());
         if (sw == null) {
             // Reordered event: delay the event in local cache
             ByteBuffer id = portEvent.getIDasByteBuffer();
@@ -856,7 +857,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
 
         Port port = sw.getPort(portEvent.getNumber());
         if (port == null) {
-            port = new PortImpl(networkGraph, sw, portEvent.getNumber());
+            port = new PortImpl(topology, sw, portEvent.getNumber());
             switchImpl.addPort(port);
         } else {
             // TODO: Update the port attributes
@@ -866,12 +867,12 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     }
 
     /**
-     * Remove a port from the Network Graph.
+     * Remove a port from the topology.
      *
      * @param portEvent the Port Event with the port to remove.
      */
     private void removePort(PortEvent portEvent) {
-        Switch sw = networkGraph.getSwitch(portEvent.getDpid());
+        Switch sw = topology.getSwitch(portEvent.getDpid());
         if (sw == null) {
             log.warn("Parent Switch for Port {} already removed, ignoring",
                     portEvent);
@@ -930,14 +931,14 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     }
 
     /**
-     * Add a link to the Network Graph.
+     * Add a link to the topology.
      *
      * @param linkEvent the Link Event with the link to add.
      */
     private void addLink(LinkEvent linkEvent) {
-        Port srcPort = networkGraph.getPort(linkEvent.getSrc().dpid,
+        Port srcPort = topology.getPort(linkEvent.getSrc().dpid,
                 linkEvent.getSrc().number);
-        Port dstPort = networkGraph.getPort(linkEvent.getDst().dpid,
+        Port dstPort = topology.getPort(linkEvent.getDst().dpid,
                 linkEvent.getDst().number);
         if ((srcPort == null) || (dstPort == null)) {
             // Reordered event: delay the event in local cache
@@ -950,8 +951,8 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
         Link link = dstPort.getIncomingLink();
         assert (link == srcPort.getOutgoingLink());
         if (link == null) {
-            link = new LinkImpl(networkGraph, srcPort, dstPort);
-            networkGraph.putLink(link);
+            link = new LinkImpl(topology, srcPort, dstPort);
+            topology.putLink(link);
 
             // Remove all Devices attached to the Ports
             ArrayList<DeviceEvent> devicesToRemove = new ArrayList<>();
@@ -983,12 +984,12 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
     }
 
     /**
-     * Remove a link from the Network Graph.
+     * Remove a link from the topology.
      *
      * @param linkEvent the Link Event with the link to remove.
      */
     private void removeLink(LinkEvent linkEvent) {
-        Port srcPort = networkGraph.getPort(linkEvent.getSrc().dpid,
+        Port srcPort = topology.getPort(linkEvent.getSrc().dpid,
                 linkEvent.getSrc().number);
         if (srcPort == null) {
             log.warn("Src Port for Link {} already removed, ignoring",
@@ -996,7 +997,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             return;
         }
 
-        Port dstPort = networkGraph.getPort(linkEvent.getDst().dpid,
+        Port dstPort = topology.getPort(linkEvent.getDst().dpid,
                 linkEvent.getDst().number);
         if (dstPort == null) {
             log.warn("Dst Port for Link {} already removed, ignoring",
@@ -1019,14 +1020,14 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
 
         // TODO should we check that we get the same link from each port?
         if (link != null) {
-            networkGraph.removeLink(link);
+            topology.removeLink(link);
         }
 
         apiRemovedLinkEvents.add(linkEvent);
     }
 
     /**
-     * Add a device to the Network Graph.
+     * Add a device to the topology.
      * <p/>
      * TODO: Device-related work is incomplete.
      * TODO: Eventually, we might need to consider reordering
@@ -1035,12 +1036,12 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
      * @param deviceEvent the Device Event with the device to add.
      */
     private void addDevice(DeviceEvent deviceEvent) {
-        log.debug("Adding a device to the Network Graph with mac {}", deviceEvent.getMac());
-        Device device = networkGraph.getDeviceByMac(deviceEvent.getMac());
+        log.debug("Adding a device to the topology with mac {}", deviceEvent.getMac());
+        Device device = topology.getDeviceByMac(deviceEvent.getMac());
 
         if (device == null) {
-            log.debug("Existing device was not found in the NetworkGraph: Adding new device: mac {}", deviceEvent.getMac());
-            device = new DeviceImpl(networkGraph, deviceEvent.getMac());
+            log.debug("Existing device was not found in the Topology: Adding new device: mac {}", deviceEvent.getMac());
+            device = new DeviceImpl(topology, deviceEvent.getMac());
         }
 
         DeviceImpl deviceImpl = getDeviceImpl(device);
@@ -1049,7 +1050,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
         boolean attachmentFound = false;
         for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
             // Attached Ports must exist
-            Port port = networkGraph.getPort(swp.dpid, swp.number);
+            Port port = topology.getPort(swp.dpid, swp.number);
             if (port == null) {
                 // Reordered event: delay the event in local cache
                 ByteBuffer id = deviceEvent.getIDasByteBuffer();
@@ -1072,24 +1073,24 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             attachmentFound = true;
         }
 
-        // Update the device in the Network Graph
+        // Update the device in the topology
         if (attachmentFound) {
-            log.debug("Storing the device info into the NetworkGraph: mac {}", deviceEvent.getMac());
-            networkGraph.putDevice(device);
+            log.debug("Storing the device info into the Topology: mac {}", deviceEvent.getMac());
+            topology.putDevice(device);
             apiAddedDeviceEvents.add(deviceEvent);
         }
     }
 
     /**
-     * Remove a device from the Network Graph.
+     * Remove a device from the topology.
      * <p/>
      * TODO: Device-related work is incomplete.
      *
      * @param deviceEvent the Device Event with the device to remove.
      */
     private void removeDevice(DeviceEvent deviceEvent) {
-        log.debug("Removing a device to the Network Graph: mac {}", deviceEvent.getMac());
-        Device device = networkGraph.getDeviceByMac(deviceEvent.getMac());
+        log.debug("Removing a device to the topology: mac {}", deviceEvent.getMac());
+        Device device = topology.getDeviceByMac(deviceEvent.getMac());
         if (device == null) {
             log.warn("Device {} already removed, ignoring", deviceEvent);
             return;
@@ -1099,7 +1100,7 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
         // Process each attachment point
         for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
             // Attached Ports must exist
-            Port port = networkGraph.getPort(swp.dpid, swp.number);
+            Port port = topology.getPort(swp.dpid, swp.number);
             if (port == null) {
                 log.warn("Port for the attachment point {} did not exist. skipping attachment point mutation", swp);
                 continue;
@@ -1111,8 +1112,8 @@ public class TopologyManager implements NetworkGraphDiscoveryInterface {
             deviceImpl.removeAttachmentPoint(port);
         }
 
-        log.debug("Removing the device info into the NetworkGraph: mac {}", deviceEvent.getMac());
-        networkGraph.removeDevice(device);
+        log.debug("Removing the device info into the Topology: mac {}", deviceEvent.getMac());
+        topology.removeDevice(device);
         apiRemovedDeviceEvents.add(deviceEvent);
     }
 

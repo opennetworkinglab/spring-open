@@ -33,9 +33,9 @@ import net.onrc.onos.core.intent.runtime.IntentStateList;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.Device;
-import net.onrc.onos.core.topology.INetworkGraphService;
+import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.Dpid;
@@ -65,8 +65,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     private IPacketService packetService;
     private IControllerRegistryService controllerRegistryService;
 
-    private INetworkGraphService networkGraphService;
-    private NetworkGraph networkGraph;
+    private ITopologyService topologyService;
+    private Topology topology;
     private IPathCalcRuntimeService pathRuntime;
     private IntentMap intentMap;
 
@@ -154,7 +154,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         dependencies.add(IControllerRegistryService.class);
         dependencies.add(IOnosDeviceService.class);
         dependencies.add(IDatagridService.class);
-        dependencies.add(INetworkGraphService.class);
+        dependencies.add(ITopologyService.class);
         dependencies.add(IPathCalcRuntimeService.class);
         // We don't use the IProxyArpService directly, but reactive forwarding
         // requires it to be loaded and answering ARP requests
@@ -167,7 +167,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     public void init(FloodlightModuleContext context) {
         datagrid = context.getServiceImpl(IDatagridService.class);
         controllerRegistryService = context.getServiceImpl(IControllerRegistryService.class);
-        networkGraphService = context.getServiceImpl(INetworkGraphService.class);
+        topologyService = context.getServiceImpl(ITopologyService.class);
         pathRuntime = context.getServiceImpl(IPathCalcRuntimeService.class);
         packetService = context.getServiceImpl(IPacketService.class);
 
@@ -179,7 +179,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     public void startUp(FloodlightModuleContext context) {
         packetService.registerPacketListener(this);
 
-        networkGraph = networkGraphService.getNetworkGraph();
+        topology = topologyService.getTopology();
         intentMap = pathRuntime.getPathIntents();
         datagrid.addListener("onos.pathintent_state", this, Long.class, IntentStateList.class);
     }
@@ -217,7 +217,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                 HexString.toHexString(eth.getDestinationMACAddress());
 
         //FIXME getDeviceByMac() is a blocking call, so it may be better way to handle it to avoid the condition.
-        Device deviceObject = networkGraph.getDeviceByMac(MACAddress.valueOf(destinationMac));
+        Device deviceObject = topology.getDeviceByMac(MACAddress.valueOf(destinationMac));
 
         if (deviceObject == null) {
             log.debug("No device entry found for {}",
@@ -245,7 +245,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         @Override
         public void run() {
-            Device deviceObject = networkGraph.getDeviceByMac(MACAddress.valueOf(eth.getDestinationMACAddress()));
+            Device deviceObject = topology.getDeviceByMac(MACAddress.valueOf(eth.getDestinationMACAddress()));
             if (deviceObject == null) {
                 log.debug("wait {}ms and device was not found. Send broadcast packet and the thread finish.", SLEEP_TIME_FOR_DB_DEVICE_INSTALLED);
                 handleBroadcast(sw, inPort, eth);

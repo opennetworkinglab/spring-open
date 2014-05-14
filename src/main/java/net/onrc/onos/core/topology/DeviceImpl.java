@@ -8,14 +8,14 @@ import net.floodlightcontroller.util.MACAddress;
 /**
  * @author Toshio Koide (t-koide@onlab.us)
  */
-public class DeviceImpl extends NetworkGraphObject implements Device {
+public class DeviceImpl extends TopologyObject implements Device {
 
     private final MACAddress macAddr;
     protected LinkedList<Port> attachmentPoints;
     private long lastSeenTime;
 
-    public DeviceImpl(NetworkGraph graph, MACAddress mac) {
-        super(graph);
+    public DeviceImpl(Topology topology, MACAddress mac) {
+        super(topology);
         this.macAddr = mac;
         this.attachmentPoints = new LinkedList<>();
     }

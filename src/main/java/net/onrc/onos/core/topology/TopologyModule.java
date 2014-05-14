@@ -14,18 +14,17 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.topology.web.NetworkGraphWebRoutable;
+import net.onrc.onos.core.topology.web.TopologyWebRoutable;
 
-public class NetworkGraphModule implements IFloodlightModule, INetworkGraphService {
+public class TopologyModule implements IFloodlightModule, ITopologyService {
 
     // This is initialized as a module for now
 
     private TopologyManager topologyManager;
-    //private NetworkGraphDatastore southboundNetworkGraph;
     private IDatagridService datagridService;
     private IControllerRegistryService registryService;
 
-    private CopyOnWriteArrayList<INetworkGraphListener> networkGraphListeners;
+    private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
 
     private IRestApiService restApi;
 
@@ -33,7 +32,7 @@ public class NetworkGraphModule implements IFloodlightModule, INetworkGraphServi
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
         List<Class<? extends IFloodlightService>> services =
                 new ArrayList<Class<? extends IFloodlightService>>();
-        services.add(INetworkGraphService.class);
+        services.add(ITopologyService.class);
         return services;
     }
 
@@ -42,7 +41,7 @@ public class NetworkGraphModule implements IFloodlightModule, INetworkGraphServi
     getServiceImpls() {
         Map<Class<? extends IFloodlightService>, IFloodlightService> impls =
                 new HashMap<Class<? extends IFloodlightService>, IFloodlightService>();
-        impls.put(INetworkGraphService.class, this);
+        impls.put(ITopologyService.class, this);
         return impls;
     }
 
@@ -63,35 +62,34 @@ public class NetworkGraphModule implements IFloodlightModule, INetworkGraphServi
         datagridService = context.getServiceImpl(IDatagridService.class);
         registryService = context.getServiceImpl(IControllerRegistryService.class);
 
-        networkGraphListeners = new CopyOnWriteArrayList<>();
-        topologyManager = new TopologyManager(registryService, networkGraphListeners);
-        //southboundNetworkGraph = new NetworkGraphDatastore(networkGraph);
+        topologyListeners = new CopyOnWriteArrayList<>();
+        topologyManager = new TopologyManager(registryService, topologyListeners);
     }
 
     @Override
     public void startUp(FloodlightModuleContext context) {
-        restApi.addRestletRoutable(new NetworkGraphWebRoutable());
+        restApi.addRestletRoutable(new TopologyWebRoutable());
         topologyManager.startup(datagridService);
     }
 
     @Override
-    public NetworkGraph getNetworkGraph() {
-        return topologyManager.getNetworkGraph();
+    public Topology getTopology() {
+        return topologyManager.getTopology();
     }
 
     @Override
-    public NetworkGraphDiscoveryInterface getNetworkGraphDiscoveryInterface() {
+    public TopologyDiscoveryInterface getTopologyDiscoveryInterface() {
         return topologyManager;
     }
 
     @Override
-    public void registerNetworkGraphListener(INetworkGraphListener listener) {
-        networkGraphListeners.addIfAbsent(listener);
+    public void registerTopologyListener(ITopologyListener listener) {
+        topologyListeners.addIfAbsent(listener);
     }
 
     @Override
-    public void deregisterNetworkGraphListener(INetworkGraphListener listener) {
-        networkGraphListeners.remove(listener);
+    public void deregisterTopologyListener(ITopologyListener listener) {
+        topologyListeners.remove(listener);
     }
 
 }

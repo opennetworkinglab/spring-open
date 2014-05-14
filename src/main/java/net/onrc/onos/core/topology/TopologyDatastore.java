@@ -19,22 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The southbound interface to the network graph which allows clients to
- * mutate the graph. This class will maintain the invariants of the network
- * graph. The southbound discovery modules will use this interface to update
- * the network graph as they learn about the state of the network.
- * <p/>
- * Modification to the Network Map by this module will:
- * 1. Writes to Cluster-wide DataStore.
- * 2. Update ONOS instance In-memory Network Map.
- * 3. Send-out Notification. (TBD)
- * (XXX: To update other instances In-memory Network Map,
- * notification should be triggered here.
- * But if we want to aggregate notification to minimize notification,
- * It might be better for the caller to trigger notification.)
+ * Contains methods which write topology events into the key-value data store.
  */
-public class NetworkGraphDatastore {
-    private static final Logger log = LoggerFactory.getLogger(NetworkGraphDatastore.class);
+public class TopologyDatastore {
+    private static final Logger log = LoggerFactory.getLogger(TopologyDatastore.class);
 
     /**
      * Add a switch to the database.

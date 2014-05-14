@@ -6,7 +6,7 @@ import java.util.Collection;
  * Interface used by the Topology Discovery module to write topology-related
  * events.
  */
-public interface NetworkGraphDiscoveryInterface {
+public interface TopologyDiscoveryInterface {
     /**
      * Switch discovered event.
      *

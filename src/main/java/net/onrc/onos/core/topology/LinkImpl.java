@@ -8,7 +8,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * TODO REMOVE following design memo: This object itself may hold the DBObject,
  * but this Object itself will not issue any read/write to the DataStore.
  */
-public class LinkImpl extends NetworkGraphObject implements Link {
+public class LinkImpl extends TopologyObject implements Link {
     private SwitchPort srcPort;
     private SwitchPort dstPort;
 
@@ -20,36 +20,36 @@ public class LinkImpl extends NetworkGraphObject implements Link {
 
     /**
      * Constructor for when a link is read from the database and the Ports
-     * already exist in the in-memory network graph.
+     * already exist in the in-memory topology.
      *
-     * @param graph
+     * @param topology
      * @param srcPort
      * @param dstPort
      */
-    public LinkImpl(NetworkGraph graph, Port srcPort, Port dstPort) {
-        super(graph);
+    public LinkImpl(Topology topology, Port srcPort, Port dstPort) {
+        super(topology);
         this.srcPort = srcPort.asSwitchPort();
         this.dstPort = dstPort.asSwitchPort();
     }
 
     @Override
     public Switch getSrcSwitch() {
-        return graph.getSwitch(srcPort.dpid().value());
+        return topology.getSwitch(srcPort.dpid().value());
     }
 
     @Override
     public Port getSrcPort() {
-        return graph.getPort(srcPort.dpid().value(), (long) srcPort.port().value());
+        return topology.getPort(srcPort.dpid().value(), (long) srcPort.port().value());
     }
 
     @Override
     public Switch getDstSwitch() {
-        return graph.getSwitch(dstPort.dpid().value());
+        return topology.getSwitch(dstPort.dpid().value());
     }
 
     @Override
     public Port getDstPort() {
-        return graph.getPort(dstPort.dpid().value(), (long) dstPort.port().value());
+        return topology.getPort(dstPort.dpid().value(), (long) dstPort.port().value());
     }
 
     @Override

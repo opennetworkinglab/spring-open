@@ -23,7 +23,7 @@ public class GetNGEventsResource extends ServerResource {
                         get(IDatagridService.class.getCanonicalName());
 
 
-        log.debug("Get network graph events");
+        log.debug("Get topology events");
 
         IEventChannel<byte[], TopologyEvent> channel = datagridService.createChannel(TopologyManager.EVENT_CHANNEL_NAME,
                 byte[].class, TopologyEvent.class);

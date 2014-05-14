@@ -25,7 +25,6 @@ public class PathIntent extends Intent {
     }
 
     /**
-     * @param graph
      * @param path
      * @param bandwidth    bandwidth which should be allocated for the path.
      *                     If 0, no intent for bandwidth allocation (best effort).

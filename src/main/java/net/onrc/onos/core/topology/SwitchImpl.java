@@ -16,14 +16,15 @@ import java.util.Set;
  * TODO REMOVE following design memo: This object itself may hold the DBObject,
  * but this Object itself will not issue any read/write to the DataStore.
  */
-public class SwitchImpl extends NetworkGraphObject implements Switch {
+public class SwitchImpl extends TopologyObject implements Switch {
 
     private Long dpid;
-    // These needs to be ConcurrentCollecton if allowing Graph to be accessed Concurrently
+    // These needs to be ConcurrentCollecton if allowing the topology to be
+    // accessed concurrently
     private final Map<Long, Port> ports;
 
-    public SwitchImpl(NetworkGraph graph, Long dpid) {
-        super(graph);
+    public SwitchImpl(Topology topology, Long dpid) {
+        super(topology);
         this.dpid = dpid;
         ports = new HashMap<Long, Port>();
     }
@@ -91,7 +92,7 @@ public class SwitchImpl extends NetworkGraphObject implements Switch {
     }
 
     public Port addPort(Long portNumber) {
-        PortImpl port = new PortImpl(graph, this, portNumber);
+        PortImpl port = new PortImpl(topology, this, portNumber);
         ports.put(port.getNumber(), port);
         return port;
     }

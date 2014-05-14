@@ -12,7 +12,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * TODO REMOVE following design memo: This object itself may hold the DBObject,
  * but this Object itself will not issue any read/write to the DataStore.
  */
-public class PortImpl extends NetworkGraphObject implements Port {
+public class PortImpl extends TopologyObject implements Port {
 
     private Switch sw;
 
@@ -21,11 +21,12 @@ public class PortImpl extends NetworkGraphObject implements Port {
 
     private final SwitchPort switchPort;
 
-    // These needs to be ConcurrentCollecton if allowing Graph to be accessed Concurrently
+    // These needs to be ConcurrentCollecton if allowing the topology to be
+    // accessed concurrently
     protected Set<Device> devices;
 
-    public PortImpl(NetworkGraph graph, Switch parentSwitch, Long number) {
-        super(graph);
+    public PortImpl(Topology topology, Switch parentSwitch, Long number) {
+        super(topology);
         this.sw = parentSwitch;
         this.number = number;
         this.devices = new HashSet<>();
@@ -70,13 +71,13 @@ public class PortImpl extends NetworkGraphObject implements Port {
 
     @Override
     public Link getOutgoingLink() {
-        return graph.getOutgoingLink(switchPort.dpid().value(),
+        return topology.getOutgoingLink(switchPort.dpid().value(),
                 (long) switchPort.port().value());
     }
 
     @Override
     public Link getIncomingLink() {
-        return graph.getIncomingLink(switchPort.dpid().value(),
+        return topology.getIncomingLink(switchPort.dpid().value(),
                 (long) switchPort.port().value());
     }
 

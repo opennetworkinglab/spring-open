@@ -17,8 +17,8 @@ import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
-import net.onrc.onos.core.topology.NetworkGraph;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.topology.Topology;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
  * @author Toshio Koide (t-koide@onlab.us)
  */
 public class PathCalcRuntime implements IFloodlightService {
-    private NetworkGraph graph;
+    private Topology topology;
     private static final Logger log = LoggerFactory.getLogger(PathCalcRuntime.class);
 
-    public PathCalcRuntime(NetworkGraph g) {
-        this.graph = g;
+    public PathCalcRuntime(Topology topology) {
+        this.topology = topology;
     }
 
     /**
@@ -45,9 +45,9 @@ public class PathCalcRuntime implements IFloodlightService {
         IntentOperationList pathIntentOpList = new IntentOperationList();
         HashMap<Switch, ConstrainedBFSTree> spfTrees = new HashMap<>();
 
-        // TODO optimize locking of NetworkGraph
-        graph.acquireReadLock();
-        log.debug("NetworkGraph: {}", graph.getLinks());
+        // TODO optimize locking of Topology
+        topology.acquireReadLock();
+        log.debug("Topology: {}", topology.getLinks());
 
         for (IntentOperation intentOp : intentOpList) {
             switch (intentOp.operator) {
@@ -62,13 +62,13 @@ public class PathCalcRuntime implements IFloodlightService {
                     }
 
                     ShortestPathIntent spIntent = (ShortestPathIntent) intentOp.intent;
-                    Switch srcSwitch = graph.getSwitch(spIntent.getSrcSwitchDpid());
-                    Switch dstSwitch = graph.getSwitch(spIntent.getDstSwitchDpid());
+                    Switch srcSwitch = topology.getSwitch(spIntent.getSrcSwitchDpid());
+                    Switch dstSwitch = topology.getSwitch(spIntent.getDstSwitchDpid());
                     if (srcSwitch == null || dstSwitch == null) {
-                        log.error("Switch not found. src:{}, dst:{}, NetworkGraph:{}",
+                        log.error("Switch not found. src:{}, dst:{}, Topology:{}",
                                 spIntent.getSrcSwitchDpid(),
                                 spIntent.getDstSwitchDpid(),
-                                graph.getLinks());
+                                topology.getLinks());
                         pathIntentOpList.add(Operator.ERROR, new ErrorIntent(
                                 ErrorType.SWITCH_NOT_FOUND,
                                 "Switch not found.",
@@ -90,7 +90,7 @@ public class PathCalcRuntime implements IFloodlightService {
                     }
                     Path path = tree.getPath(dstSwitch);
                     if (path == null) {
-                        log.error("Path not found. Intent: {}, NetworkGraph:{}", spIntent.toString(), graph.getLinks());
+                        log.error("Path not found. Intent: {}, Topology: {}", spIntent.toString(), topology.getLinks());
                         pathIntentOpList.add(Operator.ERROR, new ErrorIntent(
                                 ErrorType.PATH_NOT_FOUND,
                                 "Path not found.",
@@ -137,8 +137,8 @@ public class PathCalcRuntime implements IFloodlightService {
                     break;
             }
         }
-        // TODO optimize locking of NetworkGraph
-        graph.releaseReadLock();
+        // TODO optimize locking of Topology
+        topology.releaseReadLock();
 
         return pathIntentOpList;
     }

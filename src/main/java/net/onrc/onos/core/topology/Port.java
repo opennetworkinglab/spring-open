@@ -6,7 +6,7 @@ import net.onrc.onos.core.util.SwitchPort;
 //immutable object, or a copy of the original "SB" In-memory Topology.
 
 /**
- * Interface of Port object in Network Graph topology.
+ * Interface of Port object in the topology.
  */
 public interface Port {
 

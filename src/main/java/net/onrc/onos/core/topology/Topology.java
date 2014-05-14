@@ -3,11 +3,11 @@ package net.onrc.onos.core.topology;
 import net.floodlightcontroller.util.MACAddress;
 
 /**
- * The northbound interface to the topology network graph. This interface
+ * The northbound interface to the topology. This interface
  * is presented to the rest of ONOS. It is currently read-only, as we want
  * only the discovery modules to be allowed to modify the topology.
  */
-public interface NetworkGraph {
+public interface Topology {
     /**
      * Get the switch for a given switch DPID.
      *

@@ -6,7 +6,7 @@ import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
-public class NetworkGraphWebRoutable implements RestletRoutable {
+public class TopologyWebRoutable implements RestletRoutable {
 
     @Override
     public Restlet getRestlet(Context context) {
@@ -17,11 +17,11 @@ public class NetworkGraphWebRoutable implements RestletRoutable {
         router.attach("/ds/ports/json", DatastorePortsResource.class);
 
         // Topology API
-        router.attach("/switches/json", NetworkGraphSwitchesResource.class);
-        router.attach("/links/json", NetworkGraphLinksResource.class);
-        router.attach("/devices/json", NetworkGraphDevicesResource.class);
+        router.attach("/switches/json", TopologySwitchesResource.class);
+        router.attach("/links/json", TopologyLinksResource.class);
+        router.attach("/devices/json", TopologyDevicesResource.class);
         // TODO: Move the Shortest Path REST API to the Intent framework
-        router.attach("/shortest-path/{src-dpid}/{dst-dpid}/json", NetworkGraphShortestPathResource.class);
+        router.attach("/shortest-path/{src-dpid}/{dst-dpid}/json", TopologyShortestPathResource.class);
 
         return router;
     }

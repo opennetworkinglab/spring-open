@@ -21,15 +21,15 @@ import net.onrc.onos.core.intent.FlowEntry;
 import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
-import net.onrc.onos.core.topology.INetworkGraphService;
-//import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.ITopologyService;
+//import net.onrc.onos.core.topology.Topology;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PlanInstallModule implements IFloodlightModule {
     protected volatile IFloodlightProviderService floodlightProvider;
-    protected volatile INetworkGraphService networkGraph;
+    protected volatile ITopologyService topologyService;
     protected volatile IDatagridService datagridService;
     protected volatile IFlowPusherService flowPusher;
     private PlanCalcRuntime planCalc;
@@ -47,10 +47,9 @@ public class PlanInstallModule implements IFloodlightModule {
     public void init(FloodlightModuleContext context)
             throws FloodlightModuleException {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-        networkGraph = context.getServiceImpl(INetworkGraphService.class);
+        topologyService = context.getServiceImpl(ITopologyService.class);
         datagridService = context.getServiceImpl(IDatagridService.class);
         flowPusher = context.getServiceImpl(IFlowPusherService.class);
-//      NetworkGraph graph = networkGraph.getNetworkGraph();
         planCalc = new PlanCalcRuntime();
         planInstall = new PlanInstallRuntime(floodlightProvider, flowPusher);
         eventListener = new EventListener();
@@ -175,7 +174,7 @@ public class PlanInstallModule implements IFloodlightModule {
         Collection<Class<? extends IFloodlightService>> l =
                 new ArrayList<Class<? extends IFloodlightService>>();
         l.add(IFloodlightProviderService.class);
-        l.add(INetworkGraphService.class);
+        l.add(ITopologyService.class);
         l.add(IDatagridService.class);
         l.add(IFlowPusherService.class);
         return l;

@@ -31,8 +31,8 @@ import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.Device;
-import net.onrc.onos.core.topology.INetworkGraphService;
-import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.SwitchPort;
@@ -65,8 +65,8 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
     private IConfigInfoService configService;
     private IRestApiService restApi;
 
-    private INetworkGraphService networkGraphService;
-    private NetworkGraph networkGraph;
+    private ITopologyService topologyService;
+    private Topology topology;
     private IOnosDeviceService onosDeviceService;
     private IPacketService packetService;
 
@@ -246,7 +246,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         dependencies.add(IRestApiService.class);
         dependencies.add(IDatagridService.class);
         dependencies.add(IConfigInfoService.class);
-        dependencies.add(INetworkGraphService.class);
+        dependencies.add(ITopologyService.class);
         dependencies.add(IOnosDeviceService.class);
         dependencies.add(IPacketService.class);
         return dependencies;
@@ -257,7 +257,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         this.configService = context.getServiceImpl(IConfigInfoService.class);
         this.restApi = context.getServiceImpl(IRestApiService.class);
         this.datagrid = context.getServiceImpl(IDatagridService.class);
-        this.networkGraphService = context.getServiceImpl(INetworkGraphService.class);
+        this.topologyService = context.getServiceImpl(ITopologyService.class);
         this.onosDeviceService = context.getServiceImpl(IOnosDeviceService.class);
         this.packetService = context.getServiceImpl(IPacketService.class);
 
@@ -292,7 +292,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
         restApi.addRestletRoutable(new ArpWebRoutable());
         packetService.registerPacketListener(this);
-        networkGraph = networkGraphService.getNetworkGraph();
+        topology = topologyService.getTopology();
 
         //
         // Event notification setup: channels and event handlers
@@ -353,9 +353,9 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                     // If the ARP request is expired and then delete the device
                     HostArpRequester requester = (HostArpRequester) request.requester;
                     ARP req = requester.getArpRequest();
-                    networkGraph.acquireReadLock();
-                    Device targetDev = networkGraph.getDeviceByMac(MACAddress.valueOf(req.getTargetHardwareAddress()));
-                    networkGraph.releaseReadLock();
+                    topology.acquireReadLock();
+                    Device targetDev = topology.getDeviceByMac(MACAddress.valueOf(req.getTargetHardwareAddress()));
+                    topology.releaseReadLock();
                     if (targetDev != null) {
                         onosDeviceService.deleteOnosDeviceByMac(MACAddress.valueOf(req.getTargetHardwareAddress()));
                         if (log.isDebugEnabled()) {
@@ -453,10 +453,10 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         arpRequests.put(target, new ArpRequest(
                 new HostArpRequester(arp, dpid, inPort), false));
 
-        networkGraph.acquireReadLock();
-        Device targetDevice = networkGraph.getDeviceByMac(
+        topology.acquireReadLock();
+        Device targetDevice = topology.getDeviceByMac(
                 MACAddress.valueOf(arp.getTargetHardwareAddress()));
-        networkGraph.releaseReadLock();
+        topology.releaseReadLock();
 
         if (targetDevice == null) {
             if (log.isTraceEnabled()) {

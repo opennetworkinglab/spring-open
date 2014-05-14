@@ -2,8 +2,8 @@ package net.onrc.onos.core.topology.web;
 
 import java.io.IOException;
 
-import net.onrc.onos.core.topology.INetworkGraphService;
-import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.serializers.DeviceSerializer;
 
 import org.codehaus.jackson.Version;
@@ -14,29 +14,29 @@ import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetworkGraphDevicesResource extends ServerResource {
-    private static final Logger log = LoggerFactory.getLogger(NetworkGraphDevicesResource.class);
+public class TopologyDevicesResource extends ServerResource {
+    private static final Logger log = LoggerFactory.getLogger(TopologyDevicesResource.class);
 
     @Get("json")
     public String retrieve() {
-        INetworkGraphService networkGraphService = (INetworkGraphService) getContext().getAttributes().
-                get(INetworkGraphService.class.getCanonicalName());
+        ITopologyService topologyService = (ITopologyService) getContext().getAttributes().
+                get(ITopologyService.class.getCanonicalName());
 
-        NetworkGraph graph = networkGraphService.getNetworkGraph();
+        Topology topology = topologyService.getTopology();
 
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule("module", new Version(1, 0, 0, null));
         module.addSerializer(new DeviceSerializer());
         mapper.registerModule(module);
 
-        graph.acquireReadLock();
+        topology.acquireReadLock();
         try {
-            return mapper.writeValueAsString(graph.getDevices());
+            return mapper.writeValueAsString(topology.getDevices());
         } catch (IOException e) {
             log.error("Error writing device list to JSON", e);
             return "";
         } finally {
-            graph.releaseReadLock();
+            topology.releaseReadLock();
         }
     }
 

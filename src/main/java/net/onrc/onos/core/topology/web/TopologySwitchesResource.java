@@ -2,8 +2,8 @@ package net.onrc.onos.core.topology.web;
 
 import java.io.IOException;
 
-import net.onrc.onos.core.topology.INetworkGraphService;
-import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.serializers.PortSerializer;
 import net.onrc.onos.core.topology.serializers.SwitchSerializer;
 
@@ -15,16 +15,16 @@ import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetworkGraphSwitchesResource extends ServerResource {
+public class TopologySwitchesResource extends ServerResource {
 
-    private static final Logger log = LoggerFactory.getLogger(NetworkGraphSwitchesResource.class);
+    private static final Logger log = LoggerFactory.getLogger(TopologySwitchesResource.class);
 
     @Get("json")
     public String retrieve() {
-        INetworkGraphService networkGraphService = (INetworkGraphService) getContext().getAttributes().
-                get(INetworkGraphService.class.getCanonicalName());
+        ITopologyService topologyService = (ITopologyService) getContext().getAttributes().
+                get(ITopologyService.class.getCanonicalName());
 
-        NetworkGraph graph = networkGraphService.getNetworkGraph();
+        Topology topology = topologyService.getTopology();
 
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule("module", new Version(1, 0, 0, null));
@@ -33,13 +33,13 @@ public class NetworkGraphSwitchesResource extends ServerResource {
         mapper.registerModule(module);
 
         try {
-            graph.acquireReadLock();
-            return mapper.writeValueAsString(graph.getSwitches());
+            topology.acquireReadLock();
+            return mapper.writeValueAsString(topology.getSwitches());
         } catch (IOException e) {
             log.error("Error writing switch list to JSON", e);
             return "";
         } finally {
-            graph.releaseReadLock();
+            topology.releaseReadLock();
         }
     }
 }

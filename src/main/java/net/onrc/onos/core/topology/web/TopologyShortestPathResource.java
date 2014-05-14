@@ -6,10 +6,10 @@ import java.util.List;
 
 import net.onrc.onos.core.intent.ConstrainedBFSTree;
 import net.onrc.onos.core.intent.Path;
-import net.onrc.onos.core.topology.INetworkGraphService;
+import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.serializers.LinkSerializer;
 import net.onrc.onos.core.util.Dpid;
@@ -22,17 +22,17 @@ import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetworkGraphShortestPathResource extends ServerResource {
+public class TopologyShortestPathResource extends ServerResource {
 
-    private static final Logger log = LoggerFactory.getLogger(NetworkGraphShortestPathResource.class);
+    private static final Logger log = LoggerFactory.getLogger(TopologyShortestPathResource.class);
 
     @Get("json")
     public String retrieve() {
-        INetworkGraphService networkGraphService =
-                (INetworkGraphService) getContext().getAttributes().
-                        get(INetworkGraphService.class.getCanonicalName());
+        ITopologyService topologyService =
+                (ITopologyService) getContext().getAttributes().
+                        get(ITopologyService.class.getCanonicalName());
 
-        NetworkGraph graph = networkGraphService.getNetworkGraph();
+        Topology topology = topologyService.getTopology();
 
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule("module", new Version(1, 0, 0, null));
@@ -53,9 +53,9 @@ public class NetworkGraphShortestPathResource extends ServerResource {
         // links.
         //
         try {
-            graph.acquireReadLock();
-            Switch srcSwitch = graph.getSwitch(srcDpid.value());
-            Switch dstSwitch = graph.getSwitch(dstDpid.value());
+            topology.acquireReadLock();
+            Switch srcSwitch = topology.getSwitch(srcDpid.value());
+            Switch dstSwitch = topology.getSwitch(dstDpid.value());
             if ((srcSwitch == null) || (dstSwitch == null)) {
                 return "";
             }
@@ -63,7 +63,7 @@ public class NetworkGraphShortestPathResource extends ServerResource {
             Path path = bfsTree.getPath(dstSwitch);
             List<Link> links = new LinkedList<>();
             for (LinkEvent linkEvent : path) {
-                Link link = graph.getLink(linkEvent.getSrc().getDpid(),
+                Link link = topology.getLink(linkEvent.getSrc().getDpid(),
                         linkEvent.getSrc().getNumber(),
                         linkEvent.getDst().getDpid(),
                         linkEvent.getDst().getNumber());
@@ -77,7 +77,7 @@ public class NetworkGraphShortestPathResource extends ServerResource {
             log.error("Error writing Shortest Path to JSON", e);
             return "";
         } finally {
-            graph.releaseReadLock();
+            topology.releaseReadLock();
         }
     }
 }

@@ -13,9 +13,9 @@ import net.onrc.onos.core.util.SwitchPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetworkGraphImpl implements NetworkGraph {
+public class TopologyImpl implements Topology {
     @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(NetworkGraphImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(TopologyImpl.class);
 
     // DPID -> Switch
     private final ConcurrentMap<Long, Switch> switches;
@@ -29,7 +29,7 @@ public class NetworkGraphImpl implements NetworkGraph {
     // TODO use the write lock after refactor
     private Lock writeLock = readWriteLock.writeLock();
 
-    public NetworkGraphImpl() {
+    public TopologyImpl() {
         // TODO: Does these object need to be stored in Concurrent Collection?
         switches = new ConcurrentHashMap<>();
         mac2Device = new ConcurrentHashMap<>();

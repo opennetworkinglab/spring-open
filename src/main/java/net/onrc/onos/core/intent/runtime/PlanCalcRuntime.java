@@ -19,7 +19,7 @@ import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.LinkEvent;
-//import net.onrc.onos.core.topology.NetworkGraph;
+//import net.onrc.onos.core.topology.Topology;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 
 public class PlanCalcRuntime {
 
-    //    NetworkGraph graph;
+    //    Topology graph;
     private static final Logger log = LoggerFactory.getLogger(PlanCalcRuntime.class);
 
-    public PlanCalcRuntime(/*NetworkGraph graph*/) {
+    public PlanCalcRuntime(/*Topology graph*/) {
 //      this.graph = graph;
     }
 

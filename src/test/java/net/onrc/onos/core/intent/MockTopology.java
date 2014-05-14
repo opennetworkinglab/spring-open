@@ -2,22 +2,22 @@ package net.onrc.onos.core.intent;
 
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkImpl;
-import net.onrc.onos.core.topology.NetworkGraphImpl;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.SwitchImpl;
+import net.onrc.onos.core.topology.TopologyImpl;
 
 /**
- * A mock class of NetworkGraph.
+ * A mock class of Topology.
  * This class should be used only by test codes.
  *
  * @author Toshio Koide (t-koide@onlab.us)
  */
-public class MockNetworkGraph extends NetworkGraphImpl {
-    // TODO this class doesn't seem like it should extend NetworkGraphImpl. It
-    // isn't a NetworkGraph, it's more of a NetworkGraphBuilder - methods to
-    // create an populate a fake network graph that's not based on discovery
+public class MockTopology extends TopologyImpl {
+    // TODO this class doesn't seem like it should extend TopologyImpl. It
+    // isn't a Topology, it's more of a TopologyBuilder - methods to
+    // create an populate a fake topology that's not based on discovery
     // data from the driver modules.
-    // We may well need a MockNetworkGraph, but that's not what this class is
+    // We may well need a MockTopology, but that's not what this class is
     // doing.
 
     public static Long LOCAL_PORT = 0xFFFEL;

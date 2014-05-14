@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology;
 // TODO Everything returned by these interfaces must be either Unmodifiable view,
 // immutable object, or a copy of the original "SB" In-memory Topology.
 /**
- * Interface of Link object in Network Graph topology.
+ * Interface of Link object in the topology.
  */
 public interface Link {
     /**

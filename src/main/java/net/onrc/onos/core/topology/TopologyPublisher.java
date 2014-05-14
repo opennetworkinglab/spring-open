@@ -31,27 +31,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The NetworkGraphPublisher subscribes to topology network events from the
- * discovery modules. These events are reformatted and relayed to the topology
- * part of the network graph
+ * The TopologyPublisher subscribes to topology network events from the
+ * discovery modules. These events are reformatted and relayed to the in-memory
+ * topology instance.
  */
-public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
+public class TopologyPublisher implements /*IOFSwitchListener,*/
         IOFSwitchPortListener,
         ILinkDiscoveryListener,
         IFloodlightModule,
         IOnosDeviceListener {
     private static final Logger log =
-            LoggerFactory.getLogger(NetworkGraphPublisher.class);
+            LoggerFactory.getLogger(TopologyPublisher.class);
 
     private IFloodlightProviderService floodlightProvider;
     private ILinkDiscoveryService linkDiscovery;
     private IControllerRegistryService registryService;
-    private INetworkGraphService networkGraphService;
+    private ITopologyService topologyService;
 
     private IOnosDeviceService onosDeviceService;
 
-    private NetworkGraph networkGraph;
-    private NetworkGraphDiscoveryInterface networkGraphDiscoveryInterface;
+    private Topology topology;
+    private TopologyDiscoveryInterface topologyDiscoveryInterface;
 
     private static final String ENABLE_CLEANUP_PROPERTY = "EnableCleanup";
     private boolean cleanupEnabled = true;
@@ -59,7 +59,7 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
     private SingletonTask cleanupTask;
 
     /**
-     * Cleanup old switches from the network graph. Old switches are those
+     * Cleanup old switches from the topology. Old switches are those
      * which have no controller in the registry.
      */
     private class SwitchCleanup implements ControlChangeCallback, Runnable {
@@ -86,7 +86,7 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
          * registry.
          */
         private void switchCleanup() {
-            Iterable<Switch> switches = networkGraph.getSwitches();
+            Iterable<Switch> switches = topology.getSwitches();
 
             if (log.isTraceEnabled()) {
                 log.trace("Checking for inactive switches");
@@ -110,7 +110,7 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
         /**
          * Second half of the switch cleanup operation. If the registry grants
          * control of a switch, we can be sure no other instance is writing
-         * this switch to the network graph, so we can remove it now.
+         * this switch to the topology, so we can remove it now.
          *
          * @param dpid       the dpid of the switch we requested control for
          * @param hasControl whether we got control or not
@@ -122,7 +122,7 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
                         HexString.toHexString(dpid));
 
                 SwitchEvent switchEvent = new SwitchEvent(dpid);
-                networkGraphDiscoveryInterface.
+                topologyDiscoveryInterface.
                         removeSwitchDiscoveryEvent(switchEvent);
                 registryService.releaseControl(dpid);
             }
@@ -137,13 +137,13 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
 
         switch (update.getOperation()) {
             case LINK_ADDED:
-                networkGraphDiscoveryInterface.putLinkDiscoveryEvent(linkEvent);
+                topologyDiscoveryInterface.putLinkDiscoveryEvent(linkEvent);
                 break;
             case LINK_UPDATED:
                 // We don't use the LINK_UPDATED event (unsure what it means)
                 break;
             case LINK_REMOVED:
-                networkGraphDiscoveryInterface.removeLinkDiscoveryEvent(linkEvent);
+                topologyDiscoveryInterface.removeLinkDiscoveryEvent(linkEvent);
                 break;
             default:
                 break;
@@ -153,14 +153,14 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
     @Override
     public void switchPortAdded(Long switchId, OFPhysicalPort port) {
         PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
-        networkGraphDiscoveryInterface.putPortDiscoveryEvent(portEvent);
+        topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
         linkDiscovery.removeFromSuppressLLDPs(switchId, port.getPortNumber());
     }
 
     @Override
     public void switchPortRemoved(Long switchId, OFPhysicalPort port) {
         PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
-        networkGraphDiscoveryInterface.removePortDiscoveryEvent(portEvent);
+        topologyDiscoveryInterface.removePortDiscoveryEvent(portEvent);
     }
 
     @Override
@@ -176,7 +176,7 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
         for (OFPhysicalPort port : sw.getPorts()) {
             portEvents.add(new PortEvent(sw.getId(), (long) port.getPortNumber()));
         }
-        networkGraphDiscoveryInterface
+        topologyDiscoveryInterface
                 .putSwitchDiscoveryEvent(switchEvent, portEvents);
 
         for (OFPhysicalPort port : sw.getPorts()) {
@@ -226,7 +226,7 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
         l.add(ILinkDiscoveryService.class);
         l.add(IThreadPoolService.class);
         l.add(IControllerRegistryService.class);
-        l.add(INetworkGraphService.class);
+        l.add(ITopologyService.class);
         l.add(IOnosDeviceService.class);
         return l;
     }
@@ -239,7 +239,7 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
         registryService = context.getServiceImpl(IControllerRegistryService.class);
         onosDeviceService = context.getServiceImpl(IOnosDeviceService.class);
 
-        networkGraphService = context.getServiceImpl(INetworkGraphService.class);
+        topologyService = context.getServiceImpl(ITopologyService.class);
     }
 
     @Override
@@ -248,9 +248,9 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
         linkDiscovery.addListener(this);
         onosDeviceService.addOnosDeviceListener(this);
 
-        networkGraph = networkGraphService.getNetworkGraph();
-        networkGraphDiscoveryInterface =
-                networkGraphService.getNetworkGraphDiscoveryInterface();
+        topology = topologyService.getTopology();
+        topologyDiscoveryInterface =
+                topologyService.getTopologyDiscoveryInterface();
 
         // Run the cleanup thread
         String enableCleanup =
@@ -285,13 +285,13 @@ public class NetworkGraphPublisher implements /*IOFSwitchListener,*/
         event.setLastSeenTime(device.getLastSeenTimestamp().getTime());
         // Does not use vlan info now.
 
-        networkGraphDiscoveryInterface.putDeviceDiscoveryEvent(event);
+        topologyDiscoveryInterface.putDeviceDiscoveryEvent(event);
     }
 
     @Override
     public void onosDeviceRemoved(OnosDevice device) {
         log.debug("Called onosDeviceRemoved");
         DeviceEvent event = new DeviceEvent(device.getMacAddress());
-        networkGraphDiscoveryInterface.removeDeviceDiscoveryEvent(event);
+        topologyDiscoveryInterface.removeDeviceDiscoveryEvent(event);
     }
 }

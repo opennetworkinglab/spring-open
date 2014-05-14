@@ -13,7 +13,7 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.FlowEntry;
-//import net.onrc.onos.core.topology.NetworkGraph;
+//import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Pair;
 
 import org.openflow.protocol.OFBarrierReply;
@@ -25,12 +25,12 @@ import org.slf4j.LoggerFactory;
  */
 
 public class PlanInstallRuntime {
-    //    NetworkGraph graph;
+    //    Topology graph;
     IFlowPusherService pusher;
     IFloodlightProviderService provider;
     private static final Logger log = LoggerFactory.getLogger(PlanInstallRuntime.class);
 
-    public PlanInstallRuntime(//NetworkGraph graph,
+    public PlanInstallRuntime(//Topology graph,
                               IFloodlightProviderService provider,
                               IFlowPusherService pusher) {
 //      this.graph = graph;

@@ -22,10 +22,10 @@ import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.Ethernet;
-import net.onrc.onos.core.topology.INetworkGraphService;
-import net.onrc.onos.core.topology.NetworkGraph;
+import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.protocol.OFMessage;
@@ -49,7 +49,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     private final CopyOnWriteArrayList<IPacketListener> listeners;
 
     private IFloodlightProviderService floodlightProvider;
-    private NetworkGraph networkGraph;
+    private Topology topology;
     private IDatagridService datagrid;
     private IFlowPusherService flowPusher;
 
@@ -74,7 +74,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                 }
             }
             Multimap<Long, Short> outPorts = value.calculateOutPorts(
-                    localPorts, networkGraph);
+                    localPorts, topology);
             sendPacketToSwitches(outPorts, value.getPacketData());
         }
 
@@ -159,24 +159,24 @@ public class PacketModule implements IOFMessageListener, IPacketService,
         Ethernet eth = IFloodlightProviderService.bcStore.
                 get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 
-        Switch networkGraphSwitch;
+        Switch topologySwitch;
         Port inPort;
         try {
-            networkGraph.acquireReadLock();
-            networkGraphSwitch = networkGraph.getSwitch(sw.getId());
-            inPort = networkGraph.getPort(sw.getId(), (long) pi.getInPort());
+            topology.acquireReadLock();
+            topologySwitch = topology.getSwitch(sw.getId());
+            inPort = topology.getPort(sw.getId(), (long) pi.getInPort());
         } finally {
-            networkGraph.releaseReadLock();
+            topology.releaseReadLock();
         }
 
-        if (networkGraphSwitch == null || inPort == null) {
+        if (topologySwitch == null || inPort == null) {
             // We can't send packets for switches or ports that aren't in the
-            // network graph yet
+            // topology yet
             return Command.CONTINUE;
         }
 
         for (IPacketListener listener : listeners) {
-            listener.receive(networkGraphSwitch, inPort, eth);
+            listener.receive(topologySwitch, inPort, eth);
         }
 
         return Command.CONTINUE;
@@ -202,7 +202,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         List<Class<? extends IFloodlightService>> dependencies = new ArrayList<>();
         dependencies.add(IFloodlightProviderService.class);
-        dependencies.add(INetworkGraphService.class);
+        dependencies.add(ITopologyService.class);
         dependencies.add(IDatagridService.class);
         dependencies.add(IFlowPusherService.class);
         return dependencies;
@@ -213,8 +213,8 @@ public class PacketModule implements IOFMessageListener, IPacketService,
             throws FloodlightModuleException {
         floodlightProvider =
                 context.getServiceImpl(IFloodlightProviderService.class);
-        networkGraph = context.getServiceImpl(INetworkGraphService.class)
-                .getNetworkGraph();
+        topology = context.getServiceImpl(ITopologyService.class)
+                .getTopology();
         datagrid = context.getServiceImpl(IDatagridService.class);
         flowPusher = context.getServiceImpl(IFlowPusherService.class);
     }

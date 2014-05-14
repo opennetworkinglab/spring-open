@@ -4,11 +4,11 @@ import java.util.Collection;
 
 /**
  * Interface which needs to be implemented to receive Topology events from
- * the NetworkGraph.
+ * the Topology.
  */
-public interface INetworkGraphListener {
+public interface ITopologyListener {
     /**
-     * Network Graph events.
+     * Topology events.
      * <p/>
      * The recommended ordering rules for applying/processing the events is:
      * (a) Process "added" events before "removed" events.
@@ -34,7 +34,7 @@ public interface INetworkGraphListener {
      * @param removedDeviceEvents the Removed Device Events.
      */
     // CHECKSTYLE:OFF suppress warning about too many parameters
-    public void networkGraphEvents(Collection<SwitchEvent> addedSwitchEvents,
+    public void topologyEvents(Collection<SwitchEvent> addedSwitchEvents,
                                    Collection<SwitchEvent> removedSwitchEvents,
                                    Collection<PortEvent> addedPortEvents,
                                    Collection<PortEvent> removedPortEvents,

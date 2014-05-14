@@ -5,7 +5,7 @@ import java.util.Collection;
 // TOOD Everything returned by these interfaces must be either Unmodifiable view,
 // immutable object, or a copy of the original "SB" In-memory Topology.
 /**
- * Interface of Switch object in Network Graph topology.
+ * Interface of Switch object in the topology.
  */
 public interface Switch {
 
