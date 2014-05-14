@@ -2,9 +2,12 @@ package net.onrc.onos.api.rest;
 
 import org.junit.Test;
 
+import static net.onrc.onos.core.util.ImmutableClassChecker.assertThatClassIsImmutable;
 import static net.onrc.onos.core.util.UtilityClassChecker.assertThatClassIsUtility;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 
 /**
@@ -77,5 +80,13 @@ public class RestErrorTest {
     @Test
     public void assureThatErrorCodesIsUtility() {
         assertThatClassIsUtility(RestErrorCodes.class);
+    }
+
+    /**
+     * Make sure that the RestError class is immutable.
+     */
+    @Test
+    public void assureThatRestErrorIsImmutable() {
+        assertThatClassIsImmutable(RestError.class);
     }
 }
