@@ -58,8 +58,9 @@ public class PlanCalcRuntime {
             PathIntent intent = (PathIntent) i.intent;
             Intent parent = intent.getParentIntent();
             long srcPort, dstPort;
-            long lastDstSw = -1, lastDstPort = -1;
+            long lastDstSw = -1, lastDstPort = -1, firstSrcSw = -1;
             MACAddress srcMac, dstMac;
+            int idleTimeout = 0, hardTimeout = 0, firstSwitchIdleTimeout = 0, firstSwitchHardTimeout = 0;
             if (parent instanceof ShortestPathIntent) {
                 ShortestPathIntent pathIntent = (ShortestPathIntent) parent;
 //              Switch srcSwitch = graph.getSwitch(pathIntent.getSrcSwitchDpid());
@@ -69,8 +70,13 @@ public class PlanCalcRuntime {
                 dstMac = MACAddress.valueOf(pathIntent.getDstMac());
 //              Switch dstSwitch = graph.getSwitch(pathIntent.getDstSwitchDpid());
                 lastDstSw = pathIntent.getDstSwitchDpid();
+                firstSrcSw = pathIntent.getSrcSwitchDpid();
 //              lastDstPort = dstSwitch.getPort(pathIntent.getDstPortNumber());
                 lastDstPort = pathIntent.getDstPortNumber();
+                idleTimeout = pathIntent.getIdleTimeout();
+                hardTimeout = pathIntent.getHardTimeout();
+                firstSwitchIdleTimeout = pathIntent.getFirstSwitchIdleTimeout();
+                firstSwitchHardTimeout = pathIntent.getFirstSwitchHardTimetout();
             } else {
                 log.warn("Unsupported Intent: {}", parent);
                 continue;
@@ -86,6 +92,13 @@ public class PlanCalcRuntime {
 //              dstPort = link.getSrcPort();
                 dstPort = linkEvent.getSrc().getNumber();
                 FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac, i.operator);
+                if (sw != firstSrcSw) {
+                    fe.setIdleTimeout(idleTimeout);
+                    fe.setHardTimeout(hardTimeout);
+                } else {
+                    fe.setIdleTimeout(firstSwitchIdleTimeout);
+                    fe.setHardTimeout(firstSwitchHardTimeout);
+                }
                 entries.add(fe);
 //              srcPort = link.getDstPort();
                 srcPort = linkEvent.getDst().getNumber();
@@ -95,6 +108,8 @@ public class PlanCalcRuntime {
                 long sw = lastDstSw;
                 dstPort = lastDstPort;
                 FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac, i.operator);
+                fe.setIdleTimeout(idleTimeout);
+                fe.setHardTimeout(hardTimeout);
                 entries.add(fe);
             }
             // install flow entries in reverse order
@@ -102,6 +117,18 @@ public class PlanCalcRuntime {
             flowEntries.add(entries);
         }
         return flowEntries;
+    }
+
+    // This method is for a testing purpose. Please leave it right now.
+    private List<Set<FlowEntry>> simpleBuildPhases(List<Collection<FlowEntry>> flowEntries) {
+        List<Set<FlowEntry>> plan = new ArrayList<>();
+        Set<FlowEntry> phase = new HashSet<>();
+        for (Collection<FlowEntry> c : flowEntries) {
+            phase.addAll(c);
+        }
+        plan.add(phase);
+
+        return plan;
     }
 
     private List<Set<FlowEntry>> buildPhases(List<Collection<FlowEntry>> flowEntries) {

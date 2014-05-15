@@ -54,6 +54,9 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     private static final int SLEEP_TIME_FOR_DB_DEVICE_INSTALLED = 100; // milliseconds
     private static final int NUMBER_OF_THREAD_FOR_EXECUTOR = 1;
+    private static final int SRC_SWITCH_TIMEOUT_ADJUST_SECOND = 2;
+    private static final int DEFAULT_IDLE_TIMEOUT = 5;
+    private int idleTimeout = DEFAULT_IDLE_TIMEOUT;
 
     private static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newScheduledThreadPool(NUMBER_OF_THREAD_FOR_EXECUTOR);
 
@@ -172,6 +175,19 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     @Override
     public void startUp(FloodlightModuleContext context) {
+        Map<String, String> configOptions = context.getConfigParams(this);
+
+        try {
+            if (Integer.parseInt(configOptions.get("idletimeout")) > 0) {
+                idleTimeout = Integer.parseInt(configOptions.get("idletimeout"));
+                log.info("idle_timeout for Forwarding is set to {}.", idleTimeout);
+            } else {
+                log.info("idle_timeout for Forwarding is less than 0. Use default {}.", idleTimeout);
+            }
+        } catch (NumberFormatException e) {
+            log.info("idle_timeout related config options were not set. Use default.");
+        }
+
         packetService.registerPacketListener(this);
 
         topology = topologyService.getTopology();
@@ -358,10 +374,11 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             ShortestPathIntent intent = new ShortestPathIntent(intentId,
                     sw.getDpid(), inPort.getNumber(), srcMacAddress.toLong(),
                     destinationDpid, destinationPort, dstMacAddress.toLong());
+            intent.setIdleTimeout(idleTimeout + SRC_SWITCH_TIMEOUT_ADJUST_SECOND);
+            intent.setFirstSwitchIdleTimeout(idleTimeout);
             IntentOperation.Operator operator = IntentOperation.Operator.ADD;
             operations.add(operator, intent);
             pathRuntime.executeIntentOperations(operations);
-
             // Add to waiting lists
             pendingFlows.put(pathspec, new PushedFlow(intentId));
             log.debug("Put a Path {} in the pending flow, intent ID {}", pathspec, intentId);

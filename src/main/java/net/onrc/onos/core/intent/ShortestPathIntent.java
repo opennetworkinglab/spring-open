@@ -14,6 +14,10 @@ public class ShortestPathIntent extends Intent {
     protected long dstPortNumber;
     protected long dstMacAddress;
     protected String pathIntentId = null;
+    protected int idleTimeout;
+    protected int hardTimeout;
+    protected int firstSwitchIdleTimeout;
+    protected int firstSwitchHardTimetout;
 
     /**
      * Default constructor for Kryo deserialization.
@@ -104,6 +108,46 @@ public class ShortestPathIntent extends Intent {
 
     public String getPathIntentId() {
         return pathIntentId;
+    }
+
+    @Deprecated
+    public int getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    @Deprecated
+    public int getHardTimeout() {
+        return hardTimeout;
+    }
+
+    @Deprecated
+    public void setIdleTimeout(int idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
+
+    @Deprecated
+    public void setHardTimeout(int hardTimeout) {
+        this.hardTimeout = hardTimeout;
+    }
+
+    @Deprecated
+    public int getFirstSwitchIdleTimeout() {
+        return firstSwitchIdleTimeout;
+    }
+
+    @Deprecated
+    public int getFirstSwitchHardTimetout() {
+        return firstSwitchHardTimetout;
+    }
+
+    @Deprecated
+    public void setFirstSwitchIdleTimeout(int firstSwitchIdleTimeout) {
+        this.firstSwitchIdleTimeout = firstSwitchIdleTimeout;
+    }
+
+    @Deprecated
+    public void setFirstSwitchHardTimetout(int firstSwitchHardTimetout) {
+        this.firstSwitchHardTimetout = firstSwitchHardTimetout;
     }
 
     @Override

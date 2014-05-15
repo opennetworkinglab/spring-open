@@ -19,6 +19,8 @@ public class FlowEntry {
     protected Match match;
     protected Set<Action> actions;
     protected Operator operator;
+    protected int hardTimeout = 0;
+    protected int idleTimeout = 0;
 
     public FlowEntry(long sw, long srcPort, long dstPort,
                      MACAddress srcMac, MACAddress dstMac,
@@ -28,8 +30,46 @@ public class FlowEntry {
         this.actions = new HashSet<Action>();
         this.actions.add(new ForwardAction(dstPort));
         this.operator = operator;
+
     }
 
+    /***
+     * Gets hard timeout value in seconds.
+     *
+     * @return hardTimeout
+     */
+    public int getHardTimeout() {
+        return hardTimeout;
+    }
+
+    /***
+     * Gets idle timeout value in seconds.
+     *
+     * @return idleTimeout
+     */
+    public int getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    /***
+     * Sets hard timeout value in seconds.
+     *
+     * @param hardTimeout
+     */
+    public void setHardTimeout(int hardTimeout) {
+        this.hardTimeout = hardTimeout;
+    }
+
+    /***
+     * Sets idle timeout value in seconds.
+     *
+     * @param idleTimeout
+     */
+    public void setIdleTimeout(int idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
+
+    @Override
     public String toString() {
         return match + "->" + actions;
     }
@@ -66,14 +106,18 @@ public class FlowEntry {
             default:
                 break;
         }
+        entry.setIdleTimeout(idleTimeout);
+        entry.setHardTimeout(hardTimeout);
         return entry;
     }
 
 
+    @Override
     public int hashCode() {
         return match.hashCode();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof FlowEntry)) {
             return false;
