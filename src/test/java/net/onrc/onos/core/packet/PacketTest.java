@@ -85,16 +85,18 @@ public class PacketTest {
     }
 
     protected void doTestClone(IPacket pkt) {
-        if (pkt.getPayload() != null)
+        if (pkt.getPayload() != null) {
             doTestClone(pkt.getPayload());
+        }
         IPacket newPkt = (IPacket) pkt.clone();
         assertSame(pkt.getClass(), newPkt.getClass());
         assertNotSame(pkt, newPkt);
         assertSame(pkt.getParent(), newPkt.getParent());
         assertEquals(pkt, newPkt);
         assertEquals(pkt.getPayload(), newPkt.getPayload());
-        if (pkt.getPayload() != null)
+        if (pkt.getPayload() != null) {
             assertNotSame(pkt.getPayload(), newPkt.getPayload());
+        }
 
         if (pkt instanceof Ethernet) {
             Ethernet eth = (Ethernet) pkt;

@@ -69,9 +69,9 @@ public class PrefixTest {
     public void testPrefixReturnsSame() {
         //Create a prefix of all 1s for each prefix length.
         //Check that Prefix doesn't mangle it
-        int MAX_PREFIX_LENGTH = 32;
+        final int MAX_PREFIX_LENGTH = 32;
         for (int prefixLength = 1; prefixLength <= MAX_PREFIX_LENGTH; prefixLength++) {
-            byte address[] = new byte[MAX_PREFIX_LENGTH / Byte.SIZE];
+            byte[] address = new byte[MAX_PREFIX_LENGTH / Byte.SIZE];
 
             int lastByte = (prefixLength - 1) / Byte.SIZE;
             int lastBit = (prefixLength - 1) % Byte.SIZE;

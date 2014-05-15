@@ -24,6 +24,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openflow.util.HexString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Unit test for {@link StandaloneRegistry}.
@@ -31,6 +33,9 @@ import org.openflow.util.HexString;
  * @author Naoki Shiota
  */
 public class StandaloneRegistryTest {
+
+    private static final Logger log = LoggerFactory.getLogger(StandaloneRegistryTest.class);
+
     protected static final long TIMEOUT_MSEC = 1000;
 
     protected StandaloneRegistry registry;
@@ -49,7 +54,7 @@ public class StandaloneRegistryTest {
         private LinkedList<Long> dpidsCalledback = new LinkedList<Long>();
         private LinkedList<Boolean> controlsCalledback = new LinkedList<Boolean>();
         private CountDownLatch lock = null, registerLock = null;
-        ;
+
 
         /**
          * Constructor with number of times callback to be called.
@@ -129,7 +134,7 @@ public class StandaloneRegistryTest {
         }
 
         /**
-         * Get hasControl parameter given by latest call
+         * Get hasControl parameter given by latest call.
          *
          * @return hasControl value
          */
@@ -147,7 +152,7 @@ public class StandaloneRegistryTest {
         }
     }
 
-    ;
+
 
     @Before
     public void setUp() throws Exception {
@@ -179,6 +184,7 @@ public class StandaloneRegistryTest {
             fail("Double registration goes through without exception");
         } catch (RegistryException e) {
             // expected behavior
+            log.debug("Exception thrown as expected", e);
         }
     }
 
@@ -445,7 +451,7 @@ public class StandaloneRegistryTest {
         assertTrue(switches.contains(dpidToRequestStr));
         int count = 0;
         for (Long dpid : switches) {
-            if ((long) dpid == dpidToRequest) {
+            if (dpid == dpidToRequest) {
                 ++count;
             }
         }

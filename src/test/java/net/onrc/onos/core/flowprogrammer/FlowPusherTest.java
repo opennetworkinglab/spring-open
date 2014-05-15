@@ -77,8 +77,8 @@ public class FlowPusherTest {
         endInitMock();
         initPusher(1);
 
-        boolean add_result = pusher.add(sw, msg);
-        assertTrue(add_result);
+        boolean addResult = pusher.add(sw, msg);
+        assertTrue(addResult);
 
         try {
             // wait until message is processed.
@@ -129,8 +129,8 @@ public class FlowPusherTest {
         initPusher(1);
 
         for (OFMessage msg : messages) {
-            boolean add_result = pusher.add(sw, msg);
-            assertTrue(add_result);
+            boolean addResult = pusher.add(sw, msg);
+            assertTrue(addResult);
         }
 
         try {
@@ -159,7 +159,7 @@ public class FlowPusherTest {
 
         beginInitMock();
 
-        Map<IOFSwitch, List<OFMessage>> sw_map = new HashMap<IOFSwitch, List<OFMessage>>();
+        Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
         for (int i = 0; i < NUM_SWITCH; ++i) {
             IOFSwitch sw = EasyMock.createMock(IOFSwitch.class);
             EasyMock.expect(sw.getId()).andReturn((long) i).anyTimes();
@@ -183,16 +183,16 @@ public class FlowPusherTest {
                     fail("Failed in OFMessageDamper#write()");
                 }
             }
-            sw_map.put(sw, messages);
+            swMap.put(sw, messages);
         }
 
         endInitMock();
         initPusher(1);
 
-        for (IOFSwitch sw : sw_map.keySet()) {
-            for (OFMessage msg : sw_map.get(sw)) {
-                boolean add_result = pusher.add(sw, msg);
-                assertTrue(add_result);
+        for (IOFSwitch sw : swMap.keySet()) {
+            for (OFMessage msg : swMap.get(sw)) {
+                boolean addResult = pusher.add(sw, msg);
+                assertTrue(addResult);
             }
         }
 
@@ -203,8 +203,8 @@ public class FlowPusherTest {
             fail("Failed in Thread.sleep()");
         }
 
-        for (IOFSwitch sw : sw_map.keySet()) {
-            for (OFMessage msg : sw_map.get(sw)) {
+        for (IOFSwitch sw : swMap.keySet()) {
+            for (OFMessage msg : swMap.get(sw)) {
                 EasyMock.verify(msg);
             }
 
@@ -225,7 +225,7 @@ public class FlowPusherTest {
 
         beginInitMock();
 
-        Map<IOFSwitch, List<OFMessage>> sw_map = new HashMap<IOFSwitch, List<OFMessage>>();
+        Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
         for (int i = 0; i < NUM_THREAD; ++i) {
             IOFSwitch sw = EasyMock.createMock(IOFSwitch.class);
             EasyMock.expect(sw.getId()).andReturn((long) i).anyTimes();
@@ -249,16 +249,16 @@ public class FlowPusherTest {
                     fail("Failed in OFMessageDamper#write()");
                 }
             }
-            sw_map.put(sw, messages);
+            swMap.put(sw, messages);
         }
 
         endInitMock();
         initPusher(NUM_THREAD);
 
-        for (IOFSwitch sw : sw_map.keySet()) {
-            for (OFMessage msg : sw_map.get(sw)) {
-                boolean add_result = pusher.add(sw, msg);
-                assertTrue(add_result);
+        for (IOFSwitch sw : swMap.keySet()) {
+            for (OFMessage msg : swMap.get(sw)) {
+                boolean addResult = pusher.add(sw, msg);
+                assertTrue(addResult);
             }
         }
 
@@ -269,8 +269,8 @@ public class FlowPusherTest {
             fail("Failed in Thread.sleep()");
         }
 
-        for (IOFSwitch sw : sw_map.keySet()) {
-            for (OFMessage msg : sw_map.get(sw)) {
+        for (IOFSwitch sw : swMap.keySet()) {
+            for (OFMessage msg : swMap.get(sw)) {
                 EasyMock.verify(msg);
             }
 
@@ -348,8 +348,8 @@ public class FlowPusherTest {
 
         long beginTime = System.currentTimeMillis();
         for (OFMessage msg : messages) {
-            boolean add_result = pusher.add(sw, msg);
-            assertTrue(add_result);
+            boolean addResult = pusher.add(sw, msg);
+            assertTrue(addResult);
         }
 
         pusher.barrierAsync(sw);
@@ -362,8 +362,8 @@ public class FlowPusherTest {
             fail("Failed to sleep");
         }
 
-        double measured_rate = NUM_MSG * 100 / (barrierTime - beginTime);
-        assertTrue(measured_rate < ACCEPTABLE_RATE);
+        double measuredRate = NUM_MSG * 100 / (barrierTime - beginTime);
+        assertTrue(measuredRate < ACCEPTABLE_RATE);
 
         for (OFMessage msg : messages) {
             EasyMock.verify(msg);
@@ -536,8 +536,8 @@ public class FlowPusherTest {
         EasyMock.verify(context);
     }
 
-    private void initPusher(int num_thread) {
-        pusher = new FlowPusher(num_thread);
+    private void initPusher(int numThread) {
+        pusher = new FlowPusher(numThread);
         pusher.init(context, modContext, factory, damper);
         pusher.start();
     }

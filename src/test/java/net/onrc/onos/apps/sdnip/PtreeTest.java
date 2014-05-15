@@ -182,8 +182,8 @@ public class PtreeTest {
     @Test
     public void testMisc() {
         int bitIndex = -1;
-        int index = (int) (bitIndex / Byte.SIZE);
-        int bit = (int) (bitIndex % Byte.SIZE);
+        int index = bitIndex / Byte.SIZE;
+        int bit = bitIndex % Byte.SIZE;
 
         log.debug("index {} bit {}", index, bit);
         log.debug("percent {}", 1 % 8);
@@ -199,7 +199,7 @@ public class PtreeTest {
     }
 
     @Test
-    public void testIteration() {
+    public void testIteration() throws UnknownHostException {
         Iterator<IPatriciaTree.Entry<RibEntry>> it = ooPtree.iterator();
 
         while (it.hasNext()) {
@@ -207,13 +207,9 @@ public class PtreeTest {
             log.debug("PatriciaTree prefix {} \t {}", entry.getPrefix(), entry.getPrefix().printAsBits());
         }
 
-        try {
-            PtreeNode node;
-            for (node = ptree.begin(); node != null; node = ptree.next(node)) {
-                log.debug("Ptree prefix {}/{}", InetAddress.getByAddress(node.key).getHostAddress(), node.keyBits);
-            }
-        } catch (UnknownHostException e) {
-
+        PtreeNode node;
+        for (node = ptree.begin(); node != null; node = ptree.next(node)) {
+            log.debug("Ptree prefix {}/{}", InetAddress.getByAddress(node.key).getHostAddress(), node.keyBits);
         }
     }
 

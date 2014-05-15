@@ -15,17 +15,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class KVArpCacheTest {
-    
+
     KVArpCache arpCache = null;
     InetAddress ip = null;
     MACAddress mac = null;
 
     @Before
     public void setUp() throws Exception {
-        arpCache = new KVArpCache();  
-        try {  
+        arpCache = new KVArpCache();
+        try {
             mac = MACAddress.valueOf("00:01:02:03:04:05");
-            ip = InetAddress.getLocalHost();  
+            ip = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             fail();
         }
@@ -90,7 +90,7 @@ public class KVArpCacheTest {
     public void testForceDelete() {
         byte[] byteMac = mac.toBytes();
         long ver = arpCache.forceCreate(ip, byteMac);
-        long deletedVer= arpCache.forceDelete(ip);
+        long deletedVer = arpCache.forceDelete(ip);
         assertEquals(ver, deletedVer);
     }
 
@@ -103,7 +103,7 @@ public class KVArpCacheTest {
         } catch (UnknownHostException e) {
             fail();
         }
-        
+
         byte[] byteMac = mac.toBytes();
         byte[] byteMac2 = MACAddress.valueOf("00:01:02:03:04:06").toBytes();
         Map<InetAddress, byte[]> map = new HashMap<InetAddress, byte[]>();
@@ -112,7 +112,7 @@ public class KVArpCacheTest {
             map.put(ip, byteMac);
             arpCache.create(ip2, byteMac2);
             map.put(ip2, byteMac2);
-            for(IKVEntry entry : arpCache.getAllEntries()) {
+            for (IKVEntry entry : arpCache.getAllEntries()) {
                 try {
                     assertTrue(map.containsKey(InetAddress.getByAddress(entry.getKey())));
                     MACAddress mac1 = MACAddress.valueOf(map.get(InetAddress.getByAddress(entry.getKey())));

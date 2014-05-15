@@ -35,7 +35,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 // Test should be fixed to fit RAMCloud basis
 @Ignore
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FlowSynchronizer.class})
+@PrepareForTest({FlowSynchronizer.class })
 public class FlowSynchronizerTest {
     private FlowPusher pusher;
     private FlowSynchronizer sync;
@@ -262,21 +262,21 @@ public class FlowSynchronizerTest {
              */
             /*
                 List<IFlowEntry> flowEntryList = new ArrayList<IFlowEntry>();
-                
+
                 for (long id : idList) {
                         IFlowEntry entry = EasyMock.createMock(IFlowEntry.class);
                         EasyMock.expect(entry.getFlowEntryId()).andReturn(String.valueOf(id)).anyTimes();
                         EasyMock.replay(entry);
                         flowEntryList.add(entry);
                 }
-                
+
                 ISwitchObject swObj = EasyMock.createMock(ISwitchObject.class);
                 EasyMock.expect(swObj.getFlowEntries()).andReturn(flowEntryList).once();
                 EasyMock.replay(swObj);
-                
+
                 DBOperation mockOp = PowerMock.createMock(DBOperation.class);
                 EasyMock.expect(mockOp.searchSwitch(EasyMock.anyObject(String.class))).andReturn(swObj).once();
-                
+
                 PowerMock.mockStatic(FlowDatabaseOperation.class);
                 for (IFlowEntry entry : flowEntryList) {
                         EasyMock.expect(FlowDatabaseOperation.extractFlowEntry(EasyMock.eq(entry)))
@@ -285,20 +285,20 @@ public class FlowSynchronizerTest {
                                         public FlowEntry answer() throws Throwable {
                                                 IFlowEntry iflow = (IFlowEntry)EasyMock.getCurrentArguments()[0];
                                                 long flowEntryId = Long.valueOf(iflow.getFlowEntryId());
-                                                
+
                                                 FlowEntry flow = EasyMock.createMock(FlowEntry.class);
                                                 EasyMock.expect(flow.flowEntryId()).andReturn(new FlowEntryId(flowEntryId)).anyTimes();
                                                 EasyMock.replay(flow);
                                                 return flow;
                                         }
-                                        
+
                                 }).anyTimes();
                         EasyMock.expect(mockOp.searchFlowEntry(EasyMock.eq(new FlowEntryId(entry.getFlowEntryId()))))
                                 .andReturn(entry);
                 }
                 PowerMock.replay(FlowDatabaseOperation.class);
                 EasyMock.replay(mockOp);
-                
+
                 try {
                         PowerMock.expectNew(DBOperation.class).andReturn(mockOp);
                 } catch (Exception e) {

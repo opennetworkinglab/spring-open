@@ -1,6 +1,7 @@
 package net.onrc.onos.core.datastore;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +15,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import net.onrc.onos.core.datastore.DataStoreClient;
-import net.onrc.onos.core.datastore.IKVClient;
-import net.onrc.onos.core.datastore.IKVTableID;
-import net.onrc.onos.core.datastore.ObjectDoesntExistException;
-import net.onrc.onos.core.datastore.ObjectExistsException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -84,7 +79,7 @@ public class AtomicCounterTest {
             .getProperty("AtomicCounterTest.NUM_THREADS", "3")));
 
     class Incrementor implements Callable<Long> {
-        private final ConcurrentMap<Long,Long> uniquenessTestSet;
+        private final ConcurrentMap<Long, Long> uniquenessTestSet;
         private final ConcurrentLinkedQueue<Long> incrementTimes;
 
         public Incrementor(ConcurrentMap<Long, Long> uniquenessTestSet, ConcurrentLinkedQueue<Long> incrementTimes) {
@@ -96,10 +91,10 @@ public class AtomicCounterTest {
         @Override
         public Long call() throws ObjectDoesntExistException {
             IKVClient client = DataStoreClient.getClient();
-            for (int i = 0 ; i < NUM_INCREMENTS ; ++i) {
+            for (int i = 0; i < NUM_INCREMENTS; ++i) {
                 final long start = System.nanoTime();
                 final long incremented = client.incrementCounter(counterID, LONG_ZERO, 1);
-                incrementTimes.add( System.nanoTime() - start );
+                incrementTimes.add(System.nanoTime() - start);
                 final Long expectNull = uniquenessTestSet.putIfAbsent(incremented, incremented);
                 assertNull(expectNull);
             }
@@ -119,22 +114,22 @@ public class AtomicCounterTest {
         final int initThreads = Math.max(1, Integer.valueOf(System
                 .getProperty("AtomicCounterTest.initThreads",
                         String.valueOf(NUM_THREADS))));
-        for (int num_threads = initThreads; num_threads <= NUM_THREADS; ++num_threads) {
+        for (int numThreads = initThreads; numThreads <= NUM_THREADS; ++numThreads) {
             client.setCounter(counterID, LONG_ZERO, 0L);
-            parallelIncrementCounter(executor, num_threads);
+            parallelIncrementCounter(executor, numThreads);
         }
 
         executor.shutdown();
     }
 
     private void parallelIncrementCounter(final ExecutorService executor,
-            final int num_threads) throws InterruptedException, ExecutionException {
+            final int numThreads) throws InterruptedException, ExecutionException {
 
-        ConcurrentNavigableMap<Long,Long> uniquenessTestSet = new ConcurrentSkipListMap<>();
+        ConcurrentNavigableMap<Long, Long> uniquenessTestSet = new ConcurrentSkipListMap<>();
         ConcurrentLinkedQueue<Long> incrementTimes = new ConcurrentLinkedQueue<Long>();
 
-        List<Callable<Long>> tasks = new ArrayList<>(num_threads);
-        for (int i = 0 ; i < num_threads ; ++i) {
+        List<Callable<Long>> tasks = new ArrayList<>(numThreads);
+        for (int i = 0; i < numThreads; ++i) {
             tasks.add(new Incrementor(uniquenessTestSet, incrementTimes));
         }
         List<Future<Long>> futures = executor.invokeAll(tasks);
@@ -144,10 +139,10 @@ public class AtomicCounterTest {
             future.get();
         }
 
-        assertEquals(num_threads * NUM_INCREMENTS , uniquenessTestSet.size());
+        assertEquals(numThreads * NUM_INCREMENTS , uniquenessTestSet.size());
         long prevValue = 0;
-        for (Long value : uniquenessTestSet.keySet() ) {
-            assertEquals( (prevValue + 1), value.longValue() );
+        for (Long value : uniquenessTestSet.keySet()) {
+            assertEquals((prevValue + 1), value.longValue());
             prevValue = value;
         }
 
@@ -161,8 +156,8 @@ public class AtomicCounterTest {
         }
         System.err.printf("incrementCounter: th, incs, N, avg(ns), min(ns), max(ns)\n");
         System.err.printf("incrementCounter: %d, %d, %d, %f, %d, %d\n",
-                num_threads, NUM_INCREMENTS, incrementTimes.size(),
-                sum/(double)incrementTimes.size(), min, max );
+                numThreads, NUM_INCREMENTS, incrementTimes.size(),
+                sum / (double) incrementTimes.size(), min, max);
     }
 
 }

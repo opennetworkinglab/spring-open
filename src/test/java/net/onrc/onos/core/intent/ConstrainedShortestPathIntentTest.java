@@ -50,7 +50,7 @@ public class ConstrainedShortestPathIntentTest {
         kryo.writeObject(output, intent1);
 
         output.close();
-        byte bytes[] = output.toBytes();
+        byte[] bytes = output.toBytes();
 
         Input input = new Input(bytes);
         ConstrainedShortestPathIntent intent2 = kryo.readObject(input, ConstrainedShortestPathIntent.class);

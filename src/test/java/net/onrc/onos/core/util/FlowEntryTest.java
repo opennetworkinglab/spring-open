@@ -222,9 +222,9 @@ public class FlowEntryTest {
 
     @Test
     public void testSetFlowEntryActions() {
-        FlowEntryActions actions = new FlowEntryActions();
-        entry.setFlowEntryActions(actions);
-        assertEquals("flowEntryActions", actions, entry.flowEntryActions());
+        FlowEntryActions acts = new FlowEntryActions();
+        entry.setFlowEntryActions(acts);
+        assertEquals("flowEntryActions", acts, entry.flowEntryActions());
     }
 
     @Test

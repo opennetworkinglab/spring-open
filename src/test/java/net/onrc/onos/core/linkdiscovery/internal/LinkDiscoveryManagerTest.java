@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 public class LinkDiscoveryManagerTest extends FloodlightTestCase {
 
     private TestLinkDiscoveryManager ldm;
-    protected final static Logger log = LoggerFactory.getLogger(LinkDiscoveryManagerTest.class);
+    protected static final Logger log = LoggerFactory.getLogger(LinkDiscoveryManagerTest.class);
 
     public class TestLinkDiscoveryManager extends LinkDiscoveryManager {
         public boolean isSendLLDPsCalled = false;
@@ -80,6 +80,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         return mockSwitch;
     }
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -268,15 +269,15 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         assertTrue(topology.portLinks.get(dstNpt).contains(lt));
         assertTrue(topology.links.containsKey(lt));
         assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                topology.portBroadcastDomainLinks.get(srcNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
         assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                topology.portBroadcastDomainLinks.get(dstNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
 
         topology.timeoutLinks();
 
 
-        info = new LinkInfo(System.currentTimeMillis(),/* firstseen */
-                null,/* unicast */
+        info = new LinkInfo(System.currentTimeMillis(), /* firstseen */
+                null, /* unicast */
                 System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
         assertTrue(topology.links.get(lt).getUnicastValidTime() == null);
@@ -294,9 +295,9 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
                 System.currentTimeMillis() - 40000, null, 0, 0);
         topology.addOrUpdateLink(lt, info);
         assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                topology.portBroadcastDomainLinks.get(srcNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
         assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                topology.portBroadcastDomainLinks.get(dstNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
 
         // Expect to timeout the unicast Valid Time, but not the multicast Valid time
         // So the link type should go back to non-openflow link.
@@ -313,9 +314,9 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         topology.timeoutLinks();
         assertTrue(topology.links.get(lt) == null);
         assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                topology.portBroadcastDomainLinks.get(srcNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
         assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                topology.portBroadcastDomainLinks.get(dstNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
 
 
         // Test again only with multicast LLDP
@@ -331,9 +332,9 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         topology.timeoutLinks();
         assertTrue(topology.links.get(lt) == null);
         assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                topology.portBroadcastDomainLinks.get(srcNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
         assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                topology.portBroadcastDomainLinks.get(dstNpt).contains(lt) == false);
+                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
 
         // Start clean and see if loops are also added.
         lt = new Link(1L, 1, 1L, 2);

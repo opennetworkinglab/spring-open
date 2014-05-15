@@ -49,20 +49,21 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ZookeeperRegistry.class, CuratorFramework.class, CuratorFrameworkFactory.class,
         ServiceDiscoveryBuilder.class, ServiceDiscovery.class, ServiceCache.class, PathChildrenCache.class,
-        ZookeeperRegistry.SwitchPathCacheListener.class})
+        ZookeeperRegistry.SwitchPathCacheListener.class })
 public class ZookeeperRegistryTest extends FloodlightTestCase {
-    private final static Long ID_BLOCK_SIZE = 0x100000000L;
+    private static final Long ID_BLOCK_SIZE = 0x100000000L;
 
     protected ZookeeperRegistry registry;
     protected CuratorFramework client;
 
     protected PathChildrenCacheListener pathChildrenCacheListener;
-    protected final String CONTROLLER_ID = "controller2013";
+    protected static final String CONTROLLER_ID = "controller2013";
 
     /**
      * Initialize {@link ZookeeperRegistry} Object and inject initial value with {@link ZookeeperRegistry#init(FloodlightModuleContext)} method.
      * This setup code also tests {@link ZookeeperRegistry#init(FloodlightModuleContext)} method itself.
      */
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -90,6 +91,7 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     /**
      * Clean up member variables (empty for now).
      */
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();
@@ -395,7 +397,7 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
      * @return Created mock object
      * @throws Exception
      */
-    @SuppressWarnings({"serial", "unchecked"})
+    @SuppressWarnings({"serial", "unchecked" })
     private CuratorFramework createCuratorFrameworkMock() throws Exception {
         // Mock of AtomicValue
         AtomicValue<Long> atomicValue = EasyMock.createMock(AtomicValue.class);
@@ -464,10 +466,10 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         ServiceCache<ControllerService> serviceCache = EasyMock.createMock(ServiceCache.class);
         serviceCache.start();
         EasyMock.expectLastCall().once();
-        EasyMock.expect(serviceCache.getInstances()).andReturn(new ArrayList<ServiceInstance<ControllerService>>() {{
+        EasyMock.expect(serviceCache.getInstances()).andReturn(new ArrayList<ServiceInstance<ControllerService>>() { {
             add(createServiceInstanceMock("controller1"));
             add(createServiceInstanceMock("controller2"));
-        }}).anyTimes();
+        } }).anyTimes();
         EasyMock.replay(serviceCache);
 
         // Mock ServiceCacheBuilder
@@ -486,15 +488,15 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         EasyMock.replay(serviceDiscovery);
 
         // Mock CuratorFramework
-        CuratorFramework client = EasyMock.createMock(CuratorFramework.class);
-        client.start();
+        CuratorFramework mockClient = EasyMock.createMock(CuratorFramework.class);
+        mockClient.start();
         EasyMock.expectLastCall().once();
-        EasyMock.expect(client.usingNamespace(EasyMock.anyObject(String.class))).andReturn(client);
-        EasyMock.replay(client);
+        EasyMock.expect(mockClient.usingNamespace(EasyMock.anyObject(String.class))).andReturn(mockClient);
+        EasyMock.replay(mockClient);
 
         // Mock ServiceDiscoveryBuilder
         ServiceDiscoveryBuilder<ControllerService> builder = EasyMock.createMock(ServiceDiscoveryBuilder.class);
-        EasyMock.expect(builder.client(client)).andReturn(builder).once();
+        EasyMock.expect(builder.client(mockClient)).andReturn(builder).once();
         EasyMock.expect(builder.basePath(EasyMock.anyObject(String.class))).andReturn(builder);
         EasyMock.expect(builder.build()).andReturn(serviceDiscovery);
         EasyMock.replay(builder);
@@ -503,7 +505,7 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         EasyMock.expect(ServiceDiscoveryBuilder.builder(ControllerService.class)).andReturn(builder).once();
         PowerMock.replay(ServiceDiscoveryBuilder.class);
 
-        return client;
+        return mockClient;
     }
 
     /**

@@ -65,8 +65,8 @@ public class FlowEntryMatchTest {
 
     @Test
     public void testFlowEntryMatchFlowEntryMatch() {
-        FlowEntryMatch def_base = new FlowEntryMatch();
-        FlowEntryMatch def = new FlowEntryMatch(def_base);
+        FlowEntryMatch defBase = new FlowEntryMatch();
+        FlowEntryMatch def = new FlowEntryMatch(defBase);
 
         assertEquals("default null", null, def.inPort());
         assertEquals("default null", null, def.srcMac());

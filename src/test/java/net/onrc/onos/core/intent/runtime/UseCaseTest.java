@@ -67,14 +67,14 @@ public class UseCaseTest {
     private IEventChannel<Long, IntentOperationList> intentOperationChannel;
     private IEventChannel<Long, IntentStateList> intentStateChannel;
 
-    private static Long LOCAL_PORT = 0xFFFEL;
+    private static final Long LOCAL_PORT = 0xFFFEL;
 
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
-        MockTopology topology = new MockTopology();
-        topology.createSampleTopology1();
-        this.topology = topology;
+        MockTopology mockTopology = new MockTopology();
+        mockTopology.createSampleTopology1();
+        this.topology = mockTopology;
 
         datagridService = createMock(IDatagridService.class);
         topologyService = createMock(ITopologyService.class);
@@ -100,7 +100,7 @@ public class UseCaseTest {
         expect(modContext.getServiceImpl(IRestApiService.class))
                 .andReturn(restApi).once();
 
-        expect(topologyService.getTopology()).andReturn(topology).anyTimes();
+        expect(topologyService.getTopology()).andReturn(mockTopology).anyTimes();
         topologyService.registerTopologyListener(anyObject(ITopologyListener.class));
         expectLastCall();
 

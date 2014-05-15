@@ -74,7 +74,7 @@ public class KVTopologyTest {
     }
 
     @Test
-    public void basic_switch_test() {
+    public void basicSwitchTest() {
         // create switch 0x1
         try {
             KVSwitch sw = new KVSwitch(DPID1);
@@ -145,13 +145,13 @@ public class KVTopologyTest {
     }
 
     @Test
-    public void topology_setup_and_tear_down() {
-        topology_setup();
-        topology_walk();
-        topology_delete();
+    public void topologySetupAndTeardown() {
+        topologySetup();
+        topologyWalk();
+        topologyDelete();
     }
 
-    private static void topology_setup() {
+    private static void topologySetup() {
 
         // d1 - s1p1 - s1 - s1p2 - s2p1 - s2 - s2p2
 
@@ -298,7 +298,7 @@ public class KVTopologyTest {
     }
 
 
-    private static void topology_walk() {
+    private static void topologyWalk() {
         Iterable<KVSwitch> swIt = KVSwitch.getAllSwitches();
         List<Long> switchesExpected = new ArrayList<>(Arrays.asList(DPID1, DPID2));
 
@@ -336,10 +336,10 @@ public class KVTopologyTest {
 
         // DPID -> [port_no]
         @SuppressWarnings("serial")
-        Map<Long, List<Long>> expectedPorts = new HashMap<Long, List<Long>>() {{
+        Map<Long, List<Long>> expectedPorts = new HashMap<Long, List<Long>>() { {
             put(DPID1, new ArrayList<>(Arrays.asList(SW1_PORTNO1, SW1_PORTNO2)));
             put(DPID2, new ArrayList<>(Arrays.asList(SW2_PORTNO1, SW2_PORTNO2)));
-        }};
+        } };
 
         for (KVPort port : KVPort.getAllPorts()) {
             System.out.println(port + " @ " + port.getVersion());
@@ -355,10 +355,10 @@ public class KVTopologyTest {
 
         // DeviceID -> PortID
         @SuppressWarnings("serial")
-        Map<byte[], byte[]> expectedDevice = new TreeMap<byte[], byte[]>(ByteArrayComparator.BYTEARRAY_COMPARATOR) {{
+        Map<byte[], byte[]> expectedDevice = new TreeMap<byte[], byte[]>(ByteArrayComparator.BYTEARRAY_COMPARATOR) { {
             put(DEVICE1_MAC_SW1P1, KVPort.getPortID(DPID1, SW1_PORTNO1));
             put(DEVICE2_MAC_SW2P2, KVPort.getPortID(DPID2, SW2_PORTNO2));
-        }};
+        } };
 
         for (KVDevice device : KVDevice.getAllDevices()) {
             System.out.println(device + " @ " + device.getVersion());
@@ -383,7 +383,7 @@ public class KVTopologyTest {
     }
 
 
-    private static void topology_delete() {
+    private static void topologyDelete() {
 
         for (KVSwitch sw : KVSwitch.getAllSwitches()) {
             try {
@@ -426,9 +426,9 @@ public class KVTopologyTest {
 
     public static void main(final String[] argv) {
 
-        topology_setup();
-        topology_walk();
-        topology_delete();
+        topologySetup();
+        topologyWalk();
+        topologyDelete();
 
         System.exit(0);
     }

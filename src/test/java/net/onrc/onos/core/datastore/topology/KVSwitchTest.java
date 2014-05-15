@@ -19,8 +19,12 @@ import net.onrc.onos.core.datastore.topology.KVSwitch.STATUS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KVSwitchTest {
+
+    private static final Logger log = LoggerFactory.getLogger(KVSwitchTest.class);
 
     static {
         // configuration to quickly fall back to instance mode for faster test run
@@ -28,13 +32,13 @@ public class KVSwitchTest {
     }
 
     IKVTable switchTable;
-    static final Long dpid1 = 0x1L;
+    static final Long DPID1 = 0x1L;
     KVSwitch sw1;
 
     @Before
     public void setUp() throws Exception {
         switchTable = DataStoreClient.getClient().getTable(KVSwitch.GLOBAL_SWITCH_TABLE_NAME);
-        sw1 = new KVSwitch(dpid1);
+        sw1 = new KVSwitch(DPID1);
     }
 
     @After
@@ -62,6 +66,7 @@ public class KVSwitchTest {
             sw.read();
             fail("Switch was not supposed to be there in datastore");
         } catch (ObjectDoesntExistException e) {
+            log.debug("Exception thrown as expected", e);
         }
     }
 
@@ -96,19 +101,19 @@ public class KVSwitchTest {
         sw1.create();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw1.getVersion());
 
-        assertEquals(dpid1, sw1.getDpid());
+        assertEquals(DPID1, sw1.getDpid());
         assertEquals(STATUS.ACTIVE, sw1.getStatus());
 
-        assertSwitchInDataStore(dpid1, STATUS.ACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.ACTIVE);
     }
 
     @Test(expected = ObjectExistsException.class)
     public void testCreateFailAlreadyExist() throws ObjectExistsException {
         // setup pre-existing Switch
-        KVSwitch sw = new KVSwitch(dpid1);
+        KVSwitch sw = new KVSwitch(DPID1);
         sw.forceCreate();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw.getVersion());
-        assertSwitchInDataStore(dpid1, STATUS.INACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.INACTIVE);
 
         sw1.setStatus(STATUS.ACTIVE);
         sw1.create();
@@ -118,34 +123,34 @@ public class KVSwitchTest {
     @Test
     public void testForceCreate() {
         // setup pre-existing Switch
-        KVSwitch sw = new KVSwitch(dpid1);
+        KVSwitch sw = new KVSwitch(DPID1);
         sw.forceCreate();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw.getVersion());
-        assertSwitchInDataStore(dpid1, STATUS.INACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.INACTIVE);
 
 
         sw1.setStatus(STATUS.ACTIVE);
         sw1.forceCreate();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw1.getVersion());
 
-        assertEquals(dpid1, sw1.getDpid());
+        assertEquals(DPID1, sw1.getDpid());
         assertEquals(STATUS.ACTIVE, sw1.getStatus());
-        assertSwitchInDataStore(dpid1, STATUS.ACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.ACTIVE);
     }
 
     @Test
     public void testRead() throws ObjectDoesntExistException {
         // setup pre-existing Switch
-        KVSwitch sw = new KVSwitch(dpid1);
+        KVSwitch sw = new KVSwitch(DPID1);
         sw.setStatus(STATUS.ACTIVE);
         sw.forceCreate();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw.getVersion());
-        assertSwitchInDataStore(dpid1, STATUS.ACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.ACTIVE);
 
         sw1.read();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw1.getVersion());
         assertEquals(sw.getVersion(), sw1.getVersion());
-        assertEquals(dpid1, sw1.getDpid());
+        assertEquals(DPID1, sw1.getDpid());
         assertEquals(STATUS.ACTIVE, sw1.getStatus());
     }
 
@@ -159,11 +164,11 @@ public class KVSwitchTest {
     @Test
     public void testUpdate() throws ObjectDoesntExistException, WrongVersionException {
         // setup pre-existing Switch
-        KVSwitch sw = new KVSwitch(dpid1);
+        KVSwitch sw = new KVSwitch(DPID1);
         sw.setStatus(STATUS.ACTIVE);
         sw.forceCreate();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw.getVersion());
-        assertSwitchInDataStore(dpid1, STATUS.ACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.ACTIVE);
 
 
         sw1.read();
@@ -173,18 +178,18 @@ public class KVSwitchTest {
         sw1.update();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw1.getVersion());
         assertNotEquals(sw.getVersion(), sw1.getVersion());
-        assertEquals(dpid1, sw1.getDpid());
+        assertEquals(DPID1, sw1.getDpid());
         assertEquals(STATUS.INACTIVE, sw1.getStatus());
     }
 
     @Test
     public void testDelete() throws ObjectDoesntExistException, WrongVersionException {
         // setup pre-existing Switch
-        KVSwitch sw = new KVSwitch(dpid1);
+        KVSwitch sw = new KVSwitch(DPID1);
         sw.setStatus(STATUS.ACTIVE);
         sw.forceCreate();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw.getVersion());
-        assertSwitchInDataStore(dpid1, STATUS.ACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.ACTIVE);
 
 
         try {
@@ -194,17 +199,17 @@ public class KVSwitchTest {
         }
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw1.getVersion());
         sw1.delete();
-        assertSwitchNotInDataStore(dpid1);
+        assertSwitchNotInDataStore(DPID1);
     }
 
     @Test
     public void testForceDelete() {
         // setup pre-existing Switch
-        KVSwitch sw = new KVSwitch(dpid1);
+        KVSwitch sw = new KVSwitch(DPID1);
         sw.setStatus(STATUS.ACTIVE);
         sw.forceCreate();
         assertNotEquals(DataStoreClient.getClient().getVersionNonexistant(), sw.getVersion());
-        assertSwitchInDataStore(dpid1, STATUS.ACTIVE);
+        assertSwitchInDataStore(DPID1, STATUS.ACTIVE);
 
 
         sw1.forceDelete();

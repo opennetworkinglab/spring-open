@@ -20,7 +20,7 @@ public class MockTopology extends TopologyImpl {
     // We may well need a MockTopology, but that's not what this class is
     // doing.
 
-    public static Long LOCAL_PORT = 0xFFFEL;
+    public static final Long LOCAL_PORT = 0xFFFEL;
     public SwitchImpl sw1, sw2, sw3, sw4;
 
     public Switch addSwitch(Long switchId) {

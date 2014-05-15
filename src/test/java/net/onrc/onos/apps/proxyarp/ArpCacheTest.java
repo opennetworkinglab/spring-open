@@ -18,7 +18,7 @@ import org.junit.Test;
 
 public class ArpCacheTest {
     ArpCache arpCache;
-    InetAddress ip, ip2;
+    InetAddress ip1, ip2;
     MACAddress mac, mac2;
     Map<InetAddress, MACAddress> map;
 
@@ -27,7 +27,7 @@ public class ArpCacheTest {
         arpCache = new ArpCache();
         arpCache.setArpEntryTimeoutConfig(1000);
         mac = MACAddress.valueOf("00:01:02:03:04:05");
-        ip = InetAddress.getByAddress(new byte[]{10, 0, 0, 1});
+        ip1 = InetAddress.getByAddress(new byte[]{10, 0, 0, 1});
         mac2 = MACAddress.valueOf("00:01:02:03:04:06");
         ip2 = InetAddress.getByAddress(new byte[]{10, 0, 0, 2});
     }
@@ -51,24 +51,24 @@ public class ArpCacheTest {
     @Test
     public void testUpdate() {
         map = new HashMap<InetAddress, MACAddress>();
-        arpCache.update(ip, mac);
-        map.put(ip, mac);
+        arpCache.update(ip1, mac);
+        map.put(ip1, mac);
         arpCache.update(ip2, mac2);
         map.put(ip2, mac2);
-        assertEquals(mac, arpCache.lookup(ip));
+        assertEquals(mac, arpCache.lookup(ip1));
     }
 
     @Test
     public void testRemove() {
         testUpdate();
-        arpCache.remove(ip);
-        assertNull(arpCache.lookup(ip));
+        arpCache.remove(ip1);
+        assertNull(arpCache.lookup(ip1));
     }
 
     @Test
     public void testGetMappings() {
         testUpdate();
-        for(String macStr :arpCache.getMappings()) {
+        for (String macStr :arpCache.getMappings()) {
             assertNotNull(macStr);
         }
     }
@@ -85,7 +85,7 @@ public class ArpCacheTest {
 
         assertNotNull(arpCache.getExpiredArpCacheIps());
         assertEquals(map.size(), arpCache.getExpiredArpCacheIps().size());
-        for(InetAddress ip : arpCache.getExpiredArpCacheIps()) {
+        for (InetAddress ip : arpCache.getExpiredArpCacheIps()) {
            assertTrue(map.containsKey(ip));
         }
     }

@@ -27,7 +27,6 @@ import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
-import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
 import net.onrc.onos.core.topology.Device;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Topology;
@@ -44,7 +43,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ProxyArpManager.class, ArpCache.class})
+@PrepareForTest({ ProxyArpManager.class, ArpCache.class })
 public class ProxyArpManagerTest {
     String defaultStrAgingMsec = "60000";
     String defaultStrCleanupMsec = "60000";
@@ -59,7 +58,7 @@ public class ProxyArpManagerTest {
     ITopologyService topologyService;
     IOnosDeviceService onosDeviceService;
     IPacketService packetService;
-    Map<String, String> config;
+    Map<String, String> configMap;
 
     String srcStrMac, dstStrMac, cachedStrMac1, cachedStrMac2, srcStrIp, dstStrIp, cachedStrIp1, cachedStrIp2;
     byte[] srcByteMac, dstByteMac;
@@ -117,7 +116,7 @@ public class ProxyArpManagerTest {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        sw1Dpid = 1l;
+        sw1Dpid = 1L;
         sw1Inport = 1;
         sw1Outport = 2;
         vlanId = 1;
@@ -201,7 +200,7 @@ public class ProxyArpManagerTest {
                 + " : VALID");
 
         arpManager = new ProxyArpManager();
-        config = new HashMap<String, String>();
+        configMap = new HashMap<String, String>();
     }
 
     private void makeMock() {
@@ -227,8 +226,8 @@ public class ProxyArpManagerTest {
     }
 
     private void prepareExpectForGeneral() {
-        EasyMock.expect(inPort1.getNumber()).andReturn((long)sw1Inport).anyTimes();
-        EasyMock.expect(outPort1.getNumber()).andReturn((long)sw1Outport).anyTimes();
+        EasyMock.expect(inPort1.getNumber()).andReturn((long) sw1Inport).anyTimes();
+        EasyMock.expect(outPort1.getNumber()).andReturn((long) sw1Outport).anyTimes();
         EasyMock.expect(outPort1.getOutgoingLink()).andReturn(null).anyTimes();
         EasyMock.expect(outPort1.getIncomingLink()).andReturn(null).anyTimes();
         EasyMock.expect(outPort1.getSwitch()).andReturn(sw1).anyTimes();
@@ -259,8 +258,8 @@ public class ProxyArpManagerTest {
         packetService.registerPacketListener(arpManager);
         EasyMock.expectLastCall();
         EasyMock.expect(topologyService.getTopology()).andReturn(topology);
-        EasyMock.expect(datagridService.addListener((String)EasyMock.anyObject(), EasyMock.isA(IEventChannelListener.class),
-                (Class)EasyMock.anyObject(), (Class)EasyMock.anyObject())).andReturn(eg).anyTimes();
+        EasyMock.expect(datagridService.addListener((String) EasyMock.anyObject(), EasyMock.isA(IEventChannelListener.class),
+                (Class) EasyMock.anyObject(), (Class) EasyMock.anyObject())).andReturn(eg).anyTimes();
         List<ArpCacheNotification> list = new ArrayList<ArpCacheNotification>();
         EasyMock.expect(eg.getAllEntries()).andReturn(list);
     }
@@ -309,9 +308,9 @@ public class ProxyArpManagerTest {
     public void testConfigTime() {
         String strAgingMsec = "10000";
         String strCleanupMsec = "10000";
-        config.put("agingmsec", strAgingMsec);
-        config.put("cleanupmsec", strCleanupMsec);
-        EasyMock.expect(context.getConfigParams(arpManager)).andReturn(config);
+        configMap.put("agingmsec", strAgingMsec);
+        configMap.put("cleanupmsec", strCleanupMsec);
+        EasyMock.expect(context.getConfigParams(arpManager)).andReturn(configMap);
 
         EasyMock.replay(context, floodligthProviderService, configInfoService, restApiService, datagridService, flowPusherService,
                 topologyService, onosDeviceService, packetService, topology, eg, el, dev1, inPort1, sw1);
@@ -344,7 +343,7 @@ public class ProxyArpManagerTest {
         arpManager.init(context);
         arpManager.startUp(context);
         List<String> list = arpManager.getMappings();
-        for(String str : list) {
+        for (String str : list) {
             assertTrue(arpCacheComparisonList.contains(str));
         }
     }
@@ -429,7 +428,7 @@ public class ProxyArpManagerTest {
         topology.releaseReadLock();
         EasyMock.expectLastCall();
         EasyMock.expect(dev1.getAttachmentPoints()).andReturn(portList);
-        eg.addTransientEntry(EasyMock.anyLong(), (SinglePacketOutNotification)EasyMock.anyObject());
+        eg.addTransientEntry(EasyMock.anyLong(), EasyMock.anyObject());
         EasyMock.expectLastCall();
 
         EasyMock.replay(context, configInfoService, restApiService, floodligthProviderService,

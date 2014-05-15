@@ -27,13 +27,13 @@ public class FlowEntryActionTest {
         assertEquals("actionOutput port should be the same", actout.port(), act.actionOutput().port());
         assertEquals("actionOutput maxlen should be the same", actout.maxLen(), act.actionOutput().maxLen());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -41,13 +41,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionOutput(new Port((short) 42));
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -55,15 +55,15 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionOutputToController((short) 0);
 
-        FlowEntryAction act_copy = new FlowEntryAction();
-        act_copy.setActionOutput(new Port(Port.PortValues.PORT_CONTROLLER));
-        ;
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction();
+        actCopy.setActionOutput(new Port(Port.PortValues.PORT_CONTROLLER));
+
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -75,13 +75,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_VLAN_VID, act.actionType());
         assertEquals("vlanid should be the same", actVlan.vlanId(), act.actionSetVlanId().vlanId());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -89,13 +89,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionSetVlanId((short) 42);
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -107,13 +107,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_VLAN_PCP, act.actionType());
         assertEquals("vlan priority should be the same", actVlan.vlanPriority(), act.actionSetVlanPriority().vlanPriority());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -121,13 +121,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionSetVlanPriority((byte) 42);
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -139,13 +139,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_STRIP_VLAN, act.actionType());
         assertEquals("vlanid should be the same", actVlan.stripVlan(), act.actionStripVlan().stripVlan());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -153,13 +153,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionStripVlan(true);
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -173,13 +173,13 @@ public class FlowEntryActionTest {
         assertEquals("addr should be the same", setEth.addr(), act.actionSetEthernetSrcAddr().addr());
 
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -188,13 +188,13 @@ public class FlowEntryActionTest {
         byte[] mac = {1, 2, 3, 4, 5, 6};
         act.setActionSetEthernetSrcAddr(new MACAddress(mac));
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -207,13 +207,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_DL_DST, act.actionType());
         assertEquals("addr should be the same", setEth.addr(), act.actionSetEthernetDstAddr().addr());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -222,13 +222,13 @@ public class FlowEntryActionTest {
         byte[] mac = {1, 2, 3, 4, 5, 6};
         act.setActionSetEthernetDstAddr(new MACAddress(mac));
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -240,14 +240,14 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_NW_SRC, act.actionType());
         assertEquals("addr should be the same", setIp.addr(), act.actionSetIPv4SrcAddr().addr());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -255,13 +255,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionSetIPv4SrcAddr(new IPv4("127.0.0.1"));
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -273,13 +273,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_NW_DST, act.actionType());
         assertEquals("addr should be the same", setIp.addr(), act.actionSetIPv4DstAddr().addr());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -287,13 +287,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionSetIPv4DstAddr(new IPv4("127.0.0.1"));
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -305,13 +305,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_NW_TOS, act.actionType());
         assertEquals("tos should be the same", setIpTos.ipToS(), act.actionSetIpToS().ipToS());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -319,13 +319,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionSetIpToS((byte) 1);
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -337,13 +337,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_TP_SRC, act.actionType());
         assertEquals("port should be the same", setPorts.port(), act.actionSetTcpUdpSrcPort().port());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -351,13 +351,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionSetTcpUdpSrcPort((short) 1);
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -369,13 +369,13 @@ public class FlowEntryActionTest {
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_TP_DST, act.actionType());
         assertEquals("port should be the same", setPorts.port(), act.actionSetTcpUdpDstPort().port());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -383,13 +383,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionSetTcpUdpDstPort((short) 1);
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -402,13 +402,13 @@ public class FlowEntryActionTest {
         assertEquals("port should be the same", enq.port(), act.actionEnqueue().port());
         assertEquals("queue id should be the same", enq.queueId(), act.actionEnqueue().queueId());
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
     @Test
@@ -416,13 +416,13 @@ public class FlowEntryActionTest {
         FlowEntryAction act = new FlowEntryAction();
         act.setActionEnqueue(new Port((short) 42), 1);
 
-        FlowEntryAction act_copy = new FlowEntryAction(act);
-        FlowEntryAction act_copy2 = new FlowEntryAction(act.toString());
+        FlowEntryAction actCopy = new FlowEntryAction(act);
+        FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
         assertEquals("toString must match between copies", act.toString(),
-                act_copy.toString());
+                actCopy.toString());
         assertEquals("toString must match between copies", act.toString(),
-                act_copy2.toString());
+                actCopy2.toString());
     }
 
 }

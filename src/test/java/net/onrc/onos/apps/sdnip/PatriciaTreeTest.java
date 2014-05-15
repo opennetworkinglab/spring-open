@@ -48,7 +48,7 @@ public class PatriciaTreeTest {
 
     @Test
     public void testPut() {
-        IPatriciaTree<RibEntry> ptree = new PatriciaTree<RibEntry>(32);
+        ptree = new PatriciaTree<RibEntry>(32);
 
         Prefix p1 = new Prefix("192.168.240.0", 20);
         RibEntry r1 = new RibEntry("192.168.10.101", "192.168.60.2");

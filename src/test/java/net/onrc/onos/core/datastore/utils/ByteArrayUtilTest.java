@@ -34,8 +34,8 @@ public class ByteArrayUtilTest {
         MatcherAssert.assertThat(allocatedBuilder.toString(), is(equalTo("")));
 
         final StringBuilder providedBuilder = new StringBuilder();
-        final StringBuilder returnedBuilder = ByteArrayUtil.toHexStringBuilder
-                (null, "", providedBuilder);
+        final StringBuilder returnedBuilder = ByteArrayUtil.toHexStringBuilder(null, "",
+                providedBuilder);
         MatcherAssert.assertThat(providedBuilder, is(notNullValue()));
         MatcherAssert.assertThat(returnedBuilder, is(equalTo(providedBuilder)));
         MatcherAssert.assertThat(providedBuilder.toString(), is(equalTo("")));
@@ -57,7 +57,7 @@ public class ByteArrayUtilTest {
         MatcherAssert.assertThat(result, is(notNullValue()));
         MatcherAssert.assertThat(result.toString(),
                 is(equalTo(expectedResult)));
-        
+
         final StringBuilder providedBuilder = new StringBuilder();
         final StringBuilder returnedBuilder =
                 ByteArrayUtil.toHexStringBuilder(testData, ":", providedBuilder);

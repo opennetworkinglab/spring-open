@@ -139,7 +139,7 @@ public class PathCalcRuntimeModuleTest {
      * Intent with the specified Intent Id.
      */
     public static class EntryForIntentMatcher extends TypeSafeMatcher<Collection<Intent>> {
-        final private String id;
+        private final String id;
 
         public EntryForIntentMatcher(String idValue) {
             id = idValue;
@@ -179,8 +179,8 @@ public class PathCalcRuntimeModuleTest {
      * and that entry has a given state.
      */
     public static class IntentsHaveIntentWithStateMatcher extends TypeSafeMatcher<IntentMap> {
-        final private String id;
-        final private IntentState state;
+        private final String id;
+        private final IntentState state;
         private Intent intent;
 
         public IntentsHaveIntentWithStateMatcher(String idValue,

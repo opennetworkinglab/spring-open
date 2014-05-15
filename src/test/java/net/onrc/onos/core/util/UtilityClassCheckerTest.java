@@ -12,12 +12,15 @@ import static org.hamcrest.Matchers.is;
  * checker.
  */
 public class UtilityClassCheckerTest {
+
+    // CHECKSTYLE:OFF test data intentionally not final
     /**
      * Test class for non final class check.
      */
     static class NonFinal {
-        private NonFinal() {}
+        private NonFinal() { }
     }
+    // CHECKSTYLE:ON
 
     /**
      * Check that a non final class correctly produces an error.
@@ -66,9 +69,9 @@ public class UtilityClassCheckerTest {
     /**
      * Test class for class with more than one constructor check.
      */
-    final static class TwoConstructors {
-        private TwoConstructors() {}
-        private TwoConstructors(int x) {}
+    static final class TwoConstructors {
+        private TwoConstructors() { }
+        private TwoConstructors(int x) { }
     }
 
     /**
@@ -91,8 +94,8 @@ public class UtilityClassCheckerTest {
     /**
      * Test class with a non private constructor.
      */
-    final static class NonPrivateConstructor {
-        protected NonPrivateConstructor() {}
+    static final class NonPrivateConstructor {
+        protected NonPrivateConstructor() { }
     }
 
     /**
@@ -117,9 +120,9 @@ public class UtilityClassCheckerTest {
     /**
      * Test class with a non static method.
      */
-    final static class NonStaticMethod {
-        private NonStaticMethod() {}
-        public void aPublicMethod() {}
+    static final class NonStaticMethod {
+        private NonStaticMethod() { }
+        public void aPublicMethod() { }
     }
 
     /**

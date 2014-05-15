@@ -14,7 +14,7 @@ import org.junit.Test;
  * @author Toshio Koide (t-koide@onlab.us)
  */
 public class ConstrainedBFSTreeTest {
-    static long LOCAL_PORT = 0xFFFEL;
+    static final long LOCAL_PORT = 0xFFFEL;
 
     @Before
     public void setUp() throws Exception {
