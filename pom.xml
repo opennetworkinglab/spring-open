@@ -56,9 +56,7 @@
         <version>${checkstyle-plugin.version}</version>
         <configuration>
           <configLocation>conf/checkstyle/sun_checks.xml</configLocation>
-          <suppressionsLocation>
-            ${basedir}/conf/checkstyle/onos_suppressions.xml
-          </suppressionsLocation>
+          <propertiesLocation>${basedir}/conf/checkstyle/checkstyle_maven.properties</propertiesLocation>
           <failsOnError>false</failsOnError>
           <logViolationsToConsole>true</logViolationsToConsole>
         </configuration>
@@ -418,9 +416,7 @@
             - maven-pmd-plugin configuration in pom.xml
               (under build and reporting)
           -->
-          <suppressionsLocation>
-             ${basedir}/conf/checkstyle/onos_suppressions.xml
-          </suppressionsLocation>
+          <propertiesLocation>${basedir}/conf/checkstyle/checkstyle_maven.properties</propertiesLocation>
         </configuration>
         <reportSets>
           <reportSet>
