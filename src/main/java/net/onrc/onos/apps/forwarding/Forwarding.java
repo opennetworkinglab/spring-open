@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,26 +18,25 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.apps.proxyarp.IProxyArpService;
-import net.onrc.onos.core.datagrid.IDatagridService;
-import net.onrc.onos.core.datagrid.IEventChannelListener;
 import net.onrc.onos.core.devicemanager.IOnosDeviceService;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentMap;
+import net.onrc.onos.core.intent.IntentMap.ChangedEvent;
+import net.onrc.onos.core.intent.IntentMap.ChangedListener;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
-import net.onrc.onos.core.intent.runtime.IntentStateList;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.Device;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.FlowPath;
 import net.onrc.onos.core.util.SwitchPort;
@@ -50,8 +49,7 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 
 public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
-        IForwardingService, IEventChannelListener<Long, IntentStateList>,
-        IPacketListener {
+        IForwardingService, IPacketListener, ChangedListener {
     private static final Logger log = LoggerFactory.getLogger(Forwarding.class);
 
     private static final int SLEEP_TIME_FOR_DB_DEVICE_INSTALLED = 100; // milliseconds
@@ -61,7 +59,6 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     private final String callerId = "Forwarding";
 
-    private IDatagridService datagrid;
     private IPacketService packetService;
     private IControllerRegistryService controllerRegistryService;
 
@@ -153,7 +150,6 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                 new ArrayList<Class<? extends IFloodlightService>>();
         dependencies.add(IControllerRegistryService.class);
         dependencies.add(IOnosDeviceService.class);
-        dependencies.add(IDatagridService.class);
         dependencies.add(ITopologyService.class);
         dependencies.add(IPathCalcRuntimeService.class);
         // We don't use the IProxyArpService directly, but reactive forwarding
@@ -165,7 +161,6 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     @Override
     public void init(FloodlightModuleContext context) {
-        datagrid = context.getServiceImpl(IDatagridService.class);
         controllerRegistryService = context.getServiceImpl(IControllerRegistryService.class);
         topologyService = context.getServiceImpl(ITopologyService.class);
         pathRuntime = context.getServiceImpl(IPathCalcRuntimeService.class);
@@ -181,12 +176,14 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         topology = topologyService.getTopology();
         intentMap = pathRuntime.getPathIntents();
-        datagrid.addListener("onos.pathintent_state", this, Long.class, IntentStateList.class);
+        intentMap.addChangeListener(this);
     }
 
     @Override
     public void receive(Switch sw, Port inPort, Ethernet eth) {
-        log.debug("Receive PACKET_IN swId {}, portId {}", sw.getDpid(), inPort.getNumber());
+        if (log.isTraceEnabled()) {
+            log.trace("Receive PACKET_IN swId {}, portId {}", sw.getDpid(), inPort.getNumber());
+        }
 
         if (eth.getEtherType() != Ethernet.TYPE_IPV4) {
             // Only handle IPv4 packets right now
@@ -211,7 +208,9 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     }
 
     private void handlePacketIn(Switch sw, Port inPort, Ethernet eth) {
-        log.debug("Start handlePacketIn swId {}, portId {}", sw.getDpid(), inPort.getNumber());
+        if (log.isTraceEnabled()) {
+           log.trace("Start handlePacketIn swId {}, portId {}", sw.getDpid(), inPort.getNumber());
+        }
 
         String destinationMac =
                 HexString.toHexString(eth.getDestinationMACAddress());
@@ -313,7 +312,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     if (intent instanceof PathIntent) {
                         pathIntent = (PathIntent) intent;
                     } else {
-                        log.debug("Intent {} is not PathIntent. Return.", intent.getId());
+                        log.debug("Intent ID {} is not PathIntent or null. return.", existingFlow.intentId);
                         return;
                     }
 
@@ -404,7 +403,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     private void flowInstalled(PathIntent installedPath) {
         if (log.isTraceEnabled()) {
-            log.trace("Path {} was installed", installedPath.getParentIntent().getId());
+            log.trace("Installed intent ID {}, path {}", installedPath.getParentIntent().getId(), installedPath.getPath());
         }
 
         ShortestPathIntent spfIntent = (ShortestPathIntent) installedPath.getParentIntent();
@@ -464,20 +463,10 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     }
 
     @Override
-    public void entryAdded(IntentStateList value) {
-        entryUpdated(value);
-    }
-
-    @Override
-    public void entryRemoved(IntentStateList value) {
-        //no-op
-    }
-
-    @Override
-    public void entryUpdated(IntentStateList value) {
-        for (Entry<String, IntentState> entry : value.entrySet()) {
-            log.debug("path intent key {}, value {}", entry.getKey(), entry.getValue());
-            PathIntent pathIntent = (PathIntent) intentMap.getIntent(entry.getKey());
+    public void intentsChange(LinkedList<ChangedEvent> events) {
+        for (ChangedEvent event : events) {
+            log.debug("path intent ID {}, eventType {}", event.intent.getId() , event.eventType);
+            PathIntent pathIntent = (PathIntent) intentMap.getIntent(event.intent.getId());
             if (pathIntent == null) {
                 continue;
             }
@@ -486,22 +475,31 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                 continue;
             }
 
-            IntentState state = entry.getValue();
-            switch (state) {
-                case INST_REQ:
+            switch(event.eventType) {
+                case ADDED:
                     break;
-                case INST_ACK:
-                    flowInstalled(pathIntent);
+                case REMOVED:
                     break;
-                case INST_NACK:
-                    break;
-                case DEL_REQ:
-                    break;
-                case DEL_ACK:
-                    flowRemoved(pathIntent);
-                    break;
-                case DEL_PENDING:
-                    break;
+                case STATE_CHANGED:
+                    IntentState state = pathIntent.getState();
+                    switch (state) {
+                        case INST_REQ:
+                            break;
+                        case INST_ACK:
+                            flowInstalled(pathIntent);
+                            break;
+                        case INST_NACK:
+                            break;
+                        case DEL_REQ:
+                            break;
+                        case DEL_ACK:
+                            flowRemoved(pathIntent);
+                            break;
+                        case DEL_PENDING:
+                            break;
+                        default:
+                            break;
+                    }
                 default:
                     break;
             }

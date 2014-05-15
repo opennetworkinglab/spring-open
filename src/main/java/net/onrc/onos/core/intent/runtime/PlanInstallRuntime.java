@@ -64,6 +64,7 @@ public class PlanInstallRuntime {
             }
         }
 
+        @Override
         public String toString() {
             return "sw:" + sw.getStringId() + ": modify " + modFlows + " delete " + delFlows + " error " + errors;
         }
@@ -102,7 +103,6 @@ public class PlanInstallRuntime {
         Map<Long, IOFSwitch> switches = provider.getSwitches();
 
         log.debug("IOFSwitches: {}", switches);
-
         FlowModCount.startCount();
         for (Set<FlowEntry> phase : plan) {
             Set<Pair<IOFSwitch, net.onrc.onos.core.util.FlowEntry>> entries = new HashSet<>();

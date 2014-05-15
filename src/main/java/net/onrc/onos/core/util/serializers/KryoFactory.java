@@ -4,6 +4,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import net.floodlightcontroller.util.MACAddress;
@@ -210,6 +211,7 @@ public class KryoFactory {
         kryo.register(IntentOperation.Operator.class);
         kryo.register(IntentOperationList.class);
         kryo.register(IntentStateList.class);
+        kryo.register(HashMap.class);
 
         // Device-related classes
         kryo.register(HashSet.class);

@@ -22,7 +22,6 @@ import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.topology.ITopologyService;
-//import net.onrc.onos.core.topology.Topology;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,6 @@ public class PlanInstallModule implements IFloodlightModule {
     private EventListener eventListener;
     private IEventChannel<Long, IntentStateList> intentStateChannel;
     private static final Logger log = LoggerFactory.getLogger(PlanInstallModule.class);
-
 
     private static final String PATH_INTENT_CHANNEL_NAME = "onos.pathintent";
     private static final String INTENT_STATE_EVENT_CHANNEL_NAME = "onos.pathintent_state";
@@ -88,14 +86,22 @@ public class PlanInstallModule implements IFloodlightModule {
             log("begin_installPlan");
             boolean success = planInstall.installPlan(plan);
             log("end_installPlan");
-
+            Set<Long> domainSwitchDpids = floodlightProvider.getSwitches().keySet();
             log("begin_sendInstallNotif");
-            sendNotifications(intents, true, success);
+            sendNotifications(intents, true, success, domainSwitchDpids);
             log("end_sendInstallNotif");
             log("finish");
         }
 
-        private void sendNotifications(IntentOperationList intents, boolean installed, boolean success) {
+        /***
+         * This function is for sending intent state notification to other ONOS instances.
+         * The argument of "domainSwitchDpids" is required for dispatching this ONOS's managed switches.
+         * @param intents
+         * @param installed
+         * @param success
+         * @param domainSwitchDpids
+         */
+        private void sendNotifications(IntentOperationList intents, boolean installed, boolean success, Set<Long> domainSwitchDpids) {
             IntentStateList states = new IntentStateList();
             for (IntentOperation i : intents) {
                 IntentState newState;
@@ -110,6 +116,9 @@ public class PlanInstallModule implements IFloodlightModule {
                     case ADD:
                     default:
                         if (installed) {
+                            if (domainSwitchDpids != null) {
+                                states.domainSwitchDpids.addAll(domainSwitchDpids);
+                            }
                             newState = success ? IntentState.INST_ACK : IntentState.INST_NACK;
                         } else {
                             newState = IntentState.INST_REQ;
@@ -118,7 +127,12 @@ public class PlanInstallModule implements IFloodlightModule {
                 }
                 states.put(i.intent.getId(), newState);
             }
-            intentStateChannel.addEntry(key, states);
+
+            if (log.isTraceEnabled()) {
+                log.trace("domainSwitchDpids {}", states.domainSwitchDpids);
+            }
+
+            intentStateChannel.addTransientEntry(key, states);
             // XXX: Send notifications using the same key every time
             // and receive them by entryAdded() and entryUpdated()
             // key += 1;
@@ -138,7 +152,7 @@ public class PlanInstallModule implements IFloodlightModule {
         public void entryUpdated(IntentOperationList value) {
             log("start_intentNotifRecv");
             log("begin_sendReceivedNotif");
-            sendNotifications(value, false, false);
+            sendNotifications(value, false, false, null);
             log("end_sendReceivedNotif");
             log("finish");
 
@@ -191,5 +205,4 @@ public class PlanInstallModule implements IFloodlightModule {
         // no services, for now
         return null;
     }
-
 }

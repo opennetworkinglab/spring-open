@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
@@ -89,6 +91,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     private IEventChannel<Long, IntentOperationList> opEventChannel;
     private final ReentrantLock lock = new ReentrantLock();
     private HashSet<LinkEvent> unmatchedLinkEvents = new HashSet<>();
+    private Map<String, Set<Long>> intentInstalledMap = new ConcurrentHashMap<String, Set<Long>>();
     private static final String INTENT_OP_EVENT_CHANNEL_NAME = "onos.pathintent";
     private static final String INTENT_STATE_EVENT_CHANNEL_NAME = "onos.pathintent_state";
     private static final Logger log = LoggerFactory.getLogger(PathCalcRuntimeModule.class);
@@ -397,12 +400,23 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                 }
 
                 IntentState state = entry.getValue();
+                log.debug("put the state pathIntentStates ID {}, state {}", entry.getKey(), state);
+
                 switch (state) {
-                    //case INST_REQ:
                     case INST_ACK:
+                        Set<Long> installedDpids = calcInstalledDpids(pathIntent, value.domainSwitchDpids);
+                        if (!isFlowInstalled(pathIntent, installedDpids)) {
+                            break;
+                        }
+                        // FALLTHROUGH
                     case INST_NACK:
-                        //case DEL_REQ:
+                        // FALLTHROUGH
+                    // case INST_REQ:
+                        // FALLTHROUGH
+                    // case DEL_REQ:
+                        // FALLTHROUGH
                     case DEL_ACK:
+                        // FALLTHROUGH
                     case DEL_PENDING:
                         highLevelIntentStates.put(parentIntent.getId(), state);
                         pathIntentStates.put(entry.getKey(), entry.getValue());
@@ -418,5 +432,68 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
             lock.unlock();
             p.flushLog();
         }
+    }
+
+    /***
+     * This function is to check whether the entire path's flow entries are installed or not.
+     * @param pathIntent : The pathIntent to be checked
+     * @param installedDpids : The dpids installed on one ONOS instance
+     * @return The result of whether a pathIntent has been installed or not.
+     */
+    private boolean isFlowInstalled(PathIntent pathIntent, Set<Long> installedDpids) {
+        String parentIntentId = pathIntent.getParentIntent().getId();
+        log.debug("parentIntentId {}", parentIntentId);
+
+        if (intentInstalledMap.containsKey(parentIntentId)) {
+            if (!installedDpids.isEmpty()) {
+                intentInstalledMap.get(parentIntentId).addAll(installedDpids);
+            }
+        } else {
+            // This is the creation of an entry.
+            intentInstalledMap.put(parentIntentId, installedDpids);
+        }
+
+        Set<Long> allSwitchesForPath = new HashSet<Long>();
+        ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
+
+        for (LinkEvent linkEvent : pathIntent.getPath()) {
+            long sw = linkEvent.getSrc().getDpid();
+            allSwitchesForPath.add(sw);
+        }
+        allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
+
+        if (log.isTraceEnabled()) {
+            log.trace("All switches {}, installed installedDpids {}", allSwitchesForPath, intentInstalledMap.get(parentIntentId));
+        }
+
+        if (allSwitchesForPath.equals(intentInstalledMap.get(parentIntentId))) {
+            intentInstalledMap.remove(parentIntentId);
+            return true;
+        }
+
+        return false;
+    }
+
+    private Set<Long> calcInstalledDpids(PathIntent pathIntent, Set<Long> domainSwitchDpids) {
+        Set<Long> allSwitchesForPath = new HashSet<Long>();
+        ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
+
+        for (LinkEvent linkEvent : pathIntent.getPath()) {
+            long sw = linkEvent.getSrc().getDpid();
+
+            if (domainSwitchDpids.contains(sw)) {
+                allSwitchesForPath.add(sw);
+            }
+        }
+
+        if (domainSwitchDpids.contains(spfIntent.getDstSwitchDpid())) {
+            allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("All switches {}, domain switch dpids {}", allSwitchesForPath, domainSwitchDpids);
+        }
+
+        return allSwitchesForPath;
     }
 }

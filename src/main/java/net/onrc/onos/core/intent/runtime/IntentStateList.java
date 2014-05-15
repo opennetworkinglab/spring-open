@@ -1,12 +1,30 @@
 package net.onrc.onos.core.intent.runtime;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import net.onrc.onos.core.intent.Intent.IntentState;
+public class IntentStateList {
+    protected Map<String, IntentState> intentMap;
+    public Set<Long> domainSwitchDpids;
 
-/**
- * @author Toshio Koide (t-koide@onlab.us)
- */
-public class IntentStateList extends HashMap<String, IntentState> {
-    private static final long serialVersionUID = -3674903999581438936L;
+    public IntentStateList() {
+        intentMap = new HashMap<String, IntentState>();
+        domainSwitchDpids = new HashSet<Long>();
+    }
+
+    public IntentState put(String id, IntentState state) {
+        return intentMap.put(id, state);
+    }
+
+    public Set<Entry<String, IntentState>> entrySet() {
+        return intentMap.entrySet();
+    }
+
+    public void clear() {
+        intentMap.clear();
+    }
 }
