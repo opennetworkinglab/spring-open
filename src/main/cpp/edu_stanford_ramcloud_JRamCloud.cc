@@ -606,22 +606,6 @@ JNICALL Java_edu_stanford_ramcloud_JRamCloud_write__J_3B_3BLedu_stanford_ramclou
                                                            jbyteArray jValue,
                                                            jobject jRejectRules)
 {
-    return Java_edu_stanford_ramcloud_JRamCloud_writeRule(env, jRamCloud, jTableId, jKey, jValue, jRejectRules);
-}
-
-/*
- * Class:     edu_stanford_ramcloud_JRamCloud
- * Method:    writeRule
- * Signature: (J[B[BLedu/stanford/ramcloud/JRamCloud/RejectRules;)J
- */
-JNIEXPORT jlong
-JNICALL Java_edu_stanford_ramcloud_JRamCloud_writeRule(JNIEnv *env,
-        jobject jRamCloud,
-        jlong jTableId,
-        jbyteArray jKey,
-        jbyteArray jValue,
-        jobject jRejectRules)
-{
     RamCloud* ramcloud = getRamCloud(env, jRamCloud);
     JByteArrayReference key(env, jKey);
     JByteArrayGetter value(env, jValue);

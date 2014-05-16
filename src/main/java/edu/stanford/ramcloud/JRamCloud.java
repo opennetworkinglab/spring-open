@@ -409,8 +409,6 @@ public class JRamCloud {
     public native long remove(long tableId, byte[] key, RejectRules rules) throws RejectRulesException;
     public native long write(long tableId, byte[] key, byte[] value);
     public native long write(long tableId, byte[] key, byte[] value, RejectRules rules) throws RejectRulesException;
-    @Deprecated
-    public native long writeRule(long tableId, byte[] key, byte[] value, RejectRules rules);
     public native MultiWriteRspObject[] multiWrite(long[] tableId, byte[] key[], short[] keyDataSize, byte[] value[], int[] valueDataSize, int requestNum, RejectRules[] rules);
     public native TableEnumeratorObject getTableObjects(long tableId, long nextHash);
     public native long increment(long tableId, byte[] key, long incrementValue) throws ObjectDoesntExistException;
