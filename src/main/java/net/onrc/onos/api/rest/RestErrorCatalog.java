@@ -1,5 +1,6 @@
 package net.onrc.onos.api.rest;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,17 +18,20 @@ public final class RestErrorCatalog {
      * Static list of known errors.  Someday this will be read in from an
      * external file.
      */
-    private static final RestError[] ERROR_LIST = {
-        new RestError(RestErrorCodes.RestErrorCode.INTENT_NOT_FOUND,
+    private static final RestErrorCatalogEntry[] ERROR_LIST = {
+        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_NOT_FOUND,
                       "Intent not found",
                       "An intent with the identifier {} was not found."),
-        new RestError(RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS,
+        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS,
                       "Intent already exists",
                       "An intent with the identifier {} could not be created " +
                       "because one already exists."),
-        new RestError(RestErrorCodes.RestErrorCode.INTENT_NO_PATH,
+        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_NO_PATH,
                       "No path found",
                       "No path found between {} and {}"),
+        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_INVALID,
+                      "Intent invalid",
+                      "The intent provided is empty or invalid"),
 
     };
 
@@ -35,17 +39,19 @@ public final class RestErrorCatalog {
      * Singleton implementation using the demand holder idiom.
      */
     private static class RestErrorMapHolder {
+        private static Map<Integer, RestErrorCatalogEntry> restErrorMap = initializeRestErrorMap();
+
         /**
          * Load up the error map.
          *
          * @return REST error map
          */
-        private static Map<Integer, RestError> initializeRestErrorMap() {
+        private static Map<Integer, RestErrorCatalogEntry> initializeRestErrorMap() {
             restErrorMap = new HashMap<>();
-            for (final RestError restError : ERROR_LIST) {
-                restErrorMap.put(restError.getCode().ordinal(), restError);
+            for (final RestErrorCatalogEntry restErrorCatalogEntry : ERROR_LIST) {
+                restErrorMap.put(restErrorCatalogEntry.getCode().ordinal(), restErrorCatalogEntry);
             }
-            return restErrorMap;
+            return Collections.unmodifiableMap(restErrorMap);
         }
 
         /**
@@ -54,12 +60,10 @@ public final class RestErrorCatalog {
          * @return map of the Rest Errors that was created from the known error
          * list.
          */
-        public static Map<Integer, RestError> getRestErrorMap() {
+        public static Map<Integer, RestErrorCatalogEntry> getRestErrorMap() {
             return restErrorMap;
         }
 
-
-        private static Map<Integer, RestError> restErrorMap = initializeRestErrorMap();
     }
 
     /**
@@ -67,18 +71,18 @@ public final class RestErrorCatalog {
      *
      * @return map of possible REST errors.
      */
-    public static Map<Integer, RestError> getRestErrorMap() {
+    public static Map<Integer, RestErrorCatalogEntry> getRestErrorMap() {
         return RestErrorMapHolder.getRestErrorMap();
     }
 
     /**
-     * Fetch the RestError for the given code.
+     * Fetch the RestErrorCatalogEntry for the given code.
      *
      * @param code the code for the message to look up.
      * @return the REST error for the code if one exists, null if it does not
      *         exist.
      */
-    public static RestError getRestError(final RestErrorCodes.RestErrorCode code) {
+    public static RestErrorCatalogEntry getRestError(final RestErrorCodes.RestErrorCode code) {
         return getRestErrorMap().get(code.ordinal());
     }
 }

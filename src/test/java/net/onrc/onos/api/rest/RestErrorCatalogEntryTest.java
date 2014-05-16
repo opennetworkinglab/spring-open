@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * Unit tests for REST error handling classes.
  */
-public class RestErrorTest {
+public class RestErrorCatalogEntryTest {
 
     /**
      * Test the formatting of a REST error that contains a single
@@ -21,20 +21,21 @@ public class RestErrorTest {
      */
     @Test
     public void testRestErrorFormatting1Parameter() {
-        final RestError restError =
+        final RestErrorCatalogEntry restErrorCatalogEntry =
                 RestErrorCatalog.getRestError(RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS);
-        assertThat(restError, is(notNullValue()));
+        assertThat(restErrorCatalogEntry, is(notNullValue()));
 
-        final String formattedError =
-                RestErrorFormatter.formatErrorMessage(restError,
-                                                      "INTENT-ID");
-        assertThat(formattedError, is(notNullValue()));
+        final RestError formattedError =
+                RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS,
+                                          "INTENT-ID");
+        final String formattedErrorString =
+                formattedError.getFormattedDescription();
+        assertThat(formattedErrorString, is(notNullValue()));
 
         final String expectedFormattedString =
                 "An intent with the identifier INTENT-ID could not be created " +
                 "because one already exists.";
-        assertThat(formattedError, is(equalTo(expectedFormattedString)));
-
+        assertThat(formattedErrorString, is(equalTo(expectedFormattedString)));
     }
 
     /**
@@ -43,19 +44,21 @@ public class RestErrorTest {
      */
     @Test
     public void testRestErrorFormatting2Parameters() {
-        final RestError restError =
+        final RestErrorCatalogEntry restErrorCatalogEntry =
                 RestErrorCatalog.getRestError(RestErrorCodes.RestErrorCode.INTENT_NO_PATH);
-        assertThat(restError, is(notNullValue()));
+        assertThat(restErrorCatalogEntry, is(notNullValue()));
 
-        final String formattedError =
-                RestErrorFormatter.formatErrorMessage(restError,
-                        "Switch1", "Switch2");
-        assertThat(formattedError, is(notNullValue()));
+        final RestError formattedError =
+                RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_NO_PATH,
+                                          "Switch1", "Switch2");
+        final String formattedErrorString =
+                formattedError.getFormattedDescription();
+
+        assertThat(formattedErrorString, is(notNullValue()));
 
         final String expectedFormattedString =
                 "No path found between Switch1 and Switch2";
-        assertThat(formattedError, is(equalTo(expectedFormattedString)));
-
+        assertThat(formattedErrorString, is(equalTo(expectedFormattedString)));
     }
 
     /**
@@ -83,7 +86,15 @@ public class RestErrorTest {
     }
 
     /**
-     * Make sure that the RestError class is immutable.
+     * Make sure that the RestErrorCatalogEntry class is immutable.
+     */
+    @Test
+    public void assureThatRestErrorCatalogEntryIsImmutable() {
+        assertThatClassIsImmutable(RestErrorCatalogEntry.class);
+    }
+
+    /**
+     * Make sure that the RestErrorCatalogEntry class is immutable.
      */
     @Test
     public void assureThatRestErrorIsImmutable() {

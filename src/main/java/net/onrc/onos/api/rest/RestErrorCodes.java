@@ -24,7 +24,10 @@ public final class RestErrorCodes {
         INTENT_ALREADY_EXISTS,
 
         /** No path available for the Intent. */
-        INTENT_NO_PATH
+        INTENT_NO_PATH,
+
+        /** An object specified for an intent is invalid (parsing error). */
+        INTENT_INVALID
     }
 
 }

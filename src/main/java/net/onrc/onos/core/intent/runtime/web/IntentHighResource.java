@@ -5,6 +5,8 @@ import java.util.Collection;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.intent.ApplicationIntent;
+import net.onrc.onos.api.rest.RestError;
+import net.onrc.onos.api.rest.RestErrorCodes;
 import net.onrc.onos.core.intent.ConstrainedShortestPathIntent;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
@@ -14,9 +16,8 @@ import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 import net.onrc.onos.core.util.Dpid;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.restlet.data.Status;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
@@ -66,16 +67,18 @@ public class IntentHighResource extends ServerResource {
         ObjectMapper mapper = new ObjectMapper();
         ApplicationIntent[] addOperations = null;
         try {
-            addOperations = mapper.readValue(jsonIntent, ApplicationIntent[].class);
-        } catch (JsonParseException ex) {
-            log.error("JsonParseException occurred", ex);
-        } catch (JsonMappingException ex) {
-            log.error("JsonMappingException occurred", ex);
+            if (jsonIntent != null) {
+                addOperations = mapper.readValue(jsonIntent, ApplicationIntent[].class);
+            }
         } catch (IOException ex) {
-            log.error("IOException occurred", ex);
+            log.error("Exception occurred parsing inbound JSON", ex);
         }
+
         if (addOperations == null) {
-            return "";
+            setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            final RestError error =
+                    RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_INVALID);
+            return mapper.writeValueAsString(error);
         }
 
         //
@@ -127,6 +130,8 @@ public class IntentHighResource extends ServerResource {
         // Apply the Intent Operations
         pathRuntime.executeIntentOperations(intentOperations);
 
+        setStatus(Status.SUCCESS_CREATED);
+
         return reply;
     }
 
@@ -144,6 +149,7 @@ public class IntentHighResource extends ServerResource {
         // TODO: The implementation below is broken - waiting for the Java API
         // TODO: The deletion should use synchronous Java API?
         pathRuntime.purgeIntents();
+        setStatus(Status.SUCCESS_NO_CONTENT);
         return "";      // TODO no reply yet from the purge intents call
     }
 }

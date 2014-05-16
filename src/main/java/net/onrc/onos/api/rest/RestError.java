@@ -1,60 +1,84 @@
 package net.onrc.onos.api.rest;
 
 /**
- * Describes a REST error.
- * code is a unique identifier for the error.
- * summary is indended to be a short description of what happened.
- * description is a long description of the problem, and can be formatted using
- * variable replacement.  Variable placeholders are indicated with the string
- * "{}" in the description.
- * Objects of this class are immutable.
+ * Object to represent an instance of a particular REST error.  The error
+ * contains a formatted description which has information about the particular
+ * occurence.  Objects of this type are passed back to REST callers if an error
+ * is encountered.
  */
-
 public final class RestError {
 
     private final RestErrorCodes.RestErrorCode code;
     private final String summary;
-    private final String description;
+    private final String formattedDescription;
 
     /**
-     * Constructs a new RestError object from a code, summary and description.
-     *
-     * @param newCode code for the new error
-     * @param newSummary short summary for the new error
-     * @param newDescription formatable description for the new error
+     * Hidden default constructor to force usage of the factory method.
      */
-    public RestError(final RestErrorCodes.RestErrorCode newCode,
-                     final String newSummary,
-                     final String newDescription) {
-        code = newCode;
-        summary = newSummary;
-        description = newDescription;
+    private RestError() {
+        // This is never called, but Java requires these initializations
+        // because the members are final.
+        code = RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS;
+        summary = "";
+        formattedDescription = "";
     }
 
     /**
-     * Gets the summary of the error.
+     * Constructor to make a new Error.  Called by factory method.
      *
-     * @return string for the summary
+     * @param code code for the new error
+     * @param summary summary string for the new error
+     * @param formattedDescription formatted full description of the error
      */
-    public String getSummary() {
-        return summary;
+    private RestError(final RestErrorCodes.RestErrorCode code,
+                      final String summary,
+                      final String formattedDescription) {
+        this.code = code;
+        this.summary = summary;
+        this.formattedDescription = formattedDescription;
     }
 
     /**
-     * Gets the unique code for this error.
+     * Fetch the code for this error.
      *
-     * @return unique code
+     * @return error code
      */
     public RestErrorCodes.RestErrorCode getCode() {
         return code;
     }
 
     /**
-     * Gets the unformatted description string for the error.
+     * Fetch the summary for this error.
      *
-     * @return the unformatted description string.
+     * @return summary
      */
-    public String getDescription() {
-        return description;
+    public String getSummary() {
+        return summary;
+    }
+
+    /**
+     * Fetch the formatted descritpion for this error.
+     *
+     * @return formatted error
+     */
+    public String getFormattedDescription() {
+        return formattedDescription;
+    }
+
+    /**
+     * Creates an object to represent an instance of a REST error.  The
+     * descrption is formatted for this particular instance.
+     *
+     * @param code code of the error in the catalog
+     * @param parameters list of positional parameters to use in formatting
+     *                   the description
+     * @return new RestError representing this intance
+     */
+    public static RestError createRestError(final RestErrorCodes.RestErrorCode code,
+                                            final Object... parameters) {
+        final RestErrorCatalogEntry error = RestErrorCatalog.getRestError(code);
+        final String formattedDescription =
+                RestErrorFormatter.formatErrorMessage(error, parameters);
+        return new RestError(code, error.getSummary(), formattedDescription);
     }
 }
