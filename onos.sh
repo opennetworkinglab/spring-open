@@ -692,7 +692,7 @@ function start-server {
 
   local masterServiceThreads=$(read-conf ${ONOS_CONF} ramcloud.server.masterServiceThreads 5)
   local logCleanerThreads=$(read-conf ${ONOS_CONF}    ramcloud.server.logCleanerThreads    1)
-  local detectFailures=$(read-conf ${ONOS_CONF}       ramcloud.server.detectFailures       1)
+  local detectFailures=$(read-conf ${ONOS_CONF}       ramcloud.server.detectFailures       0)
 
   # TODO Configuration for ZK address, port
   local zk_addr="localhost:2181"
