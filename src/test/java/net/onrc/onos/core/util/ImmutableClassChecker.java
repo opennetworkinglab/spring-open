@@ -37,6 +37,10 @@ public class ImmutableClassChecker {
 
         // class must have only final and private data members
         for (final Field field : clazz.getDeclaredFields()) {
+            if (field.getName().startsWith("__cobertura")) {
+                //  cobertura sticks these fields into classes - ignore them
+                continue;
+            }
             if (!Modifier.isFinal(field.getModifiers())) {
                 failureReason = "a field named '" + field.getName() +
                                 "' that is not final";
