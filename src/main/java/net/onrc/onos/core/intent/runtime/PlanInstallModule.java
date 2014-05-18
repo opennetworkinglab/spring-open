@@ -6,9 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOFMessageListener;
+import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -18,15 +23,21 @@ import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.FlowEntry;
+import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
+import net.onrc.onos.core.intent.PathIntent;
+import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.ITopologyService;
 
+import org.openflow.protocol.OFFlowRemoved;
+import org.openflow.protocol.OFMessage;
+import org.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PlanInstallModule implements IFloodlightModule {
+public class PlanInstallModule implements IFloodlightModule, IOFMessageListener {
     protected volatile IFloodlightProviderService floodlightProvider;
     protected volatile ITopologyService topologyService;
     protected volatile IDatagridService datagridService;
@@ -39,19 +50,7 @@ public class PlanInstallModule implements IFloodlightModule {
 
     private static final String PATH_INTENT_CHANNEL_NAME = "onos.pathintent";
     private static final String INTENT_STATE_EVENT_CHANNEL_NAME = "onos.pathintent_state";
-
-
-    @Override
-    public void init(FloodlightModuleContext context)
-            throws FloodlightModuleException {
-        floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-        topologyService = context.getServiceImpl(ITopologyService.class);
-        datagridService = context.getServiceImpl(IDatagridService.class);
-        flowPusher = context.getServiceImpl(IFlowPusherService.class);
-        planCalc = new PlanCalcRuntime();
-        planInstall = new PlanInstallRuntime(floodlightProvider, flowPusher);
-        eventListener = new EventListener();
-    }
+    private ConcurrentMap<String, Intent> parentIntentMap = new ConcurrentHashMap<String, Intent>();
 
     class EventListener extends Thread
             implements IEventChannelListener<Long, IntentOperationList> {
@@ -129,7 +128,8 @@ public class PlanInstallModule implements IFloodlightModule {
             }
 
             if (log.isTraceEnabled()) {
-                log.trace("domainSwitchDpids {}", states.domainSwitchDpids);
+                log.trace("sendNotifications, states {}, domainSwitchDpids {}",
+                       states, states.domainSwitchDpids);
             }
 
             intentStateChannel.addTransientEntry(key, states);
@@ -150,6 +150,7 @@ public class PlanInstallModule implements IFloodlightModule {
 
         @Override
         public void entryUpdated(IntentOperationList value) {
+            putIntentOpsInfoInParentMap(value);
             log("start_intentNotifRecv");
             log("begin_sendReceivedNotif");
             sendNotifications(value, false, false, null);
@@ -163,10 +164,39 @@ public class PlanInstallModule implements IFloodlightModule {
                 log.warn("Error putting to intent queue: {}", e.getMessage());
             }
         }
+
+        private void putIntentOpsInfoInParentMap(IntentOperationList intentOps) {
+            for (IntentOperation i : intentOps) {
+                if (!(i.intent instanceof PathIntent)) {
+                    log.warn("Not a path intent: {}", i);
+                    continue;
+                }
+                PathIntent intent = (PathIntent) i.intent;
+                Intent parent = intent.getParentIntent();
+                if (parent instanceof ShortestPathIntent) {
+                    parentIntentMap.put(parent.getId(), parent);
+                } else {
+                    log.warn("Unsupported Intent: {}", parent);
+                    continue;
+                }
+            }
+        }
     }
 
     public static void log(String step) {
         log.debug("Time:{}, Step:{}", System.nanoTime(), step);
+    }
+
+    @Override
+    public void init(FloodlightModuleContext context)
+            throws FloodlightModuleException {
+        floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+        topologyService = context.getServiceImpl(ITopologyService.class);
+        datagridService = context.getServiceImpl(IDatagridService.class);
+        flowPusher = context.getServiceImpl(IFlowPusherService.class);
+        planCalc = new PlanCalcRuntime();
+        planInstall = new PlanInstallRuntime(floodlightProvider, flowPusher);
+        eventListener = new EventListener();
     }
 
     @Override
@@ -181,6 +211,7 @@ public class PlanInstallModule implements IFloodlightModule {
         intentStateChannel = datagridService.createChannel(INTENT_STATE_EVENT_CHANNEL_NAME,
                 Long.class,
                 IntentStateList.class);
+        floodlightProvider.addOFMessageListener(OFType.FLOW_REMOVED, this);
     }
 
     @Override
@@ -204,5 +235,85 @@ public class PlanInstallModule implements IFloodlightModule {
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
         // no services, for now
         return null;
+    }
+
+    @Override
+    public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
+        if (msg.getType().equals(OFType.FLOW_REMOVED) &&
+            (msg instanceof OFFlowRemoved)) {
+            OFFlowRemoved flowRemovedMsg = (OFFlowRemoved) msg;
+
+            if (log.isTraceEnabled()) {
+               log.trace("Receive flowRemoved from sw {} : Cookie {}",
+                       sw.getId(), flowRemovedMsg.getCookie());
+            }
+
+            String intentParentId = Long.toString(flowRemovedMsg.getCookie());
+            Intent intent = parentIntentMap.get(intentParentId);
+
+            //We assume if the path src sw flow entry is expired,
+            //the path is expired.
+            if (!isFlowSrcRemoved(sw.getId(), intentParentId)) {
+                return Command.CONTINUE;
+            }
+
+            ShortestPathIntent spfIntent = null;
+            if (!(intent instanceof ShortestPathIntent)) {
+                return Command.CONTINUE;
+            }
+            spfIntent = (ShortestPathIntent) intent;
+            String pathIntentId = spfIntent.getPathIntentId();
+
+            IntentStateList states = new IntentStateList();
+            IntentState newState = IntentState.DEL_ACK;
+            states.put(pathIntentId, newState);
+            Set<Long> domainSwitchDpids = floodlightProvider.getSwitches().keySet();
+            if (domainSwitchDpids != null) {
+                states.domainSwitchDpids.addAll(domainSwitchDpids);
+            }
+            parentIntentMap.remove(intentParentId);
+            log.debug("addEntry to intentStateChannel intentId {}, states {}", flowRemovedMsg.getCookie(), states);
+
+            intentStateChannel.addTransientEntry(flowRemovedMsg.getCookie(), states);
+        }
+
+        return Command.CONTINUE;
+    }
+
+    private boolean isFlowSrcRemoved(long dpid, String shortestPathIntentId) {
+        Intent intent =  parentIntentMap.get(shortestPathIntentId);
+        ShortestPathIntent spfIntent = null;
+        if (intent instanceof ShortestPathIntent) {
+            spfIntent = (ShortestPathIntent) intent;
+        }
+
+        if (spfIntent == null) {
+            return false;
+        }
+
+        long srcSwDpid = spfIntent.getSrcSwitchDpid();
+        if (srcSwDpid == dpid) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isCallbackOrderingPrereq(OFType type, String name) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isCallbackOrderingPostreq(OFType type, String name) {
+        // TODO Auto-generated method stub
+        return false;
     }
 }

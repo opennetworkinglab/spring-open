@@ -5,9 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
@@ -17,11 +15,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.flowprogrammer.web.FlowProgrammerWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.util.FlowEntryId;
 
-import org.openflow.protocol.OFFlowRemoved;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +33,6 @@ import org.slf4j.LoggerFactory;
  * @author Brian
  */
 public class FlowProgrammer implements IFloodlightModule,
-        IOFMessageListener,
         IOFSwitchListener {
     // flag to enable FlowSynchronizer
     private static final boolean ENABLE_FLOW_SYNC = false;
@@ -76,7 +69,6 @@ public class FlowProgrammer implements IFloodlightModule,
     public void startUp(FloodlightModuleContext context) {
         restApi.addRestletRoutable(new FlowProgrammerWebRoutable());
         pusher.start();
-        floodlightProvider.addOFMessageListener(OFType.FLOW_REMOVED, this);
         floodlightProvider.addOFSwitchListener(this);
     }
 
@@ -117,31 +109,6 @@ public class FlowProgrammer implements IFloodlightModule,
     public String getName() {
         // TODO Auto-generated method stub
         return "FlowProgrammer";
-    }
-
-    @Override
-    public boolean isCallbackOrderingPrereq(OFType type, String name) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isCallbackOrderingPostreq(OFType type, String name) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-        if (msg.getType().equals(OFType.FLOW_REMOVED) &&
-            (msg instanceof OFFlowRemoved)) {
-            OFFlowRemoved flowMsg = (OFFlowRemoved) msg;
-            FlowEntryId id = new FlowEntryId(flowMsg.getCookie());
-            log.debug("Got flow entry removed from {}: {}", sw.getId(), id);
-            // TODO: Inform the Forwarding module that a flow has expired
-        }
-
-        return Command.CONTINUE;
     }
 
     @Override

@@ -21,6 +21,7 @@ public class FlowEntry {
     protected Operator operator;
     protected int hardTimeout = 0;
     protected int idleTimeout = 0;
+    protected long flowEntryId;
 
     public FlowEntry(long sw, long srcPort, long dstPort,
                      MACAddress srcMac, MACAddress dstMac,
@@ -30,13 +31,13 @@ public class FlowEntry {
         this.actions = new HashSet<Action>();
         this.actions.add(new ForwardAction(dstPort));
         this.operator = operator;
-
+        this.flowEntryId = hashCode();
     }
 
     /***
      * Gets hard timeout value in seconds.
      *
-     * @return hardTimeout
+     * @return the hard timeout value in seconds
      */
     public int getHardTimeout() {
         return hardTimeout;
@@ -45,7 +46,7 @@ public class FlowEntry {
     /***
      * Gets idle timeout value in seconds.
      *
-     * @return idleTimeout
+     * @return the idle timeout value in seconds
      */
     public int getIdleTimeout() {
         return idleTimeout;
@@ -54,7 +55,7 @@ public class FlowEntry {
     /***
      * Sets hard timeout value in seconds.
      *
-     * @param hardTimeout
+     * @param the hard timeout value in seconds
      */
     public void setHardTimeout(int hardTimeout) {
         this.hardTimeout = hardTimeout;
@@ -63,10 +64,28 @@ public class FlowEntry {
     /***
      * Sets idle timeout value in seconds.
      *
-     * @param idleTimeout
+     * @param the idle timeout value in seconds
      */
     public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
+    }
+
+    /***
+     * Gets flowEntryId.
+     *
+     * @param the flowEntryId to be set in cookie
+     */
+    public long getFlowEntryId() {
+        return flowEntryId;
+    }
+
+    /***
+     * Sets flowEntryId.
+     *
+     * @param the flowEntryId to be set in cookie
+     */
+    public void setFlowEntryId(long flowEntryId) {
+        this.flowEntryId = flowEntryId;
     }
 
     @Override
@@ -89,7 +108,7 @@ public class FlowEntry {
     public net.onrc.onos.core.util.FlowEntry getFlowEntry() {
         net.onrc.onos.core.util.FlowEntry entry = new net.onrc.onos.core.util.FlowEntry();
         entry.setDpid(new Dpid(sw));
-        entry.setFlowEntryId(new FlowEntryId(hashCode())); // naive, but useful for now
+        entry.setFlowEntryId(new FlowEntryId(flowEntryId));
         entry.setFlowEntryMatch(match.getFlowEntryMatch());
         FlowEntryActions flowEntryActions = new FlowEntryActions();
         for (Action action : actions) {

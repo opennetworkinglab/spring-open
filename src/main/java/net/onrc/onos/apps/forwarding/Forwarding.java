@@ -68,7 +68,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     private ITopologyService topologyService;
     private Topology topology;
     private IPathCalcRuntimeService pathRuntime;
-    private IntentMap intentMap;
+    private IntentMap pathIntentMap;
+    private IntentMap highLevelIntentMap;
 
     // TODO it seems there is a Guava collection that will time out entries.
     // We should see if this will work here.
@@ -191,8 +192,9 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         packetService.registerPacketListener(this);
 
         topology = topologyService.getTopology();
-        intentMap = pathRuntime.getPathIntents();
-        intentMap.addChangeListener(this);
+        highLevelIntentMap = pathRuntime.getHighLevelIntents();
+        pathIntentMap = pathRuntime.getPathIntents();
+        pathIntentMap.addChangeListener(this);
     }
 
     @Override
@@ -273,7 +275,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     private void continueHandlePacketIn(Switch sw, Port inPort, Ethernet eth, Device deviceObject) {
 
-        log.debug("Start continuehandlePacketIn");
+        log.trace("Start continuehandlePacketIn");
 
         //Iterator<IPortObject> ports = deviceObject.getAttachedPorts().iterator();
         Iterator<net.onrc.onos.core.topology.Port> ports = deviceObject.getAttachmentPoints().iterator();
@@ -300,10 +302,12 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         MACAddress srcMacAddress = MACAddress.valueOf(eth.getSourceMACAddress());
         MACAddress dstMacAddress = MACAddress.valueOf(eth.getDestinationMACAddress());
+        Path pathspec = new Path(srcMacAddress, dstMacAddress);
+        IntentOperationList operations = new IntentOperationList();
 
         synchronized (lock) {
             //TODO check concurrency
-            Path pathspec = new Path(srcMacAddress, dstMacAddress);
+
             PushedFlow existingFlow = pendingFlows.get(pathspec);
 
             //A path is installed side by side to reduce a path timeout and a wrong state.
@@ -323,23 +327,58 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     // Flow has been sent to the switches so it is safe to
                     // send a packet out now
 
-                    Intent intent = intentMap.getIntent(existingFlow.intentId);
-                    PathIntent pathIntent = null;
-                    if (intent instanceof PathIntent) {
-                        pathIntent = (PathIntent) intent;
+                    // TODO Here highLevelIntentMap and pathIntentMap would be problem,
+                    // because it doesn't have global information as of May 2014.
+                    // However usually these lines here is used when we got packet-in and this class think
+                    // the path for the packet is installed already, so it is pretty rare.
+                    // I will leave it for now, and will work in the next step.
+                    Intent highLevelIntent = highLevelIntentMap.getIntent(existingFlow.intentId);
+                    if (highLevelIntent == null) {
+                        log.debug("Intent ID {} is null in HighLevelIntentMap. return.", existingFlow.intentId);
+                        return;
+                    }
+
+                    if (highLevelIntent.getState() != IntentState.INST_ACK) {
+                        log.debug("Intent ID {}'s state is not INST_ACK. return.", existingFlow.intentId);
+                        return;
+                    }
+
+                    ShortestPathIntent spfIntent = null;
+                    if (highLevelIntent instanceof ShortestPathIntent) {
+                        spfIntent = (ShortestPathIntent) highLevelIntent;
                     } else {
                         log.debug("Intent ID {} is not PathIntent or null. return.", existingFlow.intentId);
                         return;
                     }
 
-                    Boolean isflowEntryForThisSwitch = false;
+                    PathIntent pathIntent = (PathIntent) pathIntentMap.getIntent(spfIntent.getPathIntentId());
+                    if (pathIntent == null) {
+                        log.debug("PathIntent ID {} is null in PathIntentMap. return.", existingFlow.intentId);
+                        return;
+                    }
+
+                    if (pathIntent.getState() != IntentState.INST_ACK) {
+                        log.debug("Intent ID {}'s state is not INST_ACK. return.", existingFlow.intentId);
+                        return;
+                    }
+
+                    boolean isflowEntryForThisSwitch = false;
                     net.onrc.onos.core.intent.Path path = pathIntent.getPath();
+                    long outPort = -1;
+
+                    if (spfIntent.getDstSwitchDpid() == sw.getDpid()) {
+                        log.trace("The packet-in sw dpid {} is on the path.", sw.getDpid());
+                        isflowEntryForThisSwitch = true;
+                        outPort = spfIntent.getDstPortNumber();
+                    }
 
                     for (Iterator<LinkEvent> i = path.iterator(); i.hasNext();) {
                         LinkEvent le = i.next();
+
                         if (le.getSrc().dpid.equals(sw.getDpid())) {
-                            log.debug("src {} dst {}", le.getSrc(), le.getDst());
+                            log.trace("The packet-in sw dpid {} is on the path.", sw.getDpid());
                             isflowEntryForThisSwitch = true;
+                            outPort = le.getSrc().getNumber();
                             break;
                         }
                     }
@@ -352,25 +391,24 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                                 existingFlow.intentId,
                                 srcMacAddress, dstMacAddress);
                     } else {
-                        log.debug("Sending packet out from sw {}, outport{}", sw, existingFlow.firstOutPort);
+                        if (outPort < 0) {
+                            outPort = existingFlow.firstOutPort;
+                        }
 
+                        log.debug("Sending packet out from sw {}, outport{}", sw.getDpid(), outPort);
                         packetService.sendPacket(eth, new SwitchPort(
-                                        sw.getDpid(), existingFlow.firstOutPort));
+                                sw.getDpid(), (short) outPort));
                     }
                 } else {
                     // Flow path has not yet been installed to switches so save the
                     // packet out for later
-                    log.debug("Put a packet into the waiting list. flowId {}", existingFlow.intentId);
+                    log.trace("Put a packet into the waiting list. flowId {}", existingFlow.intentId);
                     waitingPackets.put(existingFlow.intentId, new PacketToPush(eth, sw.getDpid()));
                 }
                 return;
             }
 
-            log.debug("Adding new flow between {} at {} and {} at {}",
-                    new Object[]{srcMacAddress, srcSwitchPort, dstMacAddress, dstSwitchPort});
-
-            String intentId = callerId + ":" + controllerRegistryService.getNextUniqueId();
-            IntentOperationList operations = new IntentOperationList();
+            String intentId = Long.toString(controllerRegistryService.getNextUniqueId());
             ShortestPathIntent intent = new ShortestPathIntent(intentId,
                     sw.getDpid(), inPort.getNumber(), srcMacAddress.toLong(),
                     destinationDpid, destinationPort, dstMacAddress.toLong());
@@ -379,14 +417,16 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             intent.setFirstSwitchIdleTimeout(idleTimeout);
             IntentOperation.Operator operator = IntentOperation.Operator.ADD;
             operations.add(operator, intent);
-            pathRuntime.executeIntentOperations(operations);
-            // Add to waiting lists
-            pendingFlows.put(pathspec, new PushedFlow(intentId));
-            log.debug("Put a Path {} in the pending flow, intent ID {}", pathspec, intentId);
-            waitingPackets.put(intentId, new PacketToPush(eth, sw.getDpid()));
-            log.debug("Put a Packet in the wating list. related pathspec {}", pathspec);
+            log.debug("Adding new flow between {} at {} and {} at {}",
+                    new Object[]{srcMacAddress, srcSwitchPort, dstMacAddress, dstSwitchPort});
 
+             // Add to waiting lists
+            waitingPackets.put(intentId, new PacketToPush(eth, sw.getDpid()));
+            log.trace("Put a Packet in the wating list. intent ID {}, related pathspec {}", intentId, pathspec);
+            pendingFlows.put(pathspec, new PushedFlow(intentId));
+            log.trace("Put a Path {} in the pending flow, intent ID {}", pathspec, intentId);
         }
+        pathRuntime.executeIntentOperations(operations);
     }
 
     @Override
@@ -406,7 +446,6 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         MACAddress srcMacAddress = MACAddress.valueOf(spfIntent.getSrcMac());
         MACAddress dstMacAddress = MACAddress.valueOf(spfIntent.getDstMac());
         Path removedPath = new Path(srcMacAddress, dstMacAddress);
-
         synchronized (lock) {
             // There *shouldn't* be any packets queued if the flow has
             // just been removed.
@@ -414,6 +453,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             if (!packets.isEmpty()) {
                 log.warn("Removed flow {} has packets queued.", spfIntent.getId());
             }
+
             pendingFlows.remove(removedPath);
             log.debug("Removed from the pendingFlow: Path {}, Flow ID {}", removedPath, spfIntent.getId());
         }
@@ -484,7 +524,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     public void intentsChange(LinkedList<ChangedEvent> events) {
         for (ChangedEvent event : events) {
             log.debug("path intent ID {}, eventType {}", event.intent.getId() , event.eventType);
-            PathIntent pathIntent = (PathIntent) intentMap.getIntent(event.intent.getId());
+            PathIntent pathIntent = (PathIntent) pathIntentMap.getIntent(event.intent.getId());
             if (pathIntent == null) {
                 continue;
             }

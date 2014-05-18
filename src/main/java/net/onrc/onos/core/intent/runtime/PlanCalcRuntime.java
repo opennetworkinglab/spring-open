@@ -61,6 +61,7 @@ public class PlanCalcRuntime {
             long lastDstSw = -1, lastDstPort = -1, firstSrcSw = -1;
             MACAddress srcMac, dstMac;
             int idleTimeout = 0, hardTimeout = 0, firstSwitchIdleTimeout = 0, firstSwitchHardTimeout = 0;
+            Long cookieId = null;
             if (parent instanceof ShortestPathIntent) {
                 ShortestPathIntent pathIntent = (ShortestPathIntent) parent;
 //              Switch srcSwitch = graph.getSwitch(pathIntent.getSrcSwitchDpid());
@@ -77,6 +78,11 @@ public class PlanCalcRuntime {
                 hardTimeout = pathIntent.getHardTimeout();
                 firstSwitchIdleTimeout = pathIntent.getFirstSwitchIdleTimeout();
                 firstSwitchHardTimeout = pathIntent.getFirstSwitchHardTimetout();
+                try {
+                    cookieId = Long.valueOf(pathIntent.getId());
+                } catch (NumberFormatException e) {
+                    log.trace("NumberFormatException : ", e);
+                }
             } else {
                 log.warn("Unsupported Intent: {}", parent);
                 continue;
@@ -98,6 +104,10 @@ public class PlanCalcRuntime {
                 } else {
                     fe.setIdleTimeout(firstSwitchIdleTimeout);
                     fe.setHardTimeout(firstSwitchHardTimeout);
+                }
+                if (cookieId != null) {
+                    log.trace("cookieId is set: {}", cookieId);
+                    fe.setFlowEntryId(cookieId);
                 }
                 entries.add(fe);
 //              srcPort = link.getDstPort();

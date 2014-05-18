@@ -89,7 +89,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     private IRestApiService restApi;
 
     private IEventChannel<Long, IntentOperationList> opEventChannel;
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock(true);
     private HashSet<LinkEvent> unmatchedLinkEvents = new HashSet<>();
     private Map<String, Set<Long>> intentInstalledMap = new ConcurrentHashMap<String, Set<Long>>();
     private static final String INTENT_OP_EVENT_CHANNEL_NAME = "onos.pathintent";
@@ -173,15 +173,16 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
 
     @Override
     public IntentOperationList executeIntentOperations(IntentOperationList list) {
+
         if (list == null || list.size() == 0) {
             return null;
         }
-        PerfLogger p = new PerfLogger("executeIntentOperations_" + list.get(0).operator);
 
         lock.lock(); // TODO optimize locking using smaller steps
         try {
+            log.trace("lock executeIntentOperations, lock obj is already locked? {}", lock.isLocked());
             // update the map of high-level intents
-            p.log("begin_updateInMemoryIntents");
+
             highLevelIntents.executeOperations(list);
 
             // change states of high-level intents
@@ -214,21 +215,15 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                 }
             }
             highLevelIntents.changeStates(states);
-            p.log("end_updateInMemoryIntents");
 
             // calculate path-intents (low-level operations)
-            p.log("begin_calcPathIntents");
             IntentOperationList pathIntentOperations = runtime.calcPathIntents(list, highLevelIntents, pathIntents);
-            p.log("end_calcPathIntents");
 
             // persist calculated low-level operations into data store
-            p.log("begin_persistPathIntents");
             long key = persistIntent.getKey();
             persistIntent.persistIfLeader(key, pathIntentOperations);
-            p.log("end_persistPathIntents");
 
             // remove error-intents and reflect them to high-level intents
-            p.log("begin_removeErrorIntents");
             states.clear();
             Iterator<IntentOperation> i = pathIntentOperations.iterator();
             while (i.hasNext()) {
@@ -239,15 +234,11 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                 }
             }
             highLevelIntents.changeStates(states);
-            p.log("end_removeErrorIntents");
 
             // update the map of path intents and publish the path operations
-            p.log("begin_updateInMemoryPathIntents");
             pathIntents.executeOperations(pathIntentOperations);
-            p.log("end_updateInMemoryPathIntents");
 
             // XXX Demo special: add a complete path to remove operation
-            p.log("begin_addPathToRemoveOperation");
             for (IntentOperation op : pathIntentOperations) {
                 if (op.operator.equals(Operator.REMOVE)) {
                     op.intent = pathIntents.getIntent(op.intent.getId());
@@ -256,19 +247,16 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                     log.debug("operation: {}, intent:{}", op.operator, op.intent);
                 }
             }
-            p.log("end_addPathToRemoveOperation");
 
             // send notification
-            p.log("begin_sendNotification");
             // XXX: Send notifications using the same key every time
             // and receive them by entryAdded() and entryUpdated()
             opEventChannel.addEntry(0L, pathIntentOperations);
-            p.log("end_sendNotification");
             //opEventChannel.removeEntry(key);
             return pathIntentOperations;
         } finally {
             lock.unlock();
-            p.flushLog();
+            log.trace("unlock executeIntentOperations");
         }
     }
 
@@ -380,11 +368,11 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     @Override
     public void entryUpdated(IntentStateList value) {
         // TODO draw state transition diagram in multiple ONOS instances and update this method
-        PerfLogger p = new PerfLogger("entryUpdated");
+
         lock.lock(); // TODO optimize locking using smaller steps
         try {
+            log.trace("lock entryUpdated, lock obj is already locked? {}", lock.isLocked());
             // reflect state changes of path-level intent into application-level intents
-            p.log("begin_changeStateByNotification");
             IntentStateList highLevelIntentStates = new IntentStateList();
             IntentStateList pathIntentStates = new IntentStateList();
             for (Entry<String, IntentState> entry : value.entrySet()) {
@@ -401,8 +389,6 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                 }
 
                 IntentState state = entry.getValue();
-                log.debug("put the state pathIntentStates ID {}, state {}", entry.getKey(), state);
-
                 switch (state) {
                     case INST_ACK:
                         Set<Long> installedDpids = calcInstalledDpids(pathIntent, value.domainSwitchDpids);
@@ -416,10 +402,19 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                         // FALLTHROUGH
                     // case DEL_REQ:
                         // FALLTHROUGH
-                    case DEL_ACK:
-                        // FALLTHROUGH
                     case DEL_PENDING:
+                        log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), state);
                         highLevelIntentStates.put(parentIntent.getId(), state);
+                        log.debug("put the state pathIntentStates ID {}, state {}", entry.getKey(), entry.getValue());
+                        pathIntentStates.put(entry.getKey(), entry.getValue());
+                        break;
+                    case DEL_ACK:
+                        if (intentInstalledMap.containsKey(parentIntent.getId())) {
+                             intentInstalledMap.remove(parentIntent.getId());
+                        }
+                        log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), state);
+                        highLevelIntentStates.put(parentIntent.getId(), state);
+                        log.debug("put the state pathIntentStates ID {}, state {}", entry.getKey(), entry.getValue());
                         pathIntentStates.put(entry.getKey(), entry.getValue());
                         break;
                     default:
@@ -428,15 +423,15 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
             }
             highLevelIntents.changeStates(highLevelIntentStates);
             pathIntents.changeStates(pathIntentStates);
-            p.log("end_changeStateByNotification");
         } finally {
             lock.unlock();
-            p.flushLog();
+            log.trace("unlock entryUpdated");
         }
     }
 
     /***
      * This function is to check whether the entire path's flow entries are installed or not.
+     *
      * @param pathIntent : The pathIntent to be checked
      * @param installedDpids : The dpids installed on one ONOS instance
      * @return The result of whether a pathIntent has been installed or not.
@@ -492,7 +487,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         }
 
         if (log.isTraceEnabled()) {
-            log.trace("All switches {}, domain switch dpids {}", allSwitchesForPath, domainSwitchDpids);
+            log.trace("All switches for a path {}, domain switch dpids {}", allSwitchesForPath, domainSwitchDpids);
         }
 
         return allSwitchesForPath;
