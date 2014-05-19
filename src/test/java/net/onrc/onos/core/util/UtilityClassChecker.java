@@ -33,7 +33,7 @@ public class UtilityClassChecker {
      * @param clazz the class to check
      * @return true if the given class is a properly specified utility class.
      */
-    private boolean isProperlyDefinedUtilityClass(Class clazz) {
+    private boolean isProperlyDefinedUtilityClass(Class<?> clazz) {
         // class must be declared final
         if (!Modifier.isFinal(clazz.getModifiers())) {
             failureReason = "a class that is not final";
@@ -116,7 +116,7 @@ public class UtilityClassChecker {
      * @throws java.lang.AssertionError if the class is not a valid
      *         utility class
      */
-    public static void assertThatClassIsUtility(Class clazz) {
+    public static void assertThatClassIsUtility(Class<?> clazz) {
         final UtilityClassChecker checker = new UtilityClassChecker();
         if (!checker.isProperlyDefinedUtilityClass(clazz)) {
             final Description toDescription = new StringDescription();

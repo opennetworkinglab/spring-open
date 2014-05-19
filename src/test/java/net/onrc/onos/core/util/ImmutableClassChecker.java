@@ -28,7 +28,7 @@ public class ImmutableClassChecker {
      * @param clazz the class to check
      * @return true if the given class is a properly specified immutable class.
      */
-    private boolean isImmutableClass(Class clazz) {
+    private boolean isImmutableClass(Class<?> clazz) {
         // class must be declared final
         if (!Modifier.isFinal(clazz.getModifiers())) {
             failureReason = "a class that is not final";
@@ -97,7 +97,7 @@ public class ImmutableClassChecker {
      * @throws java.lang.AssertionError if the class is not a valid
      *         utility class
      */
-    public static void assertThatClassIsImmutable(Class clazz) {
+    public static void assertThatClassIsImmutable(Class<?> clazz) {
         final ImmutableClassChecker checker = new ImmutableClassChecker();
         if (!checker.isImmutableClass(clazz)) {
             final Description toDescription = new StringDescription();
