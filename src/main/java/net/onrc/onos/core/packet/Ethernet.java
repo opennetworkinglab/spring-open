@@ -392,7 +392,7 @@ public class Ethernet extends BasePacket {
 
         StringBuffer sb = new StringBuffer("\n");
 
-        IPacket pkt = (IPacket) this.getPayload();
+        IPacket pkt = this.getPayload();
 
         if (pkt instanceof ARP) {
             sb.append("arp");
@@ -447,7 +447,7 @@ public class Ethernet extends BasePacket {
             sb.append("\nnw_proto: ");
             sb.append(p.getProtocol());
 
-            IPacket payload = (IPacket) pkt.getPayload();
+            IPacket payload = pkt.getPayload();
             if (payload instanceof TCP) {
                 sb.append("\ntp_src: ");
                 sb.append(((TCP) payload).getSourcePort());

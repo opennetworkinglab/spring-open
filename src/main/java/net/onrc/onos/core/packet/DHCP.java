@@ -368,7 +368,7 @@ public class DHCP extends BasePacket {
             if (code == 0 || code == 255) {
                 optionsLength += 1;
             } else {
-                optionsLength += 2 + (int) (0xff & option.getLength());
+                optionsLength += 2 + (0xff & option.getLength());
             }
         }
         int optionsPadLength = 0;

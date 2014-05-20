@@ -376,6 +376,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         // do nothing
     }
 
+    @SuppressWarnings("fallthrough")
     @Override
     public void entryUpdated(IntentStateList value) {
         // TODO draw state transition diagram in multiple ONOS instances and update this method

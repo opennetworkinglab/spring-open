@@ -22,8 +22,8 @@ public class ArpCacheNotification {
      */
     public ArpCacheNotification(byte[] targetAddress,
                                 byte[] targetMacAddress) {
-        this.targetAddress = (byte[]) targetAddress.clone();
-        this.targetMacAddress = (byte[]) targetMacAddress.clone();
+        this.targetAddress = targetAddress.clone();
+        this.targetMacAddress = targetMacAddress.clone();
     }
 
     /**
@@ -32,7 +32,7 @@ public class ArpCacheNotification {
      * @return the IP address
      */
     public byte[] getTargetAddress() {
-        return (byte[]) targetAddress.clone();
+        return targetAddress.clone();
     }
 
     /**
@@ -41,7 +41,7 @@ public class ArpCacheNotification {
      * @return the MAC address
      */
     public byte[] getTargetMacAddress() {
-        return (byte[]) targetMacAddress.clone();
+        return targetMacAddress.clone();
     }
 
 }

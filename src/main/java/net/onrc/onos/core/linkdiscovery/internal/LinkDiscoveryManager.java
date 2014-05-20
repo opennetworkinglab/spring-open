@@ -1521,7 +1521,7 @@ public class LinkDiscoveryManager
                 // Timeout the unicast and multicast LLDP valid times
                 // independently.
                 if ((info.getUnicastValidTime() != null) &&
-                        (info.getUnicastValidTime() + (1000L * this.LINK_TIMEOUT) < curTime)) {
+                        (info.getUnicastValidTime() + (1000L * LINK_TIMEOUT) < curTime)) {
                     info.setUnicastValidTime(null);
 
                     if (info.getMulticastValidTime() != null) {
@@ -1532,7 +1532,7 @@ public class LinkDiscoveryManager
                     linkChanged = true;
                 }
                 if ((info.getMulticastValidTime() != null) &&
-                        (info.getMulticastValidTime() + (1000L * this.LINK_TIMEOUT) < curTime)) {
+                        (info.getMulticastValidTime() + (1000L * LINK_TIMEOUT) < curTime)) {
                     info.setMulticastValidTime(null);
                     // if uTime is not null, then link will remain as openflow
                     // link. If uTime is null, it will be deleted.  So, we

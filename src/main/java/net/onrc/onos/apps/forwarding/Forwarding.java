@@ -320,7 +320,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     net.onrc.onos.core.intent.Path path = pathIntent.getPath();
 
                     for (Iterator<LinkEvent> i = path.iterator(); i.hasNext();) {
-                        LinkEvent le = (LinkEvent) i.next();
+                        LinkEvent le = i.next();
                         if (le.getSrc().dpid.equals(sw.getDpid())) {
                             log.debug("src {} dst {}", le.getSrc(), le.getDst());
                             isflowEntryForThisSwitch = true;
@@ -500,6 +500,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                         default:
                             break;
                     }
+                    break;
                 default:
                     break;
             }
