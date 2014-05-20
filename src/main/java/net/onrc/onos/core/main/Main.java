@@ -20,7 +20,7 @@ public final class Main {
     /**
      * Private default constructor.
      */
-    private Main() { }
+    private Main() {}
 
     /**
      * Main method to load configuration and modules.
