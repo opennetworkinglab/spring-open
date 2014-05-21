@@ -1,15 +1,14 @@
 package net.onrc.onos.core.intent.runtime.web;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-
+import net.onrc.onos.api.rest.RestError;
+import net.onrc.onos.api.rest.RestErrorCodes;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
-
+import org.restlet.data.Status;
+import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
@@ -27,14 +26,16 @@ public class IntentHighObjectResource extends ServerResource {
     /**
      * Gets a single high-level intent.
      *
-     * @return a Collection with the single high-level intent if found,
-     * otherwise null.
+     * @return a Representation of a single high-level intent. If the
+     * intent is not found, return a Representation of a RestError indicating
+     * the problem.
      */
     @Get("json")
-    public Collection<Intent> retrieve() throws IOException {
+    public Representation retrieve() {
         IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
                 getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
-        Collection<Intent> intents = null;
+
+        Representation result;
 
         String intentId = (String) getRequestAttributes().get("intent-id");
         if (intentId == null) {
@@ -48,27 +49,29 @@ public class IntentHighObjectResource extends ServerResource {
         String applnIntentId = APPLN_ID + ":" + intentId;
         Intent intent = intentMap.getIntent(applnIntentId);
         if (intent != null) {
-            intents = new LinkedList<>();
-            intents.add(intent);
+            result = toRepresentation(intent, null);
+        } else {
+            setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+            final RestError notFound =
+                RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_NOT_FOUND,
+                                          applnIntentId);
+            result = toRepresentation(notFound, null);
         }
 
-        return intents;
+        return result;
     }
 
     /**
      * Deletes a single high-level intent.
      *
-     * @return the status of the operation (TBD).
+     * @return a null Representation.
      */
     @Delete("json")
-    public String store() {
+    public Representation remove() {
         IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
                 getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
 
         String intentId = (String) getRequestAttributes().get("intent-id");
-        if (intentId == null) {
-            return null;        // Missing Intent ID
-        }
 
         //
         // Remove a single high-level Intent: use the Intent ID to find it
@@ -84,6 +87,7 @@ public class IntentHighObjectResource extends ServerResource {
             operations.add(IntentOperation.Operator.REMOVE, intent);
             pathRuntime.executeIntentOperations(operations);
         }
-        return "";      // TODO no reply yet from the purge intents call
+        setStatus(Status.SUCCESS_NO_CONTENT);
+        return null;
     }
 }

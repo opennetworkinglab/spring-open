@@ -1,13 +1,12 @@
 package net.onrc.onos.core.intent.runtime.web;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-
+import net.onrc.onos.api.rest.RestError;
+import net.onrc.onos.api.rest.RestErrorCodes;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
-
+import org.restlet.data.Status;
+import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
@@ -24,19 +23,17 @@ public class IntentLowObjectResource extends ServerResource {
     /**
      * Gets a single low-level intent.
      *
-     * @return a Collection with the single low-level intent if found,
-     * otherwise null.
+     * @return a Representation of the single low-level intent if found,
+     * otherwise a Representation of a RestError object describing the problem.
      */
     @Get("json")
-    public Collection<Intent> retrieve() throws IOException {
+    public Representation retrieve() {
         IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
                 getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
-        Collection<Intent> intents = null;
+
+        Representation result;
 
         String intentId = (String) getRequestAttributes().get("intent-id");
-        if (intentId == null) {
-            return null;        // Missing Intent ID
-        }
 
         //
         // Get a single low-level Intent: use the Intent ID to find it
@@ -45,10 +42,15 @@ public class IntentLowObjectResource extends ServerResource {
         String applnIntentId = APPLN_ID + ":" + intentId;
         Intent intent = intentMap.getIntent(applnIntentId);
         if (intent != null) {
-            intents = new LinkedList<>();
-            intents.add(intent);
+            result = toRepresentation(intent, null);
+        } else {
+            setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+            final RestError notFound =
+                    RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_NOT_FOUND,
+                            applnIntentId);
+            result = toRepresentation(notFound, null);
         }
 
-        return intents;
+        return result;
     }
 }

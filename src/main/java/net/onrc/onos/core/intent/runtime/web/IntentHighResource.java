@@ -1,8 +1,5 @@
 package net.onrc.onos.core.intent.runtime.web;
 
-import java.io.IOException;
-import java.util.Collection;
-
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.intent.ApplicationIntent;
 import net.onrc.onos.api.rest.RestError;
@@ -15,15 +12,18 @@ import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 import net.onrc.onos.core.util.Dpid;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.data.Status;
+import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Collection;
 
 /**
  * A class to access the high-level intents.
@@ -36,34 +36,35 @@ public class IntentHighResource extends ServerResource {
     /**
      * Gets all high-level intents.
      *
-     * @return a collection with all high-level intents.
+     * @return a Representation for a collection with all of the high-level intents.
      */
     @Get("json")
-    public Collection<Intent> retrieve() throws IOException {
+    public Representation retrieve() throws IOException {
         IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
                 getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
 
         IntentMap intentMap = pathRuntime.getHighLevelIntents();
         Collection<Intent> intents = intentMap.getAllIntents();
 
-        return intents;
+        return toRepresentation(intents, null);
     }
 
     /**
      * Adds a collection of high-level intents.
      *
-     * @return the status of the operation (TBD).
+     * @param jsonIntent JSON representation of the intents to add.
+     * @return a Representation of a collection containing the intents that were
+     *         created.
      */
     @Post("json")
-    public String store(String jsonIntent) throws IOException {
+    public Representation store(String jsonIntent) {
         IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext()
                 .getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
         if (pathRuntime == null) {
             log.warn("Failed to get path calc runtime");
-            return "";
+            return null;
         }
 
-        String reply = "";
         ObjectMapper mapper = new ObjectMapper();
         ApplicationIntent[] addOperations = null;
         try {
@@ -78,7 +79,7 @@ public class IntentHighResource extends ServerResource {
             setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             final RestError error =
                     RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_INVALID);
-            return mapper.writeValueAsString(error);
+            return toRepresentation(error, null);
         }
 
         //
@@ -132,16 +133,16 @@ public class IntentHighResource extends ServerResource {
 
         setStatus(Status.SUCCESS_CREATED);
 
-        return reply;
+        return toRepresentation(intentOperations, null);
     }
 
     /**
      * Deletes all high-level intents.
      *
-     * @return the status of the operation (TBD).
+     * @return a null Representation.
      */
     @Delete("json")
-    public String store() {
+    public Representation remove() {
         IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
                 getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
 
@@ -150,6 +151,6 @@ public class IntentHighResource extends ServerResource {
         // TODO: The deletion should use synchronous Java API?
         pathRuntime.purgeIntents();
         setStatus(Status.SUCCESS_NO_CONTENT);
-        return "";      // TODO no reply yet from the purge intents call
+        return null;      // TODO no reply yet from the purge intents call
     }
 }

@@ -1,16 +1,15 @@
 package net.onrc.onos.core.intent.runtime.web;
 
-import java.io.IOException;
-import java.util.Collection;
-
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
-
+import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 
 /**
  * A class to access the low-level intents.
@@ -21,10 +20,10 @@ public class IntentLowResource extends ServerResource {
     /**
      * Gets all low-level intents.
      *
-     * @return a collection of all low-leve intents.
+     * @return a Representation of a collection of all of the low-level intents.
      */
     @Get("json")
-    public Collection<Intent> retrieve() throws IOException {
+    public Representation retrieve() {
         IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
                 getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
 
@@ -34,6 +33,6 @@ public class IntentLowResource extends ServerResource {
         IntentMap intentMap = pathRuntime.getPathIntents();
         Collection<Intent> intents = intentMap.getAllIntents();
 
-        return intents;
+        return toRepresentation(intents, null);
     }
 }
