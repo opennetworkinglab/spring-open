@@ -43,9 +43,12 @@ public class KVSwitch extends KVObject {
         }
     };
 
-    public static final String GLOBAL_SWITCH_TABLE_NAME = "G:Switch";
+    static final String SWITCH_TABLE_SUFFIX = ":Switch";
 
     // must not re-order enum members, ordinal will be sent over wire
+    /**
+     * Status.
+     */
     public enum STATUS {
         INACTIVE, ACTIVE;
     }
@@ -53,14 +56,32 @@ public class KVSwitch extends KVObject {
     private final Long dpid;
     private STATUS status;
 
+    /**
+     * Generate a SwitchID from dpid.
+     *
+     * @param dpid dpid of the switch
+     * @return SwitchID
+     */
     public static byte[] getSwitchID(final Long dpid) {
         return SwitchEvent.getSwitchID(dpid).array();
     }
 
+    /**
+     * Gets the DPID from SwitchID.
+     *
+     * @param key SwitchID
+     * @return dpid
+     */
     public static long getDpidFromKey(final byte[] key) {
         return getDpidFromKey(ByteBuffer.wrap(key));
     }
 
+    /**
+     * Gets the DPID from SwitchID.
+     *
+     * @param keyBuf SwitchID
+     * @return dpid
+     */
     public static long getDpidFromKey(final ByteBuffer keyBuf) {
         if (keyBuf.getChar() != 'S') {
             throw new IllegalArgumentException("Invalid Switch key");
@@ -68,65 +89,154 @@ public class KVSwitch extends KVObject {
         return keyBuf.getLong();
     }
 
-    // FIXME specify DPID here, or Should caller specify the key it self?
-    // In other words, should layer above have the control of the ID?
+    // FIXME Should the parameter be DPID here, or should caller specify the key?
+    // Should layer above have the control of the ID computation/generation?
+    /**
+     * KVSwitch constructor for default namespace.
+     *
+     * @param dpid dpid of this switch
+     */
     public KVSwitch(final Long dpid) {
-        super(DataStoreClient.getClient().getTable(GLOBAL_SWITCH_TABLE_NAME), getSwitchID(dpid));
-
-        this.dpid = dpid;
-        this.status = STATUS.INACTIVE;
+        this(dpid, KVObject.DEFAULT_NAMESPACE);
     }
 
     /**
-     * Get an instance from Key.
+     * KVSwitch constructor for specified namespace.
      *
-     * @param key
-     * @return KVSwitch instance
+     * @param dpid dpid of this switch
+     * @param namespace namespace to create this object
+     */
+    public KVSwitch(final Long dpid, final String namespace) {
+        super(DataStoreClient.getClient()
+                .getTable(namespace + SWITCH_TABLE_SUFFIX),
+                getSwitchID(dpid), namespace);
+
+        this.dpid = dpid;
+        this.status = STATUS.INACTIVE;
+        // may need to store namespace here or at KVObject.
+    }
+
+    /**
+     * Gets an instance from SwitchID in default namespace.
+     *
+     * @param key SwitchID
+     * @return {@link KVSwitch} instance
      * @note You need to call `read()` to get the DB content.
      */
     public static KVSwitch createFromKey(final byte[] key) {
         return new KVSwitch(getDpidFromKey(key));
     }
 
-    public static Iterable<KVSwitch> getAllSwitches() {
-        return new SwitchEnumerator();
+    /**
+     * Gets an instance from SwitchID in specified namespace.
+     *
+     * @param key SwitchID
+     * @param namespace namespace to create this object
+     * @return {@link KVSwitch} instance
+     * @note You need to call `read()` to get the DB content.
+     */
+    public static KVSwitch createFromKey(final byte[] key, final String namespace) {
+        return new KVSwitch(getDpidFromKey(key), namespace);
     }
 
+    /**
+     * Gets all the switches in default namespace.
+     *
+     * @return All the {@link KVSwitch}
+     */
+    public static Iterable<KVSwitch> getAllSwitches() {
+        return getAllSwitches(DEFAULT_NAMESPACE);
+    }
+
+    /**
+     * Gets all the switches in specified namespace.
+     *
+     * @param namespace Namespace to get all switches.
+     * @return All the {@link KVSwitch}
+     */
+    public static Iterable<KVSwitch> getAllSwitches(final String namespace) {
+        return new SwitchEnumerator(namespace);
+    }
+
+    /**
+     * Utility class to provide Iterable interface.
+     */
     public static class SwitchEnumerator implements Iterable<KVSwitch> {
+
+        private final String namespace;
+
+        /**
+         * Constructor to iterate Ports in specified namespace.
+         *
+         * @param namespace namespace to iterate through
+         */
+        public SwitchEnumerator(final String namespace) {
+            this.namespace = namespace;
+        }
 
         @Override
         public Iterator<KVSwitch> iterator() {
-            return new SwitchIterator();
+            return new SwitchIterator(namespace);
         }
     }
 
+    /**
+     * Utility class to provide Iterator over all the Switch objects.
+     */
     public static class SwitchIterator extends AbstractObjectIterator<KVSwitch> {
 
-        public SwitchIterator() {
-            super(DataStoreClient.getClient().getTable(GLOBAL_SWITCH_TABLE_NAME));
+        /**
+         * Constructor to create an iterator to iterate all the Switches
+         * in specified namespace.
+         *
+         * @param namespace namespace to iterate through
+         */
+        public SwitchIterator(final String namespace) {
+            super(DataStoreClient.getClient()
+                    .getTable(namespace + SWITCH_TABLE_SUFFIX), namespace);
         }
 
         @Override
         public KVSwitch next() {
             IKVEntry o = enumerator.next();
-            KVSwitch e = KVSwitch.createFromKey(o.getKey());
+            KVSwitch e = KVSwitch.createFromKey(o.getKey(), namespace);
             e.deserialize(o.getValue(), o.getVersion());
             return e;
         }
     }
 
+    /**
+     * Gets the status.
+     *
+     * @return status
+     */
     public STATUS getStatus() {
         return status;
     }
 
+    /**
+     * Sets the status.
+     *
+     * @param status new status
+     */
     public void setStatus(final STATUS status) {
         this.status = status;
     }
 
+    /**
+     * Gets the DPID of the switch this port is on.
+     *
+     * @return DPID of the switch this port is on
+     */
     public Long getDpid() {
         return dpid;
     }
 
+    /**
+     * Gets the SwitchID.
+     *
+     * @return SwitchID
+     */
     public byte[] getId() {
         return getKey();
     }

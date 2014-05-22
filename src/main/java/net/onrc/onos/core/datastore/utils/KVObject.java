@@ -44,12 +44,18 @@ public class KVObject {
         }
     };
 
+    /**
+     * Default namespace name for KVObject.
+     */
+    public static final String DEFAULT_NAMESPACE = "G";
+
+    private final String namespace;
     private final IKVTable table;
     private final byte[] key;
 
     /**
-     * serialized value version stored on data store or
-     * {@link IKVTable.getVersionNonexistant()} if is a new object.
+     * Serialized-value version stored on data store or
+     * {@link IKVTable.getVersionNonexistant()} if it is a new object.
      */
     private long version;
 
@@ -58,17 +64,36 @@ public class KVObject {
      */
     private Map<Object, Object> propertyMap;
 
-    public KVObject(final IKVTable table, final byte[] key) {
-        this(table, key, null, table.getVersionNonexistant());
+    /**
+     * KVObject constructor without value secified for specified namespace.
+     *
+     * @param table table where this object resides
+     * @param key Key or ID of this object
+     * @param namespace namespace where this object resides
+     */
+    public KVObject(final IKVTable table, final byte[] key, final String namespace) {
+        this(table, key, null, table.getVersionNonexistant(), namespace);
     }
 
-    public KVObject(final IKVTable table, final byte[] key, final byte[] value, final long version) {
+    /**
+     * KVObject constructor for specified namespace.
+     *
+     * @param table table where this object resides
+     * @param key Key or ID of this object
+     * @param value Value blob representation of this object
+     * @param version version of this Value blob
+     * @param namespace namespace where this object resides
+     */
+    public KVObject(final IKVTable table, final byte[] key,
+                    final byte[] value, final long version,
+                    final String namespace) {
         if (table == null) {
             throw new IllegalArgumentException("table cannot be null");
         }
         if (key == null) {
             throw new IllegalArgumentException("key cannot be null");
         }
+        this.namespace = namespace;
         this.table = table;
         this.key = key.clone();
         this.version = version;
@@ -79,24 +104,47 @@ public class KVObject {
         }
     }
 
-    protected static KVObject createFromKey(final byte[] key) {
-        // Equivalent of this method is expected to be implemented by SubClasses
-        throw new UnsupportedOperationException(
-                "createFromKey() is not expected to be called for RCObject");
+    /**
+     * Gets the namespace which this object reside.
+     *
+     * @return the namespace which this object reside
+     */
+    public String getNamespace() {
+        return namespace;
     }
 
+    /**
+     * Gets the table where this object resides.
+     *
+     * @return table where this object resides
+     */
     public IKVTable getTable() {
         return table;
     }
 
+    /**
+     * Gets the table ID of the table where this object resides.
+     *
+     * @return the table ID of the table where this object resides
+     */
     public IKVTableID getTableId() {
         return table.getTableId();
     }
 
+    /**
+     * Gets the Key or ID of this object.
+     *
+     * @return Key or ID of this object
+     */
     public byte[] getKey() {
         return key.clone();
     }
 
+    /**
+     * Gets the version of this objects value blob.
+     *
+     * @return version of this objects value blob
+     */
     public long getVersion() {
         return version;
     }
@@ -111,6 +159,12 @@ public class KVObject {
         return this.propertyMap;
     }
 
+    /**
+     * Replaces the user-defined object properties.
+     *
+     * @param newMap new user-defined object properties
+     * @return old user-defined object properties
+     */
     protected Map<Object, Object> replacePropertyMap(final Map<Object, Object> newMap) {
         Map<Object, Object> oldMap = this.propertyMap;
         this.propertyMap = newMap;
@@ -128,9 +182,15 @@ public class KVObject {
         return serializePropertyMap(DEFAULT_KRYO.get(), this.propertyMap);
     }
 
+    /**
+     * Serialize user-defined object properties.
+     *
+     * @param kryo {@link Kryo} instance to use for serialization
+     * @param propMap user-defined object properties
+     * @return serialized byte array
+     */
     protected byte[] serializePropertyMap(final Kryo kryo,
                                           final Map<Object, Object> propMap) {
-
 
         // value
         byte[] rcTemp = new byte[1024 * 1024];
@@ -183,7 +243,15 @@ public class KVObject {
         return true;
     }
 
-    protected <T extends Map<?, ?>> T deserializePropertyMap(final Kryo kryo,
+    /**
+     * Deserialize user-defined object properties.
+     *
+     * @param kryo {@link Kryo} instance to use for deserialization
+     * @param bytes serialized byte array
+     * @param type Type of user-defined object properties
+     * @return user-defined object properties
+     */
+    protected static <T extends Map<?, ?>> T deserializePropertyMap(final Kryo kryo,
                                                              final byte[] bytes, final Class<T> type) {
 
         if (bytes == null || bytes.length == 0) {
@@ -433,9 +501,16 @@ public class KVObject {
             Iterator<E> {
 
         protected Iterator<IKVEntry> enumerator;
+        protected final String namespace;
 
+        @Deprecated
         public AbstractObjectIterator(final IKVTable table) {
+            this(table, DEFAULT_NAMESPACE);
+        }
+
+        public AbstractObjectIterator(final IKVTable table, final String namespace) {
             this.enumerator = table.getAllEntries().iterator();
+            this.namespace = namespace;
         }
 
         @Override
@@ -452,6 +527,9 @@ public class KVObject {
         //          return obj;
         //      }
 
+        /**
+         * Not implemented.
+         */
         @Deprecated
         @Override
         public void remove() {

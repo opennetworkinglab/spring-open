@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import net.onrc.onos.core.datastore.DataStoreClient;
 import net.onrc.onos.core.datastore.IKVClient;
@@ -57,19 +58,21 @@ public class KVTopologyTest {
 
     private static final Long DPID1 = 0x1L;
 
+    private static final String namespace = UUID.randomUUID().toString();
+
     @Before
     @After
     public void wipeTopology() throws Exception {
-        IKVTable switchTable = DataStoreClient.getClient().getTable(KVSwitch.GLOBAL_SWITCH_TABLE_NAME);
+        IKVTable switchTable = DataStoreClient.getClient().getTable(namespace + KVSwitch.SWITCH_TABLE_SUFFIX);
         DataStoreClient.getClient().dropTable(switchTable);
 
-        IKVTable portTable = DataStoreClient.getClient().getTable(KVPort.GLOBAL_PORT_TABLE_NAME);
+        IKVTable portTable = DataStoreClient.getClient().getTable(namespace + KVPort.PORT_TABLE_SUFFIX);
         DataStoreClient.getClient().dropTable(portTable);
 
-        IKVTable linkTable = DataStoreClient.getClient().getTable(KVLink.GLOBAL_LINK_TABLE_NAME);
+        IKVTable linkTable = DataStoreClient.getClient().getTable(namespace + KVLink.LINK_TABLE_SUFFIX);
         DataStoreClient.getClient().dropTable(linkTable);
 
-        IKVTable deviceTable = DataStoreClient.getClient().getTable(KVDevice.GLOBAL_DEVICE_TABLE_NAME);
+        IKVTable deviceTable = DataStoreClient.getClient().getTable(namespace + KVDevice.DEVICE_TABLE_SUFFIX);
         DataStoreClient.getClient().dropTable(deviceTable);
     }
 
@@ -77,7 +80,7 @@ public class KVTopologyTest {
     public void basicSwitchTest() {
         // create switch 0x1
         try {
-            KVSwitch sw = new KVSwitch(DPID1);
+            KVSwitch sw = new KVSwitch(DPID1, namespace);
             sw.setStatus(KVSwitch.STATUS.ACTIVE);
             sw.create();
             assertNotEquals(VERSION_NONEXISTENT, sw.getVersion());
@@ -89,7 +92,7 @@ public class KVTopologyTest {
         }
 
         // read switch 0x1
-        KVSwitch swRead = new KVSwitch(DPID1);
+        KVSwitch swRead = new KVSwitch(DPID1, namespace);
         try {
             swRead.read();
             assertNotEquals(VERSION_NONEXISTENT, swRead.getVersion());
@@ -113,7 +116,7 @@ public class KVTopologyTest {
         }
 
         // read 0x1 again and delete
-        KVSwitch swRead2 = new KVSwitch(DPID1);
+        KVSwitch swRead2 = new KVSwitch(DPID1, namespace);
         try {
             swRead2.read();
             assertNotEquals(VERSION_NONEXISTENT, swRead2.getVersion());
@@ -133,7 +136,7 @@ public class KVTopologyTest {
         }
 
         // make sure 0x1 is deleted
-        KVObject swRead3 = new KVSwitch(DPID1);
+        KVObject swRead3 = new KVSwitch(DPID1, namespace);
         try {
             swRead3.read();
             fail(swRead3 + " was supposed to be deleted, but read succeed");
@@ -155,7 +158,7 @@ public class KVTopologyTest {
 
         // d1 - s1p1 - s1 - s1p2 - s2p1 - s2 - s2p2
 
-        KVSwitch sw1 = new KVSwitch(DPID1);
+        KVSwitch sw1 = new KVSwitch(DPID1, namespace);
         sw1.setStatus(KVSwitch.STATUS.ACTIVE);
         try {
             sw1.create();
@@ -167,9 +170,9 @@ public class KVTopologyTest {
             fail("Switch creation failed " + e);
         }
 
-        KVPort sw1p1 = new KVPort(DPID1, SW1_PORTNO1);
+        KVPort sw1p1 = new KVPort(DPID1, SW1_PORTNO1, namespace);
         sw1p1.setStatus(KVPort.STATUS.ACTIVE);
-        KVPort sw1p2 = new KVPort(DPID1, SW1_PORTNO2);
+        KVPort sw1p2 = new KVPort(DPID1, SW1_PORTNO2, namespace);
         sw1p2.setStatus(KVPort.STATUS.ACTIVE);
         try {
             sw1p1.create();
@@ -198,7 +201,7 @@ public class KVTopologyTest {
             fail("Switch update failed " + e);
         }
 
-        KVDevice d1 = new KVDevice(DEVICE1_MAC_SW1P1);
+        KVDevice d1 = new KVDevice(DEVICE1_MAC_SW1P1, namespace);
         d1.addPortId(sw1p1.getId());
 
         try {
@@ -222,14 +225,14 @@ public class KVTopologyTest {
             fail("Device creation failed " + e);
         }
 
-        KVSwitch sw2 = new KVSwitch(DPID2);
+        KVSwitch sw2 = new KVSwitch(DPID2, namespace);
         sw2.setStatus(KVSwitch.STATUS.ACTIVE);
-        KVPort sw2p1 = new KVPort(DPID2, SW2_PORTNO1);
+        KVPort sw2p1 = new KVPort(DPID2, SW2_PORTNO1, namespace);
         sw2p1.setStatus(KVPort.STATUS.ACTIVE);
-        KVPort sw2p2 = new KVPort(DPID2, SW2_PORTNO2);
+        KVPort sw2p2 = new KVPort(DPID2, SW2_PORTNO2, namespace);
         sw2p2.setStatus(KVPort.STATUS.ACTIVE);
 
-        KVDevice d2 = new KVDevice(DEVICE2_MAC_SW2P2);
+        KVDevice d2 = new KVDevice(DEVICE2_MAC_SW2P2, namespace);
         d2.addPortId(sw2p2.getId());
 
         IKVClient client = DataStoreClient.getClient();
@@ -263,7 +266,7 @@ public class KVTopologyTest {
             assertArrayEquals(sw2p2.getId(), d2.getAllPortIds().iterator().next());
         }
 
-        KVLink l1 = new KVLink(DPID1, SW1_PORTNO2, DPID2, SW2_PORTNO1);
+        KVLink l1 = new KVLink(DPID1, SW1_PORTNO2, DPID2, SW2_PORTNO1, namespace);
         l1.setStatus(KVLink.STATUS.ACTIVE);
 
         try {
@@ -299,7 +302,7 @@ public class KVTopologyTest {
 
 
     private static void topologyWalk() {
-        Iterable<KVSwitch> swIt = KVSwitch.getAllSwitches();
+        Iterable<KVSwitch> swIt = KVSwitch.getAllSwitches(namespace);
         List<Long> switchesExpected = new ArrayList<>(Arrays.asList(DPID1, DPID2));
 
         System.out.println("Enumerating Switches start");
@@ -313,7 +316,7 @@ public class KVTopologyTest {
         }
         System.out.println("Enumerating Switches end");
 
-        KVSwitch sw1 = new KVSwitch(DPID1);
+        KVSwitch sw1 = new KVSwitch(DPID1, namespace);
         try {
             sw1.read();
             assertNotEquals(VERSION_NONEXISTENT, sw1.getVersion());
@@ -324,7 +327,7 @@ public class KVTopologyTest {
             fail("Reading switch failed " + e);
         }
 
-        KVSwitch sw2 = new KVSwitch(DPID2);
+        KVSwitch sw2 = new KVSwitch(DPID2, namespace);
         if (KVObject.multiRead(Arrays.asList(sw2))) {
             fail("Failed to read switch " + sw2);
         } else {
@@ -341,7 +344,7 @@ public class KVTopologyTest {
             put(DPID2, new ArrayList<>(Arrays.asList(SW2_PORTNO1, SW2_PORTNO2)));
         } };
 
-        for (KVPort port : KVPort.getAllPorts()) {
+        for (KVPort port : KVPort.getAllPorts(namespace)) {
             System.out.println(port + " @ " + port.getVersion());
             assertNotEquals(VERSION_NONEXISTENT, port.getVersion());
             assertEquals(KVPort.STATUS.ACTIVE, port.getStatus());
@@ -360,7 +363,7 @@ public class KVTopologyTest {
             put(DEVICE2_MAC_SW2P2, KVPort.getPortID(DPID2, SW2_PORTNO2));
         } };
 
-        for (KVDevice device : KVDevice.getAllDevices()) {
+        for (KVDevice device : KVDevice.getAllDevices(namespace)) {
             System.out.println(device + " @ " + device.getVersion());
             assertNotEquals(VERSION_NONEXISTENT, device.getVersion());
 
@@ -369,7 +372,7 @@ public class KVTopologyTest {
             expectedDevice.remove(device.getMac());
         }
 
-        for (KVLink link : KVLink.getAllLinks()) {
+        for (KVLink link : KVLink.getAllLinks(namespace)) {
             System.out.println(link + " @ " + link.getVersion());
             assertNotEquals(VERSION_NONEXISTENT, link.getVersion());
 
@@ -385,7 +388,7 @@ public class KVTopologyTest {
 
     private static void topologyDelete() {
 
-        for (KVSwitch sw : KVSwitch.getAllSwitches()) {
+        for (KVSwitch sw : KVSwitch.getAllSwitches(namespace)) {
             try {
                 sw.read();
                 sw.delete();
@@ -396,7 +399,7 @@ public class KVTopologyTest {
             }
         }
 
-        for (KVPort p : KVPort.getAllPorts()) {
+        for (KVPort p : KVPort.getAllPorts(namespace)) {
             try {
                 p.read();
                 p.delete();
@@ -407,12 +410,12 @@ public class KVTopologyTest {
             }
         }
 
-        for (KVDevice d : KVDevice.getAllDevices()) {
+        for (KVDevice d : KVDevice.getAllDevices(namespace)) {
             d.forceDelete();
             assertNotEquals(VERSION_NONEXISTENT, d.getVersion());
         }
 
-        for (KVLink l : KVLink.getAllLinks()) {
+        for (KVLink l : KVLink.getAllLinks(namespace)) {
             try {
                 l.read();
                 l.delete();

@@ -40,19 +40,38 @@ public class KVLink extends KVObject {
         }
     };
 
+    /**
+     * Internal data structure to represent a port on a switch.
+     */
     public static class SwitchPort {
         public final Long dpid;
         public final Long number;
 
+        /**
+         * Constructor.
+         *
+         * @param dpid datapath ID of this switch port
+         * @param number port number of this port on switch({@code dpid})
+         */
         public SwitchPort(final Long dpid, final Long number) {
             this.dpid = dpid;
             this.number = number;
         }
 
+        /**
+         * Gets the PortID of a port this object represent.
+         *
+         * @return PortID
+         */
         public byte[] getPortID() {
             return KVPort.getPortID(dpid, number);
         }
 
+        /**
+         * Gets the SwitchID of a switch this object represent.
+         *
+         * @return SwitchID
+         */
         public byte[] getSwitchID() {
             return KVSwitch.getSwitchID(dpid);
         }
@@ -64,9 +83,12 @@ public class KVLink extends KVObject {
 
     }
 
-    public static final String GLOBAL_LINK_TABLE_NAME = "G:Link";
+    static final String LINK_TABLE_SUFFIX = ":Link";
 
     // must not re-order enum members, ordinal will be sent over wire
+    /**
+     * Status.
+     */
     public enum STATUS {
         INACTIVE, ACTIVE;
     }
@@ -75,16 +97,37 @@ public class KVLink extends KVObject {
     private final SwitchPort dst;
     private STATUS status;
 
+    /**
+     * Generate a LinkID from Link 4-tuples.
+     *
+     * @param srcDpid source DPID
+     * @param srcPortNo source port number
+     * @param dstDpid destination DPID
+     * @param dstPortNo destination port number
+     * @return LinkID
+     */
     public static byte[] getLinkID(final Long srcDpid, final Long srcPortNo,
                                    final Long dstDpid, final Long dstPortNo) {
         return LinkEvent.getLinkID(srcDpid, srcPortNo, dstDpid,
                 dstPortNo).array();
     }
 
+    /**
+     * Gets Link 4-tuples from LinkID.
+     *
+     * @param key LinkID
+     * @return Link 4-tuple: [src DPID, src PortNo, dst DPID, dst PortNo]
+     */
     public static long[] getLinkTupleFromKey(final byte[] key) {
         return getLinkTupleFromKey(ByteBuffer.wrap(key));
     }
 
+    /**
+     * Gets Link 4-tuples from LinkID.
+     *
+     * @param keyBuf LinkID
+     * @return Link 4-tuple: [src DPID, src PortNo, dst DPID, dst PortNo]
+     */
     public static long[] getLinkTupleFromKey(final ByteBuffer keyBuf) {
         if (keyBuf.getChar() != 'L') {
             throw new IllegalArgumentException("Invalid Link key");
@@ -102,10 +145,36 @@ public class KVLink extends KVObject {
         return tuple;
     }
 
+
+    /**
+     * KVLink constructor for default namespace.
+     *
+     * @param srcDpid source DPID
+     * @param srcPortNo source port number
+     * @param dstDpid destination DPID
+     * @param dstPortNo destination port number
+     */
     public KVLink(final Long srcDpid, final Long srcPortNo,
                   final Long dstDpid, final Long dstPortNo) {
-        super(DataStoreClient.getClient().getTable(GLOBAL_LINK_TABLE_NAME), getLinkID(srcDpid,
-                srcPortNo, dstDpid, dstPortNo));
+        this(srcDpid, srcPortNo, dstDpid, dstPortNo, DEFAULT_NAMESPACE);
+    }
+
+    /**
+     * KVLink constructor for specified namespace.
+     *
+     * @param srcDpid source DPID
+     * @param srcPortNo source port number
+     * @param dstDpid destination DPID
+     * @param dstPortNo destination port number
+     * @param namespace namespace to create this object
+     */
+    public KVLink(final Long srcDpid, final Long srcPortNo,
+                  final Long dstDpid, final Long dstPortNo,
+                  final String namespace) {
+        super(DataStoreClient.getClient()
+                .getTable(namespace + LINK_TABLE_SUFFIX),
+                getLinkID(srcDpid, srcPortNo, dstDpid, dstPortNo),
+                namespace);
 
         src = new SwitchPort(srcDpid, srcPortNo);
         dst = new SwitchPort(dstDpid, dstPortNo);
@@ -113,61 +182,139 @@ public class KVLink extends KVObject {
     }
 
     /**
-     * Get an instance from Key.
+     * Gets an instance from LinkID in default namespace.
      *
-     * @param key
+     * @param key LinkID
      * @return KVLink instance
      * @note You need to call `read()` to get the DB content.
      */
     public static KVLink createFromKey(final byte[] key) {
+        return createFromKey(key, DEFAULT_NAMESPACE);
+    }
+
+    /**
+     * Gets an instance from LinkID in specified namespace.
+     *
+     * @param key LinkID
+     * @param namespace namespace to create this object in
+     * @return KVLink instance
+     * @note You need to call `read()` to get the DB content.
+     */
+    public static KVLink createFromKey(final byte[] key, final String namespace) {
         long[] linkTuple = getLinkTupleFromKey(key);
-        return new KVLink(linkTuple[0], linkTuple[1], linkTuple[2],
-                linkTuple[3]);
+        return new KVLink(linkTuple[0], linkTuple[1],
+                          linkTuple[2], linkTuple[3],
+                          namespace);
     }
 
+    /**
+     * Gets all the Links in default namespace.
+     *
+     * @return Links
+     */
     public static Iterable<KVLink> getAllLinks() {
-        return new LinkEnumerator();
+        return getAllLinks(DEFAULT_NAMESPACE);
     }
 
+    /**
+     * Gets all the Links in specified namespace.
+     *
+     * @param namespace namespace to iterate over
+     * @return Links
+     */
+    public static Iterable<KVLink> getAllLinks(final String namespace) {
+        return new LinkEnumerator(namespace);
+    }
+
+    /**
+     * Utility class to provide Iterable interface.
+     */
     public static class LinkEnumerator implements Iterable<KVLink> {
+
+        private final String namespace;
+
+        /**
+         * Constructor to iterate Links in specified namespace.
+         *
+         * @param namespace namespace to iterate through
+         */
+        public LinkEnumerator(final String namespace) {
+            this.namespace = namespace;
+        }
 
         @Override
         public Iterator<KVLink> iterator() {
-            return new LinkIterator();
+            return new LinkIterator(namespace);
         }
     }
 
+    /**
+     * Utility class to provide Iterator over all the Link objects.
+     */
     public static class LinkIterator extends AbstractObjectIterator<KVLink> {
 
-        public LinkIterator() {
-            super(DataStoreClient.getClient().getTable(GLOBAL_LINK_TABLE_NAME));
+        /**
+         * Constructor to create an iterator to iterate all the Links
+         * in specified namespace.
+         *
+         * @param namespace namespace to iterate through
+         */
+        public LinkIterator(final String namespace) {
+            super(DataStoreClient.getClient()
+                    .getTable(namespace + LINK_TABLE_SUFFIX),
+                    namespace);
         }
 
         @Override
         public KVLink next() {
             IKVEntry o = enumerator.next();
-            KVLink e = KVLink.createFromKey(o.getKey());
+            KVLink e = KVLink.createFromKey(o.getKey(), namespace);
             e.deserialize(o.getValue(), o.getVersion());
             return e;
         }
     }
 
+    /**
+     * Gets the status.
+     *
+     * @return status
+     */
     public STATUS getStatus() {
         return status;
     }
 
+    /**
+     * Sets the status.
+     *
+     * @param status new status
+     */
     public void setStatus(final STATUS status) {
         this.status = status;
     }
 
+    /**
+     * Gets the source SwitchPort object.
+     *
+     * @return source SwitchPort object
+     */
     public SwitchPort getSrc() {
         return src;
     }
 
+    /**
+     * Gets the destination SwitchPort object.
+     *
+     * @return destination SwitchPort object
+     */
     public SwitchPort getDst() {
         return dst;
     }
 
+    /**
+     * Gets the LinkID of this object.
+     *
+     * @return LinkID
+     */
     public byte[] getId() {
         return getKey();
     }

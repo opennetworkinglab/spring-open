@@ -28,7 +28,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 /**
  * Device object.
  * <p/>
- * TODO switch to ProtoBuf, etc.
  */
 public class KVDevice extends KVObject {
     private static final Logger log = LoggerFactory.getLogger(KVDevice.class);
@@ -48,21 +47,29 @@ public class KVDevice extends KVObject {
         }
     };
 
-    public static final String GLOBAL_DEVICE_TABLE_NAME = "G:Device";
-
-    // FIXME these should be Enum or some number, not String
-    private static final String PROP_MAC = "mac";
-    private static final String PROP_PORT_IDS = "port-ids";
+    static final String DEVICE_TABLE_SUFFIX = ":Device";
 
     private final byte[] mac;
     private TreeSet<byte[]> portIds;
-    private transient boolean isPortIdsModified;
 
-    // Assuming mac is unique cluster-wide
+    /**
+     * Generate a DeviceID from MAC address.
+     * <p/>
+     * We're assuming MAC address can be an unique identifier for Device.
+     *
+     * @param mac MAC address
+     * @return DeviceID
+     */
     public static byte[] getDeviceID(final byte[] mac) {
         return DeviceEvent.getDeviceID(mac).array();
     }
 
+    /**
+     * Gets the MAC address from DeviceID.
+     *
+     * @param key DeviceID
+     * @return MAC address
+     */
     public static byte[] getMacFromKey(final byte[] key) {
         ByteBuffer keyBuf = ByteBuffer.wrap(key);
         if (keyBuf.getChar() != 'D') {
@@ -73,80 +80,175 @@ public class KVDevice extends KVObject {
         return mac;
     }
 
+    /**
+     * KVDevice constructor for default namespace.
+     *
+     * @param mac MAC address
+     */
     public KVDevice(final byte[] mac) {
-        super(DataStoreClient.getClient().getTable(GLOBAL_DEVICE_TABLE_NAME), getDeviceID(mac));
-
-        this.mac = mac.clone();
-        this.portIds = new TreeSet<>(ByteArrayComparator.BYTEARRAY_COMPARATOR);
-        this.isPortIdsModified = true;
+        this(mac, DEFAULT_NAMESPACE);
     }
 
     /**
-     * Get an instance from Key.
+     * KVDevice constructor for specified namespace.
      *
-     * @param key
-     * @return
+     * @param mac MAC address
+     * @param namespace namespace to create this object
+     */
+    public KVDevice(final byte[] mac, final String namespace) {
+        super(DataStoreClient.getClient()
+                .getTable(namespace + DEVICE_TABLE_SUFFIX),
+                getDeviceID(mac), namespace);
+
+        this.mac = mac.clone();
+        this.portIds = new TreeSet<>(ByteArrayComparator.BYTEARRAY_COMPARATOR);
+    }
+
+    /**
+     * Gets an instance from DeviceID in default namespace.
+     *
+     * @param key DeviceID
+     * @return KVDevice instance
      * @note You need to call `read()` to get the DB content.
      */
     public static KVDevice createFromKey(final byte[] key) {
-        return new KVDevice(getMacFromKey(key));
+        return createFromKey(key, DEFAULT_NAMESPACE);
     }
 
+    /**
+     * Gets an instance from DeviceID in specified namespace.
+     *
+     * @param key DeviceID
+     * @param namespace namespace to create this object in
+     * @return KVDevice instance
+     * @note You need to call `read()` to get the DB content.
+     */
+    public static KVDevice createFromKey(final byte[] key, final String namespace) {
+        return new KVDevice(getMacFromKey(key), namespace);
+    }
+
+    /**
+     * Gets all the Devices in default namespace.
+     *
+     * @return Devices
+     */
     public static Iterable<KVDevice> getAllDevices() {
-        return new DeviceEnumerator();
+        return new DeviceEnumerator(DEFAULT_NAMESPACE);
     }
 
+    /**
+     * Gets all the Devices in specified namespace.
+     *
+     * @param namespace namespace to iterate over
+     * @return Devices
+     */
+    public static Iterable<KVDevice> getAllDevices(final String namespace) {
+        return new DeviceEnumerator(namespace);
+    }
+
+    /**
+     * Utility class to provide Iterable interface.
+     */
     public static class DeviceEnumerator implements Iterable<KVDevice> {
+
+        private final String namespace;
+
+        /**
+         * Constructor to iterate Links in specified namespace.
+         *
+         * @param namespace namespace to iterate through
+         */
+        public DeviceEnumerator(final String namespace) {
+            this.namespace = namespace;
+        }
 
         @Override
         public Iterator<KVDevice> iterator() {
-            return new DeviceIterator();
+            return new DeviceIterator(namespace);
         }
     }
 
+    /**
+     * Utility class to provide Iterator over all the Device objects.
+     */
     public static class DeviceIterator extends AbstractObjectIterator<KVDevice> {
 
-        public DeviceIterator() {
-            super(DataStoreClient.getClient().getTable(GLOBAL_DEVICE_TABLE_NAME));
+        /**
+         * Constructor to create an iterator to iterate all the Devices
+         * in specified namespace.
+         *
+         * @param namespace namespace to iterate through
+         */
+        public DeviceIterator(final String namespace) {
+            super(DataStoreClient.getClient()
+                    .getTable(namespace + DEVICE_TABLE_SUFFIX), namespace);
         }
 
         @Override
         public KVDevice next() {
             IKVEntry o = enumerator.next();
-            KVDevice e = KVDevice.createFromKey(o.getKey());
+            KVDevice e = KVDevice.createFromKey(o.getKey(), namespace);
             e.deserialize(o.getValue(), o.getVersion());
             return e;
         }
     }
 
+    /**
+     * Gets the MAC address.
+     *
+     * @return MAC address
+     */
     public byte[] getMac() {
         return mac.clone();
     }
 
+    /**
+     * Gets the DeviceID.
+     *
+     * @return DeviceID
+     */
     public byte[] getId() {
         return getKey();
     }
 
+    /**
+     * Add a port to this Device's attachment points.
+     *
+     * @param portId PortID of the port which this Device is attached
+     */
     public void addPortId(final byte[] portId) {
-        // TODO: Should we copy portId, or reference is OK.
-        isPortIdsModified |= portIds.add(portId);
-    }
-
-    public void removePortId(final byte[] portId) {
-        isPortIdsModified |= portIds.remove(portId);
-    }
-
-    public void emptyPortIds() {
-        portIds.clear();
-        this.isPortIdsModified = true;
-    }
-
-    public void addAllToPortIds(final Collection<byte[]> newPortIds) {
-        // TODO: Should we copy portId, or reference is OK.
-        isPortIdsModified |= portIds.addAll(newPortIds);
+        portIds.add(portId.clone());
     }
 
     /**
+     * Remove a port from this Device's attachment points.
+     *
+     * @param portId PortID to remove
+     */
+    public void removePortId(final byte[] portId) {
+        portIds.remove(portId);
+    }
+
+    /**
+     * Empty this Device's attachment points.
+     */
+    public void emptyPortIds() {
+        portIds.clear();
+    }
+
+    /**
+     * Add ports to this Device's attachment points.
+     *
+     * @param newPortIds PortIDs which this Device is attached
+     */
+    public void addAllToPortIds(final Collection<byte[]> newPortIds) {
+        // TODO: Should we copy each portId, or reference is OK.
+        portIds.addAll(newPortIds);
+    }
+
+    /**
+     * Gets all the PortIDs which this Device is attached.
+     *
      * @return Unmodifiable Set view of all the PortIds;
      */
     public Set<byte[]> getAllPortIds() {
