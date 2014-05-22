@@ -230,7 +230,7 @@ function create-zk-conf {
   
   # Create the ZooKeeper lib directory
   if [ ! -d ${ZK_LIB_DIR} ]; then
-      local SUDO=${SUDO:-}
+      local SUDO=${SUDO:-sudo}
       local whoami=`whoami`
       {
           ${SUDO} mkdir ${ZK_LIB_DIR}
