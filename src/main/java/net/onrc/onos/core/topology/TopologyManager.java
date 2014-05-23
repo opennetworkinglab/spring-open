@@ -848,6 +848,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     private void addPort(PortEvent portEvent) {
         Switch sw = topology.getSwitch(portEvent.getDpid());
         if (sw == null) {
+            log.debug("{} reordered because switch is null", portEvent);
             // Reordered event: delay the event in local cache
             ByteBuffer id = portEvent.getIDasByteBuffer();
             reorderedAddedPortEvents.put(id, portEvent);
@@ -941,6 +942,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         Port dstPort = topology.getPort(linkEvent.getDst().dpid,
                 linkEvent.getDst().number);
         if ((srcPort == null) || (dstPort == null)) {
+            log.debug("{} reordered because {} port is null", linkEvent,
+                    (srcPort == null) ? "src" : "dst");
+
             // Reordered event: delay the event in local cache
             ByteBuffer id = linkEvent.getIDasByteBuffer();
             reorderedAddedLinkEvents.put(id, linkEvent);
