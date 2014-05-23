@@ -37,7 +37,7 @@ import java.util.List;
  * @author Rob Sherwood (rob.sherwood@stanford.edu)
  *
  */
-
+@SuppressWarnings("rawtypes")
 public class OFMatchBeanInfo extends SimpleBeanInfo {
 
     @Override

@@ -30,6 +30,7 @@ import org.openflow.protocol.Instantiable;
  *
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
+@SuppressWarnings("rawtypes")
 public enum OFActionType {
     OUTPUT              (0, OFActionOutput.class, new Instantiable<OFAction>() {
                             @Override

@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import org.openflow.protocol.Instantiable;
 import org.openflow.protocol.OFType;
 
+@SuppressWarnings("rawtypes")
 public enum OFStatisticsType {
     DESC        (0, OFDescriptionStatistics.class, OFDescriptionStatistics.class,
                     new Instantiable<OFStatistics>() {

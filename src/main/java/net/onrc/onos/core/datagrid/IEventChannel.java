@@ -79,7 +79,7 @@ public interface IEventChannel<K, V> {
      * @param key the key of the entry to get.
      * @return the entry if found, otherwise null.
      */
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     V getEntry(K key);
 
     /**
@@ -87,12 +87,12 @@ public interface IEventChannel<K, V> {
      *
      * @return all entries that are currently in the channel.
      */
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     Collection<V> getAllEntries();
 
     /**
      * Remove all entries in the channel.
      */
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     void removeAllEntries();
 }

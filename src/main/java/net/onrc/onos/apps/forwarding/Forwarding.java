@@ -374,6 +374,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             ShortestPathIntent intent = new ShortestPathIntent(intentId,
                     sw.getDpid(), inPort.getNumber(), srcMacAddress.toLong(),
                     destinationDpid, destinationPort, dstMacAddress.toLong());
+
             intent.setIdleTimeout(idleTimeout + SRC_SWITCH_TIMEOUT_ADJUST_SECOND);
             intent.setFirstSwitchIdleTimeout(idleTimeout);
             IntentOperation.Operator operator = IntentOperation.Operator.ADD;

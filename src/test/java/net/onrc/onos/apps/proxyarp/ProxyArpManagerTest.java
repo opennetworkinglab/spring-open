@@ -44,6 +44,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ ProxyArpManager.class, ArpCache.class })
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ProxyArpManagerTest {
     String defaultStrAgingMsec = "60000";
     String defaultStrCleanupMsec = "60000";

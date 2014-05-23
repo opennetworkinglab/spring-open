@@ -110,42 +110,42 @@ public class ShortestPathIntent extends Intent {
         return pathIntentId;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public int getIdleTimeout() {
         return idleTimeout;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public int getHardTimeout() {
         return hardTimeout;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public void setHardTimeout(int hardTimeout) {
         this.hardTimeout = hardTimeout;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public int getFirstSwitchIdleTimeout() {
         return firstSwitchIdleTimeout;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public int getFirstSwitchHardTimetout() {
         return firstSwitchHardTimetout;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public void setFirstSwitchIdleTimeout(int firstSwitchIdleTimeout) {
         this.firstSwitchIdleTimeout = firstSwitchIdleTimeout;
     }
 
-    @Deprecated
+    // TODO - this is intended to be refactored and removed
     public void setFirstSwitchHardTimetout(int firstSwitchHardTimetout) {
         this.firstSwitchHardTimetout = firstSwitchHardTimetout;
     }

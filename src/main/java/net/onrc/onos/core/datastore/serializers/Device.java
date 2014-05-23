@@ -588,7 +588,7 @@ public final class Device {
       public Builder addAllPortIds(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
         ensurePortIdsIsMutable();
-        super.addAll(values, portIds_);
+        Builder.addAll(values, portIds_);
         onChanged();
         return this;
       }

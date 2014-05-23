@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author readams
  */
+
 public class SwitchResourceBase extends ServerResource {
     protected final static Logger log = LoggerFactory.getLogger(SwitchResourceBase.class);
 
@@ -100,12 +101,12 @@ public class SwitchResourceBase extends ServerResource {
                 requestLength += specificReq.getLength();
             } else if (statType == OFStatisticsType.PORT) {
                 OFPortStatisticsRequest specificReq = new OFPortStatisticsRequest();
-                specificReq.setPortNumber((short) OFPort.OFPP_NONE.getValue());
+                specificReq.setPortNumber(OFPort.OFPP_NONE.getValue());
                 req.setStatistics(Collections.singletonList((OFStatistics) specificReq));
                 requestLength += specificReq.getLength();
             } else if (statType == OFStatisticsType.QUEUE) {
                 OFQueueStatisticsRequest specificReq = new OFQueueStatisticsRequest();
-                specificReq.setPortNumber((short) OFPort.OFPP_ALL.getValue());
+                specificReq.setPortNumber(OFPort.OFPP_ALL.getValue());
                 // LOOK! openflowj does not define OFPQ_ALL! pulled this from openflow.h
                 // note that I haven't seen this work yet though...
                 specificReq.setQueueId(0xffffffff);

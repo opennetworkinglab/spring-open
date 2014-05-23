@@ -367,7 +367,7 @@ public class OFFlowMod extends OFMessage implements OFActionFactoryAware, Clonea
         flowMod.setMatch(neoMatch);
         List<OFAction> neoActions = new LinkedList<OFAction>();
         for(OFAction action: this.actions)
-            neoActions.add((OFAction) action.clone());
+            neoActions.add(action.clone());
         flowMod.setActions(neoActions);
         return flowMod;
     }

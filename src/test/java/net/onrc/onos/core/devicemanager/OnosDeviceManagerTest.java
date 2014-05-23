@@ -64,6 +64,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
 
     @Override
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         super.setUp();
         MockTopology topology = new MockTopology();

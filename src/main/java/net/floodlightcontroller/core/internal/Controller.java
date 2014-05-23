@@ -512,13 +512,15 @@ public class Controller implements IFloodlightProviderService {
                         " during handshake {exception}",
                 explanation = "Could not process the switch description string",
                 recommendation = LogMessageDoc.CHECK_SWITCH)
+        @SuppressWarnings("unchecked")
         void processSwitchDescReply() {
             try {
                 // Read description, if it has been updated
-                @SuppressWarnings("unchecked")
-                Future<List<OFStatistics>> desc_future =
-                        (Future<List<OFStatistics>>) sw.
+                Future<?> future =
+                        (Future<?>) sw.
                                 getAttribute(IOFSwitch.SWITCH_DESCRIPTION_FUTURE);
+                Future<List<OFStatistics>> desc_future =
+                        (Future<List<OFStatistics>>) future;
                 List<OFStatistics> values =
                         desc_future.get(0, TimeUnit.MILLISECONDS);
                 if (values != null) {
@@ -601,11 +603,11 @@ public class Controller implements IFloodlightProviderService {
 
                 synchronized (roleChanger) {
                     // We need to keep track of all of the switches that are connected
-                    // to the controller, in any role, so that we can later send the 
+                    // to the controller, in any role, so that we can later send the
                     // role request messages when the controller role changes.
-                    // We need to be synchronized while doing this: we must not 
+                    // We need to be synchronized while doing this: we must not
                     // send a another role request to the connectedSwitches until
-                    // we were able to add this new switch to connectedSwitches 
+                    // we were able to add this new switch to connectedSwitches
                     // *and* send the current role to the new switch.
                     connectedSwitches.add(sw);
 
@@ -631,11 +633,11 @@ public class Controller implements IFloodlightProviderService {
                         // This is a probe that we'll use to determine if the switch
                         // actually supports the role request message. If it does we'll
                         // get back a role reply message. If it doesn't we'll get back an
-                        // OFError message. 
+                        // OFError message.
                         // If role is MASTER we will promote switch to active
                         // list when we receive the switch's role reply messages
                         /*
-                        log.debug("This controller's role is {}, " + 
+                        log.debug("This controller's role is {}, " +
                                 "sending initial role request msg to {}",
                                 role, sw);
                         Collection<OFSwitchImpl> swList = new ArrayList<OFSwitchImpl>(1);
@@ -644,7 +646,7 @@ public class Controller implements IFloodlightProviderService {
                         */
                     } else {
                         // Role supported not enabled on controller (for now)
-                        // automatically promote switch to active state. 
+                        // automatically promote switch to active state.
                         log.debug("This controller's role is {}, " +
                                 "not sending role request msg to {}",
                                 role, sw);
@@ -671,15 +673,15 @@ public class Controller implements IFloodlightProviderService {
         }
 
         /* Handle a role reply message we received from the switch. Since
-         * netty serializes message dispatch we don't need to synchronize 
+         * netty serializes message dispatch we don't need to synchronize
          * against other receive operations from the same switch, so no need
          * to synchronize addSwitch(), removeSwitch() operations from the same
-         * connection. 
+         * connection.
          * FIXME: However, when a switch with the same DPID connects we do
          * need some synchronization. However, handling switches with same
          * DPID needs to be revisited anyways (get rid of r/w-lock and synchronous
          * removedSwitch notification):1
-         * 
+         *
          */
         @LogMessageDoc(level = "ERROR",
                 message = "Invalid role value in role reply message",
@@ -722,22 +724,22 @@ public class Controller implements IFloodlightProviderService {
                         getAlwaysClearFlowsOnSwAdd()) {
                     // This is the first role-reply message we receive from
                     // this switch or roles were disabled when the switch
-                    // connected: 
-                    // Delete all pre-existing flows for new connections to 
+                    // connected:
+                    // Delete all pre-existing flows for new connections to
                     // the master
                     //
-                    // FIXME: Need to think more about what the test should 
-                    // be for when we flush the flow-table? For example, 
-                    // if all the controllers are temporarily in the backup 
-                    // role (e.g. right after a failure of the master 
-                    // controller) at the point the switch connects, then 
-                    // all of the controllers will initially connect as 
-                    // backup controllers and not flush the flow-table. 
+                    // FIXME: Need to think more about what the test should
+                    // be for when we flush the flow-table? For example,
+                    // if all the controllers are temporarily in the backup
+                    // role (e.g. right after a failure of the master
+                    // controller) at the point the switch connects, then
+                    // all of the controllers will initially connect as
+                    // backup controllers and not flush the flow-table.
                     // Then when one of them is promoted to master following
                     // the master controller election the flow-table
-                    // will still not be flushed because that's treated as 
-                    // a failover event where we don't want to flush the 
-                    // flow-table. The end result would be that the flow 
+                    // will still not be flushed because that's treated as
+                    // a failover event where we don't want to flush the
+                    // flow-table. The end result would be that the flow
                     // table for a newly connected switch is never
                     // flushed. Not sure how to handle that case though...
                     sw.clearAllFlowMods();
@@ -748,27 +750,27 @@ public class Controller implements IFloodlightProviderService {
 
                 // Some switches don't seem to update us with port
                 // status messages while in slave role.
-                //readSwitchPortStateFromStorage(sw);                
+                //readSwitchPortStateFromStorage(sw);
 
-                // Only add the switch to the active switch list if 
-                // we're not in the slave role. Note that if the role 
-                // attribute is null, then that means that the switch 
+                // Only add the switch to the active switch list if
+                // we're not in the slave role. Note that if the role
+                // attribute is null, then that means that the switch
                 // doesn't support the role request messages, so in that
-                // case we're effectively in the EQUAL role and the 
+                // case we're effectively in the EQUAL role and the
                 // switch should be included in the active switch list.
                 addSwitch(sw);
                 log.debug("Added master switch {} to active switch list",
                         HexString.toHexString(sw.getId()));
 
             } else if (isActive && !sw.isActive()) {
-                // Transition from MASTER to SLAVE: remove switch 
-                // from active switch list. 
+                // Transition from MASTER to SLAVE: remove switch
+                // from active switch list.
                 log.debug("Removed slave switch {} from active switch" +
                         " list", HexString.toHexString(sw.getId()));
                 removeSwitch(sw);
             }
 
-            // Indicate that we have received a role reply message. 
+            // Indicate that we have received a role reply message.
             state.firstRoleReplyReceived = true;
         }
 
@@ -894,9 +896,9 @@ public class Controller implements IFloodlightProviderService {
                     break;
                 case ERROR:
                     log.debug("Recieved ERROR message from switch {}: {}", sw, m);
-                    // TODO: we need better error handling. Especially for 
+                    // TODO: we need better error handling. Especially for
                     // request/reply style message (stats, roles) we should have
-                    // a unified way to lookup the xid in the error message. 
+                    // a unified way to lookup the xid in the error message.
                     // This will probable involve rewriting the way we handle
                     // request/reply style messages.
                     OFError error = (OFError) m;
@@ -907,9 +909,9 @@ public class Controller implements IFloodlightProviderService {
                         boolean isBadVendorError =
                                 (error.getErrorType() == OFError.OFErrorType.
                                         OFPET_BAD_REQUEST.getValue());
-                        // We expect to receive a bad vendor error when 
-                        // we're connected to a switch that doesn't support 
-                        // the Nicira vendor extensions (i.e. not OVS or 
+                        // We expect to receive a bad vendor error when
+                        // we're connected to a switch that doesn't support
+                        // the Nicira vendor extensions (i.e. not OVS or
                         // derived from OVS).  By protocol, it should also be
                         // BAD_VENDOR, but too many switch implementations
                         // get it wrong and we can already check the xid()
@@ -933,7 +935,7 @@ public class Controller implements IFloodlightProviderService {
                                     //is now never SLAVE, always MASTER.
                                     // the switch doesn't understand role request
                                     // messages and the current controller role is
-                                    // slave. We need to disconnect the switch. 
+                                    // slave. We need to disconnect the switch.
                                     // @see RoleChanger for rationale
                                     log.warn("Closing {} channel because controller's role " +
                                             "is SLAVE", sw);
@@ -942,36 +944,36 @@ public class Controller implements IFloodlightProviderService {
                                     log.debug("Adding switch {} because we got an error" +
                                             " returned from a MASTER role request", sw);
                                     // Controller's role is master: add to
-                                    // active 
+                                    // active
                                     // TODO: check if clearing flow table is
                                     // right choice here.
                                     // Need to clear FlowMods before we add the switch
                                     // and dispatch updates otherwise we have a race condition.
                                     // TODO: switch update is async. Won't we still have a potential
-                                    //       race condition? 
+                                    //       race condition?
                                     sw.clearAllFlowMods();
                                     addSwitch(sw);
                                 }
                             }
                         } else {
                             // TODO: Is this the right thing to do if we receive
-                            // some other error besides a bad vendor error? 
+                            // some other error besides a bad vendor error?
                             // Presumably that means the switch did actually
-                            // understand the role request message, but there 
+                            // understand the role request message, but there
                             // was some other error from processing the message.
                             // OF 1.2 specifies a OFPET_ROLE_REQUEST_FAILED
-                            // error code, but it doesn't look like the Nicira 
-                            // role request has that. Should check OVS source 
+                            // error code, but it doesn't look like the Nicira
+                            // role request has that. Should check OVS source
                             // code to see if it's possible for any other errors
                             // to be returned.
                             // If we received an error the switch is not
-                            // in the correct role, so we need to disconnect it. 
+                            // in the correct role, so we need to disconnect it.
                             // We could also resend the request but then we need to
                             // check if there are other pending request in which
                             // case we shouldn't resend. If we do resend we need
                             // to make sure that the switch eventually accepts one
                             // of our requests or disconnect the switch. This feels
-                            // cumbersome. 
+                            // cumbersome.
                             log.debug("Closing {} channel because we recieved an " +
                                     "error other than BAD_VENDOR", sw);
                             sw.getChannel().close();
@@ -995,8 +997,8 @@ public class Controller implements IFloodlightProviderService {
                     }
                     break;
                 case PORT_STATUS:
-                    // We want to update our port state info even if we're in 
-                    // the slave role, but we only want to update storage if 
+                    // We want to update our port state info even if we're in
+                    // the slave role, but we only want to update storage if
                     // we're the master (or equal).
                     boolean updateStorage = state.hsState.
                             equals(HandshakeState.READY) &&
@@ -1019,20 +1021,20 @@ public class Controller implements IFloodlightProviderService {
                                     "from switch {} before switch is " +
                                     "fully configured.", m.getType(), sw);
                         }
-                        // Check if the controller is in the slave role for the 
-                        // switch. If it is, then don't dispatch the message to 
+                        // Check if the controller is in the slave role for the
+                        // switch. If it is, then don't dispatch the message to
                         // the listeners.
-                        // TODO: Should we dispatch messages that we expect to 
-                        // receive when we're in the slave role, e.g. port 
-                        // status messages? Since we're "hiding" switches from 
-                        // the listeners when we're in the slave role, then it 
+                        // TODO: Should we dispatch messages that we expect to
+                        // receive when we're in the slave role, e.g. port
+                        // status messages? Since we're "hiding" switches from
+                        // the listeners when we're in the slave role, then it
                         // seems a little weird to dispatch port status messages
-                        // to them. On the other hand there might be special 
+                        // to them. On the other hand there might be special
                         // modules that care about all of the connected switches
                         // and would like to receive port status notifications.
                         else if (sw.getRole() == Role.SLAVE) {
-                            // Don't log message if it's a port status message 
-                            // since we expect to receive those from the switch 
+                            // Don't log message if it's a port status message
+                            // since we expect to receive those from the switch
                             // and don't want to emit spurious messages.
                             if (m.getType() != OFType.PORT_STATUS) {
                                 log.debug("Ignoring message type {} received " +
@@ -1178,6 +1180,7 @@ public class Controller implements IFloodlightProviderService {
                     explanation = "The switch sent a message not handled by " +
                             "the controller")
     })
+    @SuppressWarnings("fallthrough")
     protected void handleMessage(IOFSwitch sw, OFMessage m,
                                  FloodlightContext bContext)
             throws IOException {

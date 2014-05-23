@@ -27,6 +27,7 @@ import java.lang.reflect.Constructor;
  * @author David Erickson (daviderickson@cs.stanford.edu)
  *
  */
+@SuppressWarnings("rawtypes")
 public enum OFType {
     HELLO               (0, OFHello.class, new Instantiable<OFMessage>() {
                             @Override
