@@ -49,7 +49,7 @@ public interface Link {
      * <p/>
      * TODO: What is the unit?
      *
-     * @param return the link cost.
+     * @return the link cost.
      */
     public int getCost();
 
