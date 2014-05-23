@@ -1,12 +1,8 @@
 net.floodlightcontroller.core.FloodlightProvider
 net.onrc.onos.core.topology.TopologyPublisher
 net.onrc.onos.core.linkdiscovery.internal.LinkDiscoveryManager
-net.floodlightcontroller.topology.TopologyManager
-net.floodlightcontroller.forwarding.Forwarding
 net.floodlightcontroller.restserver.RestApiServer
 net.floodlightcontroller.threadpool.ThreadPool
-net.floodlightcontroller.devicemanager.internal.DefaultEntityClassifier
-net.floodlightcontroller.devicemanager.test.MockDeviceManager
 net.floodlightcontroller.core.test.MockFloodlightProvider
 net.floodlightcontroller.core.test.MockThreadPoolService
 net.onrc.onos.core.datagrid.HazelcastDatagrid
