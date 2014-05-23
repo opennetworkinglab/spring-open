@@ -1,5 +1,6 @@
 package net.onrc.onos.api.rest;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,6 @@ public final class RestErrorCatalog {
         new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_INVALID,
                       "Intent invalid",
                       "The intent provided is empty or invalid"),
-
     };
 
     /**
@@ -84,5 +84,14 @@ public final class RestErrorCatalog {
      */
     public static RestErrorCatalogEntry getRestError(final RestErrorCodes.RestErrorCode code) {
         return getRestErrorMap().get(code.ordinal());
+    }
+
+    /**
+     * Fetch the array of catalog entries.
+     *
+     * @return array of REST error catalog entries currently in use
+     */
+    public static RestErrorCatalogEntry[] getCatalogEntries() {
+        return Arrays.copyOf(ERROR_LIST, ERROR_LIST.length);
     }
 }
