@@ -28,7 +28,7 @@ External Dependencies
 ---------------------
 1. Required packages
 
-        $ sudo apt-get install maven python-flask
+        $ sudo apt-get install maven python-flask python-cmd2
 
 2. ZooKeeper
 
