@@ -5,18 +5,16 @@ import net.onrc.onos.api.rest.RestErrorCodes;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
+
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A class to access a single low-level intent.
  */
 public class IntentLowObjectResource extends ServerResource {
-    private static final Logger log = LoggerFactory.getLogger(IntentLowObjectResource.class);
     // TODO need to assign proper application id.
     private static final String APPLN_ID = "1";
 
@@ -28,8 +26,9 @@ public class IntentLowObjectResource extends ServerResource {
      */
     @Get("json")
     public Representation retrieve() {
-        IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
-                getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
+        IPathCalcRuntimeService pathRuntime =
+            (IPathCalcRuntimeService) getContext().getAttributes()
+                .get(IPathCalcRuntimeService.class.getCanonicalName());
 
         Representation result;
 
@@ -47,7 +46,7 @@ public class IntentLowObjectResource extends ServerResource {
             setStatus(Status.CLIENT_ERROR_NOT_FOUND);
             final RestError notFound =
                     RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_NOT_FOUND,
-                            applnIntentId);
+                                              applnIntentId);
             result = toRepresentation(notFound, null);
         }
 

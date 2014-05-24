@@ -1,6 +1,5 @@
 package net.onrc.onos.core.intent.runtime.web;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,12 +10,9 @@ import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
-import net.onrc.onos.core.topology.serializers.LinkSerializer;
 import net.onrc.onos.core.util.Dpid;
 
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.module.SimpleModule;
+import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
@@ -26,31 +22,20 @@ import org.slf4j.LoggerFactory;
  * A class to access Shortest-Path information between switches.
  */
 public class ShortestPathResource extends ServerResource {
-
     private static final Logger log = LoggerFactory.getLogger(ShortestPathResource.class);
 
     /**
      * Gets the Shortest-Path infomration between switches.
      *
-     * @return a JSON string with the Shortest-Path information between
-     * switches. The Shortest-Path information is an ordered collection of
-     * Links.
+     * @return a Representation with the Shortest-Path information between
+     * switches if found, otherwise null. The Shortest-Path information is an
+     * ordered collection of Links.
      */
     @Get("json")
-    public String retrieve() {
+    public Representation retrieve() {
         ITopologyService topologyService =
-                (ITopologyService) getContext().getAttributes().
-                        get(ITopologyService.class.getCanonicalName());
-
-        Topology topology = topologyService.getTopology();
-
-        //
-        // Prepare the JSON serializer
-        //
-        ObjectMapper mapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule("module", new Version(1, 0, 0, null));
-        module.addSerializer(new LinkSerializer());
-        mapper.registerModule(module);
+            (ITopologyService) getContext().getAttributes()
+                .get(ITopologyService.class.getCanonicalName());
 
         //
         // Fetch the attributes
@@ -65,12 +50,13 @@ public class ShortestPathResource extends ServerResource {
         // Do the Shortest Path computation and return the result: a list of
         // links.
         //
+        Topology topology = topologyService.getTopology();
         topology.acquireReadLock();
         try {
             Switch srcSwitch = topology.getSwitch(srcDpid.value());
             Switch dstSwitch = topology.getSwitch(dstDpid.value());
             if ((srcSwitch == null) || (dstSwitch == null)) {
-                return "";
+                return null;
             }
             ConstrainedBFSTree bfsTree = new ConstrainedBFSTree(srcSwitch);
             Path path = bfsTree.getPath(dstSwitch);
@@ -81,14 +67,11 @@ public class ShortestPathResource extends ServerResource {
                         linkEvent.getDst().getDpid(),
                         linkEvent.getDst().getNumber());
                 if (link == null) {
-                    return "";
+                    return null;
                 }
                 links.add(link);
             }
-            return mapper.writeValueAsString(links);
-        } catch (IOException e) {
-            log.error("Error writing Shortest Path to JSON", e);
-            return "";
+            return toRepresentation(links, null);
         } finally {
             topology.releaseReadLock();
         }

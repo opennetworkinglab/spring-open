@@ -1,5 +1,8 @@
 package net.onrc.onos.core.intent.runtime.web;
 
+import java.io.IOException;
+import java.util.Collection;
+
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.intent.ApplicationIntent;
 import net.onrc.onos.api.rest.RestError;
@@ -12,6 +15,7 @@ import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 import net.onrc.onos.core.util.Dpid;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
@@ -21,9 +25,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * A class to access the high-level intents.
@@ -40,8 +41,9 @@ public class IntentHighResource extends ServerResource {
      */
     @Get("json")
     public Representation retrieve() throws IOException {
-        IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
-                getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
+        IPathCalcRuntimeService pathRuntime =
+            (IPathCalcRuntimeService) getContext().getAttributes()
+                .get(IPathCalcRuntimeService.class.getCanonicalName());
 
         IntentMap intentMap = pathRuntime.getHighLevelIntents();
         Collection<Intent> intents = intentMap.getAllIntents();
@@ -58,8 +60,9 @@ public class IntentHighResource extends ServerResource {
      */
     @Post("json")
     public Representation store(String jsonIntent) {
-        IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext()
-                .getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
+        IPathCalcRuntimeService pathRuntime =
+            (IPathCalcRuntimeService) getContext().getAttributes()
+                .get(IPathCalcRuntimeService.class.getCanonicalName());
         if (pathRuntime == null) {
             log.warn("Failed to get path calc runtime");
             return null;
@@ -143,8 +146,9 @@ public class IntentHighResource extends ServerResource {
      */
     @Delete("json")
     public Representation remove() {
-        IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
-                getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
+        IPathCalcRuntimeService pathRuntime =
+            (IPathCalcRuntimeService) getContext().getAttributes()
+                .get(IPathCalcRuntimeService.class.getCanonicalName());
 
         // Delete all intents
         // TODO: The implementation below is broken - waiting for the Java API

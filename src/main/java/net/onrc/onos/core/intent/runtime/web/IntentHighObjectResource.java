@@ -7,19 +7,17 @@ import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
+
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A class to access a single high-level intent.
  */
 public class IntentHighObjectResource extends ServerResource {
-    private static final Logger log = LoggerFactory.getLogger(IntentHighObjectResource.class);
     // TODO need to assign proper application id.
     private static final String APPLN_ID = "1";
 
@@ -32,15 +30,13 @@ public class IntentHighObjectResource extends ServerResource {
      */
     @Get("json")
     public Representation retrieve() {
-        IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
-                getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
+        IPathCalcRuntimeService pathRuntime =
+            (IPathCalcRuntimeService) getContext().getAttributes()
+                .get(IPathCalcRuntimeService.class.getCanonicalName());
 
         Representation result;
 
         String intentId = (String) getRequestAttributes().get("intent-id");
-        if (intentId == null) {
-            return null;        // Missing Intent ID
-        }
 
         //
         // Get a single high-level Intent: use the Intent ID to find it
@@ -68,8 +64,9 @@ public class IntentHighObjectResource extends ServerResource {
      */
     @Delete("json")
     public Representation remove() {
-        IPathCalcRuntimeService pathRuntime = (IPathCalcRuntimeService) getContext().
-                getAttributes().get(IPathCalcRuntimeService.class.getCanonicalName());
+        IPathCalcRuntimeService pathRuntime =
+            (IPathCalcRuntimeService) getContext().getAttributes()
+                .get(IPathCalcRuntimeService.class.getCanonicalName());
 
         String intentId = (String) getRequestAttributes().get("intent-id");
 
