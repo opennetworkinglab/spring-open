@@ -207,6 +207,10 @@ class OnosCli(Cmd):
 	    Command("show switch", "Show switches"),
 	    #
 	    Command("show switch all", "Show all switches", self.show_switch_all)
+	    #
+	    Command("show topology", "Show network topology"),
+	    #
+	    Command("show topology all", "Show whole network topology", self.show_topology_all)
 	]
 
 	# Sort the commands by the level in the CLI command hierarchy
@@ -298,7 +302,7 @@ class OnosCli(Cmd):
     def show_device_all(self, args):
 	"CLI command callback: show device all"
 
-	url = "http://%s:%s/wm/onos/topology/devices/json" % (self.onos_ip, self.onos_port)
+	url = "http://%s:%s/wm/onos/topology/devices" % (self.onos_ip, self.onos_port)
 	result = get_json(url)
 	self.print_json_result(result)
 
@@ -331,7 +335,7 @@ class OnosCli(Cmd):
     def show_link_all(self, args):
 	"CLI command callback: show link all"
 
-	url = "http://%s:%s/wm/onos/topology/links/json" % (self.onos_ip, self.onos_port)
+	url = "http://%s:%s/wm/onos/topology/links" % (self.onos_ip, self.onos_port)
 	result = get_json(url)
 	#
 	if (self.output_format == "json"):
@@ -364,7 +368,15 @@ class OnosCli(Cmd):
     def show_switch_all(self, args):
 	"CLI command callback: show switch all"
 
-	url = "http://%s:%s/wm/onos/topology/switches/json" % (self.onos_ip, self.onos_port)
+	url = "http://%s:%s/wm/onos/topology/switches" % (self.onos_ip, self.onos_port)
+	result = get_json(url)
+	#
+	self.print_json_result(result)
+
+    def show_topology_all(self, args):
+	"CLI command callback: show topology all"
+
+	url = "http://%s:%s/wm/onos/topology/all" % (self.onos_ip, self.onos_port)
 	result = get_json(url)
 	#
 	self.print_json_result(result)
@@ -577,12 +589,13 @@ def get_json(url):
     """Make a REST GET call and return the JSON result
        url: the URL to call"""
 
-    parsed_result = ""
+    parsed_result = []
     try:
 	response = urllib2.urlopen(url)
 	result = response.read()
 	response.close()
-	parsed_result = json.loads(result)
+	if len(result) != 0:
+	    parsed_result = json.loads(result)
     except HTTPError as exc:
 	print "ERROR:"
 	print "  REST GET URL: %s" % url
@@ -604,7 +617,7 @@ def post_json(url, data):
        url: the URL to call
        data: the data to POST"""
 
-    parsed_result = ""
+    parsed_result = []
     data_json = json.dumps(data)
     try:
 	request = urllib2.Request(url, data_json)
@@ -634,7 +647,7 @@ def delete_json(url):
     """Make a REST DELETE call and return the JSON result
        url: the URL to call"""
 
-    parsed_result = ""
+    parsed_result = []
     try:
 	request = urllib2.Request(url)
 	request.get_method = lambda: 'DELETE'

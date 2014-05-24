@@ -17,9 +17,10 @@ public class TopologyWebRoutable implements RestletRoutable {
         router.attach("/ds/ports/json", DatastorePortsResource.class);
 
         // Topology API
-        router.attach("/switches/json", TopologySwitchesResource.class);
-        router.attach("/links/json", TopologyLinksResource.class);
-        router.attach("/devices/json", TopologyDevicesResource.class);
+        router.attach("/all", TopologyAllResource.class);
+        router.attach("/devices", TopologyDevicesResource.class);
+        router.attach("/links", TopologyLinksResource.class);
+        router.attach("/switches", TopologySwitchesResource.class);
         // TODO: Move the Shortest Path REST API to the Intent framework
         router.attach("/shortest-path/{src-dpid}/{dst-dpid}/json", TopologyShortestPathResource.class);
 
