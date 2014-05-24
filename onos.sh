@@ -633,9 +633,9 @@ function del-coord-info {
   echo -n "Deleting RAMCloud cluster coordination info ... "
   ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator ${coord_args} --reset &> $RAMCLOUD_COORD_LOG &
 
-  # TODO Assuming 1sec is enough. To be sure monitor log?
-  sleep 1
-  # Silently kill coordinator
+  # TODO Assuming 5 sec is enough. To be sure monitor log?
+  sleep 5
+  # kill coordinator
   (pkill -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/coordinator &> /dev/null)
 
   echo "DONE"
