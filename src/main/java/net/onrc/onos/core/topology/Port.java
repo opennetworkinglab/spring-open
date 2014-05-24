@@ -1,6 +1,8 @@
 package net.onrc.onos.core.topology;
 
+import net.onrc.onos.core.topology.serializers.PortSerializer;
 import net.onrc.onos.core.util.SwitchPort;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 //TODO Everything returned by these interfaces must be either Unmodifiable view,
 //immutable object, or a copy of the original "SB" In-memory Topology.
@@ -8,6 +10,7 @@ import net.onrc.onos.core.util.SwitchPort;
 /**
  * Interface of Port object in the topology.
  */
+@JsonSerialize(using = PortSerializer.class)
 public interface Port {
 
     /**

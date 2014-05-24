@@ -1,6 +1,8 @@
 package net.onrc.onos.core.topology;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.topology.serializers.DeviceSerializer;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  * Interface of Device Object exposed to the "NB" read-only Topology.
@@ -10,6 +12,7 @@ import net.floodlightcontroller.util.MACAddress;
  * Everything returned by these interfaces must be either Unmodifiable view,
  * immutable object, or a copy of the original "SB" In-memory Topology.
  */
+@JsonSerialize(using = DeviceSerializer.class)
 public interface Device {
     /**
      * Get the device MAC address.

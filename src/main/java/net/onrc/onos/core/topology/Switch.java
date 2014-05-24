@@ -1,12 +1,15 @@
 package net.onrc.onos.core.topology;
 
 import java.util.Collection;
+import net.onrc.onos.core.topology.serializers.SwitchSerializer;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 // TOOD Everything returned by these interfaces must be either Unmodifiable view,
 // immutable object, or a copy of the original "SB" In-memory Topology.
 /**
  * Interface of Switch object in the topology.
  */
+@JsonSerialize(using = SwitchSerializer.class)
 public interface Switch {
 
     /**

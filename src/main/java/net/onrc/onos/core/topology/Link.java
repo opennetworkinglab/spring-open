@@ -1,10 +1,14 @@
 package net.onrc.onos.core.topology;
 
+import net.onrc.onos.core.topology.serializers.LinkSerializer;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 // TODO Everything returned by these interfaces must be either Unmodifiable view,
 // immutable object, or a copy of the original "SB" In-memory Topology.
 /**
  * Interface of Link object in the topology.
  */
+@JsonSerialize(using = LinkSerializer.class)
 public interface Link {
     /**
      * Gets the source switch for the link.
