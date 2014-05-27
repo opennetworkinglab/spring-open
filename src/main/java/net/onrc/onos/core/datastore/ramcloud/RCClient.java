@@ -61,7 +61,7 @@ public class RCClient implements IKVClient {
      *    (Increasing the stack-size limit will help relaxing this limit.)
      */
     public static final int MAX_MULTI_READS = Math.max(1, Integer
-            .valueOf(System.getProperty("ramcloud.max_multi_reads", "400")));
+            .parseInt(System.getProperty("ramcloud.max_multi_reads", "400")));
 
     /**
      * Maximum number of Multi-Write operations which can be executed in
@@ -73,7 +73,7 @@ public class RCClient implements IKVClient {
      *    (Increasing the stack-size limit will help relaxing this limit.)
      */
     public static final int MAX_MULTI_WRITES = Math.max(1, Integer
-            .valueOf(System.getProperty("ramcloud.max_multi_writes", "800")));
+            .parseInt(System.getProperty("ramcloud.max_multi_writes", "800")));
 
     private static final ThreadLocal<JRamCloud> TLS_RC_CLIENT = new ThreadLocal<JRamCloud>() {
         @Override

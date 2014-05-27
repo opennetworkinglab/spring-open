@@ -109,7 +109,7 @@ public class IncomingRequestResource extends ServerResource {
             Prefix p;
             long sysUpTime, sequenceNum;
             try {
-                p = new Prefix(prefix, Integer.valueOf(mask));
+                p = new Prefix(prefix, Integer.parseInt(mask));
                 sysUpTime = Long.parseLong(strSysuptime);
                 sequenceNum = Long.parseLong(strSequence);
             } catch (NumberFormatException e) {
@@ -174,7 +174,7 @@ public class IncomingRequestResource extends ServerResource {
             Prefix p;
             long sysUpTime, sequenceNum;
             try {
-                p = new Prefix(prefix, Integer.valueOf(mask));
+                p = new Prefix(prefix, Integer.parseInt(mask));
                 sysUpTime = Long.parseLong(strSysuptime);
                 sequenceNum = Long.parseLong(strSequence);
             } catch (NumberFormatException e) {

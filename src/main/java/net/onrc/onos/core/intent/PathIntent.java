@@ -15,7 +15,7 @@ public class PathIntent extends Intent {
 
     public static String createNextId(String currentId) {
         String[] parts = currentId.split("___");
-        return String.format("%s___%d", parts[0], Long.valueOf(parts[1]) + 1);
+        return String.format("%s___%d", parts[0], Long.parseLong(parts[1]) + 1);
     }
 
     /**

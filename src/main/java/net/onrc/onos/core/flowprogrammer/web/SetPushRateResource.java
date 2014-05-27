@@ -28,7 +28,7 @@ public class SetPushRateResource extends PusherResource {
 
         try {
             dpid = HexString.toLong((String) getRequestAttributes().get("dpid"));
-            rate = Long.valueOf((String) getRequestAttributes().get("rate"));
+            rate = Long.parseLong((String) getRequestAttributes().get("rate"));
         } catch (NumberFormatException e) {
             log.error("Invalid number format");
             return false;

@@ -45,7 +45,7 @@ public final class HZClient implements IKVClient {
     private static boolean useClientMode = Boolean.parseBoolean(System.getProperty("net.onrc.onos.core.datastore.hazelcast.clientMode", "true"));
 
     // Note: xml configuration will overwrite this value if present
-    private static int backupCount = Integer.valueOf(System.getProperty("net.onrc.onos.core.datastore.hazelcast.backupCount", "3"));
+    private static int backupCount = Integer.parseInt(System.getProperty("net.onrc.onos.core.datastore.hazelcast.backupCount", "3"));
 
     private final HazelcastInstance hazelcastInstance;
 
@@ -98,7 +98,7 @@ public final class HZClient implements IKVClient {
             // set to 0 for fast fall back to Instance mode.
             String sAttempts = System.getProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit");
             if (sAttempts != null) {
-                clientConfig.setConnectionAttemptLimit(Integer.valueOf(sAttempts).intValue());
+                clientConfig.setConnectionAttemptLimit(Integer.parseInt(sAttempts));
             }
 
             // copy group config from base Hazelcast configuration

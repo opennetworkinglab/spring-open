@@ -341,7 +341,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                 for (IOFSwitch sw : keys) {
                     SwitchQueue queue = assignedQueues.get(sw);
 
-                    if (sw == null || queue == null) {
+                    if (queue == null) {
                         continue;
                     }
 

@@ -376,7 +376,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             Prefix p;
             try {
-                p = new Prefix(prefix1, Integer.valueOf(mask1));
+                p = new Prefix(prefix1, Integer.parseInt(mask1));
             } catch (NumberFormatException e) {
                 log.warn("Wrong mask format in RIB JSON: {}", mask1);
                 continue;

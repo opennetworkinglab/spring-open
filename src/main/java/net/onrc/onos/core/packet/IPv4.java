@@ -290,6 +290,7 @@ public class IPv4 extends BasePacket {
      * -headerLength : 0
      * -totalLength : 0
      */
+    @Override
     public byte[] serialize() {
         byte[] payloadData = null;
         if (payload != null) {
@@ -410,7 +411,7 @@ public class IPv4 extends BasePacket {
 
         int result = 0;
         for (int i = 0; i < 4; ++i) {
-            result |= Integer.valueOf(octets[i]) << ((3 - i) * 8);
+            result |= Integer.parseInt(octets[i]) << ((3 - i) * 8);
         }
         return result;
     }
@@ -443,7 +444,7 @@ public class IPv4 extends BasePacket {
         int result = 0;
         for (int i = 0; i < 4; ++i) {
             result = (ipAddress >> ((3 - i) * 8)) & 0xff;
-            sb.append(Integer.valueOf(result).toString());
+            sb.append(Integer.toString(result));
             if (i != 3) {
                 sb.append(".");
             }

@@ -54,7 +54,7 @@ public final class IPv4 {
 
         int result = 0;
         for (int i = 0; i < 4; ++i) {
-            result |= Integer.valueOf(splits[i]) << ((3 - i) * 8);
+            result |= Integer.parseInt(splits[i]) << ((3 - i) * 8);
         }
         this.value = result;
     }
