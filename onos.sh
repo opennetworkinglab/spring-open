@@ -192,12 +192,33 @@ function kill-processes {
   fi
   for p in ${pids}; do
     if [ x$p != "x" ]; then
+      # Check if target process is accesible from current user
+      kill -0 $p
+      if [ "$?" -ne 0 ]; then
+        # Error exit code here means "failed to send signal".
+        # Supposedly because of permission error.
+        echo "Failed to kill process (pid: $p)."
+        echo "Check if current user is the same as process owner."
+        exit 1
+      fi
+      
       (
         # Ask process with SIGTERM first, if that did not kill the process
         # wait 1s and if process still exist, force process to be killed.
         kill -TERM $p && kill -0 $p && sleep 1 && kill -0 $p && kill -KILL $p
       ) 2> /dev/null
-      echo "Killed existing process (pid: $p)"
+      
+      # Ensure process is killed.
+      kill -0 $p 2> /dev/null
+      if [ "$?" -ne 0 ]; then
+        # Error exit code here means "process not found", i.e. "kill succeeded".
+        echo "Killed existing process (pid: $p)"
+      else
+        # Process still exists. Some unexpected error occurs.
+        echo "Failed to kill process (pid: $p)."
+        echo "Unexpected error occurs during process termination."
+        exit 1
+      fi
     fi
   done
 }
