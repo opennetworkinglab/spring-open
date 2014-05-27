@@ -253,19 +253,17 @@ public class OnosDeviceManager implements IFloodlightModule,
     protected OnosDevice getSourceDeviceFromPacket(Ethernet eth,
             long swdpid,
             short port) {
-        byte[] dlAddrArr = eth.getSourceMACAddress();
-        long dlAddr = Ethernet.toLong(dlAddrArr);
+        long dlAddr = Ethernet.toLong(eth.getSourceMACAddress());
+        MACAddress sourceMac = eth.getSourceMAC();
 
-        /*
-         *  Ignore broadcast/multicast source
-         */
-        if (eth.isMulticast() || eth.isBroadcast()) {
+        // Ignore broadcast/multicast source
+        if (sourceMac.isBroadcast() || sourceMac.isBroadcast()) {
             return null;
         }
 
         short vlan = eth.getVlanID();
         int nwSrc = getSrcNwAddr(eth, dlAddr);
-        return new OnosDevice(MACAddress.valueOf(dlAddr),
+        return new OnosDevice(sourceMac,
                 ((vlan >= 0) ? vlan : null),
                 ((nwSrc != 0) ? nwSrc : null),
                 swdpid,

@@ -109,11 +109,11 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
 
         odm = new OnosDeviceManager();
         /*
-         * Broadcast address
+         * Broadcast source address
          */
         this.pkt0 = new Ethernet()
-        .setDestinationMACAddress("FF:FF:FF:FF:FF:FF")
-        .setSourceMACAddress("00:44:33:22:11:33")
+        .setDestinationMACAddress("00:44:33:22:11:33")
+        .setSourceMACAddress("FF:FF:FF:FF:FF:FF")
         .setEtherType(Ethernet.TYPE_IPV4)
         .setPayload(
                 new IPv4()
