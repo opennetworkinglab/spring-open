@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# -*- Mode: python; py-indent-offset: 4; tab-width: 8; indent-tabs-mode: t; -*-
+# -*- Mode: python; py-indent-offset: 4; tab-width: 8; -*-
 
 """
 onoscli : ONOS-specific Command Line Interface
@@ -49,20 +49,20 @@ class Command():
     "Command node. A hierarchy of nodes are organized in a command tree."
 
     def __init__(self, name, help, callback=None, add_parser_args=None):
-	"""name: a string with the full command name
-	   help: the help string for the command
+        """name: a string with the full command name
+           help: the help string for the command
            callback: the method to be called if the command is executed
-	   add_parser_args: the parser arguments to add to the command: a dictionary of argparse arguments"""
-	# Normalize the name by removing extra spaces
-	self.split_name = name.split()	# List of the words in the name
-	self.name = ' '.join(self.split_name)	# Normalized name
-	self.last_subname = self.split_name[-1]	# Last word in the name
-	self.parent_name = ' '.join(self.split_name[:-1]) # Name of parent command
-	self.help = help		# THe help string
-	self.callback = callback	# The command callback
-	self.add_parser_args = add_parser_args	# Parser arguments to add
-	self.parent = None		# The parent Command
-	self.children = []		# The children Command entries
+           add_parser_args: the parser arguments to add to the command: a dictionary of argparse arguments"""
+        # Normalize the name by removing extra spaces
+        self.split_name = name.split()  # List of the words in the name
+        self.name = ' '.join(self.split_name)   # Normalized name
+        self.last_subname = self.split_name[-1] # Last word in the name
+        self.parent_name = ' '.join(self.split_name[:-1]) # Name of parent command
+        self.help = help                # THe help string
+        self.callback = callback        # The command callback
+        self.add_parser_args = add_parser_args  # Parser arguments to add
+        self.parent = None              # The parent Command
+        self.children = []              # The children Command entries
 
 
 class OnosCli(Cmd):
@@ -78,7 +78,7 @@ class OnosCli(Cmd):
     settable = settable + "onos_ip ONOS IP address"
     onos_port = 8080
     settable = settable + "onos_port ONOS REST port number"
-    output_format = "json"	# Valid values: json, text
+    output_format = "json"      # Valid values: json, text
     settable = settable + "output_format The output format: `text` or `json`"
 
     # Collection of commands sorted by the level in the CLI command hierarchy
@@ -89,55 +89,55 @@ class OnosCli(Cmd):
     subparsers_dict = {}
 
     def __init__(self):
-	Cmd.__init__(self)
+        Cmd.__init__(self)
 
-	#
-	# An array of the ONOS-specific CLI commands.
-	# Each entry is a Command instance, and must have at least
-	# two arguments:
-	#  * Command name as typed on the CLI. E.g.:
-	#    "show intent"
-	#  * Command help description. E.g.:
-	#    "Show intents"
-	#
-	# Executable commands should have a third Command argument, which is
-	# the name of the method to be called when the command is executed.
-	# The method will be called with the (argparse) parsed arguments
-	# for that command.
-	#
-	# If an executable command takes arguments, those should be described
-	# in the Command's fourth argument. It is a list of pairs:
-	#   [
-	#    ("--argument-name1", dict(...)),
-	#    ("--argument-name2", dict(...)),
-	#    ...
-	#   ]
-	# where the first entry in the pair is the argument name, and the
-	# second entry in the pair is a dictionary with argparse-specific
-	# description of the argument.
-	#
-	init_commands = [
-	    Command("delete", "Delete command"),
-	    #
-	    Command("delete intent",
-		    """Delete high-level intents
+        #
+        # An array of the ONOS-specific CLI commands.
+        # Each entry is a Command instance, and must have at least
+        # two arguments:
+        #  * Command name as typed on the CLI. E.g.:
+        #    "show intent"
+        #  * Command help description. E.g.:
+        #    "Show intents"
+        #
+        # Executable commands should have a third Command argument, which is
+        # the name of the method to be called when the command is executed.
+        # The method will be called with the (argparse) parsed arguments
+        # for that command.
+        #
+        # If an executable command takes arguments, those should be described
+        # in the Command's fourth argument. It is a list of pairs:
+        #   [
+        #    ("--argument-name1", dict(...)),
+        #    ("--argument-name2", dict(...)),
+        #    ...
+        #   ]
+        # where the first entry in the pair is the argument name, and the
+        # second entry in the pair is a dictionary with argparse-specific
+        # description of the argument.
+        #
+        init_commands = [
+            Command("delete", "Delete command"),
+            #
+            Command("delete intent",
+                    """Delete high-level intents
     Usage:
       delete intent --intent-id INTENT_ID  Delete a high-level intent
       delete intent --all                  Delete all high-level intents
     Arguments:
       --intent-id INTENT_ID    The Intent ID (an integer)
       --all                    Delete all high-level intents""",
-		    self.delete_intent,
-		    [
-		    ("--intent-id", dict(required=False, type=int)),
-		    ("--all", dict(required=False, action='store_true'))
-		    ]
-		    ),
-	    #
-	    Command("set", "Set command"),
-	    #
-	    Command("set intent",
-		    """Set a high-level intent
+                    self.delete_intent,
+                    [
+                    ("--intent-id", dict(required=False, type=int)),
+                    ("--all", dict(required=False, action='store_true'))
+                    ]
+                    ),
+            #
+            Command("set", "Set command"),
+            #
+            Command("set intent",
+                    """Set a high-level intent
     Usage:
       set intent <ARGS>
     Arguments:
@@ -148,373 +148,373 @@ class OnosCli(Cmd):
       --dst-port DST_PORT       Destination Switch Port (REQUIRED)
       --match-src-mac MATCH_SRC_MAC Matching Source MAC Address (REQUIRED)
       --match-dst-mac MATCH_DST_MAC Matching Destination MAC Address (REQUIRED)""",
-		    self.set_intent,
-		    [
-		    ("--intent-id", dict(required=True, type=int)),
-		    ("--src-dpid", dict(required=True)),
-		    ("--src-port", dict(required=True, type=int)),
-		    ("--dst-dpid", dict(required=True)),
-		    ("--dst-port", dict(required=True, type=int)),
-		    ("--match-src-mac", dict(required=True)),
-		    ("--match-dst-mac", dict(required=True))
-		    ]),
-	    #
-	    Command("show", "Show command"),
-	    #
-	    Command("show device", "Show devices"),
-	    #
-	    Command("show device all", "Show all devices", self.show_device_all),
-	    #
-	    Command("show intent", "Show intents"),
-	    #
-	    Command("show intent high",
-		    """Show all high-level intents
+                    self.set_intent,
+                    [
+                    ("--intent-id", dict(required=True, type=int)),
+                    ("--src-dpid", dict(required=True)),
+                    ("--src-port", dict(required=True, type=int)),
+                    ("--dst-dpid", dict(required=True)),
+                    ("--dst-port", dict(required=True, type=int)),
+                    ("--match-src-mac", dict(required=True)),
+                    ("--match-dst-mac", dict(required=True))
+                    ]),
+            #
+            Command("show", "Show command"),
+            #
+            Command("show device", "Show devices"),
+            #
+            Command("show device all", "Show all devices", self.show_device_all),
+            #
+            Command("show intent", "Show intents"),
+            #
+            Command("show intent high",
+                    """Show all high-level intents
   show intent high --intent-id INTENT_ID    Show a high-level intent""",
-		    self.show_intent_high,
-		    [
-		    ("--intent-id", dict(required=False, type=int))
-		    ]
-		    ),
-	    #
-	    Command("show intent low",
-		    """Show all low-level intents
+                    self.show_intent_high,
+                    [
+                    ("--intent-id", dict(required=False, type=int))
+                    ]
+                    ),
+            #
+            Command("show intent low",
+                    """Show all low-level intents
   show intent low  --intent-id INTENT_ID    Show a low-level intent""",
-		    self.show_intent_low,
-		    [
-		    ("--intent-id", dict(required=False))
-		    ]
-		    ),
-	    #
-	    Command("show link", "Show links"),
-	    #
-	    Command("show link all", "Show all links", self.show_link_all),
-	    #
-	    Command("show path", "Show a path"),
-	    #
-	    Command("show path shortest",
-		    """Show a shortest path
+                    self.show_intent_low,
+                    [
+                    ("--intent-id", dict(required=False))
+                    ]
+                    ),
+            #
+            Command("show link", "Show links"),
+            #
+            Command("show link all", "Show all links", self.show_link_all),
+            #
+            Command("show path", "Show a path"),
+            #
+            Command("show path shortest",
+                    """Show a shortest path
     Usage:
       show path shortest --src-dpid SRC_DPID --dst-dpid DST_DPID
     Arguments:
       --src-dpid SRC_DPID       Source Switch DPID
       --dst-dpid DST_DPID       Destination Switch DPID""",
-		    self.show_path_shortest,
-		    [
-		    ("--src-dpid", dict(required=True)),
-		    ("--dst-dpid", dict(required=True))
-		    ]),
-	    #
-	    Command("show switch", "Show switches"),
-	    #
-	    Command("show switch all", "Show all switches", self.show_switch_all),
-	    #
-	    Command("show topology", "Show network topology"),
-	    #
-	    Command("show topology all", "Show whole network topology", self.show_topology_all)
-	]
+                    self.show_path_shortest,
+                    [
+                    ("--src-dpid", dict(required=True)),
+                    ("--dst-dpid", dict(required=True))
+                    ]),
+            #
+            Command("show switch", "Show switches"),
+            #
+            Command("show switch all", "Show all switches", self.show_switch_all),
+            #
+            Command("show topology", "Show network topology"),
+            #
+            Command("show topology all", "Show whole network topology", self.show_topology_all)
+        ]
 
-	# Sort the commands by the level in the CLI command hierarchy
-	self.commands = sorted(init_commands, key = lambda c: len(c.name.split()))
+        # Sort the commands by the level in the CLI command hierarchy
+        self.commands = sorted(init_commands, key = lambda c: len(c.name.split()))
 
-	# Create a dictionary with all commands: name -> Command
-	for c in self.commands:
-	    self.commands_dict[c.name] = c
+        # Create a dictionary with all commands: name -> Command
+        for c in self.commands:
+            self.commands_dict[c.name] = c
 
-	# Create a tree with all commands
-	for c in self.commands:
-	    if c.parent_name:
-		pc = self.commands_dict[c.parent_name]
-		pc.children.append(c)
-		c.parent = pc
+        # Create a tree with all commands
+        for c in self.commands:
+            if c.parent_name:
+                pc = self.commands_dict[c.parent_name]
+                pc.children.append(c)
+                c.parent = pc
 
-	# Create the parsers and the sub-parsers
-	for c in self.commands:
-	    # Add a parser
-	    parser = None
-	    if c.parent is None:
-		# Add a top-level parser
-		parser = argparse.ArgumentParser(description=c.help,
-						 prog=c.name,
-						 add_help=False)
-	    else:
-		# Add a parser from the parent's subparser
-		parent_subparser = self.subparsers_dict[c.parent_name]
-		parser = parent_subparser.add_parser(c.last_subname,
-						     help=c.help,
-						     add_help=False)
-	    self.parsers_dict[c.name] = parser
-	    # Add a sub-parser
-	    if c.children:
-		subparser = parser.add_subparsers(help=c.help)
-		self.subparsers_dict[c.name] = subparser
-	    # Setup the callback
-	    if c.callback is not None:
-		parser.set_defaults(func=c.callback)
-	    # Init the argument parser
-	    if c.add_parser_args is not None:
-		for a in c.add_parser_args:
-		    (p1, p2) = a
-		    parser.add_argument(p1, **p2)
+        # Create the parsers and the sub-parsers
+        for c in self.commands:
+            # Add a parser
+            parser = None
+            if c.parent is None:
+                # Add a top-level parser
+                parser = argparse.ArgumentParser(description=c.help,
+                                                 prog=c.name,
+                                                 add_help=False)
+            else:
+                # Add a parser from the parent's subparser
+                parent_subparser = self.subparsers_dict[c.parent_name]
+                parser = parent_subparser.add_parser(c.last_subname,
+                                                     help=c.help,
+                                                     add_help=False)
+            self.parsers_dict[c.name] = parser
+            # Add a sub-parser
+            if c.children:
+                subparser = parser.add_subparsers(help=c.help)
+                self.subparsers_dict[c.name] = subparser
+            # Setup the callback
+            if c.callback is not None:
+                parser.set_defaults(func=c.callback)
+            # Init the argument parser
+            if c.add_parser_args is not None:
+                for a in c.add_parser_args:
+                    (p1, p2) = a
+                    parser.add_argument(p1, **p2)
 
     def delete_intent(self, args):
-	"CLI command callback: delete intent"
+        "CLI command callback: delete intent"
 
-	url = ""
-	if args.all:
-	    # Delete all intents
-	    url = "http://%s:%s/wm/onos/intent/high" % (self.onos_ip, self.onos_port)
-	else:
-	    if args.intent_id is None:
-		print "*** Unknown syntax:"
-		self.help_delete()
-		return;
-	    # Delete an intent
-	    url = "http://%s:%s/wm/onos/intent/high/%s" % (self.onos_ip, self.onos_port, args.intent_id)
+        url = ""
+        if args.all:
+            # Delete all intents
+            url = "http://%s:%s/wm/onos/intent/high" % (self.onos_ip, self.onos_port)
+        else:
+            if args.intent_id is None:
+                print "*** Unknown syntax:"
+                self.help_delete()
+                return;
+            # Delete an intent
+            url = "http://%s:%s/wm/onos/intent/high/%s" % (self.onos_ip, self.onos_port, args.intent_id)
 
-	result = delete_json(url)
-	# NOTE: No need to print the response
-	# if len(result) != 0:
-	#     self.print_json_result(result)
+        result = delete_json(url)
+        # NOTE: No need to print the response
+        # if len(result) != 0:
+        #     self.print_json_result(result)
 
     def set_intent(self, args):
-	"CLI command callback: set intent"
+        "CLI command callback: set intent"
 
-	intents = []
-	oper = {}
-	# Create the POST payload
-	oper['intentId'] = args.intent_id
-	oper['intentType'] = 'CONSTRAINED_SHORTEST_PATH'	# XXX: Hardcoded
-	oper['staticPath'] = False		# XXX: Hardcoded
-	oper['srcSwitchDpid'] = args.src_dpid
-	oper['srcSwitchPort'] = args.src_port
-	oper['dstSwitchDpid'] = args.dst_dpid
-	oper['dstSwitchPort'] = args.dst_port
-	oper['matchSrcMac'] = args.match_src_mac
-	oper['matchDstMac'] = args.match_dst_mac
-	intents.append(oper)
+        intents = []
+        oper = {}
+        # Create the POST payload
+        oper['intentId'] = args.intent_id
+        oper['intentType'] = 'CONSTRAINED_SHORTEST_PATH'        # XXX: Hardcoded
+        oper['staticPath'] = False              # XXX: Hardcoded
+        oper['srcSwitchDpid'] = args.src_dpid
+        oper['srcSwitchPort'] = args.src_port
+        oper['dstSwitchDpid'] = args.dst_dpid
+        oper['dstSwitchPort'] = args.dst_port
+        oper['matchSrcMac'] = args.match_src_mac
+        oper['matchDstMac'] = args.match_dst_mac
+        intents.append(oper)
 
-	url = "http://%s:%s/wm/onos/intent/high" % (self.onos_ip, self.onos_port)
-	result = post_json(url, intents)
-	# NOTE: No need to print the response
-	# if len(result) != 0:
-	#     self.print_json_result(result)
+        url = "http://%s:%s/wm/onos/intent/high" % (self.onos_ip, self.onos_port)
+        result = post_json(url, intents)
+        # NOTE: No need to print the response
+        # if len(result) != 0:
+        #     self.print_json_result(result)
 
     def show_device_all(self, args):
-	"CLI command callback: show device all"
+        "CLI command callback: show device all"
 
-	url = "http://%s:%s/wm/onos/topology/devices" % (self.onos_ip, self.onos_port)
-	result = get_json(url)
-	self.print_json_result(result)
+        url = "http://%s:%s/wm/onos/topology/devices" % (self.onos_ip, self.onos_port)
+        result = get_json(url)
+        self.print_json_result(result)
 
     def show_intent_high(self, args):
-	"CLI command callback: show intent high"
+        "CLI command callback: show intent high"
 
-	if args.intent_id is None:
-	    # Show all intents
-	    url = "http://%s:%s/wm/onos/intent/high" % (self.onos_ip, self.onos_port)
-	else:
-	    # Show a single intent
-	    url = "http://%s:%s/wm/onos/intent/high/%s" % (self.onos_ip, self.onos_port, args.intent_id)
+        if args.intent_id is None:
+            # Show all intents
+            url = "http://%s:%s/wm/onos/intent/high" % (self.onos_ip, self.onos_port)
+        else:
+            # Show a single intent
+            url = "http://%s:%s/wm/onos/intent/high/%s" % (self.onos_ip, self.onos_port, args.intent_id)
 
-	result = get_json(url)
-	self.print_json_result(result)
+        result = get_json(url)
+        self.print_json_result(result)
 
     def show_intent_low(self, args):
-	"CLI command callback: show intent low"
+        "CLI command callback: show intent low"
 
-	if args.intent_id is None:
-	    # Show all intents
-	    url = "http://%s:%s/wm/onos/intent/low" % (self.onos_ip, self.onos_port)
-	else:
-	    # Show a single intent
-	    url = "http://%s:%s/wm/onos/intent/low/%s" % (self.onos_ip, self.onos_port, args.intent_id)
+        if args.intent_id is None:
+            # Show all intents
+            url = "http://%s:%s/wm/onos/intent/low" % (self.onos_ip, self.onos_port)
+        else:
+            # Show a single intent
+            url = "http://%s:%s/wm/onos/intent/low/%s" % (self.onos_ip, self.onos_port, args.intent_id)
 
-	result = get_json(url)
-	self.print_json_result(result)
+        result = get_json(url)
+        self.print_json_result(result)
 
     def show_link_all(self, args):
-	"CLI command callback: show link all"
+        "CLI command callback: show link all"
 
-	url = "http://%s:%s/wm/onos/topology/links" % (self.onos_ip, self.onos_port)
-	result = get_json(url)
-	#
-	if (self.output_format == "json"):
-	    self.print_json_result(result)
-	else:
-	    # NOTE: The code below is for demo purpose only how to
-	    # decode and print the links in text format. It will be
-	    # reimplemented in the future.
-	    links = result
-	    print "# src_dpid src_port -> dst_dpid dst_port"
-	    for v in sorted(links, key=lambda x: x['src-switch']):
-		if v.has_key('dst-switch'):
-		    dst_dpid = str(v['dst-switch'])
-		if v.has_key('src-switch'):
-		    src_dpid = str(v['src-switch'])
-		if v.has_key('src-port'):
-		    src_port = str(v['src-port'])
-		if v.has_key('dst-port'):
-		    dst_port = str(v['dst-port'])
-		self.print_result("%s %s -> %s %s" % (src_dpid, src_port, dst_dpid, dst_port))
+        url = "http://%s:%s/wm/onos/topology/links" % (self.onos_ip, self.onos_port)
+        result = get_json(url)
+        #
+        if (self.output_format == "json"):
+            self.print_json_result(result)
+        else:
+            # NOTE: The code below is for demo purpose only how to
+            # decode and print the links in text format. It will be
+            # reimplemented in the future.
+            links = result
+            print "# src_dpid src_port -> dst_dpid dst_port"
+            for v in sorted(links, key=lambda x: x['src-switch']):
+                if v.has_key('dst-switch'):
+                    dst_dpid = str(v['dst-switch'])
+                if v.has_key('src-switch'):
+                    src_dpid = str(v['src-switch'])
+                if v.has_key('src-port'):
+                    src_port = str(v['src-port'])
+                if v.has_key('dst-port'):
+                    dst_port = str(v['dst-port'])
+                self.print_result("%s %s -> %s %s" % (src_dpid, src_port, dst_dpid, dst_port))
 
     def show_path_shortest(self, args):
-	"CLI command callback: show path shortest"
+        "CLI command callback: show path shortest"
 
-	url = "http://%s:%s/wm/onos/intent/path/switch/%s/shortest-path/%s" % (self.onos_ip, self.onos_port, args.src_dpid, args.dst_dpid)
-	result = get_json(url)
-	#
-	self.print_json_result(result)
+        url = "http://%s:%s/wm/onos/intent/path/switch/%s/shortest-path/%s" % (self.onos_ip, self.onos_port, args.src_dpid, args.dst_dpid)
+        result = get_json(url)
+        #
+        self.print_json_result(result)
 
     def show_switch_all(self, args):
-	"CLI command callback: show switch all"
+        "CLI command callback: show switch all"
 
-	url = "http://%s:%s/wm/onos/topology/switches" % (self.onos_ip, self.onos_port)
-	result = get_json(url)
-	#
-	self.print_json_result(result)
+        url = "http://%s:%s/wm/onos/topology/switches" % (self.onos_ip, self.onos_port)
+        result = get_json(url)
+        #
+        self.print_json_result(result)
 
     def show_topology_all(self, args):
-	"CLI command callback: show topology all"
+        "CLI command callback: show topology all"
 
-	url = "http://%s:%s/wm/onos/topology" % (self.onos_ip, self.onos_port)
-	result = get_json(url)
-	#
-	self.print_json_result(result)
+        url = "http://%s:%s/wm/onos/topology" % (self.onos_ip, self.onos_port)
+        result = get_json(url)
+        #
+        self.print_json_result(result)
 
     #
     # Implement "delete" top-level command
     #
     def do_delete(self, arg):
         "Top-level 'delete' command"
-	self.impl_do_command('delete', arg)
+        self.impl_do_command('delete', arg)
     def complete_delete(self, text, line, begidx, endidx):
-	"Completion of top-level 'delete' command"
-	return self.impl_complete_command('delete', text, line, begidx, endidx)
+        "Completion of top-level 'delete' command"
+        return self.impl_complete_command('delete', text, line, begidx, endidx)
     def help_delete(self):
-	"Help for top-level 'delete' command"
-	self.impl_help_command('delete')
+        "Help for top-level 'delete' command"
+        self.impl_help_command('delete')
 
     #
     # Implement "set" top-level command
     #
     def do_set(self, arg):
         "Top-level 'set' command"
-	self.impl_do_command('set', arg)
+        self.impl_do_command('set', arg)
     def complete_set(self, text, line, begidx, endidx):
-	"Completion of top-level 'set' command"
-	return self.impl_complete_command('set', text, line, begidx, endidx)
+        "Completion of top-level 'set' command"
+        return self.impl_complete_command('set', text, line, begidx, endidx)
     def help_set(self):
-	"Help for top-level 'set' command"
-	self.impl_help_command('set')
+        "Help for top-level 'set' command"
+        self.impl_help_command('set')
 
     #
     # Implement "show" top-level command
     #
     def do_show(self, arg):
         "Top-level 'show' command"
-	self.impl_do_command('show', arg)
+        self.impl_do_command('show', arg)
     def complete_show(self, text, line, begidx, endidx):
-	"Completion of top-level 'show' command"
-	return self.impl_complete_command('show', text, line, begidx, endidx)
+        "Completion of top-level 'show' command"
+        return self.impl_complete_command('show', text, line, begidx, endidx)
     def help_show(self):
-	"Help for top-level 'show' command"
-	self.impl_help_command('show')
+        "Help for top-level 'show' command"
+        self.impl_help_command('show')
 
     #
     # Implement the "do_something" top-level command execution
     #
     def impl_do_command(self, root_name, arg):
-	"Implementation of top-level 'do_something' command execution"
-	parser = self.parsers_dict[root_name]
-	parsed_args = parser.parse_args(arg.split())
-	parsed_args.func(parsed_args)
+        "Implementation of top-level 'do_something' command execution"
+        parser = self.parsers_dict[root_name]
+        parsed_args = parser.parse_args(arg.split())
+        parsed_args.func(parsed_args)
 
     #
     # Implement the "complete_something" top-level command completion
     #
     def impl_complete_command(self, root_name, text, line, begidx, endidx):
-	"Implementation of top-level 'complete_something' command completion"
-	root_command = self.commands_dict[root_name]
-	subtree_commands = self.collect_subtree_commands(root_command)
+        "Implementation of top-level 'complete_something' command completion"
+        root_command = self.commands_dict[root_name]
+        subtree_commands = self.collect_subtree_commands(root_command)
 
-	#
-	# Loop through the commands and add their portion
-	# of the sub-name to the list of completions.
-	#
-	# NOTE: We add a command only if it has a callback.
-	#
-	completions = []
-	for c in subtree_commands:
-	    if c.callback is None:
-		continue
-	    name = c.split_name[len(root_command.split_name):]
-	    completions.append(' '.join(name))
+        #
+        # Loop through the commands and add their portion
+        # of the sub-name to the list of completions.
+        #
+        # NOTE: We add a command only if it has a callback.
+        #
+        completions = []
+        for c in subtree_commands:
+            if c.callback is None:
+                continue
+            name = c.split_name[len(root_command.split_name):]
+            completions.append(' '.join(name))
 
-	mline = line.partition(" ")[2]
-	offs = len(mline) - len(text)
-	return [s[offs:] for s in completions if s.startswith(mline)]
+        mline = line.partition(" ")[2]
+        offs = len(mline) - len(text)
+        return [s[offs:] for s in completions if s.startswith(mline)]
 
     #
     # Implement the "help_something" top-level command help
     #
     def impl_help_command(self, root_name):
-	"Implementation of top-level 'help_something' command help"
-	root_command = self.commands_dict[root_name]
-	subtree_commands = self.collect_subtree_commands(root_command)
+        "Implementation of top-level 'help_something' command help"
+        root_command = self.commands_dict[root_name]
+        subtree_commands = self.collect_subtree_commands(root_command)
 
-	#
-	# Loop through the commands and print the help for each command.
-	# NOTE: We add a command only if it has a callback.
-	#
-	print "Help for the `%s` command:" % (root_name)
-	for c in subtree_commands:
-	    if c.callback is None:
-		continue
-	    print "  {0:30}{1:30}".format(c.name, c.help)
-	    # if c.init_arg_parser is not None:
-	    # 	parser = self.parsers_dict[c.name]
-	    # 	parser.print_help()
+        #
+        # Loop through the commands and print the help for each command.
+        # NOTE: We add a command only if it has a callback.
+        #
+        print "Help for the `%s` command:" % (root_name)
+        for c in subtree_commands:
+            if c.callback is None:
+                continue
+            print "  {0:30}{1:30}".format(c.name, c.help)
+            # if c.init_arg_parser is not None:
+            #   parser = self.parsers_dict[c.name]
+            #   parser.print_help()
 
     #
     # Traverse (breadth-first) a subtree and return all nodes except the
     # root node.
     #
     def collect_subtree_commands(self, root_command):
-	"""Collect a subtree of commands.
+        """Collect a subtree of commands.
            Traverses (breadth-first) a subtree of commands and returns
            all nodes except the root node."""
 
-	commands = []
-	subtree_commands = []
-	commands.append(root_command)
-	# Use breadth-first to traverse the subtree
-	while commands:
-	    pc = commands.pop(0)
-	    for c in pc.children:
-		commands.append(c)
-		subtree_commands.append(c)
-	return subtree_commands
+        commands = []
+        subtree_commands = []
+        commands.append(root_command)
+        # Use breadth-first to traverse the subtree
+        while commands:
+            pc = commands.pop(0)
+            for c in pc.children:
+                commands.append(c)
+                subtree_commands.append(c)
+        return subtree_commands
 
     def log_debug(self, msg):
-	"""Log debug information.
-	msg: the message to log
-	Use the following CLI commands to enable/disable debugging:
-	  paramset debug true
-	  paramset debug false
-	"""
-	if self.debug:
-	    print "%s" % (msg)
+        """Log debug information.
+        msg: the message to log
+        Use the following CLI commands to enable/disable debugging:
+          paramset debug true
+          paramset debug false
+        """
+        if self.debug:
+            print "%s" % (msg)
 
     def print_json_result(self, json_result):
-	"""Print JSON result."""
-	if len(json_result) == 0:
-	    return
-	result = json.dumps(json_result, indent=4)
-	self.print_result(result)
+        """Print JSON result."""
+        if len(json_result) == 0:
+            return
+        result = json.dumps(json_result, indent=4)
+        self.print_result(result)
 
     def print_result(self, result):
-	"""Print parsed result."""
-	print "%s" % (result)
+        """Print parsed result."""
+        print "%s" % (result)
 
     #
     # Implementation of the "paramshow" CLI command.
@@ -555,8 +555,8 @@ class OnosCli(Cmd):
         as there is no ambiguity.  Call without arguments for a list of
         settable parameters with their values.'''
 
-	class NotSettableError(Exception):
-	    pass
+        class NotSettableError(Exception):
+            pass
 
         try:
             statement, paramName, val = arg.parsed.raw.split(None, 2)
@@ -591,25 +591,25 @@ def get_json(url):
 
     parsed_result = []
     try:
-	response = urllib2.urlopen(url)
-	result = response.read()
-	response.close()
-	if len(result) != 0:
-	    parsed_result = json.loads(result)
+        response = urllib2.urlopen(url)
+        result = response.read()
+        response.close()
+        if len(result) != 0:
+            parsed_result = json.loads(result)
     except HTTPError as exc:
-	print "ERROR:"
-	print "  REST GET URL: %s" % url
-	# NOTE: exc.fp contains the object with the response payload
-	error_payload = json.loads(exc.fp.read())
-	print "  REST Error Code: %s" % (error_payload['code'])
-	print "  REST Error Summary: %s" % (error_payload['summary'])
-	print "  REST Error Description: %s" % (error_payload['formattedDescription'])
-	print "  HTTP Error Code: %s" % exc.code
-	print "  HTTP Error Reason: %s" % exc.reason
+        print "ERROR:"
+        print "  REST GET URL: %s" % url
+        # NOTE: exc.fp contains the object with the response payload
+        error_payload = json.loads(exc.fp.read())
+        print "  REST Error Code: %s" % (error_payload['code'])
+        print "  REST Error Summary: %s" % (error_payload['summary'])
+        print "  REST Error Description: %s" % (error_payload['formattedDescription'])
+        print "  HTTP Error Code: %s" % exc.code
+        print "  HTTP Error Reason: %s" % exc.reason
     except URLError as exc:
-	print "ERROR:"
-	print "  REST GET URL: %s" % url
-	print "  URL Error Reason: %s" % exc.reason
+        print "ERROR:"
+        print "  REST GET URL: %s" % url
+        print "  URL Error Reason: %s" % exc.reason
     return parsed_result
 
 def post_json(url, data):
@@ -620,27 +620,27 @@ def post_json(url, data):
     parsed_result = []
     data_json = json.dumps(data)
     try:
-	request = urllib2.Request(url, data_json)
-	request.add_header("Content-Type", "application/json")
-	response = urllib2.urlopen(request)
-	result = response.read()
-	response.close()
-	if len(result) != 0:
-	    parsed_result = json.loads(result)
+        request = urllib2.Request(url, data_json)
+        request.add_header("Content-Type", "application/json")
+        response = urllib2.urlopen(request)
+        result = response.read()
+        response.close()
+        if len(result) != 0:
+            parsed_result = json.loads(result)
     except HTTPError as exc:
-	print "ERROR:"
-	print "  REST POST URL: %s" % url
-	# NOTE: exc.fp contains the object with the response payload
-	error_payload = json.loads(exc.fp.read())
-	print "  REST Error Code: %s" % (error_payload['code'])
-	print "  REST Error Summary: %s" % (error_payload['summary'])
-	print "  REST Error Description: %s" % (error_payload['formattedDescription'])
-	print "  HTTP Error Code: %s" % exc.code
-	print "  HTTP Error Reason: %s" % exc.reason
+        print "ERROR:"
+        print "  REST POST URL: %s" % url
+        # NOTE: exc.fp contains the object with the response payload
+        error_payload = json.loads(exc.fp.read())
+        print "  REST Error Code: %s" % (error_payload['code'])
+        print "  REST Error Summary: %s" % (error_payload['summary'])
+        print "  REST Error Description: %s" % (error_payload['formattedDescription'])
+        print "  HTTP Error Code: %s" % exc.code
+        print "  HTTP Error Reason: %s" % exc.reason
     except URLError as exc:
-	print "ERROR:"
-	print "  REST POST URL: %s" % url
-	print "  URL Error Reason: %s" % exc.reason
+        print "ERROR:"
+        print "  REST POST URL: %s" % url
+        print "  URL Error Reason: %s" % exc.reason
     return parsed_result
 
 def delete_json(url):
@@ -649,27 +649,27 @@ def delete_json(url):
 
     parsed_result = []
     try:
-	request = urllib2.Request(url)
-	request.get_method = lambda: 'DELETE'
-	response = urllib2.urlopen(request)
-	result = response.read()
-	response.close()
-	if len(result) != 0:
-	    parsed_result = json.loads(result)
+        request = urllib2.Request(url)
+        request.get_method = lambda: 'DELETE'
+        response = urllib2.urlopen(request)
+        result = response.read()
+        response.close()
+        if len(result) != 0:
+            parsed_result = json.loads(result)
     except HTTPError as exc:
-	print "ERROR:"
-	print "  REST DELETE URL: %s" % url
-	# NOTE: exc.fp contains the object with the response payload
-	error_payload = json.loads(exc.fp.read())
-	print "  REST Error Code: %s" % (error_payload['code'])
-	print "  REST Error Summary: %s" % (error_payload['summary'])
-	print "  REST Error Description: %s" % (error_payload['formattedDescription'])
-	print "  HTTP Error Code: %s" % exc.code
-	print "  HTTP Error Reason: %s" % exc.reason
+        print "ERROR:"
+        print "  REST DELETE URL: %s" % url
+        # NOTE: exc.fp contains the object with the response payload
+        error_payload = json.loads(exc.fp.read())
+        print "  REST Error Code: %s" % (error_payload['code'])
+        print "  REST Error Summary: %s" % (error_payload['summary'])
+        print "  REST Error Description: %s" % (error_payload['formattedDescription'])
+        print "  HTTP Error Code: %s" % exc.code
+        print "  HTTP Error Reason: %s" % exc.reason
     except URLError as exc:
-	print "ERROR:"
-	print "  REST DELETE URL: %s" % url
-	print "  URL Error Reason: %s" % exc.reason
+        print "ERROR:"
+        print "  REST DELETE URL: %s" % url
+        print "  URL Error Reason: %s" % exc.reason
     return parsed_result
 
 if __name__ == '__main__':
@@ -678,20 +678,20 @@ if __name__ == '__main__':
     # Setup the parser
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--command', nargs=argparse.REMAINDER,
-			help="Run arguments to the end of the line as a CLI command")
+                        help="Run arguments to the end of the line as a CLI command")
     parser.add_argument('--onos-ip',
-			help="Set the ONOS IP address (for REST calls)")
+                        help="Set the ONOS IP address (for REST calls)")
     parser.add_argument('--onos-port',
-			help="Set the ONOS port number (for REST calls)")
+                        help="Set the ONOS port number (for REST calls)")
     parser.add_argument('-t', '--test', nargs='+',
-			help="Test against transcript(s) in FILE (wildcards OK)")
+                        help="Test against transcript(s) in FILE (wildcards OK)")
 
     # Parse the arguments
     parsed_args = parser.parse_args()
     if parsed_args.onos_ip:
-	onosCli.onos_ip = parsed_args.onos_ip
+        onosCli.onos_ip = parsed_args.onos_ip
     if parsed_args.onos_port:
-	onosCli.onos_port = parsed_args.onos_port
+        onosCli.onos_port = parsed_args.onos_port
     #
     # NOTE: We have to reset the command-line options so the Cmd2 parser
     # doesn't process them again.
@@ -700,12 +700,12 @@ if __name__ == '__main__':
 
     # Run the CLI as appropriate
     if parsed_args.test:
-	# Run CLI Transcript Tests
-	onosCli.runTranscriptTests(parsed_args.test)
+        # Run CLI Transcript Tests
+        onosCli.runTranscriptTests(parsed_args.test)
     elif  parsed_args.command:
-	# Run arguments as a CLI command
-	command_line = ' '.join(parsed_args.command)
-	onosCli.onecmd(command_line)
+        # Run arguments as a CLI command
+        command_line = ' '.join(parsed_args.command)
+        onosCli.onecmd(command_line)
     else:
-	# Run interactive CLI
-	onosCli.cmdloop()
+        # Run interactive CLI
+        onosCli.cmdloop()
