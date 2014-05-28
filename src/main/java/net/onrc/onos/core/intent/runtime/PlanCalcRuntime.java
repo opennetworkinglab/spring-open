@@ -118,6 +118,10 @@ public class PlanCalcRuntime {
                 long sw = lastDstSw;
                 dstPort = lastDstPort;
                 FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac, i.operator);
+                if (cookieId != null) {
+                    log.trace("cookieId is set: {}", cookieId);
+                    fe.setFlowEntryId(cookieId);
+                }
                 fe.setIdleTimeout(idleTimeout);
                 fe.setHardTimeout(hardTimeout);
                 entries.add(fe);
