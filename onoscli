@@ -206,7 +206,7 @@ class OnosCli(Cmd):
 	    #
 	    Command("show switch", "Show switches"),
 	    #
-	    Command("show switch all", "Show all switches", self.show_switch_all)
+	    Command("show switch all", "Show all switches", self.show_switch_all),
 	    #
 	    Command("show topology", "Show network topology"),
 	    #
@@ -376,7 +376,7 @@ class OnosCli(Cmd):
     def show_topology_all(self, args):
 	"CLI command callback: show topology all"
 
-	url = "http://%s:%s/wm/onos/topology/all" % (self.onos_ip, self.onos_port)
+	url = "http://%s:%s/wm/onos/topology" % (self.onos_ip, self.onos_port)
 	result = get_json(url)
 	#
 	self.print_json_result(result)
