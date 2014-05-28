@@ -8,6 +8,10 @@ set -x
 export ONOS_HOME=${ONOS_HOME:-$(cd `dirname $0`; pwd)}
 export RAMCLOUD_HOME=${RAMCLOUD_HOME:-~/ramcloud}
 
+source ${ONOS_HOME}/scripts/common/utils.sh
+
+confirm-if-root
+
 if [ -d ${RAMCLOUD_HOME} ]; then
   echo "${RAMCLOUD_HOME} already exist, please rename or remove them."
   exit 1

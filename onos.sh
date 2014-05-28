@@ -25,6 +25,8 @@ ONOS_CONF=${ONOS_CONF:-${ONOS_CONF_DIR}/onos_node.`hostname`.conf}
 
 source ${ONOS_HOME}/scripts/common/utils.sh
 
+confirm-if-root
+
 if [ ! -f ${ONOS_CONF} ]; then
   # falling back to default config file
   ONOS_CONF=${ONOS_CONF_DIR}/onos_node.conf
@@ -33,7 +35,6 @@ if [ ! -f ${ONOS_CONF} ]; then
     exit 1
   fi
 fi
-
 
 ### Variables read from ONOS config file ###
 ONOS_HOST_NAME=$(read-conf ${ONOS_CONF}     host.name                     `hostname`)

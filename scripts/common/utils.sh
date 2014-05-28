@@ -77,3 +77,18 @@ function end-conf-creation {
   
   mv ${temp} ${conf}
 }
+
+# Confirm user whether to continue if running as root.
+function confirm-if-root {
+  if [ "`whoami`" == "root" ]; then
+    echo "This script should not be run as root. Are you sure you want to continue?[y/N]"
+    local key
+    read key
+    if [ "${key}" == "Y" -o "${key}" == "y" ]; then
+      echo "Continue running as root."
+    else
+      echo "Exiting script"
+      exit 1
+    fi
+  fi
+}
