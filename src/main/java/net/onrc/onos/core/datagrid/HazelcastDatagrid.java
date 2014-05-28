@@ -30,6 +30,12 @@ import com.hazelcast.instance.GroupProperties;
  */
 public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
     static final Logger log = LoggerFactory.getLogger(HazelcastDatagrid.class);
+
+    /**
+     * The name of Hazelcast instance in this JVM.
+     */
+    public static final String ONOS_HAZELCAST_INSTANCE = "ONOS_HazelcastInstance";
+
     private IRestApiService restApi;
 
     static final String HAZELCAST_CONFIG_FILE = "datagridConfig";
@@ -72,6 +78,10 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
                 // XXX probably should throw some exception to kill ONOS instead.
             }
         }
+
+        // set the name of Hazelcast instance in this JVM.
+        hazelcastConfig.setInstanceName(ONOS_HAZELCAST_INSTANCE);
+
         /*
         hazelcastConfig.setProperty(GroupProperties.PROP_IO_THREAD_COUNT, "1");
         hazelcastConfig.setProperty(GroupProperties.PROP_OPERATION_THREAD_COUNT, "1");

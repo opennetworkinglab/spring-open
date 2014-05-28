@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.List;
 
+import net.onrc.onos.core.datagrid.HazelcastDatagrid;
 import net.onrc.onos.core.datastore.IKVClient;
 import net.onrc.onos.core.datastore.IKVTable;
 import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
@@ -32,6 +33,9 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
 
+/**
+ * Hazelcast implementation of datastore IKVClient.
+ */
 public final class HZClient implements IKVClient {
     private static final Logger log = LoggerFactory.getLogger(HZClient.class);
 
@@ -39,9 +43,10 @@ public final class HZClient implements IKVClient {
 
     private static final String MAP_PREFIX = "datastore://";
 
-    // make this path configurable
     private static final String BASE_CONFIG_FILENAME = System.getProperty("net.onrc.onos.core.datastore.hazelcast.baseConfig", "conf/hazelcast.xml");
     private static final String HAZELCAST_DEFAULT_XML = "conf/hazelcast.default.xml";
+
+    // XXX Remove this mode at some point
     private static boolean useClientMode = Boolean.parseBoolean(System.getProperty("net.onrc.onos.core.datastore.hazelcast.clientMode", "true"));
 
     // Note: xml configuration will overwrite this value if present
@@ -55,11 +60,34 @@ public final class HZClient implements IKVClient {
         return THE_INSTANCE;
     }
 
+    /**
+     * Default constructor.
+     * <p/>
+     * Get or create the Hazelcast Instance to use for datastore.
+     */
     private HZClient() {
-        hazelcastInstance = getHZinstance(BASE_CONFIG_FILENAME);
+        // Try to get the existing HZ instance in JVM if possible.
+        HazelcastInstance instance = Hazelcast.getHazelcastInstanceByName(HazelcastDatagrid.ONOS_HAZELCAST_INSTANCE);
+        if (instance == null) {
+            log.error("Failed to get the Hazelcast instance in JVM. "
+                    + "Probably DataStoreClient was requested before "
+                    + "IDatagridService was started "
+                    + "or running as part of unit tests. "
+                    + "Creating instance on it's own.");
+            instance = getFallbackHZinstance(BASE_CONFIG_FILENAME);
+        }
+        hazelcastInstance = instance;
     }
 
-    private static HazelcastInstance getHZinstance(final String hazelcastConfigFileName) {
+    /**
+     * Get or create the hazelcast instance to use for datastore, when existing
+     * Hazelcast instance cannot be retrieved.
+     * <p/>
+     *
+     * @param hazelcastConfigFileName Hazelcast configuration to use when creating a
+     * @return HazelcastInstance to use for datastore
+     */
+    private static HazelcastInstance getFallbackHZinstance(final String hazelcastConfigFileName) {
         Config baseHzConfig = null;
         try {
             baseHzConfig = new FileSystemXmlConfig(hazelcastConfigFileName);
@@ -86,6 +114,8 @@ public final class HZClient implements IKVClient {
         }
 
         HazelcastInstance instance = null;
+        // TODO Client mode should be removed at some point.
+        // we can get HZ instance used by ONOS using getHazelcastInstanceByName
         if (useClientMode) {
             log.info("Configuring Hazelcast datastore as Client mode");
             ClientConfig clientConfig = new ClientConfig();
