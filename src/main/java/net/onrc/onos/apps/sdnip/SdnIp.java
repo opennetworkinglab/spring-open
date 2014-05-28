@@ -29,12 +29,17 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.proxyarp.IArpRequester;
 import net.onrc.onos.apps.proxyarp.IProxyArpService;
 import net.onrc.onos.apps.sdnip.RibUpdate.Operation;
-import net.onrc.onos.apps.sdnip.web.SdnIpWebRoutable;
+import net.onrc.onos.apps.sdnip.web.SdnIpWebRoutableNew;
+import net.onrc.onos.core.intent.IntentOperation;
+import net.onrc.onos.core.intent.IntentOperationList;
+import net.onrc.onos.core.intent.ShortestPathIntent;
+import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.LDUpdate;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
+import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.CallerId;
 import net.onrc.onos.core.util.DataPath;
 import net.onrc.onos.core.util.Dpid;
@@ -93,6 +98,12 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     private String routerId;
     private static final String DEFAULT_CONFIG_FILENAME = "config.json";
     private String currentConfigFilename = DEFAULT_CONFIG_FILENAME;
+
+    /* ShortestPath Intent Variables */
+    private final String callerId = "SdnIp";
+    private IControllerRegistryService controllerRegistryService;
+    private IPathCalcRuntimeService pathRuntime;
+    /* Shortest Intent Path Variables */
 
     private static final short ARP_PRIORITY = 20;
 
@@ -254,6 +265,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 = new ArrayList<Class<? extends IFloodlightService>>();
         l.add(IFloodlightProviderService.class);
         l.add(IRestApiService.class);
+        l.add(IControllerRegistryService.class);
+        l.add(IPathCalcRuntimeService.class);
         return l;
     }
 
@@ -272,6 +285,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         restApi = context.getServiceImpl(IRestApiService.class);
         proxyArp = context.getServiceImpl(IProxyArpService.class);
 
+        controllerRegistryService = context.getServiceImpl(IControllerRegistryService.class);
+        pathRuntime = context.getServiceImpl(IPathCalcRuntimeService.class);
         linkUpdates = new ArrayList<LDUpdate>();
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         topologyChangeDetectorTask = new SingletonTask(executor, new TopologyChangeDetector());
@@ -320,7 +335,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public void startUp(FloodlightModuleContext context) {
-        restApi.addRestletRoutable(new SdnIpWebRoutable());
+        //restApi.addRestletRoutable(new SdnIpWebRoutable());
+        restApi.addRestletRoutable(new SdnIpWebRoutableNew());
         floodlightProvider.addOFSwitchListener(this);
 
         // Retrieve the RIB from BGPd during startup
@@ -802,7 +818,66 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         }
     }
 
+    @Override
+    public void beginRoutingNew() {
+            setupBgpPathsNew();
+
+        //setupFullMesh();
+
+        //Suppress link discovery on external-facing router ports
+
+        for (Interface intf : interfaces.values()) {
+            linkDiscoveryService.addToSuppressLLDPs(intf.getDpid(), intf.getPort());
+        }
+
+        bgpUpdatesExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                doUpdatesThread();
+            }
+        });
+    }
+
     /**
+     * Setup the Paths to the BGP Daemon.
+     *
+     * Run a loop for all of the bgpPeers
+     * Push flow from BGPd to the peer
+     * Push flow from peer to BGPd
+     * Parameters to pass to the intent are as follows:
+     *     String id,
+     *     long srcSwitch, long srcPort, long srcMac, int srcIP,
+     *     long dstSwitch, long dstPort, long dstMac, int dstIP
+     */
+    private void setupBgpPathsNew() {
+        IntentOperationList operations = new IntentOperationList();
+        for (BgpPeer bgpPeer : bgpPeers.values()) {
+            Interface peerInterface = interfaces.get(bgpPeer.getInterfaceName());
+            //Inet4Address.
+            int srcIP = InetAddresses.coerceToInteger(peerInterface.getIpAddress());
+            int dstIP = InetAddresses.coerceToInteger(bgpPeer.getIpAddress());
+            String fwdIntentId = callerId + ":" + controllerRegistryService.getNextUniqueId();
+            String bwdIntentId = callerId + ":" + controllerRegistryService.getNextUniqueId();
+            SwitchPort srcPort =
+                new SwitchPort(bgpdAttachmentPoint.dpid(),
+                               bgpdAttachmentPoint.port());
+            SwitchPort dstPort =
+                new SwitchPort(new Dpid(peerInterface.getDpid()),
+                               new Port(peerInterface.getSwitchPort().port()));
+            ShortestPathIntent fwdIntent = new ShortestPathIntent(fwdIntentId,
+                    srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP,
+                    dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP);
+            ShortestPathIntent bwdIntent = new ShortestPathIntent(bwdIntentId,
+                    srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP,
+                    dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP);
+            IntentOperation.Operator operator = IntentOperation.Operator.ADD;
+            operations.add(operator, fwdIntent);
+            operations.add(operator, bwdIntent);
+        }
+        pathRuntime.executeIntentOperations(operations);
+    }
+
+    /*
      * Proactively install all BGP traffic paths from BGP host attachment point
      * in SDN network to all the virtual gateways to BGP peers in other networks.
      */
@@ -822,13 +897,13 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             flowPath.setFlowPathFlags(new FlowPathFlags(0));
 
             Interface peerInterface = interfaces.get(bgpPeer.getInterfaceName());
-
             // Create the Flow Path Match condition(s)
             FlowEntryMatch flowEntryMatch = new FlowEntryMatch();
             flowEntryMatch.enableEthernetFrameType(Ethernet.TYPE_IPV4);
 
             // Match both source address and dest address
             IPv4Net dstIPv4Net = new IPv4Net(bgpPeer.getIpAddress().getHostAddress() + "/32");
+
             flowEntryMatch.enableDstIPv4Net(dstIPv4Net);
 
             IPv4Net srcIPv4Net = new IPv4Net(peerInterface.getIpAddress().getHostAddress() + "/32");
@@ -900,13 +975,13 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             DataPath reverseDataPath = new DataPath();
 
             SwitchPort reverseDstPort =
-                new SwitchPort(bgpdAttachmentPoint.dpid(),
-                               bgpdAttachmentPoint.port());
+                    new SwitchPort(bgpdAttachmentPoint.dpid(),
+                            bgpdAttachmentPoint.port());
             reverseDataPath.setDstPort(reverseDstPort);
 
             SwitchPort reverseSrcPort =
-                new SwitchPort(new Dpid(peerInterface.getDpid()),
-                               new Port(peerInterface.getSwitchPort().port()));
+                    new SwitchPort(new Dpid(peerInterface.getDpid()),
+                            new Port(peerInterface.getSwitchPort().port()));
             reverseDataPath.setSrcPort(reverseSrcPort);
             flowPath.setDataPath(reverseDataPath);
 

@@ -19,10 +19,10 @@ import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.LinkEvent;
-//import net.onrc.onos.core.topology.Topology;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+//import net.onrc.onos.core.topology.Topology;
 
 /**
  * @author Brian O'Connor <bocon@onlab.us>
@@ -62,14 +62,32 @@ public class PlanCalcRuntime {
             MACAddress srcMac, dstMac;
             int idleTimeout = 0, hardTimeout = 0, firstSwitchIdleTimeout = 0, firstSwitchHardTimeout = 0;
             Long cookieId = null;
+            int srcIP, dstIP;
             if (parent instanceof ShortestPathIntent) {
                 ShortestPathIntent pathIntent = (ShortestPathIntent) parent;
-//              Switch srcSwitch = graph.getSwitch(pathIntent.getSrcSwitchDpid());
-//              srcPort = srcSwitch.getPort(pathIntent.getSrcPortNumber());
                 srcPort = pathIntent.getSrcPortNumber();
-                srcMac = MACAddress.valueOf(pathIntent.getSrcMac());
-                dstMac = MACAddress.valueOf(pathIntent.getDstMac());
 //              Switch dstSwitch = graph.getSwitch(pathIntent.getDstSwitchDpid());
+
+                // srcMacAddress
+                if (pathIntent.getSrcMac() != ShortestPathIntent.EMPTYMACADDRESS) {
+                    srcMac = MACAddress.valueOf(pathIntent.getSrcMac());
+                } else {
+                    srcMac = null;
+                }
+
+                // dstMacAddress
+                if (pathIntent.getDstMac() != ShortestPathIntent.EMPTYMACADDRESS) {
+                    dstMac = MACAddress.valueOf(pathIntent.getSrcMac());
+                } else {
+                    dstMac = null;
+                }
+
+                // srcIp
+                srcIP = pathIntent.getSrcIp();
+                // dstIp
+                dstIP = pathIntent.getDstIp();
+
+                // Switch dstSwitch = graph.getSwitch(pathIntent.getDstSwitchDpid());
                 lastDstSw = pathIntent.getDstSwitchDpid();
                 firstSrcSw = pathIntent.getSrcSwitchDpid();
 //              lastDstPort = dstSwitch.getPort(pathIntent.getDstPortNumber());
@@ -97,7 +115,8 @@ public class PlanCalcRuntime {
                 long sw = linkEvent.getSrc().getDpid();
 //              dstPort = link.getSrcPort();
                 dstPort = linkEvent.getSrc().getNumber();
-                FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac, i.operator);
+                FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac,
+                                             srcIP, dstIP, i.operator);
                 if (sw != firstSrcSw) {
                     fe.setIdleTimeout(idleTimeout);
                     fe.setHardTimeout(hardTimeout);
@@ -110,14 +129,15 @@ public class PlanCalcRuntime {
                     fe.setFlowEntryId(cookieId);
                 }
                 entries.add(fe);
-//              srcPort = link.getDstPort();
+                //              srcPort = link.getDstPort();
                 srcPort = linkEvent.getDst().getNumber();
             }
             if (lastDstSw >= 0 && lastDstPort >= 0) {
                 //Switch sw = lastDstPort.getSwitch();
                 long sw = lastDstSw;
                 dstPort = lastDstPort;
-                FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac, i.operator);
+                FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac,
+                                             srcIP, dstIP, i.operator);
                 if (cookieId != null) {
                     log.trace("cookieId is set: {}", cookieId);
                     fe.setFlowEntryId(cookieId);

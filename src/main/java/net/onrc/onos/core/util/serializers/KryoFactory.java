@@ -53,7 +53,6 @@ import net.onrc.onos.core.util.Port;
 import net.onrc.onos.core.util.Switch;
 // import net.onrc.onos.core.util.SwitchPort;
 
-
 import com.esotericsoftware.kryo.Kryo;
 
 /**

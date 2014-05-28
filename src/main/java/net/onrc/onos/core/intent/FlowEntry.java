@@ -23,11 +23,14 @@ public class FlowEntry {
     protected int idleTimeout = 0;
     protected long flowEntryId;
 
+// CHECKSTYLE:OFF suppress the warning about too many parameters
     public FlowEntry(long sw, long srcPort, long dstPort,
                      MACAddress srcMac, MACAddress dstMac,
+                     int srcIpAddress, int dstIpAddress,
                      Operator operator) {
+// CHECKSTYLE:ON
         this.sw = sw;
-        this.match = new Match(sw, srcPort, srcMac, dstMac);
+        this.match = new Match(sw, srcPort, srcMac, dstMac, srcIpAddress, dstIpAddress);
         this.actions = new HashSet<Action>();
         this.actions.add(new ForwardAction(dstPort));
         this.operator = operator;

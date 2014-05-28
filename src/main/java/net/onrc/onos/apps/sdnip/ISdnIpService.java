@@ -45,4 +45,9 @@ public interface ISdnIpService extends IFloodlightService {
      * update
      */
     public void newRibUpdate(RibUpdate update);
+
+    /**
+     * Start SDN-IP Routing.
+     */
+    public void beginRoutingNew();
 }

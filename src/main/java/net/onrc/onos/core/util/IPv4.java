@@ -80,4 +80,21 @@ public final class IPv4 {
                 ((this.value >> 8) & 0xFF) + "." +
                 (this.value & 0xFF);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof IPv4)) {
+            return false;
+        }
+        IPv4 other = (IPv4) o;
+        if (this.value != other.value) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.value;
+    }
 }

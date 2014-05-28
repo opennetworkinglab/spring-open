@@ -7,12 +7,16 @@ import net.onrc.onos.core.util.Dpid;
  * @author Toshio Koide (t-koide@onlab.us)
  */
 public class ShortestPathIntent extends Intent {
+    public static final long EMPTYMACADDRESS = 0;
+    public static final int EMPTYIPADDRESS = 0;
     protected long srcSwitchDpid;
     protected long srcPortNumber;
     protected long srcMacAddress;
     protected long dstSwitchDpid;
     protected long dstPortNumber;
     protected long dstMacAddress;
+    protected int srcIpAddress;
+    protected int dstIpAddress;
     protected String pathIntentId = null;
     protected int idleTimeout;
     protected int hardTimeout;
@@ -39,13 +43,24 @@ public class ShortestPathIntent extends Intent {
     public ShortestPathIntent(String id,
                               long srcSwitch, long srcPort, long srcMac,
                               long dstSwitch, long dstPort, long dstMac) {
+        //super(id);
+        this(id, srcSwitch, srcPort, srcMac, EMPTYIPADDRESS, dstSwitch, dstPort, dstMac, EMPTYIPADDRESS);
+    }
+
+    // CHECKSTYLE:OFF suppress the warning about too many parameters
+    public ShortestPathIntent(String id,
+                              long srcSwitch, long srcPort, long srcMac, int srcIp,
+                              long dstSwitch, long dstPort, long dstMac, int dstIp ) {
+    // CHECKSTYLE:ON
         super(id);
-        srcSwitchDpid = srcSwitch;
-        srcPortNumber = srcPort;
-        srcMacAddress = srcMac;
-        dstSwitchDpid = dstSwitch;
-        dstPortNumber = dstPort;
-        dstMacAddress = dstMac;
+        this.srcSwitchDpid = srcSwitch;
+        this.srcPortNumber = srcPort;
+        this.srcMacAddress = srcMac;
+        this.dstSwitchDpid = dstSwitch;
+        this.dstPortNumber = dstPort;
+        this.dstMacAddress = dstMac;
+        this.srcIpAddress = srcIp;
+        this.dstIpAddress = dstIp;
     }
 
     /**
@@ -164,9 +179,17 @@ public class ShortestPathIntent extends Intent {
 
     @Override
     public String toString() {
-        return String.format("id:%s, state:%s, srcDpid:%s, srcPort:%d, srcMac:%s, dstDpid:%s, dstPort:%d, dstMac:%s",
+        return String.format("id:%s, state:%s, srcDpid:%s, srcPort:%d, srcMac:%s, srcIP:%s, dstDpid:%s, dstPort:%d, dstMac:%s, dstIP:%s",
                 getId(), getState(),
-                new Dpid(srcSwitchDpid), srcPortNumber, MACAddress.valueOf(srcMacAddress),
-                new Dpid(dstSwitchDpid), dstPortNumber, MACAddress.valueOf(dstMacAddress));
+                new Dpid(srcSwitchDpid), srcPortNumber, MACAddress.valueOf(srcMacAddress), Integer.toString(srcIpAddress),
+                new Dpid(dstSwitchDpid), dstPortNumber, MACAddress.valueOf(dstMacAddress), Integer.toString(dstIpAddress));
+    }
+
+    public int getSrcIp() {
+        return srcIpAddress;
+    }
+
+    public int getDstIp() {
+        return dstIpAddress;
     }
 }
