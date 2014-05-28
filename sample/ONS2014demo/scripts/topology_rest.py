@@ -275,28 +275,28 @@ def pick_host():
   return "http://" + host + ":8080"
 
 ## Switch ##
-@app.route("/wm/onos/topology/switches/json")
+@app.route("/wm/onos/topology/switches")
 def switches():
   if request.args.get('proxy') == None:
     host = pick_host()
   else:
     host = ONOS_GUI3_HOST
 
-  url ="%s/wm/onos/topology/switches/json" % (host)
+  url ="%s/wm/onos/topology/switches" % (host)
   (code, result) = get_json(url)
 
   resp = Response(result, status=code, mimetype='application/json')
   return resp
 
 ## Link ##
-@app.route("/wm/onos/topology/links/json")
+@app.route("/wm/onos/topology/links")
 def links():
   if request.args.get('proxy') == None:
     host = pick_host()
   else:
     host = ONOS_GUI3_HOST
 
-  url ="%s/wm/onos/topology/links/json" % (host)
+  url ="%s/wm/onos/topology/links" % (host)
   (code, result) = get_json(url)
 
   resp = Response(result, status=code, mimetype='application/json')
@@ -356,7 +356,7 @@ def node_id(switch_array, dpid):
 @app.route('/topology', methods=['GET'])
 def topology_for_gui():
   try:
-    url="http://%s:%s/wm/onos/topology/switches/json" % (RestIP, RestPort)
+    url="http://%s:%s/wm/onos/topology/switches" % (RestIP, RestPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -399,7 +399,7 @@ def topology_for_gui():
         switches[sw_id]['group'] = controllers.index(ctrl) + 1
 
   try:
-    url = "http://%s:%s/wm/onos/topology/links/json" % (RestIP, RestPort)
+    url = "http://%s:%s/wm/onos/topology/links" % (RestIP, RestPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -438,7 +438,7 @@ def topology_for_gui():
 @app.route("/wm/floodlight/topology/toporoute/<v1>/<p1>/<v2>/<p2>/json")
 def shortest_path(v1, p1, v2, p2):
   try:
-    url = "http://%s:%s/wm/onos/topology/switches/json" % (RestIP, RestPort)
+    url = "http://%s:%s/wm/onos/topology/switches" % (RestIP, RestPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -484,7 +484,7 @@ def shortest_path(v1, p1, v2, p2):
       path.append( (sdpid, ddpid))
 
   try:
-    url = "http://%s:%s/wm/onos/topology/links/json" % (RestIP, RestPort)
+    url = "http://%s:%s/wm/onos/topology/links" % (RestIP, RestPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:
@@ -521,7 +521,7 @@ def shortest_path(v1, p1, v2, p2):
 @app.route("/wm/floodlight/core/controller/switches/json")
 def query_switch():
   try:
-    url = "http://%s:%s/wm/onos/topology/switches/json" % (RestIP, RestPort)
+    url = "http://%s:%s/wm/onos/topology/switches" % (RestIP, RestPort)
     (code, result) = get_json(url)
     parsedResult = json.loads(result)
   except:

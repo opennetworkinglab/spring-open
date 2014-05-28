@@ -61,8 +61,8 @@ function toD3(results) {
 }
 
 var urls = {
-	links: '/wm/onos/topology/links/json',
-	switches: '/wm/onos/topology/switches/json',
+	links: '/wm/onos/topology/links',
+	switches: '/wm/onos/topology/switches',
 	flows: '/wm/onos/flows/getsummary/0/0/json?proxy',
 	activeControllers: '/wm/onos/registry/controllers/json',
 	controllers: 'data/controllers.json',
@@ -81,8 +81,8 @@ var mockURLs = {
 }
 
 var proxyURLs = {
-	links: '/wm/onos/topology/links/json?proxy',
-	switches: '/wm/onos/topology/switches/json?proxy',
+	links: '/wm/onos/topology/links?proxy',
+	switches: '/wm/onos/topology/switches?proxy',
 	flows: '/wm/onos/flows/getsummary/0/0/json?proxy',
 	activeControllers: '/wm/onos/registry/controllers/json?proxy',
 	controllers: 'data/controllers.json',

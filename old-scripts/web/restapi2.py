@@ -57,7 +57,7 @@ def return_file(filename="index.html"):
 ONOS_GUI3_HOST="http://gui3.onlab.us:8080"
 ONOS_LOCAL_HOST="http://localhost:8080" ;# for Amazon EC2
 
-@app.route("/wm/onos/topology/switches/json")
+@app.route("/wm/onos/topology/switches")
 def switches():
   if request.args.get('proxy') == None:
     host = ONOS_LOCAL_HOST
@@ -65,7 +65,7 @@ def switches():
     host = ONOS_GUI3_HOST
 
   try:
-    command = "curl -s %s/wm/onos/topology/switches/json" % (host)
+    command = "curl -s %s/wm/onos/topology/switches" % (host)
     print command
     result = os.popen(command).read()
   except:
@@ -75,7 +75,7 @@ def switches():
   resp = Response(result, status=200, mimetype='application/json')
   return resp
 
-@app.route("/wm/onos/topology/links/json")
+@app.route("/wm/onos/topology/links")
 def links():
   if request.args.get('proxy') == None:
     host = ONOS_LOCAL_HOST
@@ -83,7 +83,7 @@ def links():
     host = ONOS_GUI3_HOST
 
   try:
-    command = "curl -s %s/wm/onos/topology/links/json" % (host)
+    command = "curl -s %s/wm/onos/topology/links" % (host)
     print command
     result = os.popen(command).read()
   except:
