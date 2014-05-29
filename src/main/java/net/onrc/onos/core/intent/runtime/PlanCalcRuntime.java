@@ -122,8 +122,13 @@ public class PlanCalcRuntime {
                     log.trace("cookieId is set: {}", cookieId);
                     fe.setFlowEntryId(cookieId);
                 }
-                fe.setIdleTimeout(idleTimeout);
-                fe.setHardTimeout(hardTimeout);
+                if (sw != firstSrcSw) {
+                    fe.setIdleTimeout(idleTimeout);
+                    fe.setHardTimeout(hardTimeout);
+                } else {
+                    fe.setIdleTimeout(firstSwitchIdleTimeout);
+                    fe.setHardTimeout(firstSwitchHardTimeout);
+                }
                 entries.add(fe);
             }
             // install flow entries in reverse order
