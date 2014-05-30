@@ -86,8 +86,11 @@ ONOS_LOGBACK_TEMPLATE=${ONOS_TEMPLATE_DIR}/logback.xml.template
 LOGDIR=${ONOS_LOGDIR:-${ONOS_HOME}/onos-logs}
 LOGBASE=${ONOS_LOGBASE:-onos.${ONOS_HOST_NAME}}
 ONOS_LOG="${LOGDIR}/${LOGBASE}.log"
+ONOS_LOG_ROLLING_PATTERN="${LOGDIR}/${LOGBASE}.%i.log.gz"
+ONOS_STDOUT_LOG="${LOGDIR}/${LOGBASE}.stdout"
+ONOS_STDERR_LOG="${LOGDIR}/${LOGBASE}.stderr"
 PCAP_LOG="${LOGDIR}/${LOGBASE}.pcap"
-LOGS="$ONOS_LOG $PCAP_LOG"
+LOGS="$ONOS_LOG $ONOS_STDOUT_LOG $ONOS_STDERR_LOG $PCAP_LOG"
 
 ONOS_PROPS=${ONOS_PROPS:-${ONOS_CONF_DIR}/onos.properties}
 JMX_PORT=${JMX_PORT:-7189}
@@ -383,8 +386,9 @@ function create-logback-conf {
   
   # creation of logback config
   local temp_lb=`begin-conf-creation ${ONOS_LOGBACK}`
-  
-  sed -e "s|__FILENAME__|${ONOS_LOG}|" ${ONOS_LOGBACK_TEMPLATE} > ${temp_lb}
+
+  sed -e "s|__FILENAME__|${ONOS_LOG}|" \
+      -e "s|__ROLLING_PATTERN__|${ONOS_LOG_ROLLING_PATTERN}|" ${ONOS_LOGBACK_TEMPLATE} > ${temp_lb}
   
   end-conf-creation ${ONOS_LOGBACK}
   
@@ -819,13 +823,22 @@ function start-onos {
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
   fi
-  # Backup log files
+  # Rotate log files
   for log in ${LOGS}; do
     if [ -f ${log} ]; then
       rotate-log ${log}
     fi
   done
-  
+
+  # Rotate logs rolled at runtime.
+  local rolled_log_shellpat=`echo ${ONOS_LOG_ROLLING_PATTERN} | sed -e "s/%i/\\*/"`
+  for rolled_log in ${rolled_log_shellpat}; do
+    if [ -f ${rolled_log} ]; then
+      rotate-log ${rolled_log}
+      # NOTE: renamed file will end up with an extension like .log.gz.1
+    fi
+  done
+
   if [ ! -f ${ONOS_LOGBACK} ]; then
     echo "[WARNING] ${ONOS_LOGBACK} not found."
     echo "          Run \"\$ $0 setup\" to create."
