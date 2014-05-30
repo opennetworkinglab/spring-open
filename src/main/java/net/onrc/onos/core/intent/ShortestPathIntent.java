@@ -21,7 +21,7 @@ public class ShortestPathIntent extends Intent {
     protected int idleTimeout;
     protected int hardTimeout;
     protected int firstSwitchIdleTimeout;
-    protected int firstSwitchHardTimetout;
+    protected int firstSwitchHardTimeout;
 
     /**
      * Default constructor for Kryo deserialization.
@@ -152,7 +152,7 @@ public class ShortestPathIntent extends Intent {
 
     // TODO - this is intended to be refactored and removed
     public int getFirstSwitchHardTimetout() {
-        return firstSwitchHardTimetout;
+        return firstSwitchHardTimeout;
     }
 
     // TODO - this is intended to be refactored and removed
@@ -162,7 +162,7 @@ public class ShortestPathIntent extends Intent {
 
     // TODO - this is intended to be refactored and removed
     public void setFirstSwitchHardTimetout(int firstSwitchHardTimetout) {
-        this.firstSwitchHardTimetout = firstSwitchHardTimetout;
+        this.firstSwitchHardTimeout = firstSwitchHardTimetout;
     }
 
     @Override
