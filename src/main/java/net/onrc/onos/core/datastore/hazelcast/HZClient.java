@@ -56,6 +56,11 @@ public final class HZClient implements IKVClient {
 
     private static final HZClient THE_INSTANCE = new HZClient();
 
+    /**
+     * Get DataStoreClient implemented on Hazelcast.
+     *
+     * @return HZClient
+     */
     public static HZClient getClient() {
         return THE_INSTANCE;
     }
@@ -170,9 +175,12 @@ public final class HZClient implements IKVClient {
     /**
      * Register serializer for VersionedValue class used to imitate value version.
      *
-     * @param config
+     * @param config SerializationConfig to add VersionedValueSerializableFactory.
      */
     private static void registerSerializer(final SerializationConfig config) {
+        // TODO remove this function at some point.
+        // This method is no longer required, if equibalent to the following
+        // is defined in hazelcast.xml
         config.addDataSerializableFactoryClass(
                 VersionedValueSerializableFactory.FACTORY_ID,
                 VersionedValueSerializableFactory.class);

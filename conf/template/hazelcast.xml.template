@@ -23,6 +23,13 @@ __HC_NETWORK__
     </join>
   </network>
 
+    <serialization>
+        <!-- IdentifiedDataSerializableFactory for HZTable.VersionedValue class -->
+        <data-serializable-factories>
+            <data-serializable-factory factory-id="1">net.onrc.onos.core.datastore.hazelcast.VersionedValueSerializableFactory</data-serializable-factory>
+        </data-serializable-factories>
+    </serialization>
+
   <!-- Configuration of maps used as a data store. -->
   <map name="datastore://*">
     <!-- must use 'sync' backup to imitate other data store -->
