@@ -18,7 +18,7 @@ zookeeper.hosts = __ZK_HOSTS__
 ramcloud.coordinator.protocol = __RAMCLOUD_PROTOCOL__
 
 # IP address of RAMCloud coordinator (host.ip by default)
-ramcloud.coordinator.ip = __RAMCLOUD_IP__
+ramcloud.coordinator.ip = __RAMCLOUD_COORD_IP__
 
 # Port number of RAMCloud coordinator (12246 by default)
 ramcloud.coordinator.port = __RAMCLOUD_COORD_PORT__
@@ -27,7 +27,7 @@ ramcloud.coordinator.port = __RAMCLOUD_COORD_PORT__
 ramcloud.server.protocol = __RAMCLOUD_PROTOCOL__
 
 # IP address of RAMCloud server (host.ip by default)
-ramcloud.server.ip = __RAMCLOUD_IP__
+ramcloud.server.ip = __RAMCLOUD_SERVER_IP__
 
 # Port number of RAMCloud server (12242 by default)
 ramcloud.server.port = __RAMCLOUD_SERVER_PORT__

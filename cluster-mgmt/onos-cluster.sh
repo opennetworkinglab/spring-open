@@ -21,6 +21,7 @@ source ${ONOS_HOME}/scripts/common/utils.sh
 CLUSTER_HOME=${ONOS_CLUSTER_HOME:-$(cd `dirname $0`; pwd)}
 CLUSTER_CONF_DIR=${CLUSTER_HOME}/conf
 CLUSTER_CONF=${ONOS_CLUSTER_CONF:-${CLUSTER_CONF_DIR}/onos-cluster.conf}
+CLUSTER_CONF_OUTPUT_DIR=${CLUSTER_CONF_DIR}/generated
 CLUSTER_TEMPLATE_DIR=${CLUSTER_CONF_DIR}/template
 CLUSTER_LOGDIR=${ONOS_CLUSTER_LOGDIR:-${CLUSTER_HOME}/logs}
 
@@ -47,7 +48,7 @@ ONOS_CONF_TEMPLATE=${CLUSTER_TEMPLATE_DIR}/onos_node.conf.template
 ### Parallel SSH settings ###
 SSH=${SSH:-ssh}
 PSSH=${PSSH:-parallel-ssh}
-PSSH_CONF=${CLUSTER_CONF_DIR}/pssh.hosts
+PSSH_CONF=${CLUSTER_CONF_OUTPUT_DIR}/pssh.hosts
 SCP=${SCP:-scp}
 #############################
 
@@ -157,14 +158,14 @@ function create-onos-conf {
     exit 1
   fi
   
-  local onos_conf="${CLUSTER_CONF_DIR}/onos_node.${host_name}.conf"
+  local onos_conf="${CLUSTER_CONF_OUTPUT_DIR}/onos_node.${host_name}.conf"
   local tempfile=`begin-conf-creation ${onos_conf}`
   local filename=`basename ${onos_conf}`
   echo -n "Creating ${filename} ... "
 
   cp ${ONOS_CONF_TEMPLATE} ${tempfile}
   
-  local prefix="cluster.${host}"
+  local prefix="cluster.${host_name}"
   
   local host_ip=$(read-conf ${CLUSTER_CONF} "${prefix}.ip")
   local host_string=${host_ip}
@@ -190,11 +191,28 @@ function create-onos-conf {
   sed -i -e "s|__BACKEND__|${CLUSTER_BACKEND}|" ${tempfile}
   sed -i -e "s|__ZK_HOSTS__|${zk_hosts}|" ${tempfile}
   sed -i -e "s|__RAMCLOUD_PROTOCOL__|${CLUSTER_RC_PROTOCOL}|" ${tempfile}
-  sed -i -e "s|__RAMCLOUD_IP__|${rc_ip}|" ${tempfile}
-  sed -i -e "s|__RAMCLOUD_COORD_PORT__|${rc_coord_port}|" ${tempfile}
-  sed -i -e "s|__RAMCLOUD_SERVER_PORT__|${rc_server_port}|" ${tempfile}
-  sed -i -e "s|__RAMCLOUD_SERVER_REPLICAS__|${CLUSTER_RC_SV_REPLICAS}|" ${tempfile}
   
+  # Filling RAMCloud parameters
+  local host_role=$(read-conf ${CLUSTER_CONF} "cluster.${host}.role")
+  if [ "${host_role}" = "coord-node" -o "${host_role}" = "coord-and-server-node" ]; then
+    sed -i -e "s|__RAMCLOUD_COORD_IP__|${rc_ip}|" ${tempfile}
+    sed -i -e "s|__RAMCLOUD_COORD_PORT__|${rc_coord_port}|" ${tempfile}
+  else
+    # comment out
+    sed -i -e "s|^\(.*__RAMCLOUD_COORD_IP__.*\)$|#\1|" ${tempfile}
+    sed -i -e "s|^\(.*__RAMCLOUD_COORD_PORT__.*\)$|#\1|" ${tempfile}
+  fi
+  if [ "${host_role}" = "server-node" -o "${host_role}" = "coord-and-server-node" ]; then
+    sed -i -e "s|__RAMCLOUD_SERVER_IP__|${rc_ip}|" ${tempfile}
+    sed -i -e "s|__RAMCLOUD_SERVER_PORT__|${rc_server_port}|" ${tempfile}
+  else
+    # comment out
+    sed -i -e "s|^\(.*__RAMCLOUD_SERVER_IP__.*\)$|#\1|" ${tempfile}
+    sed -i -e "s|^\(.*__RAMCLOUD_SERVER_PORT__.*\)$|#\1|" ${tempfile}
+  fi
+  sed -i -e "s|__RAMCLOUD_SERVER_REPLICAS__|${CLUSTER_RC_SERVER_REPLICAS}|" ${tempfile}
+  
+  # Filling Hazelcast parameters
   if [ ${CLUSTER_HC_NETWORK} = "tcp-ip" ]; then
     sed -i -e "s|__HAZELCAST_MEMBERS__|${hc_hosts}|" ${tempfile}
     
@@ -215,6 +233,8 @@ function create-onos-conf {
 
 # setup -f : force overwrite existing files
 function setup {
+  mkdir -p ${CLUSTER_CONF_OUTPUT_DIR}
+  
   if [ "${1}" = "-f" ]; then
     create-pssh-conf
     
@@ -225,7 +245,7 @@ function setup {
     create-conf-interactive ${PSSH_CONF} create-pssh-conf
     
     for host in ${CLUSTER_HOSTS}; do 
-      local filename="${CLUSTER_CONF_DIR}/onos_node.${host}.conf"
+      local filename="${CLUSTER_CONF_OUTPUT_DIR}/onos_node.${host}.conf"
       create-conf-interactive ${filename} create-onos-conf ${host}
     done
   fi
@@ -247,7 +267,7 @@ function deploy {
   mkdir -p ${CLUSTER_LOGDIR}
   
   for host in ${CLUSTER_HOSTS}; do
-    local conf=${CLUSTER_CONF_DIR}/onos_node.${host}.conf
+    local conf=${CLUSTER_CONF_OUTPUT_DIR}/onos_node.${host}.conf
     if [ ! -f ${conf} ]; then
       echo "[ERROR] ${conf} not found"
       local command=`basename ${0}`
