@@ -513,12 +513,14 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     public void putSwitchDiscoveryEvent(SwitchEvent switchEvent,
                                         Collection<PortEvent> portEvents) {
         if (datastore.addSwitch(switchEvent, portEvents)) {
+            log.debug("Sending add switch: {}", switchEvent);
             // Send out notification
             TopologyEvent topologyEvent = new TopologyEvent(switchEvent);
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
 
             // Send out notification for each port
             for (PortEvent portEvent : portEvents) {
+                log.debug("Sending add port: {}", portEvent);
                 topologyEvent = new TopologyEvent(portEvent);
                 eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
             }
@@ -576,6 +578,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         if (datastore.deactivateSwitch(switchEvent, oldPortEvents.values())) {
+            log.debug("Sending remove switch: {}", switchEvent);
             // Send out notification
             eventChannel.removeEntry(switchEvent.getID());
 
@@ -587,6 +590,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             // and the deactiveSwitch() call above already removed all ports.
             //
             for (PortEvent portEvent : oldPortEvents.values()) {
+                log.debug("Sending remove port:", portEvent);
                 eventChannel.removeEntry(portEvent.getID());
             }
             discoveredAddedPortEvents.remove(switchEvent.getDpid());
@@ -621,6 +625,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @Override
     public void putPortDiscoveryEvent(PortEvent portEvent) {
         if (datastore.addPort(portEvent)) {
+            log.debug("Sending add port: {}", portEvent);
             // Send out notification
             TopologyEvent topologyEvent = new TopologyEvent(portEvent);
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
@@ -646,6 +651,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @Override
     public void removePortDiscoveryEvent(PortEvent portEvent) {
         if (datastore.deactivatePort(portEvent)) {
+            log.debug("Sending remove port: {}", portEvent);
             // Send out notification
             eventChannel.removeEntry(portEvent.getID());
 
@@ -699,6 +705,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @Override
     public void putLinkDiscoveryEvent(LinkEvent linkEvent) {
         if (datastore.addLink(linkEvent)) {
+            log.debug("Sending add link: {}", linkEvent);
             // Send out notification
             TopologyEvent topologyEvent = new TopologyEvent(linkEvent);
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
@@ -724,6 +731,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @Override
     public void removeLinkDiscoveryEvent(LinkEvent linkEvent) {
         if (datastore.removeLink(linkEvent)) {
+            log.debug("Sending remove link: {}", linkEvent);
             // Send out notification
             eventChannel.removeEntry(linkEvent.getID());
 
