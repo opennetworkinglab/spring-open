@@ -53,15 +53,17 @@ else:
     hostname = platform.node()
     default_topo = 'topo.%s.py' % hostname
     fallback_topo = 'topo.py'
-    topofile = default_topo if os.path.exists(default_topo) else fallback_topo
+    if os.path.exists(default_topo):
+        topofile = default_topo
+    else:
+        topofile = fallback_topo
 
 if not os.path.exists( topofile ):
-    print( 'Config file %s not found' % default_topo )
+    print( 'Config file %s not found' % topofile )
     exit( 1 )
 
 execfile( topofile )
 conf = createTopo()
-print conf
 
 class ConfigTopo( Topo ):
     "Topology created from config."
@@ -74,19 +76,27 @@ class ConfigTopo( Topo ):
         # Add hosts and switches
         nmap = {}
         for s, prop in conf[ 'switches' ].iteritems():
-            # make sure encoding is ASCII (if not, virtual eth creation fails)
-            s = s.strip().encode( 'ascii' )
-            dpid = prop[ 'dpid' ].strip().encode( 'ascii' )
+            s = s.strip()
+            dpid = None
+            if 'dpid' in prop:
+                dpid = prop[ 'dpid' ].strip()
             nmap[ s ] = self.addSwitch( s, dpid=dpid )
         
         for h, prop in conf[ 'hosts' ].iteritems():
-            h = h.strip().encode( 'ascii' )
-            nmap[ h ] =self.addHost( h )
+            h = h.strip()
+            params = {}
+            if 'mac' in prop:
+                mac = prop[ 'mac' ].strip() 
+                params[ 'mac' ] = mac
+            if 'ip' in prop:
+                ip = prop[ 'ip' ].strip() 
+                params[ 'ip' ] = ip
+            nmap[ h ] = self.addHost( h, **params )
         
         # Add links
         for l in conf[ 'links' ]:
-            node1 = nmap[ l[ 'node1' ] ].strip().encode( 'ascii' )
-            node2 = nmap[ l[ 'node2' ] ].strip().encode( 'ascii' )
+            node1 = nmap[ l[ 'node1' ] ].strip()
+            node2 = nmap[ l[ 'node2' ] ].strip()
             self.addLink( node1, node2 )
 
 class ClusterConnectedSwitch( OVSSwitch ):
@@ -112,8 +122,8 @@ class ControllerCluster( Controller ):
         Controller.__init__( self, name, **params )
         
         for cname, addr in conf[ 'controllers' ].iteritems():
-            cname = cname.strip().encode( 'ascii' )
-            addr = addr.strip().encode( 'ascii' )
+            cname = cname.strip()
+            addr = addr.strip()
             ip, port = addr.split( ':' )
             self.cmap[ cname ] = RemoteController( cname, ip=ip, port=int( port ) )
         
@@ -141,6 +151,7 @@ class ControllerCluster( Controller ):
 
 if __name__ == '__main__':
     setLogLevel( 'info' )
+    info( "Topology file : %s\n" % topofile )
     net = Mininet( topo=ConfigTopo(),
                    controller=ControllerCluster,
                    switch=ClusterConnectedSwitch )

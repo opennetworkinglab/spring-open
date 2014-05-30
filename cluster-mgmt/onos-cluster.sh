@@ -191,6 +191,10 @@ function create-onos-conf {
   sed -i -e "s|__BACKEND__|${CLUSTER_BACKEND}|" ${tempfile}
   sed -i -e "s|__ZK_HOSTS__|${zk_hosts}|" ${tempfile}
   sed -i -e "s|__RAMCLOUD_PROTOCOL__|${CLUSTER_RC_PROTOCOL}|" ${tempfile}
+  sed -i -e "s|__RAMCLOUD_IP__|${rc_ip}|" ${tempfile}
+  sed -i -e "s|__RAMCLOUD_COORD_PORT__|${rc_coord_port}|" ${tempfile}
+  sed -i -e "s|__RAMCLOUD_SERVER_PORT__|${rc_server_port}|" ${tempfile}
+  sed -i -e "s|__RAMCLOUD_SERVER_REPLICAS__|${CLUSTER_RC_SERVER_REPLICAS}|" ${tempfile}
   
   # Filling RAMCloud parameters
   local host_role=$(read-conf ${CLUSTER_CONF} "cluster.${host}.role")
