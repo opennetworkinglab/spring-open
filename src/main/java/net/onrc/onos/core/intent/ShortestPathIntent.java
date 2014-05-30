@@ -151,7 +151,7 @@ public class ShortestPathIntent extends Intent {
     }
 
     // TODO - this is intended to be refactored and removed
-    public int getFirstSwitchHardTimetout() {
+    public int getFirstSwitchHardTimeout() {
         return firstSwitchHardTimeout;
     }
 
@@ -161,8 +161,8 @@ public class ShortestPathIntent extends Intent {
     }
 
     // TODO - this is intended to be refactored and removed
-    public void setFirstSwitchHardTimetout(int firstSwitchHardTimetout) {
-        this.firstSwitchHardTimeout = firstSwitchHardTimetout;
+    public void setFirstSwitchHardTimeout(int firstSwitchHardTimeout) {
+        this.firstSwitchHardTimeout = firstSwitchHardTimeout;
     }
 
     @Override

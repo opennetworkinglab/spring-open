@@ -95,7 +95,7 @@ public class PlanCalcRuntime {
                 idleTimeout = pathIntent.getIdleTimeout();
                 hardTimeout = pathIntent.getHardTimeout();
                 firstSwitchIdleTimeout = pathIntent.getFirstSwitchIdleTimeout();
-                firstSwitchHardTimeout = pathIntent.getFirstSwitchHardTimetout();
+                firstSwitchHardTimeout = pathIntent.getFirstSwitchHardTimeout();
                 try {
                     cookieId = Long.valueOf(pathIntent.getId());
                 } catch (NumberFormatException e) {
