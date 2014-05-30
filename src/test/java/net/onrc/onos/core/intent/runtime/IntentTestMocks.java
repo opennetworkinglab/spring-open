@@ -42,6 +42,7 @@ public class IntentTestMocks {
     private IControllerRegistryService controllerRegistryService;
     private PersistIntent persistIntent;
     private IRestApiService restApi;
+    private MockTopology topology;
 
     /**
      * Default constructor.  Doesn't do anything interesting.
@@ -57,7 +58,7 @@ public class IntentTestMocks {
      */
     @SuppressWarnings("unchecked")
     public void setUpIntentMocks() throws Exception {
-        final MockTopology topology = new MockTopology();
+        topology = new MockTopology();
         topology.createSampleTopology1();
 
         datagridService = createMock(IDatagridService.class);
@@ -127,7 +128,7 @@ public class IntentTestMocks {
     }
 
     /**
-     * Fetch the Floodligh module context being used by the mock.  Some tests
+     * Fetch the Floodlight module context being used by the mock.  Some tests
      * will need to add items to the Context to allow communications with
      * downstream classes.
      *
@@ -135,5 +136,13 @@ public class IntentTestMocks {
      */
     public FloodlightModuleContext getModuleContext() {
         return moduleContext;
+    }
+
+    /**
+     * Fetch the mocked topology.
+     * @return mocked topology
+     */
+    public MockTopology getTopology() {
+        return topology;
     }
 }

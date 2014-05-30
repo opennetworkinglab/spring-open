@@ -39,6 +39,7 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 
+import net.onrc.onos.core.topology.Topology;
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
@@ -66,71 +67,18 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class PathCalcRuntimeModuleTest {
     private static final Long LOCAL_PORT = 0xFFFEL;
 
-    private FloodlightModuleContext modContext;
-    private IDatagridService datagridService;
-    private ITopologyService topologyService;
-    private IControllerRegistryService controllerRegistryService;
-    private PersistIntent persistIntent;
-    private IRestApiService restApi;
-    private MockTopology topology;
-    private IEventChannel<Long, IntentOperationList> intentOperationChannel;
-    private IEventChannel<Long, IntentStateList> intentStateChannel;
+    private IntentTestMocks mocks;
+    private PathCalcRuntimeModule runtime;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
-        topology = new MockTopology();
-        topology.createSampleTopology1();
+        mocks = new IntentTestMocks();
+        mocks.setUpIntentMocks();
 
-        datagridService = createMock(IDatagridService.class);
-        topologyService = createMock(ITopologyService.class);
-        controllerRegistryService = createMock(IControllerRegistryService.class);
-        modContext = createMock(FloodlightModuleContext.class);
-        intentOperationChannel = createMock(IEventChannel.class);
-        intentStateChannel = createMock(IEventChannel.class);
-        persistIntent = PowerMock.createMock(PersistIntent.class);
-        restApi = createMock(IRestApiService.class);
-
-        PowerMock.expectNew(PersistIntent.class,
-                anyObject(IControllerRegistryService.class)).andReturn(persistIntent);
-
-        expect(modContext.getServiceImpl(IDatagridService.class))
-                .andReturn(datagridService).once();
-        expect(modContext.getServiceImpl(ITopologyService.class))
-                .andReturn(topologyService).once();
-        expect(modContext.getServiceImpl(IControllerRegistryService.class))
-                .andReturn(controllerRegistryService).once();
-        expect(persistIntent.getKey()).andReturn(1L).anyTimes();
-        expect(persistIntent.persistIfLeader(eq(1L),
-                anyObject(IntentOperationList.class))).andReturn(true)
-                .anyTimes();
-        expect(modContext.getServiceImpl(IRestApiService.class))
-                .andReturn(restApi).once();
-
-        expect(topologyService.getTopology()).andReturn(topology)
-                .anyTimes();
-        topologyService.registerTopologyListener(
-                anyObject(ITopologyListener.class));
-        expectLastCall();
-
-        expect(datagridService.createChannel("onos.pathintent",
-                Long.class, IntentOperationList.class))
-                .andReturn(intentOperationChannel).once();
-
-        expect(datagridService.addListener(
-                eq("onos.pathintent_state"),
-                anyObject(IEventChannelListener.class),
-                eq(Long.class),
-                eq(IntentStateList.class)))
-                .andReturn(intentStateChannel).once();
-        restApi.addRestletRoutable(anyObject(IntentWebRoutable.class));
-
-        replay(datagridService);
-        replay(topologyService);
-        replay(modContext);
-        replay(controllerRegistryService);
-        PowerMock.replay(persistIntent, PersistIntent.class);
-        replay(restApi);
+        runtime = new PathCalcRuntimeModule();
+        final FloodlightModuleContext moduleContext = mocks.getModuleContext();
+        runtime.init(moduleContext);
+        runtime.startUp(moduleContext);
     }
 
 
@@ -238,12 +186,7 @@ public class PathCalcRuntimeModuleTest {
 
     @After
     public void tearDown() {
-        verify(datagridService);
-        verify(topologyService);
-        verify(modContext);
-        verify(controllerRegistryService);
-        PowerMock.verify(persistIntent, PersistIntent.class);
-        verify(restApi);
+        mocks.tearDownIntentMocks();
     }
 
     /**
@@ -274,9 +217,6 @@ public class PathCalcRuntimeModuleTest {
 
         // compile high-level intent operations into low-level intent
         // operations (calculate paths)
-        final PathCalcRuntimeModule runtime = new PathCalcRuntimeModule();
-        runtime.init(modContext);
-        runtime.startUp(modContext);
         final IntentOperationList pathIntentOpList =
                 runtime.executeIntentOperations(opList);
         assertThat(pathIntentOpList, notNullValue());
@@ -336,9 +276,6 @@ public class PathCalcRuntimeModuleTest {
 
         // compile high-level intent operations into low-level intent
         // operations (calculate paths)
-        final PathCalcRuntimeModule runtime = new PathCalcRuntimeModule();
-        runtime.init(modContext);
-        runtime.startUp(modContext);
         final IntentOperationList pathIntentOpList =
                 runtime.executeIntentOperations(opList);
         assertThat(pathIntentOpList, notNullValue());
@@ -438,9 +375,6 @@ public class PathCalcRuntimeModuleTest {
 
         // compile high-level intent operations into low-level intent
         // operations (calculate paths)
-        final PathCalcRuntimeModule runtime = new PathCalcRuntimeModule();
-        runtime.init(modContext);
-        runtime.startUp(modContext);
         final IntentOperationList pathIntentOpList =
                 runtime.executeIntentOperations(opList);
         assertThat(pathIntentOpList, notNullValue());
@@ -493,6 +427,7 @@ public class PathCalcRuntimeModuleTest {
         final List<LinkEvent> addedLinkEvents = new LinkedList<>();
         final List<LinkEvent> removedLinkEvents = new LinkedList<>();
 
+        final MockTopology topology = mocks.getTopology();
         topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
         topology.removeLink(2L, 21L, 1L, 12L);
         LinkEvent linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
