@@ -456,8 +456,12 @@ function start-zk {
   mkdir -p ${ZK_LOG_DIR}
   
   load-zk-cfg
-  
-  ${ZK_HOME}/bin/zkServer.sh start
+
+  # log4j.properties is read from classpath if not found in CWD.
+  # Using the ZooKeeper supplied default in ZooKeeper conf dir.
+  # TODO: To explicitly specify our customized log4j config file:
+  #  export SERVER_JVMFLAGS="-Dlog4j.configuration=${ZK_LOG4J}"
+  env CLASSPATH="${ZK_HOME}/conf:${CLASSPATH}" ${ZK_HOME}/bin/zkServer.sh start
 }
 
 function stop-zk {
