@@ -152,15 +152,19 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public void switchPortAdded(Long switchId, OFPhysicalPort port) {
-        PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
-        topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
-        linkDiscovery.removeFromSuppressLLDPs(switchId, port.getPortNumber());
+        if (registryService.hasControl(switchId)) {
+            PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
+            topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
+            linkDiscovery.removeFromSuppressLLDPs(switchId, port.getPortNumber());
+        }
     }
 
     @Override
     public void switchPortRemoved(Long switchId, OFPhysicalPort port) {
-        PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
-        topologyDiscoveryInterface.removePortDiscoveryEvent(portEvent);
+        if (registryService.hasControl(switchId)) {
+            PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
+            topologyDiscoveryInterface.removePortDiscoveryEvent(portEvent);
+        }
     }
 
     @Override
