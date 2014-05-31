@@ -54,11 +54,13 @@ def rest(path):
   try:
     response = urlopen(url)
   except URLError, e:
-    print "ONOS REST IF %s has issue. Reason: %s" % (url, e.reason)
-    result = ""
+    errorString = "Could not access ONOS resource %s: %s" % (url, e.reason)
+    print errorString
+    return errorString, 500
   except HTTPError, e:
-    print "ONOS REST IF %s has issue. Code %s" % (url, e.code)
-    result = ""
+    errorString = "Error during ONOS resource request %s: %s" % (url, e.code)
+    print errorString
+    return errorString, e.code
 
   result = response.read()
   return result
