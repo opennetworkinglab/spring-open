@@ -77,7 +77,7 @@ public class PlanCalcRuntime {
 
                 // dstMacAddress
                 if (pathIntent.getDstMac() != ShortestPathIntent.EMPTYMACADDRESS) {
-                    dstMac = MACAddress.valueOf(pathIntent.getSrcMac());
+                    dstMac = MACAddress.valueOf(pathIntent.getDstMac());
                 } else {
                     dstMac = null;
                 }
