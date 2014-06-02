@@ -49,12 +49,19 @@ public class OnosDeviceManager implements IFloodlightModule,
 
     private CopyOnWriteArrayList<IOnosDeviceListener> deviceListeners;
     private IFloodlightProviderService floodlightProvider;
-    private static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService EXECUTOR_SERVICE =
+            Executors.newSingleThreadScheduledExecutor();
 
+    // TODO This infrastructure maintains a global device cache in the
+    // OnosDeviceManager module on each instance (in mapDevice). We want to
+    // remove this eventually - the global cache should be maintained by the
+    // topology layer (which it currently is as well).
     private IDatagridService datagrid;
     private IEventChannel<Long, OnosDevice> eventChannel;
     private static final String DEVICE_CHANNEL_NAME = "onos.device";
-    private final Map<Long, OnosDevice> mapDevice = new ConcurrentHashMap<Long, OnosDevice>();
+    private final Map<Long, OnosDevice> mapDevice =
+            new ConcurrentHashMap<Long, OnosDevice>();
+
     private ITopologyService topologyService;
     private Topology topology;
 
@@ -118,9 +125,9 @@ public class OnosDeviceManager implements IFloodlightModule,
         return Command.CONTINUE;
     }
 
-    //This "protected" modifier is for unit test.
-    //The above "receive" method couldn't be tested
-    //because of IFloodlightProviderService static final field.
+    // This "protected" modifier is for unit test.
+    // The above "receive" method couldn't be tested
+    // because of IFloodlightProviderService static final field.
     protected Command processPacketIn(IOFSwitch sw, OFPacketIn pi, Ethernet eth) {
         long dpid = sw.getId();
         short portId = pi.getInPort();
@@ -133,23 +140,28 @@ public class OnosDeviceManager implements IFloodlightModule,
             return Command.STOP;
         }
 
-        //We check if it is the same device in datagrid to suppress the device update
+        // We check if it is the same device in datagrid to suppress the device update
         OnosDevice exDev = mapDevice.get(mac);
         if (exDev != null && exDev.equals(srcDevice)) {
-            //There is the same existing device. Update only ActiveSince time.
+            // There is the same existing device. Update only ActiveSince time.
+            // TODO This doesn't update the timestamp in the Topology module,
+            // only in the local cache in this local driver module.
             exDev.setLastSeenTimestamp(new Date());
             if (log.isTraceEnabled()) {
                 log.trace("In the local cache, there is the same device."
-                        + "Only update last seen time: dpid {}, port {}, mac {}, lastSeenTime {}",
-                        dpid, portId, srcDevice.getMacAddress(), srcDevice.getLastSeenTimestamp().getTime());
+                        + " Only update last seen time: {}", exDev);
             }
             return Command.CONTINUE;
         }
 
-        //If the switch port we try to attach a new device already has a link, then stop adding device
+        // If the switch port we try to attach a new device already has a link,
+        // then don't add the device
+        // TODO We probably don't need to check this here, it should be done in
+        // the Topology module.
         if (topology.getOutgoingLink(dpid, (long) portId) != null) {
             if (log.isTraceEnabled()) {
-                log.trace("Stop adding OnosDevice {} due to there is a link to: dpid {} port {}",
+                log.trace("Stop adding OnosDevice {} as " +
+                        "there is a link on the port: dpid {} port {}",
                         srcDevice.getMacAddress(), dpid, portId);
             }
             return Command.CONTINUE;
@@ -158,14 +170,19 @@ public class OnosDeviceManager implements IFloodlightModule,
         addOnosDevice(mac, srcDevice);
 
         if (log.isTraceEnabled()) {
-            log.trace("Add device info: dpid {}, port {}, mac {}, lastSeenTime {}",
-                    dpid, portId, srcDevice.getMacAddress(), srcDevice.getLastSeenTimestamp().getTime());
+            log.trace("Add device info: {}", srcDevice);
         }
         return Command.CONTINUE;
     }
 
-    //Thread to delete devices periodically.
-    //Remove all devices from the map first and then finally delete devices from the DB.
+    // Thread to delete devices periodically.
+    // Remove all devices from the map first and then finally delete devices
+    // from the DB.
+
+    // TODO This should be sharded based on device 'owner' (i.e. the instance
+    // that owns the switch it is attached to). Currently any instance can
+    // issue deletes for any device, which permits race conditions and could
+    // cause the Topology replicas to diverge.
     private class CleanDevice implements Runnable {
         @Override
         public void run() {
@@ -174,11 +191,11 @@ public class OnosDeviceManager implements IFloodlightModule,
                 Set<OnosDevice> deleteSet = new HashSet<OnosDevice>();
                 for (OnosDevice dev : mapDevice.values()) {
                     long now = new Date().getTime();
-                    if ((now - dev.getLastSeenTimestamp().getTime() > agingMillisecConfig)) {
+                    if ((now - dev.getLastSeenTimestamp().getTime()
+                            > agingMillisecConfig)) {
                         if (log.isTraceEnabled()) {
-                            log.debug("Remove device info in the datagrid: dpid {}, port {}, mac {}, lastSeenTime {}, diff {}",
-                                    dev.getSwitchDPID(), dev.getSwitchPort(), dev.getMacAddress(),
-                                    dev.getLastSeenTimestamp().getTime(), now - dev.getLastSeenTimestamp().getTime());
+                            log.debug("Removing device info from the datagrid: {}, diff {}",
+                                    dev, now - dev.getLastSeenTimestamp().getTime());
                         }
                         deleteSet.add(dev);
                     }
@@ -188,18 +205,21 @@ public class OnosDeviceManager implements IFloodlightModule,
                     deleteOnosDevice(dev);
                 }
             } catch (Exception e) {
-                log.error("Error:", e);
+                // Any exception thrown by the task will prevent the Executor
+                // from running the next iteration, so we need to catch and log
+                // all exceptions here.
+                log.error("Exception in device cleanup thread:", e);
             }
         }
     }
 
     /**
-     * Parse an entity from an {@link Ethernet} packet.
+     * Parse a device from an {@link Ethernet} packet.
      *
      * @param eth the packet to parse
-     * @param sw  the switch on which the packet arrived
-     * @param pi  the original packetin
-     * @return the entity from the packet
+     * @param swdpid the switch on which the packet arrived
+     * @param port the port on which the packet arrived
+     * @return the device from the packet
      */
     protected OnosDevice getSourceDeviceFromPacket(Ethernet eth,
             long swdpid,
@@ -263,14 +283,16 @@ public class OnosDeviceManager implements IFloodlightModule,
         eventChannel = datagrid.addListener(DEVICE_CHANNEL_NAME, this,
                 Long.class,
                 OnosDevice.class);
-        EXECUTOR_SERVICE.scheduleAtFixedRate(new CleanDevice(), DEVICE_CLEANING_INITIAL_DELAY, cleanupSecondConfig, TimeUnit.SECONDS);
+        EXECUTOR_SERVICE.scheduleAtFixedRate(new CleanDevice(),
+                DEVICE_CLEANING_INITIAL_DELAY, cleanupSecondConfig, TimeUnit.SECONDS);
     }
 
     @Override
     public void deleteOnosDevice(OnosDevice dev) {
         Long mac = dev.getMacAddress().toLong();
         eventChannel.removeEntry(mac);
-        floodlightProvider.publishUpdate(new OnosDeviceUpdate(dev, OnosDeviceUpdateType.DELETE));
+        floodlightProvider.publishUpdate(
+                new OnosDeviceUpdate(dev, OnosDeviceUpdateType.DELETE));
     }
 
     @Override
@@ -282,7 +304,8 @@ public class OnosDeviceManager implements IFloodlightModule,
     @Override
     public void addOnosDevice(Long mac, OnosDevice dev) {
         eventChannel.addEntry(mac, dev);
-        floodlightProvider.publishUpdate(new OnosDeviceUpdate(dev, OnosDeviceUpdateType.ADD));
+        floodlightProvider.publishUpdate(
+                new OnosDeviceUpdate(dev, OnosDeviceUpdateType.ADD));
     }
 
     @Override

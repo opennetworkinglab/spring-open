@@ -191,7 +191,7 @@ public class OnosDevice implements Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Entity [macAddress=");
+        builder.append("OnosDevice [macAddress=");
         builder.append(macAddress.toString());
         builder.append(", vlan=");
         builder.append(vlan);
