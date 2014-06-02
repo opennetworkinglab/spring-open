@@ -374,6 +374,7 @@ function create-ramcloud-conf {
 
   # TODO make ZooKeeper address configurable.
   echo "ramcloud.locator=zk:localhost:2181" > ${temp_rc}
+  echo "#ramcloud.locator=zk:localhost:2181,otherhost:2181" >> ${temp_rc}
   echo "ramcloud.clusterName=${rc_cluster_name}" >> ${temp_rc}
 
   end-conf-creation ${RAMCLOUD_CONF}
@@ -607,10 +608,14 @@ function start-coord {
   
   local coord_addr=`rc-coord-addr`
 
-  # TODO Configuration for ZK address, port
-  local zk_addr="localhost:2181"
+  # TODO Make ONOS_CONF readable from ONOS process then eliminate RAMCLOUD_CONF
+
+  # Configuration for ZK address, port
+  local rc_locator=$(read-conf ${RAMCLOUD_CONF} ramcloud.locator "zk:localhost:2181")
+
   # RAMCloud cluster name
-  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName "ONOS-RC")
+
   # RAMCloud transport timeout
   local rc_timeout=$(read-conf ${ONOS_CONF} ramcloud.timeout 1000)
   # RAMCloud option deadServerTimeout
@@ -622,7 +627,7 @@ function start-coord {
   #      (FYI: -C is documented to be deprecated in the document)
 
   local coord_args="-C ${coord_addr}"
-  coord_args="${coord_args} --externalStorage zk:${zk_addr}"
+  coord_args="${coord_args} --externalStorage ${rc_locator}"
   coord_args="${coord_args} --clusterName ${rc_cluster_name}"
   coord_args="${coord_args} --timeout ${rc_timeout}"
   coord_args="${coord_args} --deadServerTimeout ${rc_coord_deadServerTimeout}"
@@ -656,10 +661,10 @@ function del-coord-info {
 
   local coord_addr=`rc-coord-addr`
 
-  # TODO Configuration for ZK address, port
-  local zk_addr="localhost:2181"
+  # Configuration for ZK address, port
+  local rc_locator=$(read-conf ${RAMCLOUD_CONF} ramcloud.locator "zk:localhost:2181")
   # RAMCloud cluster name
-  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName "ONOS-RC")
   # RAMCloud option deadServerTimeout
   # (note RC default is 250ms, setting relaxed ONOS default to 1000ms)
   local rc_coord_deadServerTimeout=$(read-conf ${ONOS_CONF} ramcloud.coordinator.deadServerTimeout 1000)
@@ -669,7 +674,7 @@ function del-coord-info {
   #      (FYI: -C is documented to be deprecated in the document)
 
   local coord_args="-C ${coord_addr}"
-  coord_args="${coord_args} --externalStorage zk:${zk_addr}"
+  coord_args="${coord_args} --externalStorage ${rc_locator}"
   coord_args="${coord_args} --clusterName ${rc_cluster_name}"
 
   # Note: --reset will reset ZK stored info and start running as acoordinator.
@@ -738,10 +743,10 @@ function start-server {
   local logCleanerThreads=$(read-conf ${ONOS_CONF}    ramcloud.server.logCleanerThreads    1)
   local detectFailures=$(read-conf ${ONOS_CONF}       ramcloud.server.detectFailures       0)
 
-  # TODO Configuration for ZK address, port
-  local zk_addr="localhost:2181"
+  # Configuration for ZK address, port
+  local rc_locator=$(read-conf ${RAMCLOUD_CONF} ramcloud.locator "zk:localhost:2181")
   # RAMCloud cluster name
-  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName "ONOS-RC")
   # RAMCloud transport timeout
   local rc_timeout=$(read-conf ${ONOS_CONF} ramcloud.timeout 1000)
   # replication factor (-r) config
@@ -751,7 +756,7 @@ function start-server {
   mkdir -p `dirname ${rc_datafile}`
 
   local server_args="-L ${server_addr}"
-  server_args="${server_args} --externalStorage zk:${zk_addr}"
+  server_args="${server_args} --externalStorage ${rc_locator}"
   server_args="${server_args} --clusterName ${rc_cluster_name}"
   server_args="${server_args} --timeout ${rc_timeout}"
   server_args="${server_args} --masterServiceThreads ${masterServiceThreads}"

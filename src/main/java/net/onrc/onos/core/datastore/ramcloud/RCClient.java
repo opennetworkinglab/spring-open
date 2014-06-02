@@ -37,6 +37,9 @@ import edu.stanford.ramcloud.JRamCloud.RejectRules;
 import edu.stanford.ramcloud.JRamCloud.RejectRulesException;
 import edu.stanford.ramcloud.JRamCloud.TableEnumerator2;
 
+/**
+ * RAMCloud implementation of datastore IKVClient.
+ */
 public class RCClient implements IKVClient {
 
     private static final Logger log = LoggerFactory.getLogger(RCClient.class);
@@ -45,10 +48,14 @@ public class RCClient implements IKVClient {
     private static final String DEFAULT_CLUSTERNAME = "ONOS-RC";
 
     private static final String DB_CONFIG_FILE = "conf/ramcloud.conf";
-    public static final Configuration CONFIG = getConfiguration();
+    private static final Configuration CONFIG = getConfiguration();
+    private static final String CLUSTER_NAME = getClusterName(CONFIG);
+    private static final String LOCATOR = getLocator(CONFIG);
 
-    // Value taken from RAMCloud's Status.h
     // FIXME These constants should be defined by JRamCloud
+    /**
+     * Constant defined in RAMCloud's Status.h.
+     */
     public static final int STATUS_OK = 0;
 
     /**
@@ -78,7 +85,7 @@ public class RCClient implements IKVClient {
     private static final ThreadLocal<JRamCloud> TLS_RC_CLIENT = new ThreadLocal<JRamCloud>() {
         @Override
         protected JRamCloud initialValue() {
-            return new JRamCloud(getLocator(CONFIG), getClusterName(CONFIG));
+            return new JRamCloud(LOCATOR, CLUSTER_NAME);
         }
     };
 
@@ -95,16 +102,41 @@ public class RCClient implements IKVClient {
     // Currently RCClient is state-less
     private static final RCClient THE_INSTANCE = new RCClient();
 
+    /**
+     * Default constructor.
+     */
+    protected RCClient() {
+        log.info("locator: {}, cluster name: {}", LOCATOR, CLUSTER_NAME);
+    }
+
+    /**
+     * Gets a DataStoreClient implemented on RAMCloud.
+     *
+     * @return RCClient
+     */
     public static RCClient getClient() {
         return THE_INSTANCE;
     }
 
-    public static final Configuration getConfiguration() {
-        final File configFile = new File(System.getProperty("ramcloud.config.path", DB_CONFIG_FILE));
+    /**
+     * Gets the {@link Configuration} instance.
+     *
+     * @return Configuration
+     */
+    private static final Configuration getConfiguration() {
+        final File configFile = new File(
+                System.getProperty("ramcloud.config.path",
+                                    DB_CONFIG_FILE));
         return getConfiguration(configFile);
     }
 
-    public static final Configuration getConfiguration(final File configFile) {
+    /**
+     * Gets the {@link Configuration} instance from properties file.
+     *
+     * @param configFile properties file
+     * @return Configuration
+     */
+    private static final Configuration getConfiguration(final File configFile) {
         if (configFile == null) {
             throw new IllegalArgumentException("Need to specify a configuration file or storage directory");
         }
@@ -114,13 +146,23 @@ public class RCClient implements IKVClient {
         }
 
         try {
-            return new PropertiesConfiguration(configFile);
+            PropertiesConfiguration conf = new PropertiesConfiguration();
+            // stop parsing commas in property value
+            conf.setDelimiterParsingDisabled(true);
+            conf.load(configFile);
+            return conf;
         } catch (ConfigurationException e) {
             throw new IllegalArgumentException("Could not load configuration at: " + configFile, e);
         }
     }
 
-    public static String getLocator(final Configuration configuration) {
+    /**
+     * Gets the RAMCloud external storage locator from configuration file.
+     *
+     * @param configuration input
+     * @return RAMCloud external storage locator string
+     */
+    private static String getLocator(final Configuration configuration) {
 
         final String locator = configuration.getString("ramcloud.locator");
         if (locator != null) {
@@ -142,13 +184,15 @@ public class RCClient implements IKVClient {
         return coordinatorURL;
     }
 
-    public static String getClusterName(final Configuration configuration) {
-        final String clusterName = configuration.getString("ramcloud.clusterName");
-        if (clusterName != null) {
-            return clusterName;
-        }
-
-        return DEFAULT_CLUSTERNAME;
+    /**
+     * Gets the RAMCloud clusterName from configuration file.
+     *
+     * @param configuration input
+     * @return RAMCloud clusterName
+     */
+    private static String getClusterName(final Configuration configuration) {
+        return configuration.getString("ramcloud.clusterName",
+                                       DEFAULT_CLUSTERNAME);
     }
 
     @Override
