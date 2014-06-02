@@ -25,8 +25,6 @@ public class PortSerializer extends SerializerBase<Port> {
         jsonGenerator.writeStringField("dpid", HexString.toHexString(port.getDpid()));
         jsonGenerator.writeNumberField("number", port.getNumber());
         jsonGenerator.writeStringField("desc", port.getDescription());
-        jsonGenerator.writeArrayFieldStart("devices");
-        jsonGenerator.writeEndArray();
         jsonGenerator.writeEndObject();
     }
 
