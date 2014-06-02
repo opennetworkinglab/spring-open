@@ -1,5 +1,5 @@
 /**
- l*    Copyright 2011,2012, Big Switch Networks, Inc.
+ *    Copyright 2011,2012, Big Switch Networks, Inc.
  *    Originally created by David Erickson, Stanford University
  *
  *    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.Date;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.packet.IPv4;
 
 /**
  * An entity on the network is a visible trace of a device that corresponds
@@ -36,20 +35,14 @@ import net.onrc.onos.core.packet.IPv4;
  *
  * @author readams
  */
-public class OnosDevice implements Serializable { //implements Comparable<OnosDevice> {
+public class OnosDevice implements Serializable {
 
-    private static final int ACTIVITY_TIMEOUT = 30000;
+    private static final long serialVersionUID = 1L;
 
     /**
      * The MAC address associated with this entity.
      */
     private MACAddress macAddress;
-
-    /**
-     * The IP address associated with this entity, or null if no IP learned
-     * from the network observation associated with this entity.
-     */
-    private Integer ipv4Address;
 
     /**
      * The VLAN tag on this entity, or null if untagged.
@@ -73,8 +66,6 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
      */
     private Date lastSeenTimestamp;
 
-    private Date activeSince;
-
     private int hashCode = 0;
 
     // ************
@@ -93,20 +84,16 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
      * @param switchPort
      * @param lastSeenTimestamp
      */
-    public OnosDevice(MACAddress macAddress, Short vlan,
-                      Integer ipv4Address, Long switchDPID, short switchPort,
-                      Date lastSeenTimestamp) {
+    public OnosDevice(MACAddress macAddress, Short vlan, Long switchDPID,
+            short switchPort, Date lastSeenTimestamp) {
         this.macAddress = macAddress;
-        this.ipv4Address = ipv4Address;
         this.vlan = vlan;
         this.switchDPID = switchDPID;
         this.switchPort = switchPort;
         if (lastSeenTimestamp != null) {
             this.lastSeenTimestamp = new Date(lastSeenTimestamp.getTime());
-            this.activeSince = new Date(lastSeenTimestamp.getTime());
         } else {
             this.lastSeenTimestamp = null;
-            this.activeSince = null;
         }
     }
 
@@ -116,14 +103,6 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
 
     public MACAddress getMacAddress() {
         return macAddress;
-    }
-
-    public Integer getIpv4Address() {
-        return ipv4Address;
-    }
-
-    public void setIpv4Address(Integer ipv4Address) {
-        this.ipv4Address = ipv4Address;
     }
 
     public Short getVlan() {
@@ -154,20 +133,7 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
     }
 
     public void setLastSeenTimestamp(Date lastSeenTimestamp) {
-        if (activeSince == null ||
-                (activeSince.getTime() + ACTIVITY_TIMEOUT) <
-                        lastSeenTimestamp.getTime()) {
-            this.activeSince = new Date(lastSeenTimestamp.getTime());
-        }
         this.lastSeenTimestamp = new Date(lastSeenTimestamp.getTime());
-    }
-
-    public Date getActiveSince() {
-        return new Date(this.activeSince.getTime());
-    }
-
-    public void setActiveSince(Date activeSince) {
-        this.activeSince = new Date(activeSince.getTime());
     }
 
     @Override
@@ -177,8 +143,6 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
         }
         final int prime = 31;
         hashCode = 1;
-        hashCode = prime * hashCode
-                + ((ipv4Address == null) ? 0 : ipv4Address.hashCode());
         hashCode = prime * hashCode + (int) (macAddress.toLong() ^ (macAddress.toLong() >>> 32));
         hashCode = prime * hashCode + (int) switchDPID;
         hashCode = prime * hashCode + (int) switchPort;
@@ -199,13 +163,6 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
         }
         OnosDevice other = (OnosDevice) obj;
         if (hashCode() != other.hashCode()) {
-            return false;
-        }
-        if (ipv4Address == null) {
-            if (other.ipv4Address != null) {
-                return false;
-            }
-        } else if (!ipv4Address.equals(other.ipv4Address)) {
             return false;
         }
         if (macAddress == null) {
@@ -236,9 +193,6 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
         StringBuilder builder = new StringBuilder();
         builder.append("Entity [macAddress=");
         builder.append(macAddress.toString());
-        builder.append(", ipv4Address=");
-        builder.append(IPv4.fromIPv4Address(ipv4Address == null ?
-                0 : ipv4Address.intValue()));
         builder.append(", vlan=");
         builder.append(vlan);
         builder.append(", switchDPID=");
@@ -247,52 +201,7 @@ public class OnosDevice implements Serializable { //implements Comparable<OnosDe
         builder.append(switchPort);
         builder.append(", lastSeenTimestamp=");
         builder.append(lastSeenTimestamp == null ? "null" : lastSeenTimestamp.getTime());
-        builder.append(", activeSince=");
-        builder.append(activeSince == null ? "null" : activeSince.getTime());
         builder.append("]");
         return builder.toString();
     }
-
-    /*
-    @Override
-    public int compareTo(OnosDevice o) {
-        if (macAddress < o.macAddress) return -1;
-        if (macAddress > o.macAddress) return 1;
-
-        int r;
-        if (switchDPID == null)
-            r = o.switchDPID == null ? 0 : -1;
-        else if (o.switchDPID == null)
-            r = 1;
-        else
-            r = switchDPID.compareTo(o.switchDPID);
-        if (r != 0) return r;
-
-        if (switchPort == null)
-            r = o.switchPort == null ? 0 : -1;
-        else if (o.switchPort == null)
-            r = 1;
-        else
-            r = switchPort.compareTo(o.switchPort);
-        if (r != 0) return r;
-
-        if (ipv4Address == null)
-            r = o.ipv4Address == null ? 0 : -1;
-        else if (o.ipv4Address == null)
-            r = 1;
-        else
-            r = ipv4Address.compareTo(o.ipv4Address);
-        if (r != 0) return r;
-
-        if (vlan == null)
-            r = o.vlan == null ? 0 : -1;
-        else if (o.vlan == null)
-            r = 1;
-        else
-            r = vlan.compareTo(o.vlan);
-        if (r != 0) return r;
-
-        return 0;
-    }*/
-
 }

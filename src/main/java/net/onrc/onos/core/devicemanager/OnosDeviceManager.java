@@ -27,11 +27,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
-import net.onrc.onos.core.packet.ARP;
-import net.onrc.onos.core.packet.DHCP;
 import net.onrc.onos.core.packet.Ethernet;
-import net.onrc.onos.core.packet.IPv4;
-import net.onrc.onos.core.packet.UDP;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Topology;
 
@@ -139,30 +135,15 @@ public class OnosDeviceManager implements IFloodlightModule,
 
         //We check if it is the same device in datagrid to suppress the device update
         OnosDevice exDev = mapDevice.get(mac);
-        if (exDev != null) {
-            if (exDev.equals(srcDevice)) {
-                //There is the same existing device. Update only ActiveSince time.
-                exDev.setLastSeenTimestamp(new Date());
-                if (log.isTraceEnabled()) {
-                    log.trace("In the local cache, there is the same device."
-                            + "Only update last seen time: dpid {}, port {}, mac {}, ip {}, lastSeenTime {}",
-                            dpid, portId, srcDevice.getMacAddress(), srcDevice.getIpv4Address(), srcDevice.getLastSeenTimestamp().getTime());
-                }
-                return Command.CONTINUE;
-            } else if (srcDevice.getIpv4Address() == null &&
-                    exDev.getSwitchDPID().equals(srcDevice.getSwitchDPID()) &&
-                    exDev.getSwitchPort() == srcDevice.getSwitchPort()) {
-                //Vlan should be handled based on the Onos spec. Until then, don't handle it.
-                //Device attachment point and mac address are the same
-                //but the packet does not have an ip address.
-                exDev.setLastSeenTimestamp(new Date());
-                if (log.isTraceEnabled()) {
-                    log.trace("In the local cache, there is the same mac device and got no ip addr packet-in."
-                            + "Only update last seen time. dpid {}, port {}, mac {}, ip {} lastSeenTime {}",
-                            dpid, portId, srcDevice.getMacAddress(), exDev.getIpv4Address(), srcDevice.getLastSeenTimestamp().getTime());
-                }
-                return Command.CONTINUE;
+        if (exDev != null && exDev.equals(srcDevice)) {
+            //There is the same existing device. Update only ActiveSince time.
+            exDev.setLastSeenTimestamp(new Date());
+            if (log.isTraceEnabled()) {
+                log.trace("In the local cache, there is the same device."
+                        + "Only update last seen time: dpid {}, port {}, mac {}, lastSeenTime {}",
+                        dpid, portId, srcDevice.getMacAddress(), srcDevice.getLastSeenTimestamp().getTime());
             }
+            return Command.CONTINUE;
         }
 
         //If the switch port we try to attach a new device already has a link, then stop adding device
@@ -177,8 +158,8 @@ public class OnosDeviceManager implements IFloodlightModule,
         addOnosDevice(mac, srcDevice);
 
         if (log.isTraceEnabled()) {
-            log.trace("Add device info: dpid {}, port {}, mac {}, ip {}, lastSeenTime {}",
-                    dpid, portId, srcDevice.getMacAddress(), srcDevice.getIpv4Address(), srcDevice.getLastSeenTimestamp().getTime());
+            log.trace("Add device info: dpid {}, port {}, mac {}, lastSeenTime {}",
+                    dpid, portId, srcDevice.getMacAddress(), srcDevice.getLastSeenTimestamp().getTime());
         }
         return Command.CONTINUE;
     }
@@ -195,8 +176,8 @@ public class OnosDeviceManager implements IFloodlightModule,
                     long now = new Date().getTime();
                     if ((now - dev.getLastSeenTimestamp().getTime() > agingMillisecConfig)) {
                         if (log.isTraceEnabled()) {
-                            log.debug("Remove device info in the datagrid: dpid {}, port {}, mac {}, ip {}, lastSeenTime {}, diff {}",
-                                    dev.getSwitchDPID(), dev.getSwitchPort(), dev.getMacAddress(), dev.getIpv4Address(),
+                            log.debug("Remove device info in the datagrid: dpid {}, port {}, mac {}, lastSeenTime {}, diff {}",
+                                    dev.getSwitchDPID(), dev.getSwitchPort(), dev.getMacAddress(),
                                     dev.getLastSeenTimestamp().getTime(), now - dev.getLastSeenTimestamp().getTime());
                         }
                         deleteSet.add(dev);
@@ -213,36 +194,6 @@ public class OnosDeviceManager implements IFloodlightModule,
     }
 
     /**
-     * Get IP address from packet if the packet is either an ARP
-     * or a DHCP packet.
-     *
-     * @param eth
-     * @param dlAddr
-     * @return
-     */
-    private int getSrcNwAddr(Ethernet eth, long dlAddr) {
-        if (eth.getPayload() instanceof ARP) {
-            ARP arp = (ARP) eth.getPayload();
-            if ((arp.getProtocolType() == ARP.PROTO_TYPE_IP) &&
-                    (Ethernet.toLong(arp.getSenderHardwareAddress()) == dlAddr)) {
-                return IPv4.toIPv4Address(arp.getSenderProtocolAddress());
-            }
-        } else if (eth.getPayload() instanceof IPv4) {
-            IPv4 ipv4 = (IPv4) eth.getPayload();
-            if (ipv4.getPayload() instanceof UDP) {
-                UDP udp = (UDP) ipv4.getPayload();
-                if (udp.getPayload() instanceof DHCP) {
-                    DHCP dhcp = (DHCP) udp.getPayload();
-                    if (dhcp.getOpCode() == DHCP.OPCODE_REPLY) {
-                        return ipv4.getSourceAddress();
-                    }
-                }
-            }
-        }
-        return 0;
-    }
-
-    /**
      * Parse an entity from an {@link Ethernet} packet.
      *
      * @param eth the packet to parse
@@ -253,7 +204,6 @@ public class OnosDeviceManager implements IFloodlightModule,
     protected OnosDevice getSourceDeviceFromPacket(Ethernet eth,
             long swdpid,
             short port) {
-        long dlAddr = Ethernet.toLong(eth.getSourceMACAddress());
         MACAddress sourceMac = eth.getSourceMAC();
 
         // Ignore broadcast/multicast source
@@ -262,10 +212,8 @@ public class OnosDeviceManager implements IFloodlightModule,
         }
 
         short vlan = eth.getVlanID();
-        int nwSrc = getSrcNwAddr(eth, dlAddr);
         return new OnosDevice(sourceMac,
                 ((vlan >= 0) ? vlan : null),
-                ((nwSrc != 0) ? nwSrc : null),
                 swdpid,
                 port,
                 new Date());

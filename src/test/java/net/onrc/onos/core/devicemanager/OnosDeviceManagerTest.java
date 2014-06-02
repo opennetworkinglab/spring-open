@@ -243,12 +243,8 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
     public void testGetSourceDeviceFromPacket() {
         byte[] address = new byte[] {0x00,0x44,0x33,0x22,0x11,0x01};
         MACAddress srcMac = new MACAddress(address);
-        IPv4 v4Pkt = new IPv4()
-        .setSourceAddress("192.168.1.1")
-        .setDestinationAddress("192.168.1.2");
         OnosDevice dev1 = new OnosDevice(srcMac,
                 null,
-                v4Pkt.getSourceAddress(),
                 sw1Dpid,
                 sw1DevPort,
                 null);
