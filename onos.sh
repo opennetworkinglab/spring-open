@@ -469,7 +469,10 @@ function start-zk {
 }
 
 function stop-zk {
-  kill-processes "ZooKeeper" `jps -l | grep org.apache.zookeeper.server | awk '{print $1}'`
+  echo -n "Stopping ZooKeeper ... "
+  load-zk-cfg
+
+  ${ZK_HOME}/bin/zkServer.sh stop
 }
 
 function status-zk {
