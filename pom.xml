@@ -258,6 +258,7 @@
               <exclude>net/floodlightcontroller/**/web/**/*.class</exclude>
             </excludes>
           </instrumentation>
+          <quiet>true</quiet>
         </configuration>
         <executions>
           <execution>
@@ -710,6 +711,7 @@
               <formats>
                 <format>xml</format>
               </formats>
+              <quiet>true</quiet>
             </configuration>
             <executions>
               <execution>
