@@ -725,4 +725,15 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
     public long getArpCleaningTimerPeriod() {
         return arpCleaningTimerPeriodConfig;
     }
+
+    /**
+     * Replaces the internal ArpCache.
+     *
+     * @param cache ArpCache instance
+     *
+     * @exclude Backdoor for unit testing purpose only, do not use.
+     */
+    void debugReplaceArpCache(final ArpCache cache) {
+        this.arpCache = cache;
+    }
 }

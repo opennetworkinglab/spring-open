@@ -2,8 +2,6 @@ package net.onrc.onos.apps.proxyarp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -37,13 +35,11 @@ import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.easymock.PowerMock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ ProxyArpManager.class, ArpCache.class })
+// XXX Commented out as workaround for PowerMock + Hazelcast issue.
+//@RunWith(PowerMockRunner.class)
+//@PowerMockIgnore({ "net.onrc.onos.core.datastore.*", "com.hazelcast.*" })
+//@PrepareOnlyThisForTest({ ProxyArpManager.class })
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ProxyArpManagerTest {
     String defaultStrAgingMsec = "60000";
@@ -89,7 +85,7 @@ public class ProxyArpManagerTest {
         prepareExpectForGeneral();
     }
 
-    private void makeTestedObject() {
+    private void makeTestedObject() throws UnknownHostException {
         //Made tested values
         srcStrMac = "00:00:00:00:00:01";
         dstStrMac = "00:00:00:00:00:02";
@@ -105,18 +101,12 @@ public class ProxyArpManagerTest {
         srcMac = new MACAddress(srcByteMac);
         cachedMac1 = new MACAddress(Ethernet.toMACAddress(cachedStrMac1));
         cachedMac2 = new MACAddress(Ethernet.toMACAddress(cachedStrMac2));
-        srcIp = null;
-        dstIp = null;
-        cachedIp1 = null;
-        cachedIp2 = null;
-        try {
-            srcIp = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(srcStrIp));
-            dstIp = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(dstStrIp));
-            cachedIp1 = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(cachedStrIp1));
-            cachedIp2 = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(cachedStrIp2));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+
+        srcIp = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(srcStrIp));
+        dstIp = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(dstStrIp));
+        cachedIp1 = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(cachedStrIp1));
+        cachedIp2 = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(cachedStrIp2));
+
         sw1Dpid = 1L;
         sw1Inport = 1;
         sw1Outport = 2;
@@ -247,12 +237,13 @@ public class ProxyArpManagerTest {
     }
 
     private void prepareExpectForStartUp() {
-        try {
-            PowerMock.expectNew(ArpCache.class).andReturn(arpCache);
-        } catch (Exception e) {
-            fail("Exception:" + e.getMessage());
-        }
-        PowerMock.replayAll();
+        // XXX Commented out as workaround for PowerMock + Hazelcast issue.
+//        try {
+//            PowerMock.expectNew(ArpCache.class).andReturn(arpCache);
+//        } catch (Exception e) {
+//            fail("Exception:" + e.getMessage());
+//        }
+//        PowerMock.replayAll();
         EasyMock.expect(configInfoService.getVlan()).andReturn(vlanId);
         restApiService.addRestletRoutable(EasyMock.isA(ArpWebRoutable.class));
         EasyMock.expectLastCall();
@@ -339,6 +330,10 @@ public class ProxyArpManagerTest {
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
+
+        // XXX workaround for PowerMock + Hazelcast issue.
+        this.arpManager.debugReplaceArpCache(arpCache);
+
         MACAddress mac = arpManager.getMacAddress(cachedIp1);
         assertEquals(cachedMac1, mac);
     }

@@ -130,13 +130,13 @@ public final class HZClient implements IKVClient {
             final int port = baseHzConfig.getNetworkConfig().getPort();
 
             String server = System.getProperty("net.onrc.onos.core.datastore.hazelcast.client.server", "localhost");
-            clientConfig.addAddress(server + ":" + port);
+            clientConfig.getNetworkConfig().addAddress(server + ":" + port);
 
             // client mode connection limit.
             // set to 0 for fast fall back to Instance mode.
             String sAttempts = System.getProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit");
             if (sAttempts != null) {
-                clientConfig.setConnectionAttemptLimit(Integer.parseInt(sAttempts));
+                clientConfig.getNetworkConfig().setConnectionAttemptLimit(Integer.parseInt(sAttempts));
             }
 
             // copy group config from base Hazelcast configuration
@@ -148,7 +148,7 @@ public final class HZClient implements IKVClient {
 
             registerSerializer(clientConfig.getSerializationConfig());
 
-            log.info("Starting Hazelcast datastore client for [{}]", clientConfig.getAddressList());
+            log.info("Starting Hazelcast datastore client for [{}]", clientConfig.getNetworkConfig().getAddresses());
 
             try {
                 instance = HazelcastClient.newHazelcastClient(clientConfig);
