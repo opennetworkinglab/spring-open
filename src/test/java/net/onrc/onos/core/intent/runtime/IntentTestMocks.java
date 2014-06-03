@@ -53,65 +53,69 @@ public class IntentTestMocks {
      * Create whatever mocks are required to access the Intents framework.
      * This method is intended to be called during @Before processing (setUp())
      * of the JUnit test.
-     *
-     * @throws Exception if any of the mocks cannot be created.
      */
     @SuppressWarnings("unchecked")
-    public void setUpIntentMocks() throws Exception {
-        topology = new MockTopology();
-        topology.createSampleTopology1();
+    public void setUpIntentMocks() {
+        try {
+            topology = new MockTopology();
+            topology.createSampleTopology1();
 
-        datagridService = createMock(IDatagridService.class);
-        topologyService = createMock(ITopologyService.class);
-        controllerRegistryService = createMock(IControllerRegistryService.class);
-        moduleContext = createMock(FloodlightModuleContext.class);
-        final IEventChannel<Long, IntentOperationList> intentOperationChannel =
-                createMock(IEventChannel.class);
-        final IEventChannel<Long, IntentStateList>intentStateChannel =
-                createMock(IEventChannel.class);
-        persistIntent = PowerMock.createMock(PersistIntent.class);
-        restApi = createMock(IRestApiService.class);
+            datagridService = createMock(IDatagridService.class);
+            topologyService = createMock(ITopologyService.class);
+            controllerRegistryService = createMock(IControllerRegistryService.class);
+            moduleContext = createMock(FloodlightModuleContext.class);
+            final IEventChannel<Long, IntentOperationList> intentOperationChannel =
+                    createMock(IEventChannel.class);
+            final IEventChannel<Long, IntentStateList>intentStateChannel =
+                    createMock(IEventChannel.class);
+            persistIntent = PowerMock.createMock(PersistIntent.class);
+            restApi = createMock(IRestApiService.class);
 
-        PowerMock.expectNew(PersistIntent.class,
-                anyObject(IControllerRegistryService.class)).andReturn(persistIntent);
+            PowerMock.expectNew(PersistIntent.class,
+                    anyObject(IControllerRegistryService.class)).andReturn(persistIntent);
 
-        expect(moduleContext.getServiceImpl(IDatagridService.class))
-                .andReturn(datagridService).once();
-        expect(moduleContext.getServiceImpl(ITopologyService.class))
-                .andReturn(topologyService).once();
-        expect(moduleContext.getServiceImpl(IControllerRegistryService.class))
-                .andReturn(controllerRegistryService).once();
-        expect(persistIntent.getKey()).andReturn(1L).anyTimes();
-        expect(persistIntent.persistIfLeader(eq(1L),
-                anyObject(IntentOperationList.class))).andReturn(true)
-                .anyTimes();
-        expect(moduleContext.getServiceImpl(IRestApiService.class))
-                .andReturn(restApi).once();
+            expect(moduleContext.getServiceImpl(IDatagridService.class))
+                    .andReturn(datagridService).once();
+            expect(moduleContext.getServiceImpl(ITopologyService.class))
+                    .andReturn(topologyService).once();
+            expect(moduleContext.getServiceImpl(IControllerRegistryService.class))
+                    .andReturn(controllerRegistryService).once();
+            expect(persistIntent.getKey()).andReturn(1L).anyTimes();
+            expect(persistIntent.persistIfLeader(eq(1L),
+                    anyObject(IntentOperationList.class))).andReturn(true)
+                    .anyTimes();
+            expect(moduleContext.getServiceImpl(IRestApiService.class))
+                    .andReturn(restApi).once();
 
-        expect(topologyService.getTopology()).andReturn(topology)
-                .anyTimes();
-        topologyService.registerTopologyListener(
-                anyObject(ITopologyListener.class));
-        expectLastCall();
+            expect(topologyService.getTopology()).andReturn(topology)
+                    .anyTimes();
+            topologyService.registerTopologyListener(
+                    anyObject(ITopologyListener.class));
+            expectLastCall();
 
-        expect(datagridService.createChannel("onos.pathintent",
-                Long.class, IntentOperationList.class))
-                .andReturn(intentOperationChannel).once();
+            expect(datagridService.createChannel("onos.pathintent",
+                    Long.class, IntentOperationList.class))
+                    .andReturn(intentOperationChannel).once();
 
-        expect(datagridService.addListener(
-                eq("onos.pathintent_state"),
-                anyObject(IEventChannelListener.class),
-                eq(Long.class),
-                eq(IntentStateList.class)))
-                .andReturn(intentStateChannel).once();
-        restApi.addRestletRoutable(anyObject(IntentWebRoutable.class));
+            expect(datagridService.addListener(
+                    eq("onos.pathintent_state"),
+                    anyObject(IEventChannelListener.class),
+                    eq(Long.class),
+                    eq(IntentStateList.class)))
+                    .andReturn(intentStateChannel).once();
+            restApi.addRestletRoutable(anyObject(IntentWebRoutable.class));
 
-        replay(datagridService);
-        replay(topologyService);
-        replay(moduleContext);
-        replay(controllerRegistryService);
-        PowerMock.replay(persistIntent, PersistIntent.class);
-        replay(restApi);
+            replay(datagridService);
+            replay(topologyService);
+            replay(moduleContext);
+            replay(controllerRegistryService);
+            PowerMock.replay(persistIntent, PersistIntent.class);
+            replay(restApi);
+        } catch (Exception ex) {
+            // Convert the checked exception into an unchecked exception to
+            // abort the test that called.
+            throw new IllegalStateException(ex);
+        }
     }
 
     /**
@@ -140,6 +144,7 @@ public class IntentTestMocks {
 
     /**
      * Fetch the mocked topology.
+     *
      * @return mocked topology
      */
     public MockTopology getTopology() {

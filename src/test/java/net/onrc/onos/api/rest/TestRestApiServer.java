@@ -2,7 +2,6 @@ package net.onrc.onos.api.rest;
 
 
 import net.floodlightcontroller.restserver.RestletRoutable;
-import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Context;
@@ -57,7 +56,7 @@ public class TestRestApiServer {
      * The restlet engine requires an Application as a container.
      */
     private class RestApplication extends Application {
-        private Context context;
+        private final Context context;
 
         /**
          * Initialize the Application along with its Context.
@@ -149,10 +148,8 @@ public class TestRestApiServer {
      * of a JUnit test.
      *
      * @param restletsUnderTest list of Restlets to run as part of the server.
-     * @throws Exception if starting the server fails.
      */
-    public void startServer(final List<RestletRoutable> restletsUnderTest)
-           throws Exception {
+    public void startServer(final List<RestletRoutable> restletsUnderTest) {
         restlets = restletsUnderTest;
 
         restApplication = new RestApplication();
@@ -163,14 +160,18 @@ public class TestRestApiServer {
     /**
      * Stop the REST server.  The container is stopped, and the server will
      * no longer respond to requests.  The usual use of this is in the @After
-     * (tearDown) part of the server.
-     *
-     * @throws Exception if the server cannot be shut down cleanly.
+     * (tearDown) part of the test.
      */
-    public void stopServer() throws Exception {
-        restApplication.stop();
-        server.stop();
-        component.stop();
+    public void stopServer() {
+        try {
+            restApplication.stop();
+            server.stop();
+            component.stop();
+        } catch (Exception ex) {
+            // Stopping the server failed, convert to unchecked exception to
+            // abort the calling test with a failure.
+            throw new IllegalStateException(ex);
+        }
     }
 
 
