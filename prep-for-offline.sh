@@ -10,9 +10,5 @@ if [ -z "${MVN}" ]; then
 fi
 
 # download package dependencies
-${MVN} -T 1C dependency:go-offline
-
 # run goals to download required plugins
-${MVN} -T 1C checkstyle:checkstyle
-${MVN} -q -T 1C clean test -Dtest=DoNotTest -DfailIfNoTests=false > /dev/null
-${MVN} -T 1C compile
+${MVN} -T 1C dependency:go-offline clean verify pmd:pmd pmd:cpd -DskipTests -Dcheckstyle.skip -Dfindbugs.skip -Dpmd.skip -Dcpd.skip
