@@ -488,9 +488,17 @@ function check-zk {
   return 0
 }
 
+function check-and-start-zk {
+  check-zk
+  local zk_status=$?
+  if [ "$zk_status" -ne 0 ]; then
+    start-zk
+  fi
+}
+
 # wait-zk-or-die {timeout-sec}
 function wait-zk-or-die {
-  local retries=${1:-1}
+  local retries=${1:-5}
   # do-while retries >= 0
   while true; do
     check-zk
@@ -584,7 +592,8 @@ function rc-coord {
 }
 
 function start-coord {
-  wait-zk-or-die 2
+  check-and-start-zk
+  wait-zk-or-die
 
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
@@ -632,7 +641,8 @@ function start-coord {
 }
 
 function del-coord-info {
-  wait-zk-or-die 1
+  check-and-start-zk
+  wait-zk-or-die
 
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
@@ -708,7 +718,8 @@ function rc-server {
 }
 
 function start-server {
-  wait-zk-or-die 2
+  check-and-start-zk
+  wait-zk-or-die
 
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
