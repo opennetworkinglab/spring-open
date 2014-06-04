@@ -522,6 +522,69 @@ function wait-zk-or-die {
 
 
 ####### Functions related to RAMCloud ######
+
+# Check if this host should be running RAMCloud coordinator:
+function is-coord-role {
+  if [ "${ONOS_HOST_BACKEND}" = "ramcloud" ]; then
+    case "${ONOS_HOST_ROLE}" in
+      single-node)
+        echo "true"
+        return 0
+        ;;
+      coord-node)
+        echo "true"
+        return 0
+        ;;
+      server-node)
+        echo "false"
+        return 1
+        ;;
+      coord-and-server-node)
+        echo "true"
+        return 0
+        ;;
+      *)
+        echo "false"
+        return 1
+        ;;
+    esac
+  else
+    echo "false"
+    return 1
+  fi
+}
+
+# Check if this host should be running RAMCloud server:
+function is-server-role {
+  if [ "${ONOS_HOST_BACKEND}" = "ramcloud" ]; then
+    case "${ONOS_HOST_ROLE}" in
+      single-node)
+        echo "true"
+        return 0
+        ;;
+      coord-node)
+        echo "false"
+        return 1
+        ;;
+      server-node)
+        echo "true"
+        return 0
+        ;;
+      coord-and-server-node)
+        echo "true"
+        return 0
+        ;;
+      *)
+        echo "false"
+        return 1
+        ;;
+    esac
+  else
+    echo "false"
+    return 1
+  fi
+}
+
 function start-backend {
   if [ "${ONOS_HOST_BACKEND}" = "ramcloud" ]; then
     if [ $1 == "coord" ]; then
@@ -969,30 +1032,30 @@ case "$1" in
     if [ $on != 0 ]; then
       onos stop
     fi
-    
+
     rcsn=`pgrep -f obj.${RAMCLOUD_BRANCH}/server | wc -l`
     if [ $rcsn != 0 ]; then
       rc-server stop
     fi
-    
+
     rccn=`pgrep -f obj.${RAMCLOUD_BRANCH}/coordinator | wc -l`
     if [ $rccn != 0 ]; then
       rc-coord stop
     fi
-    
+
     zkn=`jps -l | grep org.apache.zookeeper.server | wc -l`
     if [ $zkn != 0 ]; then
       zk restart
     fi
-    
+
     if [ $rccn != 0 ]; then
       rc-coord startifdown
     fi
-    
+
     if [ $rcsn != 0 ]; then
       rc-server startifdown
     fi
-    
+
     if [ $on != 0 ]; then
       onos startifdown
     fi
@@ -1022,9 +1085,18 @@ case "$1" in
     rc-server $2
     ;;
   rc)
+    # XXX rc command ignores if the host is not configured to have those roles,
+    # while rc-s or rc-c executes the task regardless of role definition.
+    # This is a workaround since TestON does not take role in account
+    # and always issue rc deldb right now.
+
     # TODO make deldb command more organized (clarify when it can work)
-    rc-coord $2
-    rc-server $2
+    if [ "`is-coord-role`" == "true" ]; then
+      rc-coord $2
+    fi
+    if [ "`is-server-role`" == "true" ]; then
+      rc-server $2
+    fi
     ;;
   core)
     onos $2
