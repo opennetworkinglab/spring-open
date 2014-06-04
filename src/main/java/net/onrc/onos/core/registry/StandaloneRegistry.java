@@ -2,6 +2,7 @@ package net.onrc.onos.core.registry;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,9 @@ public class StandaloneRegistry implements IFloodlightModule,
 
     private String registeredControllerId;
     private Map<String, ControlChangeCallback> switchCallbacks;
+
+    private long blockTop;
+    private static final long BLOCK_SIZE = 0x1000000L;
 
     //
     // Unique ID generation state
@@ -95,14 +99,16 @@ public class StandaloneRegistry implements IFloodlightModule,
 
     @Override
     public Collection<String> getAllControllers() throws RegistryException {
-        List<String> l = new ArrayList<String>();
-        l.add(registeredControllerId);
-        return l;
+        //List<String> l = new ArrayList<String>();
+        //l.add(registeredControllerId);
+        //return l;
+        return Collections.singletonList(registeredControllerId);
     }
 
     @Override
     public String getControllerForSwitch(long dpid) throws RegistryException {
-        return (switchCallbacks.get(HexString.toHexString(dpid)) == null) ? null : registeredControllerId;
+        return (switchCallbacks.get(HexString.toHexString(dpid)) == null)
+                ? null : registeredControllerId;
     }
 
     @Override
@@ -112,7 +118,8 @@ public class StandaloneRegistry implements IFloodlightModule,
 
         for (String strSwitch : switchCallbacks.keySet()) {
             log.debug("Switch _{}", strSwitch);
-            List<ControllerRegistryEntry> list = new ArrayList<ControllerRegistryEntry>();
+            List<ControllerRegistryEntry> list =
+                    new ArrayList<ControllerRegistryEntry>();
             list.add(new ControllerRegistryEntry(registeredControllerId, 0));
 
             switches.put(strSwitch, list);
@@ -127,12 +134,10 @@ public class StandaloneRegistry implements IFloodlightModule,
         throw new NotImplementedException("Not yet implemented");
     }
 
-    private long blockTop;
-    private static final long BLOCK_SIZE = 0x1000000L;
-
     /**
      * Returns a block of IDs which are unique and unused.
-     * Range of IDs is fixed size and is assigned incrementally as this method called.
+     * Range of IDs is fixed size and is assigned incrementally as this method
+     * called.
      *
      * @return an IdBlock containing a set of unique IDs
      */
