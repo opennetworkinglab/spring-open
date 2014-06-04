@@ -2,15 +2,14 @@ package net.onrc.onos.core.registry;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
-
 public class ControllerRegistryEntry implements Comparable<ControllerRegistryEntry> {
     //
     // TODO: Refactor the implementation and decide whether controllerId
     // is needed. If "yes", we might need to consider it inside the
-    // compareTo(), equals() and hashCode() impmenetations.
+    // compareTo(), equals() and hashCode() implementations.
     //
-    private String controllerId;
-    private int sequenceNumber;
+    private final String controllerId;
+    private final int sequenceNumber;
 
     public ControllerRegistryEntry(String controllerId, int sequenceNumber) {
         this.controllerId = controllerId;

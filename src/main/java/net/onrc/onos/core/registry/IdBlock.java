@@ -1,9 +1,9 @@
 package net.onrc.onos.core.registry;
 
 public class IdBlock {
-    private long start;
-    private long end;
-    private long size;
+    private final long start;
+    private final long end;
+    private final long size;
 
     public IdBlock(long start, long end, long size) {
         this.start = start;

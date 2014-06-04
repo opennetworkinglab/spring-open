@@ -23,6 +23,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.registry.web.RegistryWebRoutable;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -57,46 +58,47 @@ import com.google.common.base.Charsets;
 public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistryService {
 
     private static final Logger log = LoggerFactory.getLogger(ZookeeperRegistry.class);
-    protected String controllerId = null;
 
-    protected IRestApiService restApi;
+    private String controllerId;
+
+    private IRestApiService restApi;
 
     //This is the default, it's overwritten by the connectionString configuration parameter
-    protected String connectionString = "localhost:2181";
+    private String connectionString = "localhost:2181";
 
-    private final String namespace = "onos";
-    private final String switchLatchesPath = "/switches";
+    private static final String NAMESPACE = "onos";
+    private static final String SWITCH_LATCHES_PATH = "/switches";
     private static final String CLUSTER_LEADER_PATH = "/cluster/leader";
 
     private static final String SERVICES_PATH = "/"; //i.e. the root of our namespace
     private static final String CONTROLLER_SERVICE_NAME = "controllers";
 
-    protected CuratorFramework curatorFrameworkClient;
+    private CuratorFramework curatorFrameworkClient;
 
-    protected PathChildrenCache rootSwitchCache;
+    private PathChildrenCache rootSwitchCache;
 
-    protected ConcurrentHashMap<String, SwitchLeadershipData> switches;
-    protected Map<String, PathChildrenCache> switchPathCaches;
+    private ConcurrentHashMap<String, SwitchLeadershipData> switches;
+    private Map<String, PathChildrenCache> switchPathCaches;
 
-    protected LeaderLatch clusterLeaderLatch;
-    protected ClusterLeaderListener clusterLeaderListener;
+    private LeaderLatch clusterLeaderLatch;
+    private ClusterLeaderListener clusterLeaderListener;
     private static final long CLUSTER_LEADER_ELECTION_RETRY_MS = 100;
 
     private static final String ID_COUNTER_PATH = "/flowidcounter";
     private static final Long ID_BLOCK_SIZE = 0x100000000L;
-    protected DistributedAtomicLong distributedIdCounter;
+    private DistributedAtomicLong distributedIdCounter;
 
     //Zookeeper performance-related configuration
-    protected static final int SESSION_TIMEOUT = 5000;
-    protected static final int CONNECTION_TIMEOUT = 7000;
+    private static final int SESSION_TIMEOUT = 7000;    // ms
+    private static final int CONNECTION_TIMEOUT = 5000; // ms
 
     //
     // Unique ID generation state
     // TODO: The implementation must be updated to use the Zookeeper
-    // instead of a ramdon generator.
+    // instead of a random generator.
     //
     private static Random randomGenerator = new Random();
-    private static long nextUniqueIdPrefix = 0;
+    private static long nextUniqueIdPrefix;
     // NOTE: The 0xffffffffL value is used by the Unique ID generator for
     // initialization purpose.
     private static long nextUniqueIdSuffix = 0xffffffffL;
@@ -104,15 +106,32 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
     private final BlockingQueue<SwitchLeaderEvent> switchLeadershipEvents =
             new LinkedBlockingQueue<SwitchLeaderEvent>();
 
-    private ExecutorService eventThreadExecutorService;
+    /**
+     * Listens for changes to the switch znodes in Zookeeper. This maintains
+     * the second level of PathChildrenCaches that hold the controllers
+     * contending for each switch - there's one for each switch.
+     */
+    private PathChildrenCacheListener switchPathCacheListener =
+            new SwitchPathCacheListener();
+    private ServiceDiscovery<ControllerService> serviceDiscovery;
+    private ServiceCache<ControllerService> serviceCache;
+
 
     private static class SwitchLeaderEvent {
-        public final long dpid;
-        public final boolean isLeader;
+        private final long dpid;
+        private final boolean isLeader;
 
         public SwitchLeaderEvent(long dpid, boolean isLeader) {
             this.dpid = dpid;
             this.isLeader = isLeader;
+        }
+
+        public long getDpid() {
+            return dpid;
+        }
+
+        public boolean isLeader() {
+            return isLeader;
         }
     }
 
@@ -123,13 +142,13 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 SwitchLeaderEvent event = switchLeadershipEvents.take();
-                SwitchLeadershipData swData = switches.get(HexString.toHexString(event.dpid));
+                SwitchLeadershipData swData = switches.get(HexString.toHexString(event.getDpid()));
                 if (swData == null) {
-                    log.debug("Leadership data {} not found", event.dpid);
+                    log.debug("Leadership data {} not found", event.getDpid());
                     continue;
                 }
 
-                swData.getCallback().controlChanged(event.dpid, event.isLeader);
+                swData.getCallback().controlChanged(event.getDpid(), event.isLeader());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -139,8 +158,8 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         }
     }
 
-    protected class SwitchLeaderListener implements LeaderLatchListener {
-        String dpid;
+    class SwitchLeaderListener implements LeaderLatchListener {
+        private String dpid;
 
         public SwitchLeaderListener(String dpid) {
             this.dpid = dpid;
@@ -161,7 +180,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         }
     }
 
-    protected class SwitchPathCacheListener implements PathChildrenCacheListener {
+    class SwitchPathCacheListener implements PathChildrenCacheListener {
         @Override
         public void childEvent(CuratorFramework client,
                                PathChildrenCacheEvent event) throws Exception {
@@ -204,10 +223,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         }
     }
 
-    protected static class ClusterLeaderListener implements LeaderLatchListener {
-        public ClusterLeaderListener() {
-        }
-
+    private static class ClusterLeaderListener implements LeaderLatchListener {
         //
         // NOTE: If we need to support callbacks when the
         // leadership changes, those should be called here.
@@ -224,31 +240,22 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         }
     }
 
-    /**
-     * Listens for changes to the switch znodes in Zookeeper. This maintains
-     * the second level of PathChildrenCaches that hold the controllers
-     * contending for each switch - there's one for each switch.
-     */
-    PathChildrenCacheListener switchPathCacheListener = new SwitchPathCacheListener();
-    protected ServiceDiscovery<ControllerService> serviceDiscovery;
-    protected ServiceCache<ControllerService> serviceCache;
-
-
     @Override
     public void requestControl(long dpid, ControlChangeCallback cb) throws RegistryException {
         log.info("Requesting control for {}", HexString.toHexString(dpid));
 
         if (controllerId == null) {
-            throw new RuntimeException("Must register a controller before calling requestControl");
+            throw new IllegalStateException("Must register a controller before calling requestControl");
         }
 
         String dpidStr = HexString.toHexString(dpid);
-        String latchPath = switchLatchesPath + "/" + dpidStr;
 
         if (switches.get(dpidStr) != null) {
             log.debug("Already contesting {}, returning", HexString.toHexString(dpid));
             throw new RegistryException("Already contesting control for " + dpidStr);
         }
+
+        String latchPath = SWITCH_LATCHES_PATH + "/" + dpidStr;
 
         LeaderLatch latch = new LeaderLatch(curatorFrameworkClient, latchPath, controllerId);
         SwitchLeaderListener listener = new SwitchLeaderListener(dpidStr);
@@ -356,17 +363,15 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
         controllerId = id;
 
         try {
-            ServiceInstance<ControllerService> thisInstance = ServiceInstance.<ControllerService>builder()
+            ServiceInstance<ControllerService> thisInstance =
+                    ServiceInstance.<ControllerService>builder()
                     .name(CONTROLLER_SERVICE_NAME)
                     .payload(new ControllerService(controllerId))
-                            //.port((int)(65535 * Math.random())) // in a real application, you'd use a common port
-                            //.uriSpec(uriSpec)
                     .build();
 
             serviceDiscovery.registerService(thisInstance);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Exception starting service instance:", e);
         }
 
     }
@@ -389,8 +394,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
             //uses this and that isn't particularly time-sensitive.
             switchCache.rebuild();
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Exception rebuilding the switch cache:", e);
         }
 
         List<ChildData> sortedData = new ArrayList<ChildData>(switchCache.getCurrentData());
@@ -410,7 +414,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
                 }
         );
 
-        if (sortedData.size() == 0) {
+        if (sortedData.isEmpty()) {
             return null;
         }
 
@@ -420,7 +424,7 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
     @Override
     public Collection<Long> getSwitchesControlledByController(String controller) {
         //TODO remove this if not needed
-        throw new RuntimeException("Not yet implemented");
+        throw new NotImplementedException("Not yet implemented");
     }
 
 
@@ -474,9 +478,11 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
 
     /**
      * Returns a block of IDs which are unique and unused.
-     * Range of IDs is fixed size and is assigned incrementally as this method called.
-     * Since the range of IDs is managed by Zookeeper in distributed way, this method may block when
-     * requests come up simultaneously.
+     * The range of IDs is a fixed size and is allocated incrementally as this
+     * method is called. Since the range of IDs is managed by Zookeeper in
+     * distributed way, this method may block during Zookeeper access.
+     *
+     * @return an IdBlock containing a set of unique IDs
      */
     @Override
     public IdBlock allocateUniqueIdBlock() {
@@ -563,14 +569,14 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
                 SESSION_TIMEOUT, CONNECTION_TIMEOUT, retryPolicy);
 
         curatorFrameworkClient.start();
-        curatorFrameworkClient = curatorFrameworkClient.usingNamespace(namespace);
+        curatorFrameworkClient = curatorFrameworkClient.usingNamespace(NAMESPACE);
 
         distributedIdCounter = new DistributedAtomicLong(
                 curatorFrameworkClient,
                 ID_COUNTER_PATH,
                 new RetryOneTime(100));
 
-        rootSwitchCache = new PathChildrenCache(curatorFrameworkClient, switchLatchesPath, true);
+        rootSwitchCache = new PathChildrenCache(curatorFrameworkClient, SWITCH_LATCHES_PATH, true);
         rootSwitchCache.getListenable().addListener(switchPathCacheListener);
 
         //Build the service discovery object
@@ -590,11 +596,12 @@ public class ZookeeperRegistry implements IFloodlightModule, IControllerRegistry
             //Don't prime the cache, we want a notification for each child node in the path
             rootSwitchCache.start(StartMode.NORMAL);
         } catch (Exception e) {
-            throw new FloodlightModuleException("Error initialising ZookeeperRegistry: "
-                    + e.getMessage());
+            throw new FloodlightModuleException(
+                    "Error initialising ZookeeperRegistry", e);
         }
 
-        eventThreadExecutorService = Executors.newSingleThreadExecutor();
+        ExecutorService eventThreadExecutorService =
+                Executors.newSingleThreadExecutor();
         eventThreadExecutorService.execute(
                 new Runnable() {
                     @Override

@@ -15,6 +15,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.registry.web.RegistryWebRoutable;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,17 +24,15 @@ import org.slf4j.LoggerFactory;
  * Implementation of a registry that doesn't rely on any external registry
  * service. This is designed to be used only in single-node setups (e.g. for
  * development). All registry data is stored in local memory.
- *
- * @author jono
  */
 public class StandaloneRegistry implements IFloodlightModule,
         IControllerRegistryService {
     private static final Logger log = LoggerFactory.getLogger(StandaloneRegistry.class);
 
-    protected IRestApiService restApi;
+    private IRestApiService restApi;
 
-    protected String registeredControllerId = null;
-    protected Map<String, ControlChangeCallback> switchCallbacks;
+    private String registeredControllerId;
+    private Map<String, ControlChangeCallback> switchCallbacks;
 
     //
     // Unique ID generation state
@@ -44,7 +43,7 @@ public class StandaloneRegistry implements IFloodlightModule,
     public void requestControl(long dpid, ControlChangeCallback cb)
             throws RegistryException {
         if (registeredControllerId == null) {
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "Must register a controller before calling requestControl");
         }
 
@@ -52,7 +51,7 @@ public class StandaloneRegistry implements IFloodlightModule,
 
         log.debug("Control granted for {}", HexString.toHexString(dpid));
 
-        //Immediately grant request for control
+        // Immediately grant request for control
         if (cb != null) {
             cb.controlChanged(dpid, true);
         }
@@ -103,7 +102,7 @@ public class StandaloneRegistry implements IFloodlightModule,
 
     @Override
     public String getControllerForSwitch(long dpid) throws RegistryException {
-        return (switchCallbacks.get(HexString.toHexString(dpid)) != null) ? registeredControllerId : null;
+        return (switchCallbacks.get(HexString.toHexString(dpid)) == null) ? null : registeredControllerId;
     }
 
     @Override
@@ -125,25 +124,29 @@ public class StandaloneRegistry implements IFloodlightModule,
     @Override
     public Collection<Long> getSwitchesControlledByController(
             String controllerId) {
-        throw new RuntimeException("Not yet implemented");
+        throw new NotImplementedException("Not yet implemented");
     }
 
-    private long blockTop = 0L;
+    private long blockTop;
     private static final long BLOCK_SIZE = 0x1000000L;
 
     /**
      * Returns a block of IDs which are unique and unused.
      * Range of IDs is fixed size and is assigned incrementally as this method called.
+     *
+     * @return an IdBlock containing a set of unique IDs
      */
     @Override
-    public synchronized IdBlock allocateUniqueIdBlock() {
-        long blockHead = blockTop;
-        long blockTail = blockTop + BLOCK_SIZE;
+    public IdBlock allocateUniqueIdBlock() {
+        synchronized (this)  {
+            long blockHead = blockTop;
+            long blockTail = blockTop + BLOCK_SIZE;
 
-        IdBlock block = new IdBlock(blockHead, blockTail - 1, BLOCK_SIZE);
-        blockTop = blockTail;
+            IdBlock block = new IdBlock(blockHead, blockTail - 1, BLOCK_SIZE);
+            blockTop = blockTail;
 
-        return block;
+            return block;
+        }
     }
 
     /**
@@ -196,7 +199,7 @@ public class StandaloneRegistry implements IFloodlightModule,
 
     @Override
     public IdBlock allocateUniqueIdBlock(long range) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet");
     }
 
 }
