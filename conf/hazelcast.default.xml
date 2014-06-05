@@ -46,16 +46,16 @@
     <!--
     Number of sync-backups. If 1 is set as the backup-count for example,
     then all entries of the map will be copied to another JVM for
-    ail-safety. Valid numbers are 0 (no backup), 1, 2, 3.
+    fail-safety. Valid numbers are 0 (no backup), 1, 2, 3.
     -->
-    <backup-count>0</backup-count>
+    <backup-count>3</backup-count>
 
     <!--
     Number of async-backups. If 1 is set as the backup-count for example,
     then all entries of the map will be copied to another JVM for
     fail-safety. Valid numbers are 0 (no backup), 1, 2, 3.
     -->
-    <async-backup-count>3</async-backup-count>
+    <async-backup-count>0</async-backup-count>
 
     <!--
     Can we read the local backup entries? Default value is false for
