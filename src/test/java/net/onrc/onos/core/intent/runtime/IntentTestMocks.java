@@ -150,4 +150,13 @@ public class IntentTestMocks {
     public MockTopology getTopology() {
         return topology;
     }
+
+    /**
+     * Fetch the mocked topology service.
+     *
+     * @return mocked topology service
+     */
+    public ITopologyService getTopologyService() {
+        return topologyService;
+    }
 }

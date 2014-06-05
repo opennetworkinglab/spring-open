@@ -1,12 +1,15 @@
 package net.onrc.onos.core.topology;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.topology.serializers.TopologySerializer;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  * The northbound interface to the topology. This interface
  * is presented to the rest of ONOS. It is currently read-only, as we want
  * only the discovery modules to be allowed to modify the topology.
  */
+@JsonSerialize(using = TopologySerializer.class)
 public interface Topology {
     /**
      * Get the switch for a given switch DPID.
