@@ -449,7 +449,7 @@ public class PathCalcRuntimeModuleTest {
         final IntentOperationList pathIntentOpListAfterReroute =
                 runtime.executeIntentOperations(opListForReroute);
         assertThat(pathIntentOpListAfterReroute, notNullValue());
-        assertThat(pathIntentOpListAfterReroute, hasSize(2));
+        assertThat(pathIntentOpListAfterReroute, hasSize(0));
 
         //  Check the high level intents.
         final IntentMap highLevelIntentsAfterReroute = runtime.getHighLevelIntents();
@@ -467,7 +467,7 @@ public class PathCalcRuntimeModuleTest {
         //  Check the states of the high level intents
         //  Check that switch 1 was correctly processed
         assertThat(highLevelIntents,
-                hasIntentWithIdAndState("1", IntentState.REROUTE_REQ));
+                hasIntentWithIdAndState("1", IntentState.INST_ACK));
 
         //  Check that switch 2 was correctly processed
         assertThat(highLevelIntents,

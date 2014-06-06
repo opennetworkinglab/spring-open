@@ -15,7 +15,6 @@ import java.util.Set;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.restserver.IRestApiService;
-
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
@@ -274,10 +273,51 @@ public class UseCaseTest {
                 removedLinkEvents,
                 addedDeviceEvents,
                 removedDeviceEvents);
-        System.out.println("Link goes down.");
+        System.out.println("*** Link goes down. ***");
+
+        // send notification
+        IntentStateList isl = new IntentStateList();
+        isl.put("1___0", IntentState.DEL_ACK);
+        isl.put("1___1", IntentState.INST_ACK);
+        isl.domainSwitchDpids.add(1L);
+        isl.domainSwitchDpids.add(2L);
+        isl.domainSwitchDpids.add(4L);
+        runtime1.entryUpdated(isl);
 
         // show results step2
         showResult((PathIntentMap) runtime1.getPathIntents());
+
+        // link up
+        ((MockTopology) topology).addBidirectionalLinks(1L, 12L, 2L, 21L);
+        linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
+        linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
+        removedLinkEvents.clear();
+        addedLinkEvents.clear();
+        addedLinkEvents.add(linkEvent1);
+        addedLinkEvents.add(linkEvent2);
+        runtime1.topologyEvents(
+                addedSwitchEvents,
+                removedSwitchEvents,
+                addedPortEvents,
+                removedPortEvents,
+                addedLinkEvents,
+                removedLinkEvents,
+                addedDeviceEvents,
+                removedDeviceEvents);
+        System.out.println("*** Link goes up. ***");
+
+        // send notification
+        isl = new IntentStateList();
+        isl.put("1___1", IntentState.DEL_ACK);
+        isl.put("1___2", IntentState.INST_ACK);
+        isl.domainSwitchDpids.add(1L);
+        isl.domainSwitchDpids.add(2L);
+        isl.domainSwitchDpids.add(4L);
+        runtime1.entryUpdated(isl);
+
+        // show results step3
+        showResult((PathIntentMap) runtime1.getPathIntents());
+
         // TODO: show results of plan computation
     }
 

@@ -1,5 +1,6 @@
 package net.onrc.onos.core.intent;
 
+import java.util.Objects;
 
 /**
  * @author Toshio Koide (t-koide@onlab.us)
@@ -48,6 +49,26 @@ public class PathIntent extends Intent {
 
     public Intent getParentIntent() {
         return parentIntent;
+    }
+
+    /**
+     * Checks the specified PathIntent have the same fields of
+     * path, bandwidth and parentIntent's id with this PathIntent.
+     *
+     * @param target target PathIntent instance
+     * @return true if the specified intent has the same fields, otherwise false
+     */
+    public boolean hasSameFields(PathIntent target) {
+        if (target == null) {
+            return false;
+        }
+        if (!Objects.equals(getPath(), target.getPath())) {
+            return false;
+        }
+        if (getBandwidth() != target.getBandwidth()) {
+            return false;
+        }
+        return Objects.equals(getParentIntent(), target.getParentIntent());
     }
 
     @Override

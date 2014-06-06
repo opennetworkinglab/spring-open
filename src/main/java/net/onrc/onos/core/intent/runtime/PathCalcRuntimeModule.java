@@ -238,16 +238,6 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
             // update the map of path intents and publish the path operations
             pathIntents.executeOperations(pathIntentOperations);
 
-            // XXX Demo special: add a complete path to remove operation
-            for (IntentOperation op : pathIntentOperations) {
-                if (op.operator.equals(Operator.REMOVE)) {
-                    op.intent = pathIntents.getIntent(op.intent.getId());
-                }
-                if (op.intent instanceof PathIntent) {
-                    log.debug("operation: {}, intent:{}", op.operator, op.intent);
-                }
-            }
-
             // send notification
             // XXX: Send notifications using the same key every time
             // and receive them by entryAdded() and entryUpdated()

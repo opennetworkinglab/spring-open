@@ -105,16 +105,32 @@ public class PathCalcRuntime implements IFloodlightService {
                         newPathIntentId = PathIntent.createFirstId(spIntent.getId());
                     } else {
                         newPathIntentId = PathIntent.createNextId(oldPathIntentId);
-
-                        // Request removal of low-level intent if it exists.
-                        pathIntentOpList.add(Operator.REMOVE, new Intent(oldPathIntentId));
                     }
 
                     // create new path-intent
-                    PathIntent pathIntent = new PathIntent(newPathIntentId, path, bandwidth, spIntent);
-                    pathIntent.setState(IntentState.INST_REQ);
-                    spIntent.setPathIntent(pathIntent);
-                    pathIntentOpList.add(Operator.ADD, pathIntent);
+                    PathIntent newPathIntent = new PathIntent(newPathIntentId, path, bandwidth, spIntent);
+                    newPathIntent.setState(IntentState.INST_REQ);
+
+                    // create and add operation(s)
+                    if (oldPathIntentId == null) {
+                        // operation for new path-intent
+                        spIntent.setPathIntent(newPathIntent);
+                        pathIntentOpList.add(Operator.ADD, newPathIntent);
+                        log.debug("new intent:{}", newPathIntent);
+                    } else {
+                        PathIntent oldPathIntent = (PathIntent) pathIntents.getIntent(oldPathIntentId);
+                        if (newPathIntent.hasSameFields(oldPathIntent)) {
+                            // skip the same operation (reroute)
+                            spIntent.setState(IntentState.INST_ACK);
+                            log.debug("skip intent:{}", newPathIntent);
+                        } else {
+                            // update existing path-intent (reroute)
+                            spIntent.setPathIntent(newPathIntent);
+                            pathIntentOpList.add(Operator.REMOVE, oldPathIntent);
+                            pathIntentOpList.add(Operator.ADD, newPathIntent);
+                            log.debug("update intent:{} -> {}", oldPathIntent, newPathIntent);
+                        }
+                    }
 
                     break;
                 case REMOVE:
