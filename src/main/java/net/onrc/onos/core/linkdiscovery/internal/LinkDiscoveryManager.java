@@ -861,7 +861,11 @@ public class LinkDiscoveryManager
                     log.trace("Getting standard LLDP from a different controller and quelching it.");
                 }
                 return Command.STOP;
-            } else if (sw <= remoteSwitch.getId()) {
+            }
+            // XXX ONOS: Don't disregard any BDDP messages from other
+            // controllers because they're used for inter-instance link detection
+
+            /*else if (sw <= remoteSwitch.getId()) {
                 if (log.isTraceEnabled()) {
                     log.trace("Getting BBDP from a different controller. myId {}: remoteId {}", myId, otherId);
                     log.trace("and my controller id is smaller than the other, so quelching it. myPort {}: rPort {}", pi.getInPort(), remotePort);
@@ -869,7 +873,7 @@ public class LinkDiscoveryManager
                 //XXX ONOS: Fix the BDDP broadcast issue
                 //return Command.CONTINUE;
                 return Command.STOP;
-            }
+            }*/
             /*
             else if (myId < otherId)  {
                 if (log.isTraceEnabled()) {
@@ -958,8 +962,12 @@ public class LinkDiscoveryManager
             }
         }
 
-        // If the received packet is a BDDP packet, then create a reverse BDDP
-        // link as well.
+        // XXX ONOS: Don't do this:
+        //   If the received packet is a BDDP packet, then create a reverse BDDP
+        //   link as well.
+        // We want to preserve our semantic of the instance that controls the
+        // destination switch is the one who adds the link to the database.
+        /*
         if (!isStandard) {
             Link reverseLink = new Link(lt.getDst(), lt.getDstPort(),
                     lt.getSrc(), lt.getSrcPort());
@@ -971,6 +979,7 @@ public class LinkDiscoveryManager
 
             addOrUpdateLink(reverseLink, reverseInfo);
         }
+        */
 
         // Remove the node ports from the quarantine and maintenance queues.
         NodePortTuple nptSrc = new NodePortTuple(lt.getSrc(), lt.getSrcPort());

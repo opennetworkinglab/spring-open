@@ -131,6 +131,12 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public void linkDiscoveryUpdate(LDUpdate update) {
+        if (!registryService.hasControl(update.getDst())) {
+            // Don't process or send a link event if we're not master for the
+            // destination switch
+            return;
+        }
+
         LinkEvent linkEvent = new LinkEvent(update.getSrc(),
                 (long) update.getSrcPort(), update.getDst(),
                 (long) update.getDstPort());
