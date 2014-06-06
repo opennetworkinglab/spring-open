@@ -21,7 +21,8 @@ Usage:
 #
 # INSTALLATION NOTES: MUST install Python cmd2 module. E.g., on Ubuntu:
 #    sudo apt-get install python-cmd2
-# On older Ubuntu installations (e.g., Ubuntu-12.04), install also:
+# On older Ubuntu installations (e.g., Ubuntu-12.04 or Ubuntu-13.04), install
+# also:
 #    sudo apt-get install python-pyparsing
 #
 
@@ -283,7 +284,7 @@ class OnosCli(Cmd):
         oper = {}
         # Create the POST payload
         oper['intentId'] = args.intent_id
-        oper['intentType'] = 'CONSTRAINED_SHORTEST_PATH'        # XXX: Hardcoded
+        oper['intentType'] = 'SHORTEST_PATH'    # XXX: Hardcoded
         oper['staticPath'] = False              # XXX: Hardcoded
         oper['srcSwitchDpid'] = args.src_dpid
         oper['srcSwitchPort'] = args.src_port
