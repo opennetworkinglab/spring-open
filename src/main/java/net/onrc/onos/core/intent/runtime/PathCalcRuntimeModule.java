@@ -376,20 +376,21 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
             IntentStateList highLevelIntentStates = new IntentStateList();
             IntentStateList pathIntentStates = new IntentStateList();
             for (Entry<String, IntentState> entry : value.entrySet()) {
-                PathIntent pathIntent = (PathIntent) pathIntents.getIntent(entry.getKey());
+                String pathIntentId = entry.getKey();
+                IntentState nextPathIntentState = entry.getValue();
+                PathIntent pathIntent = (PathIntent) pathIntents.getIntent(pathIntentId);
                 if (pathIntent == null) {
                     continue;
                 }
 
                 Intent parentIntent = pathIntent.getParentIntent();
                 if (parentIntent == null ||
-                        !(parentIntent instanceof ShortestPathIntent) ||
-                        !((ShortestPathIntent) parentIntent).getPathIntentId().equals(pathIntent.getId())) {
+                        !(parentIntent instanceof ShortestPathIntent)) {
                     continue;
                 }
 
-                IntentState state = entry.getValue();
-                switch (state) {
+                boolean isChildIntent = ((ShortestPathIntent) parentIntent).getPathIntentId().equals(pathIntentId);
+                switch (nextPathIntentState) {
                     case INST_ACK:
                         Set<Long> installedDpids = calcInstalledDpids(pathIntent, value.domainSwitchDpids);
                         if (!isFlowInstalled(pathIntent, installedDpids)) {
@@ -398,24 +399,32 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                         // FALLTHROUGH
                     case INST_NACK:
                         // FALLTHROUGH
-                    // case INST_REQ:
-                        // FALLTHROUGH
-                    // case DEL_REQ:
-                        // FALLTHROUGH
                     case DEL_PENDING:
-                        log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), state);
-                        highLevelIntentStates.put(parentIntent.getId(), state);
-                        log.debug("put the state pathIntentStates ID {}, state {}", entry.getKey(), entry.getValue());
-                        pathIntentStates.put(entry.getKey(), entry.getValue());
+                        if (isChildIntent) {
+                            log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), nextPathIntentState);
+                            highLevelIntentStates.put(parentIntent.getId(), nextPathIntentState);
+                        }
+                        log.debug("put the state pathIntentStates ID {}, state {}", pathIntentId, nextPathIntentState);
+                        pathIntentStates.put(pathIntentId, nextPathIntentState);
                         break;
                     case DEL_ACK:
-                        if (intentInstalledMap.containsKey(parentIntent.getId())) {
-                             intentInstalledMap.remove(parentIntent.getId());
+                        if (isChildIntent) {
+                            if (intentInstalledMap.containsKey(parentIntent.getId())) {
+                                 intentInstalledMap.remove(parentIntent.getId());
+                            }
+                            log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), nextPathIntentState);
+                            highLevelIntentStates.put(parentIntent.getId(), nextPathIntentState);
                         }
-                        log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), state);
-                        highLevelIntentStates.put(parentIntent.getId(), state);
-                        log.debug("put the state pathIntentStates ID {}, state {}", entry.getKey(), entry.getValue());
-                        pathIntentStates.put(entry.getKey(), entry.getValue());
+                        log.debug("put the state pathIntentStates ID {}, state {}", pathIntentId, nextPathIntentState);
+                        pathIntentStates.put(pathIntentId, nextPathIntentState);
+                        break;
+                    case CREATED:
+                        break;
+                    case DEL_REQ:
+                        break;
+                    case INST_REQ:
+                        break;
+                    case REROUTE_REQ:
                         break;
                     default:
                         break;
