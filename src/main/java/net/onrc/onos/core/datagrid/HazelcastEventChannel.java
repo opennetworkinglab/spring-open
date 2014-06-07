@@ -337,21 +337,24 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             //
             byte[] valueBytes = event.getValue();
             Kryo kryo = kryoFactory.newKryo();
-            V value = deserializeValue(kryo, valueBytes);
+            try {
+                V value = deserializeValue(kryo, valueBytes);
 
-            //
-            // Deliver the notification
-            //
-            int index = 0;
-            for (IEventChannelListener<K, V> listener : listeners) {
-                V copyValue = value;
-                if (index++ > 0) {
-                    // Each listener should get a deep copy of the value
-                    copyValue = kryo.copy(value);
+                //
+                // Deliver the notification
+                //
+                int index = 0;
+                for (IEventChannelListener<K, V> listener : listeners) {
+                    V copyValue = value;
+                    if (index++ > 0) {
+                        // Each listener should get a deep copy of the value
+                        copyValue = kryo.copy(value);
+                    }
+                    listener.entryAdded(copyValue);
                 }
-                listener.entryAdded(copyValue);
+            } finally {
+                kryoFactory.deleteKryo(kryo);
             }
-            kryoFactory.deleteKryo(kryo);
         }
 
         /**
@@ -366,21 +369,24 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             //
             byte[] valueBytes = event.getValue();
             Kryo kryo = kryoFactory.newKryo();
-            V value = deserializeValue(kryo, valueBytes);
+            try {
+                V value = deserializeValue(kryo, valueBytes);
 
-            //
-            // Deliver the notification
-            //
-            int index = 0;
-            for (IEventChannelListener<K, V> listener : listeners) {
-                V copyValue = value;
-                if (index++ > 0) {
-                    // Each listener should get a deep copy of the value
-                    copyValue = kryo.copy(value);
+                //
+                // Deliver the notification
+                //
+                int index = 0;
+                for (IEventChannelListener<K, V> listener : listeners) {
+                    V copyValue = value;
+                    if (index++ > 0) {
+                        // Each listener should get a deep copy of the value
+                        copyValue = kryo.copy(value);
+                    }
+                    listener.entryRemoved(copyValue);
                 }
-                listener.entryRemoved(copyValue);
+            } finally {
+                kryoFactory.deleteKryo(kryo);
             }
-            kryoFactory.deleteKryo(kryo);
         }
 
         /**
@@ -395,21 +401,24 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             //
             byte[] valueBytes = event.getValue();
             Kryo kryo = kryoFactory.newKryo();
-            V value = deserializeValue(kryo, valueBytes);
+            try {
+                V value = deserializeValue(kryo, valueBytes);
 
-            //
-            // Deliver the notification
-            //
-            int index = 0;
-            for (IEventChannelListener<K, V> listener : listeners) {
-                V copyValue = value;
-                if (index++ > 0) {
-                    // Each listener should get a deep copy of the value
-                    copyValue = kryo.copy(value);
+                //
+                // Deliver the notification
+                //
+                int index = 0;
+                for (IEventChannelListener<K, V> listener : listeners) {
+                    V copyValue = value;
+                    if (index++ > 0) {
+                        // Each listener should get a deep copy of the value
+                        copyValue = kryo.copy(value);
+                    }
+                    listener.entryUpdated(copyValue);
                 }
-                listener.entryUpdated(copyValue);
+            } finally {
+                kryoFactory.deleteKryo(kryo);
             }
-            kryoFactory.deleteKryo(kryo);
         }
 
         /**
