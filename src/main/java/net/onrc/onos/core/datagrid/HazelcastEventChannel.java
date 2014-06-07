@@ -1,6 +1,7 @@
 package net.onrc.onos.core.datagrid;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -343,14 +344,19 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
                 //
                 // Deliver the notification
                 //
-                int index = 0;
-                for (IEventChannelListener<K, V> listener : listeners) {
-                    V copyValue = value;
-                    if (index++ > 0) {
+                final Iterator<IEventChannelListener<K, V>> it = listeners.iterator();
+                while (it.hasNext()) {
+                    final IEventChannelListener<K, V> listener = it.next();
+                    if (it.hasNext()) {
                         // Each listener should get a deep copy of the value
-                        copyValue = kryo.copy(value);
+                        // TODO: compare which is faster
+                        //        - kryo.copy(value)
+                        //        - deserializeValue(kryo, valueBytes)
+                        listener.entryAdded(kryo.copy(value));
+                    } else {
+                        // Last listener can use the value
+                        listener.entryAdded(value);
                     }
-                    listener.entryAdded(copyValue);
                 }
             } finally {
                 kryoFactory.deleteKryo(kryo);
@@ -375,14 +381,16 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
                 //
                 // Deliver the notification
                 //
-                int index = 0;
-                for (IEventChannelListener<K, V> listener : listeners) {
-                    V copyValue = value;
-                    if (index++ > 0) {
+                final Iterator<IEventChannelListener<K, V>> it = listeners.iterator();
+                while (it.hasNext()) {
+                    final IEventChannelListener<K, V> listener = it.next();
+                    if (it.hasNext()) {
                         // Each listener should get a deep copy of the value
-                        copyValue = kryo.copy(value);
+                        listener.entryRemoved(kryo.copy(value));
+                    } else {
+                        // Last listener can use the value
+                        listener.entryRemoved(value);
                     }
-                    listener.entryRemoved(copyValue);
                 }
             } finally {
                 kryoFactory.deleteKryo(kryo);
@@ -407,14 +415,16 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
                 //
                 // Deliver the notification
                 //
-                int index = 0;
-                for (IEventChannelListener<K, V> listener : listeners) {
-                    V copyValue = value;
-                    if (index++ > 0) {
+                final Iterator<IEventChannelListener<K, V>> it = listeners.iterator();
+                while (it.hasNext()) {
+                    final IEventChannelListener<K, V> listener = it.next();
+                    if (it.hasNext()) {
                         // Each listener should get a deep copy of the value
-                        copyValue = kryo.copy(value);
+                        listener.entryUpdated(kryo.copy(value));
+                    } else {
+                        // Last listener can use the value
+                        listener.entryUpdated(value);
                     }
-                    listener.entryUpdated(copyValue);
                 }
             } finally {
                 kryoFactory.deleteKryo(kryo);
