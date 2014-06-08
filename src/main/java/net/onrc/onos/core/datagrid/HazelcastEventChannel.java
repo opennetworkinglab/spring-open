@@ -184,12 +184,14 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
         //
         byte[] buffer = new byte[MAX_BUFFER_SIZE];
         Kryo kryo = kryoFactory.newKryo();
-        Output output = new Output(buffer, -1);
-        kryo.writeClassAndObject(output, value);
-        byte[] valueBytes = output.toBytes();
-        kryoFactory.deleteKryo(kryo);
-
-        return valueBytes;
+        try {
+            Output output = new Output(buffer, -1);
+            kryo.writeClassAndObject(output, value);
+            byte[] valueBytes = output.toBytes();
+            return valueBytes;
+        } finally {
+            kryoFactory.deleteKryo(kryo);
+        }
     }
 
     /**
@@ -262,10 +264,12 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
         // Decode the value
         //
         Kryo kryo = kryoFactory.newKryo();
-        V value = deserializeValue(kryo, valueBytes);
-        kryoFactory.deleteKryo(kryo);
-
-        return value;
+        try {
+            V value = deserializeValue(kryo, valueBytes);
+            return value;
+        } finally {
+            kryoFactory.deleteKryo(kryo);
+        }
     }
 
     /**
@@ -287,14 +291,17 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
         //
         Collection<byte[]> values = channelMap.values();
         Kryo kryo = kryoFactory.newKryo();
-        for (byte[] valueBytes : values) {
-            //
-            // Decode the value
-            //
-            V value = deserializeValue(kryo, valueBytes);
-            allEntries.add(value);
+        try {
+            for (byte[] valueBytes : values) {
+                //
+                // Decode the value
+                //
+                V value = deserializeValue(kryo, valueBytes);
+                allEntries.add(value);
+            }
+        } finally {
+            kryoFactory.deleteKryo(kryo);
         }
-        kryoFactory.deleteKryo(kryo);
 
         return allEntries;
     }
