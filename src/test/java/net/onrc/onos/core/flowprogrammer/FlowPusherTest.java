@@ -98,7 +98,8 @@ public class FlowPusherTest {
      */
     @Test
     public void testMassiveAddMessage() {
-        final int NUM_MSG = 10000;
+        // Some number larger than FlowPusher.MAX_MESSAGE_SEND
+        final int NUM_MSG = FlowPusher.MAX_MESSAGE_SEND * 2;
 
         beginInitMock();
 
@@ -135,7 +136,7 @@ public class FlowPusherTest {
 
         try {
             // wait until message is processed.
-            Thread.sleep(5000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             fail("Failed in Thread.sleep()");
         }
