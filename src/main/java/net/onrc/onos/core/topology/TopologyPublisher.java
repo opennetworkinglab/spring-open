@@ -24,6 +24,7 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
 import net.onrc.onos.core.registry.RegistryException;
 import net.onrc.onos.core.topology.PortEvent.SwitchPort;
+import net.onrc.onos.core.util.Dpid;
 
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.util.HexString;
@@ -131,15 +132,18 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public void linkDiscoveryUpdate(LDUpdate update) {
-        if (!registryService.hasControl(update.getDst())) {
-            // Don't process or send a link event if we're not master for the
-            // destination switch
-            return;
-        }
 
         LinkEvent linkEvent = new LinkEvent(update.getSrc(),
                 (long) update.getSrcPort(), update.getDst(),
                 (long) update.getDstPort());
+
+        if (!registryService.hasControl(update.getDst())) {
+            // Don't process or send a link event if we're not master for the
+            // destination switch
+            log.debug("Not the master for dst switch {}. Suppressed link event {}.",
+                    update.getDst(), linkEvent);
+            return;
+        }
 
         switch (update.getOperation()) {
             case LINK_ADDED:
@@ -158,29 +162,40 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public void switchPortAdded(Long switchId, OFPhysicalPort port) {
+
+        PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
         if (registryService.hasControl(switchId)) {
-            PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
             topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
             linkDiscovery.removeFromSuppressLLDPs(switchId, port.getPortNumber());
+        } else {
+            log.debug("Not the master for switch {}. Suppressed port add event {}.",
+                    new Dpid(switchId), portEvent);
         }
     }
 
     @Override
     public void switchPortRemoved(Long switchId, OFPhysicalPort port) {
+
+        PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
         if (registryService.hasControl(switchId)) {
-            PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
             topologyDiscoveryInterface.removePortDiscoveryEvent(portEvent);
+        } else {
+            log.debug("Not the master for switch {}. Suppressed port del event {}.",
+                    new Dpid(switchId), portEvent);
         }
     }
 
     @Override
     public void addedSwitch(IOFSwitch sw) {
-        // TODO Not very robust
-        if (!registryService.hasControl(sw.getId())) {
-            return;
-        }
 
         SwitchEvent switchEvent = new SwitchEvent(sw.getId());
+
+        // TODO Not very robust
+        if (!registryService.hasControl(sw.getId())) {
+            log.debug("Not the master for switch {}. Suppressed switch add event {}.",
+                    new Dpid(sw.getId()), switchEvent);
+            return;
+        }
 
         List<PortEvent> portEvents = new ArrayList<PortEvent>();
         for (OFPhysicalPort port : sw.getPorts()) {

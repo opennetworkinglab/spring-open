@@ -160,7 +160,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
     }
 
     class SwitchLeaderListener implements LeaderLatchListener {
-        private String dpid;
+        private final String dpid;
 
         public SwitchLeaderListener(String dpid) {
             this.dpid = dpid;
@@ -168,7 +168,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
 
         @Override
         public void isLeader() {
-            log.debug("Became leader for {}", dpid);
+            log.info("Became leader for {}", dpid);
 
             switchLeadershipEvents.add(
                     new SwitchLeaderEvent(HexString.toLong(dpid), true));
@@ -176,7 +176,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
 
         @Override
         public void notLeader() {
-            log.debug("Lost leadership for {}", dpid);
+            log.info("Lost leadership for {}", dpid);
 
             switchLeadershipEvents.add(
                     new SwitchLeaderEvent(HexString.toLong(dpid), false));
@@ -236,12 +236,12 @@ public class ZookeeperRegistry implements IFloodlightModule,
 
         @Override
         public void isLeader() {
-            log.debug("Cluster leadership aquired");
+            log.info("Cluster leadership aquired");
         }
 
         @Override
         public void notLeader() {
-            log.debug("Cluster leadership lost");
+            log.info("Cluster leadership lost");
         }
     }
 
@@ -474,6 +474,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
         return data;
     }
 
+    @Override
     public IdBlock allocateUniqueIdBlock(long range) {
         try {
             AtomicValue<Long> result = null;
