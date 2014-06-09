@@ -1,6 +1,7 @@
 package net.onrc.onos.core.topology;
 
-import net.onrc.onos.core.topology.serializers.LinkSerializer;
+import net.onrc.onos.core.topology.web.serializers.LinkSerializer;
+
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 // TODO Everything returned by these interfaces must be either Unmodifiable view,

@@ -1,7 +1,9 @@
 package net.onrc.onos.core.topology;
 
 import java.util.Collection;
-import net.onrc.onos.core.topology.serializers.SwitchSerializer;
+
+import net.onrc.onos.core.topology.web.serializers.SwitchSerializer;
+
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 // TOOD Everything returned by these interfaces must be either Unmodifiable view,

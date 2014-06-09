@@ -1,7 +1,8 @@
 package net.onrc.onos.core.topology;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.topology.serializers.TopologySerializer;
+import net.onrc.onos.core.topology.web.serializers.TopologySerializer;
+
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**

@@ -1,7 +1,8 @@
 package net.onrc.onos.core.topology;
 
-import net.onrc.onos.core.topology.serializers.PortSerializer;
+import net.onrc.onos.core.topology.web.serializers.PortSerializer;
 import net.onrc.onos.core.util.SwitchPort;
+
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 //TODO Everything returned by these interfaces must be either Unmodifiable view,

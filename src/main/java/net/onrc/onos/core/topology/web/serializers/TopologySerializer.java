@@ -1,4 +1,4 @@
-package net.onrc.onos.core.topology.serializers;
+package net.onrc.onos.core.topology.web.serializers;
 
 import net.onrc.onos.core.topology.Device;
 import net.onrc.onos.core.topology.Link;
