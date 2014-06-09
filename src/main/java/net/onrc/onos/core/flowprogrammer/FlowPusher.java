@@ -91,7 +91,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
     // TODO: Values copied from elsewhere (class LearningSwitch).
     // The local copy should go away!
     //
-    protected static final int OFMESSAGE_DAMPER_CAPACITY = 50000; // TODO: find sweet spot
+    protected static final int OFMESSAGE_DAMPER_CAPACITY = 10000; // TODO: find sweet spot
     protected static final int OFMESSAGE_DAMPER_TIMEOUT = 250;    // ms
 
     // Number of messages sent to switch at once
