@@ -60,6 +60,9 @@ public class ShortestPathResource extends ServerResource {
             }
             ConstrainedBFSTree bfsTree = new ConstrainedBFSTree(srcSwitch);
             Path path = bfsTree.getPath(dstSwitch);
+            if (path == null) {
+                return null;
+            }
             List<Link> links = new LinkedList<>();
             for (LinkEvent linkEvent : path) {
                 Link link = topology.getLink(linkEvent.getSrc().getDpid(),
