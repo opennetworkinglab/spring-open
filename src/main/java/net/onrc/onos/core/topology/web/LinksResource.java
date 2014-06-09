@@ -8,13 +8,13 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
 /**
- * A class to access hosts information from the network topology.
+ * A class to access links information from the network topology.
  */
-public class TopologyDevicesResource extends ServerResource {
+public class LinksResource extends ServerResource {
     /**
-     * Gets the hosts information from the network topology.
+     * Gets the links information from the network topology.
      *
-     * @return a Representation of a Collection of hosts from the network
+     * @return a Representation of a Collection of links from the network
      * topology.
      */
     @Get("json")
@@ -26,7 +26,7 @@ public class TopologyDevicesResource extends ServerResource {
         Topology topology = topologyService.getTopology();
         topology.acquireReadLock();
         try {
-            return toRepresentation(topology.getDevices(), null);
+            return toRepresentation(topology.getLinks(), null);
         } finally {
             topology.releaseReadLock();
         }

@@ -10,7 +10,7 @@ import org.restlet.resource.ServerResource;
 /**
  * A class to access the network topology information.
  */
-public class TopologyAllResource extends ServerResource {
+public class TopologyResource extends ServerResource {
     /**
      * Gets the network topology information.
      *

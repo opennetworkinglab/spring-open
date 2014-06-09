@@ -17,10 +17,10 @@ public class TopologyWebRoutable implements RestletRoutable {
         router.attach("/ds/ports/json", DatastorePortsResource.class);
 
         // Topology API
-        router.attach("", TopologyAllResource.class);
-        router.attach("/devices", TopologyDevicesResource.class);
-        router.attach("/links", TopologyLinksResource.class);
-        router.attach("/switches", TopologySwitchesResource.class);
+        router.attach("", TopologyResource.class);
+        router.attach("/devices", DevicesResource.class);
+        router.attach("/links", LinksResource.class);
+        router.attach("/switches", SwitchesResource.class);
 
         return router;
     }

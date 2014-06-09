@@ -10,7 +10,7 @@ import org.restlet.resource.ServerResource;
 /**
  * A class to access switches and ports information from the network topology.
  */
-public class TopologySwitchesResource extends ServerResource {
+public class SwitchesResource extends ServerResource {
     /**
      * Gets the switches and ports information from the network topology.
      *
