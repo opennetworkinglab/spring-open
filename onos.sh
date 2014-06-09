@@ -10,7 +10,7 @@
 # $ONOS_LOGBASE    : base name of log output file (onos.`hostname`)
 # $RAMCLOUD_HOME   : path of root directory of RAMCloud repository (~/ramcloud)
 # $RAMCLOUD_BRANCH : branch name of RAMCloud to use (master)
-# $ZK_HOME         : path of root directory of ZooKeeper (~/zookeeper-3.4.5)
+# $ZK_HOME         : path of root directory of ZooKeeper (~/zookeeper-3.4.6)
 # $ZK_LIB_DIR      : path of ZooKeeper library (/var/lib/zookeeper)
 # $ZK_LOG_DIR      : path of ZooKeeper log output directory (~/ONOS/onos-logs/zk-`hostname`)
 # $JVM_OPTS        : JVM options ONOS starts with
@@ -60,7 +60,7 @@ ONOS_TEMPLATE_DIR=${ONOS_CONF_DIR}/template
 
 LOGDIR=${ONOS_LOGDIR:-${ONOS_HOME}/onos-logs}
 
-ZK_HOME=${ZK_HOME:-~/zookeeper-3.4.5}
+ZK_HOME=${ZK_HOME:-~/zookeeper-3.4.6}
 ZK_CONF=${ZK_CONF:-${ONOS_CONF_DIR}/zoo.cfg}
 ZK_CONF_TEMPLATE=${ONOS_TEMPLATE_DIR}/zoo.cfg.template
 # Adding ONOS_HOST_NAME dir since file name (zookeeper.out) cannot be controlled.

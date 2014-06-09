@@ -1,4 +1,4 @@
 # rewrite to match your environment
 ZOOKEEPER_LIB := /usr/lib/x86_64-linux-gnu/libzookeeper_mt.a
-ZOOKEEPER_DIR := ~/zookeeper-3.4.5
+ZOOKEEPER_DIR := ~/zookeeper-3.4.6
 

@@ -21,7 +21,7 @@ echo 	""
 echo    "****************************"
 echo 	"***** ZOOKEEPER STATUS *****"
 echo    "****************************"
-dsh -g onos '~/zookeeper-3.4.5/bin/zkServer.sh status'
+dsh -g onos '~/zookeeper-3.4.6/bin/zkServer.sh status'
 
 echo 	""
 echo    "**************************"

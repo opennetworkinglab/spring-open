@@ -45,7 +45,7 @@ class ONOS( Controller ):
     # Directories and configuration templates
     home = environ[ 'HOME' ]
     onosDir = home + "/ONOS"
-    zookeeperDir = home + "/zookeeper-3.4.5"
+    zookeeperDir = home + "/zookeeper-3.4.6"
     dirBase = '/tmp'
     logDir = dirBase + '/onos-logs'
     logbackFile = dirBase + '/onos-%s.logback.xml'

@@ -32,10 +32,10 @@ External Dependencies
 
 2. ZooKeeper
 
-    Download and install apache-zookeeper-3.4.5:
+    Download and install apache-zookeeper-3.4.6:
     http://zookeeper.apache.org/releases.html
     
-    By default ONOS expect ZooKeeper to be installed in `~/zookeeper-3.4.5`.  
+    By default ONOS expect ZooKeeper to be installed in `~/zookeeper-3.4.6`.  
     This can be changed by specifing the path using `ZK_HOME` environment variable.
     
     Data directory ZooKeeper uses by default is `/var/lib/zookeeper`.
