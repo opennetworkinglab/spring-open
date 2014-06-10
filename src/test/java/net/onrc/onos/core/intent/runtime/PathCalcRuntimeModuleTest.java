@@ -17,10 +17,10 @@ import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
-import net.onrc.onos.core.intent.MockTopology;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.DeviceEvent;
 import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 

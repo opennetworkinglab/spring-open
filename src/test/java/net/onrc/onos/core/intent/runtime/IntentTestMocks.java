@@ -1,19 +1,5 @@
 package net.onrc.onos.core.intent.runtime;
 
-
-import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.floodlightcontroller.restserver.IRestApiService;
-import net.onrc.onos.core.datagrid.IDatagridService;
-import net.onrc.onos.core.datagrid.IEventChannel;
-import net.onrc.onos.core.datagrid.IEventChannelListener;
-import net.onrc.onos.core.intent.IntentOperationList;
-import net.onrc.onos.core.intent.MockTopology;
-import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
-import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.topology.ITopologyListener;
-import net.onrc.onos.core.topology.ITopologyService;
-import org.powermock.api.easymock.PowerMock;
-
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.eq;
@@ -21,6 +7,19 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import net.floodlightcontroller.core.module.FloodlightModuleContext;
+import net.floodlightcontroller.restserver.IRestApiService;
+import net.onrc.onos.core.datagrid.IDatagridService;
+import net.onrc.onos.core.datagrid.IEventChannel;
+import net.onrc.onos.core.datagrid.IEventChannelListener;
+import net.onrc.onos.core.intent.IntentOperationList;
+import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
+import net.onrc.onos.core.registry.IControllerRegistryService;
+import net.onrc.onos.core.topology.ITopologyListener;
+import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.MockTopology;
+
+import org.powermock.api.easymock.PowerMock;
 
 /**
  * This class contains all of the mocked code required to run a test that uses

@@ -560,6 +560,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     break;
                 case STATE_CHANGED:
                     IntentState state = pathIntent.getState();
+                    log.debug("This is STATE_CHANGED. intent id {} is now state {}",
+                            pathIntent.getId() , state);
                     switch (state) {
                         case INST_REQ:
                             break;

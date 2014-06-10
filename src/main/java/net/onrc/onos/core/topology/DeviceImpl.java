@@ -47,19 +47,19 @@ public class DeviceImpl extends TopologyObject implements Device {
     /**
      * Only {@link TopologyManager} should use this method.
      *
-     * @param p
+     * @param port the port that the device is attached to
      */
-    void addAttachmentPoint(Port p) {
-        this.attachmentPoints.remove(p);
-        this.attachmentPoints.addFirst(p);
+    void addAttachmentPoint(Port port) {
+        this.attachmentPoints.remove(port);
+        this.attachmentPoints.addFirst(port);
     }
 
     /**
      * Only {@link TopologyManager} should use this method.
      *
-     * @param p
+     * @param port the port that the device is attached to
      */
-    boolean removeAttachmentPoint(Port p) {
-        return this.attachmentPoints.remove(p);
+    boolean removeAttachmentPoint(Port port) {
+        return this.attachmentPoints.remove(port);
     }
 }

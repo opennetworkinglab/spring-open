@@ -307,8 +307,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     public void onosDeviceAdded(OnosDevice device) {
         log.debug("Called onosDeviceAdded mac {}", device.getMacAddress());
 
-        SwitchPort sp = new SwitchPort(device.getSwitchDPID(),
-                (long) device.getSwitchPort());
+        SwitchPort sp = new SwitchPort(device.getSwitchDPID(), device.getSwitchPort());
         List<SwitchPort> spLists = new ArrayList<SwitchPort>();
         spLists.add(sp);
         DeviceEvent event = new DeviceEvent(device.getMacAddress());

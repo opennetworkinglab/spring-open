@@ -19,8 +19,11 @@ package net.onrc.onos.core.devicemanager;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 import net.floodlightcontroller.util.MACAddress;
+
+
 
 /**
  * An entity on the network is a visible trace of a device that corresponds
@@ -53,13 +56,13 @@ public class OnosDevice implements Serializable {
      * The DPID of the switch for the ingress point for this entity,
      * or null if not present.
      */
-    private long switchDPID;
+    private Long switchDPID;
 
     /**
      * The port number of the switch for the ingress point for this entity,
      * or null if not present.
      */
-    private short switchPort;
+    private Long switchPort;
 
     /**
      * The last time we observed this entity on the network.
@@ -75,16 +78,16 @@ public class OnosDevice implements Serializable {
     }
 
     /**
-     * Create a new entity.
+     * Create a new device and its information.
      *
-     * @param macAddress
-     * @param vlan
-     * @param switchDPID
-     * @param switchPort
-     * @param lastSeenTimestamp
+     * @param macAddress mac address of this device
+     * @param vlan vlan ID of this device
+     * @param switchDPID switch DPID where the device is attached
+     * @param switchPort port number where the device is attached
+     * @param lastSeenTimestamp last packet-in time of this device
      */
     public OnosDevice(MACAddress macAddress, Short vlan, Long switchDPID,
-            short switchPort, Date lastSeenTimestamp) {
+            Long switchPort, Date lastSeenTimestamp) {
         this.macAddress = macAddress;
         this.vlan = vlan;
         this.switchDPID = switchDPID;
@@ -112,16 +115,8 @@ public class OnosDevice implements Serializable {
         return switchDPID;
     }
 
-    public void setSwitchDPID(long dpid) {
-        this.switchDPID = dpid;
-    }
-
-    public short getSwitchPort() {
+    public Long getSwitchPort() {
         return switchPort;
-    }
-
-    public void setSwitchPort(short port) {
-        this.switchPort = port;
     }
 
     public Date getLastSeenTimestamp() {
@@ -137,14 +132,11 @@ public class OnosDevice implements Serializable {
 
     @Override
     public int hashCode() {
-        if (hashCode != 0) {
-            return hashCode;
-        }
         final int prime = 31;
         hashCode = 1;
         hashCode = prime * hashCode + (int) (macAddress.toLong() ^ (macAddress.toLong() >>> 32));
-        hashCode = prime * hashCode + (int) switchDPID;
-        hashCode = prime * hashCode + (int) switchPort;
+        hashCode = prime * hashCode + ((switchDPID == null) ? 0 : switchDPID.hashCode());
+        hashCode = prime * hashCode + ((switchPort == null) ? 0 : switchPort.hashCode());
         hashCode = prime * hashCode + ((vlan == null) ? 0 : vlan.hashCode());
         return hashCode;
     }
@@ -164,24 +156,16 @@ public class OnosDevice implements Serializable {
         if (hashCode() != other.hashCode()) {
             return false;
         }
-        if (macAddress == null) {
-            if (other.macAddress != null) {
-                return false;
-            }
-        } else if (!macAddress.equals(other.macAddress)) {
+        if (!Objects.equals(macAddress, other.macAddress)) {
             return false;
         }
-        if (switchDPID != other.switchDPID) {
+        if (!Objects.equals(switchDPID, other.switchDPID)) {
             return false;
         }
-        if (switchPort != other.switchPort) {
+        if (!Objects.equals(switchPort, other.switchPort)) {
             return false;
         }
-        if (vlan == null) {
-            if (other.vlan != null) {
-                return false;
-            }
-        } else if (!vlan.equals(other.vlan)) {
+        if (!Objects.equals(vlan, other.vlan)) {
             return false;
         }
         return true;

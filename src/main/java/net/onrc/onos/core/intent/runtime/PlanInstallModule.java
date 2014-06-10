@@ -340,7 +340,8 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
                 states.domainSwitchDpids.addAll(domainSwitchDpids);
             }
             parentIntentMap.remove(intentParentId);
-            log.debug("addEntry to intentStateChannel intentId {}, states {}", flowRemovedMsg.getCookie(), states);
+            log.debug("addEntry to intentStateChannel intentId {}, states {}",
+                    pathIntentId, newState);
 
             intentStateChannel.addTransientEntry(flowRemovedMsg.getCookie(), states);
         }
