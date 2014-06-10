@@ -4,10 +4,16 @@ import java.util.Objects;
 
 /**
  * A generic class representing a pair of two values.
+ *
+ * If a user supplies immutable objects, the pair become immutable.
+ * Otherwise, the pair become mutable.
+ *
+ * @param <F> the type of the first value
+ * @param <S> the type type of the second value
  */
 public class Pair<F, S> {
-    public F first;        // The first value in the pair
-    public S second;        // The second value in the pair
+    private final F first;        // The first value in the pair
+    private final S second;       // The second value in the pair
 
     /**
      * Constructor for a pair of two values.
@@ -18,6 +24,24 @@ public class Pair<F, S> {
     public Pair(F first, S second) {
         this.first = first;
         this.second = second;
+    }
+
+    /**
+     * Get the first value of the Pair.
+     *
+     * @return the first value of the Pair.
+     */
+    public F getFirst() {
+        return first;
+    }
+
+    /**
+     * Get the second value of the Pair.
+     *
+     * @return the second value of the Pair.
+     */
+    public S getSecond() {
+        return second;
     }
 
     @Override

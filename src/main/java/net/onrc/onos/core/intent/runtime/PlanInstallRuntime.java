@@ -135,8 +135,8 @@ public class PlanInstallRuntime {
                 barriers.add(new Pair<>(sw, pusher.barrierAsync(sw)));
             }
             for (Pair<IOFSwitch, OFMessageFuture<OFBarrierReply>> pair : barriers) {
-                IOFSwitch sw = pair.first;
-                OFMessageFuture<OFBarrierReply> future = pair.second;
+                IOFSwitch sw = pair.getFirst();
+                OFMessageFuture<OFBarrierReply> future = pair.getSecond();
                 try {
                     future.get();
                 } catch (InterruptedException | ExecutionException e) {

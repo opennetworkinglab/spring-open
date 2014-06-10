@@ -644,7 +644,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
             Collection<Pair<IOFSwitch, FlowEntry>> entries, MsgPriority priority) {
 
         for (Pair<IOFSwitch, FlowEntry> entry : entries) {
-            add(entry.first, entry.second, priority);
+            add(entry.getFirst(), entry.getSecond(), priority);
         }
     }
 
