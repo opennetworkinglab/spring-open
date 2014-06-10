@@ -137,7 +137,8 @@ class ArpCache {
 
         if (arpEntry != null && arpEntry.getMacAddress().equals(macAddress)) {
             arpEntry.setTimeLastSeen(System.currentTimeMillis());
-            log.debug("The same ArpCache, ip {}, mac {}. Update local cache last seen time only.", ipAddress, macAddress);
+            log.debug("The same ArpCache, ip {}, mac {}. " +
+                    "Update local cache last seen time only.", ipAddress, macAddress);
         } else {
             arpCache.put(ipAddress, new ArpCacheEntry(macAddress));
             kvArpCache.forceCreate(ipAddress, macAddress.toBytes());

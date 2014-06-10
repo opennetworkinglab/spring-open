@@ -58,7 +58,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     private static final int DEFAULT_IDLE_TIMEOUT = 5;
     private int idleTimeout = DEFAULT_IDLE_TIMEOUT;
 
-    private static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newScheduledThreadPool(NUMBER_OF_THREAD_FOR_EXECUTOR);
+    private static final ScheduledExecutorService EXECUTOR_SERVICE =
+            Executors.newScheduledThreadPool(NUMBER_OF_THREAD_FOR_EXECUTOR);
 
     private final String callerId = "Forwarding";
 
@@ -233,15 +234,18 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         String destinationMac =
                 HexString.toHexString(eth.getDestinationMACAddress());
 
-        //FIXME getDeviceByMac() is a blocking call, so it may be better way to handle it to avoid the condition.
-        Device deviceObject = topology.getDeviceByMac(MACAddress.valueOf(destinationMac));
+        // FIXME getDeviceByMac() is a blocking call, so it may be better way
+        // to handle it to avoid the condition.
+        Device deviceObject = topology.getDeviceByMac(
+                MACAddress.valueOf(destinationMac));
 
         if (deviceObject == null) {
             log.debug("No device entry found for {}",
                     destinationMac);
 
             //Device is not in the DB, so wait it until the device is added.
-            EXECUTOR_SERVICE.schedule(new WaitDeviceArp(sw, inPort, eth), SLEEP_TIME_FOR_DB_DEVICE_INSTALLED, TimeUnit.MILLISECONDS);
+            EXECUTOR_SERVICE.schedule(new WaitDeviceArp(sw, inPort, eth),
+                    SLEEP_TIME_FOR_DB_DEVICE_INSTALLED, TimeUnit.MILLISECONDS);
             return;
         }
 
@@ -264,11 +268,14 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         public void run() {
             Device deviceObject = topology.getDeviceByMac(MACAddress.valueOf(eth.getDestinationMACAddress()));
             if (deviceObject == null) {
-                log.debug("wait {}ms and device was not found. Send broadcast packet and the thread finish.", SLEEP_TIME_FOR_DB_DEVICE_INSTALLED);
+                log.debug("wait {}ms and device was not found. " +
+                        "Send broadcast packet and the thread finish.",
+                        SLEEP_TIME_FOR_DB_DEVICE_INSTALLED);
                 handleBroadcast(sw, inPort, eth);
                 return;
             }
-            log.debug("wait {}ms and device {} was found, continue", SLEEP_TIME_FOR_DB_DEVICE_INSTALLED, deviceObject.getMacAddress());
+            log.debug("wait {}ms and device {} was found, continue",
+                    SLEEP_TIME_FOR_DB_DEVICE_INSTALLED, deviceObject.getMacAddress());
             continueHandlePacketIn(sw, inPort, eth, deviceObject);
         }
     }
@@ -461,7 +468,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     private void flowInstalled(PathIntent installedPath) {
         if (log.isTraceEnabled()) {
-            log.trace("Installed intent ID {}, path {}", installedPath.getParentIntent().getId(), installedPath.getPath());
+            log.trace("Installed intent ID {}, path {}",
+                    installedPath.getParentIntent().getId(), installedPath.getPath());
         }
 
         ShortestPathIntent spfIntent = (ShortestPathIntent) installedPath.getParentIntent();

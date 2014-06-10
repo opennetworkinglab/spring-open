@@ -163,7 +163,8 @@ public interface IKVClient {
      * @param initialValue
      * @throws ObjectExistsException
      */
-    public void createCounter(final IKVTableID tableId, final byte[] key, final long initialValue) throws ObjectExistsException;
+    public void createCounter(final IKVTableID tableId, final byte[] key,
+            final long initialValue) throws ObjectExistsException;
 
     /**
      * Set atomic 64bit integer counter in data store to specified value.

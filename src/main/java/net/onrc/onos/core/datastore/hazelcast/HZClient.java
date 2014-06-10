@@ -43,14 +43,17 @@ public final class HZClient implements IKVClient {
 
     private static final String MAP_PREFIX = "datastore://";
 
-    private static final String BASE_CONFIG_FILENAME = System.getProperty("net.onrc.onos.core.datastore.hazelcast.baseConfig", "conf/hazelcast.xml");
+    private static final String BASE_CONFIG_FILENAME =
+            System.getProperty("net.onrc.onos.core.datastore.hazelcast.baseConfig", "conf/hazelcast.xml");
     private static final String HAZELCAST_DEFAULT_XML = "conf/hazelcast.default.xml";
 
     // XXX Remove this mode at some point
-    private static boolean useClientMode = Boolean.parseBoolean(System.getProperty("net.onrc.onos.core.datastore.hazelcast.clientMode", "true"));
+    private static boolean useClientMode = Boolean.parseBoolean(
+            System.getProperty("net.onrc.onos.core.datastore.hazelcast.clientMode", "true"));
 
     // Note: xml configuration will overwrite this value if present
-    private static int backupCount = Integer.parseInt(System.getProperty("net.onrc.onos.core.datastore.hazelcast.backupCount", "3"));
+    private static int backupCount = Integer.parseInt(
+            System.getProperty("net.onrc.onos.core.datastore.hazelcast.backupCount", "3"));
 
     private final HazelcastInstance hazelcastInstance;
 
@@ -279,7 +282,8 @@ public final class HZClient implements IKVClient {
     @Override
     public IMultiEntryOperation forceCreateOp(final IKVTableID tableId, final byte[] key,
                                               final byte[] value) {
-        return new HZMultiEntryOperation((HZTable) tableId, key, value, HZClient.VERSION_NONEXISTENT, OPERATION.FORCE_CREATE);
+        return new HZMultiEntryOperation((HZTable) tableId, key, value,
+                HZClient.VERSION_NONEXISTENT, OPERATION.FORCE_CREATE);
     }
 
     @Override

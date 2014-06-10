@@ -15,7 +15,9 @@ public class Ptree {
     private int maxKeyOctets;
     //private int refCount;
     private PtreeNode top;
-    private byte[] maskBits = {(byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0, (byte) 0xf0, (byte) 0xf8, (byte) 0xfc, (byte) 0xfe, (byte) 0xff};
+    private byte[] maskBits =
+        {(byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0, (byte) 0xf0,
+         (byte) 0xf8, (byte) 0xfc, (byte) 0xfe, (byte) 0xff};
 
     public Ptree(int maxKeyBits) {
         this.maxKeyBits = maxKeyBits;

@@ -52,7 +52,10 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Toshio Koide (t-koide@onlab.us)
  */
-public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntimeService, ITopologyListener, IEventChannelListener<Long, IntentStateList> {
+public class PathCalcRuntimeModule implements IFloodlightModule,
+                                    IPathCalcRuntimeService,
+                                    ITopologyListener,
+                                    IEventChannelListener<Long, IntentStateList> {
     static class PerfLog {
         private String step;
         private long time;
@@ -266,7 +269,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         runtime = new PathCalcRuntime(topologyService.getTopology());
         pathIntents = new PathIntentMap();
         pathIntents.addChangeListener(deleteIntentsTracker);
-        opEventChannel = datagridService.createChannel(INTENT_OP_EVENT_CHANNEL_NAME, Long.class, IntentOperationList.class);
+        opEventChannel = datagridService.createChannel(
+                INTENT_OP_EVENT_CHANNEL_NAME, Long.class, IntentOperationList.class);
         datagridService.addListener(INTENT_STATE_EVENT_CHANNEL_NAME, this, Long.class, IntentStateList.class);
         topologyService.registerTopologyListener(this);
         persistIntent = new PersistIntent(controllerRegistry);
@@ -512,7 +516,9 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
 
         boolean rerouteAll = false;
         for (LinkEvent le : addedLinkEvents) {
-            LinkEvent rev = new LinkEvent(le.getDst().getDpid(), le.getDst().getNumber(), le.getSrc().getDpid(), le.getSrc().getNumber());
+            LinkEvent rev = new LinkEvent(le.getDst().getDpid(),
+                    le.getDst().getNumber(), le.getSrc().getDpid(),
+                    le.getSrc().getNumber());
             if (unmatchedLinkEvents.contains(rev)) {
                 rerouteAll = true;
                 unmatchedLinkEvents.remove(rev);
@@ -630,10 +636,12 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                         // FALLTHROUGH
                     case DEL_PENDING:
                         if (isChildIntent) {
-                            log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), nextPathIntentState);
+                            log.debug("put the state highLevelIntentStates ID {}, state {}",
+                                    parentIntent.getId(), nextPathIntentState);
                             highLevelIntentStates.put(parentIntent.getId(), nextPathIntentState);
                         }
-                        log.debug("put the state pathIntentStates ID {}, state {}", pathIntentId, nextPathIntentState);
+                        log.debug("put the state pathIntentStates ID {}, state {}",
+                                pathIntentId, nextPathIntentState);
                         pathIntentStates.put(pathIntentId, nextPathIntentState);
                         break;
                     case DEL_ACK:
@@ -641,10 +649,12 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                             if (intentInstalledMap.containsKey(parentIntent.getId())) {
                                  intentInstalledMap.remove(parentIntent.getId());
                             }
-                            log.debug("put the state highLevelIntentStates ID {}, state {}", parentIntent.getId(), nextPathIntentState);
+                            log.debug("put the state highLevelIntentStates ID {}, state {}",
+                                    parentIntent.getId(), nextPathIntentState);
                             highLevelIntentStates.put(parentIntent.getId(), nextPathIntentState);
                         }
-                        log.debug("put the state pathIntentStates ID {}, state {}", pathIntentId, nextPathIntentState);
+                        log.debug("put the state pathIntentStates ID {}, state {}",
+                                pathIntentId, nextPathIntentState);
                         pathIntentStates.put(pathIntentId, nextPathIntentState);
                         break;
                     case CREATED:
@@ -698,7 +708,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
 
         if (log.isTraceEnabled()) {
-            log.trace("All switches {}, installed installedDpids {}", allSwitchesForPath, intentInstalledMap.get(parentIntentId));
+            log.trace("All switches {}, installed installedDpids {}",
+                    allSwitchesForPath, intentInstalledMap.get(parentIntentId));
         }
 
         if (allSwitchesForPath.equals(intentInstalledMap.get(parentIntentId))) {

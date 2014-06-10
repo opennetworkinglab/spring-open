@@ -41,7 +41,8 @@ public class PathCalcRuntime implements IFloodlightService {
      * @param pathIntents  a set of current low-level intents
      * @return IntentOperationList. PathIntent and/or ErrorIntent instances.
      */
-    public IntentOperationList calcPathIntents(final IntentOperationList intentOpList, final IntentMap appIntents, final PathIntentMap pathIntents) {
+    public IntentOperationList calcPathIntents(final IntentOperationList intentOpList,
+            final IntentMap appIntents, final PathIntentMap pathIntents) {
         IntentOperationList pathIntentOpList = new IntentOperationList();
         HashMap<Switch, ConstrainedBFSTree> spfTrees = new HashMap<>();
 
@@ -134,7 +135,9 @@ public class PathCalcRuntime implements IFloodlightService {
 
                     break;
                 case REMOVE:
-                    ShortestPathIntent targetAppIntent = (ShortestPathIntent) appIntents.getIntent(intentOp.intent.getId());
+                    ShortestPathIntent targetAppIntent =
+                            (ShortestPathIntent) appIntents.getIntent(
+                                    intentOp.intent.getId());
                     if (targetAppIntent != null) {
                         String pathIntentId = targetAppIntent.getPathIntentId();
                         if (pathIntentId != null) {

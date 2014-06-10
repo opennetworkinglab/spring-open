@@ -52,7 +52,8 @@ public class HZMultiEntryOperation implements IMultiEntryOperation, IModifiableM
      * @param version
      * @param operation
      */
-    public HZMultiEntryOperation(final HZTable table, final byte[] key, final byte[] value, final long version, final OPERATION operation) {
+    public HZMultiEntryOperation(final HZTable table, final byte[] key,
+            final byte[] value, final long version, final OPERATION operation) {
         this.table = table;
         this.key = key.clone();
         this.status = STATUS.NOT_EXECUTED;

@@ -1225,7 +1225,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
          for (KVDevice d : KVDevice.getAllDevices()) {
               DeviceEvent devEvent = new DeviceEvent(MACAddress.valueOf(d.getMac()));
               for (byte[] portId : d.getAllPortIds()) {
-                  devEvent.addAttachmentPoint(new SwitchPort(KVPort.getDpidFromKey(portId), KVPort.getNumberFromKey(portId)));
+                  devEvent.addAttachmentPoint(
+                          new SwitchPort(KVPort.getDpidFromKey(portId),
+                                  KVPort.getNumberFromKey(portId)));
               }
          }
 

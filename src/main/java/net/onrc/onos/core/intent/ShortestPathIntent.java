@@ -179,10 +179,13 @@ public class ShortestPathIntent extends Intent {
 
     @Override
     public String toString() {
-        return String.format("id:%s, state:%s, srcDpid:%s, srcPort:%d, srcMac:%s, srcIP:%s, dstDpid:%s, dstPort:%d, dstMac:%s, dstIP:%s",
+        return String.format("id:%s, state:%s, srcDpid:%s, srcPort:%d, " +
+                "srcMac:%s, srcIP:%s, dstDpid:%s, dstPort:%d, dstMac:%s, dstIP:%s",
                 getId(), getState(),
-                new Dpid(srcSwitchDpid), srcPortNumber, MACAddress.valueOf(srcMacAddress), Integer.toString(srcIpAddress),
-                new Dpid(dstSwitchDpid), dstPortNumber, MACAddress.valueOf(dstMacAddress), Integer.toString(dstIpAddress));
+                new Dpid(srcSwitchDpid), srcPortNumber,
+                MACAddress.valueOf(srcMacAddress), Integer.toString(srcIpAddress),
+                new Dpid(dstSwitchDpid), dstPortNumber,
+                MACAddress.valueOf(dstMacAddress), Integer.toString(dstIpAddress));
     }
 
     public int getSrcIp() {

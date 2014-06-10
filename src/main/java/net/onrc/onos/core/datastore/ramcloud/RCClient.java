@@ -498,11 +498,15 @@ public class RCClient implements IKVClient {
                         op.entry.setVersion(removedVersion);
                         op.status = STATUS.SUCCESS;
                     } catch (JRamCloud.ObjectDoesntExistException | JRamCloud.WrongVersionException e) {
-                        log.error("Failed to remove key:" + ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), "") + " from tableID:" + op.tableId, e);
+                        log.error("Failed to remove key:" +
+                                ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), "") +
+                                " from tableID:" + op.tableId, e);
                         failExists = true;
                         op.status = STATUS.FAILED;
                     } catch (JRamCloud.RejectRulesException e) {
-                        log.error("Failed to remove key:" + ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), "") + " from tableID:" + op.tableId, e);
+                        log.error("Failed to remove key:" +
+                                ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), "") +
+                                " from tableID:" + op.tableId, e);
                         failExists = true;
                         op.status = STATUS.FAILED;
                     }
@@ -514,7 +518,9 @@ public class RCClient implements IKVClient {
                         op.entry.setVersion(removedVersion);
                         op.status = STATUS.SUCCESS;
                     } else {
-                        log.error("Failed to remove key:{} from tableID:{}", ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), ""), op.tableId);
+                        log.error("Failed to remove key:{} from tableID:{}",
+                                ByteArrayUtil.toHexStringBuilder(op.entry.getKey(), ""),
+                                op.tableId);
                         failExists = true;
                         op.status = STATUS.FAILED;
                     }
@@ -545,9 +551,11 @@ public class RCClient implements IKVClient {
         }
 
         // execute
-        JRamCloud.Object[] results = rcClient.multiRead(multiReadObjects.tableId, multiReadObjects.key, multiReadObjects.keyLength, reqs);
+        JRamCloud.Object[] results = rcClient.multiRead(multiReadObjects.tableId,
+                multiReadObjects.key, multiReadObjects.keyLength, reqs);
         if (results.length != reqs) {
-            log.error("multiRead returned unexpected number of results. (requested:{}, returned:{})", reqs, results.length);
+            log.error("multiRead returned unexpected number of results. " +
+                    "(requested:{}, returned:{})", reqs, results.length);
             failExists = true;
         }
 
@@ -605,12 +613,18 @@ public class RCClient implements IKVClient {
                     op.setStatus(STATUS.FAILED);
                     return failExists;
             }
-            multiWriteObjects.setObject(i, ((RCTableID) op.getTableId()).getTableID(), op.getKey(), op.getValue(), rules);
+            multiWriteObjects.setObject(i,
+                    ((RCTableID) op.getTableId()).getTableID(), op.getKey(),
+                    op.getValue(), rules);
         }
 
-        MultiWriteRspObject[] results = rcClient.multiWrite(multiWriteObjects.tableId, multiWriteObjects.key, multiWriteObjects.keyLength, multiWriteObjects.value, multiWriteObjects.valueLength, ops.size(), multiWriteObjects.rules);
+        MultiWriteRspObject[] results = rcClient.multiWrite(multiWriteObjects.tableId,
+                multiWriteObjects.key, multiWriteObjects.keyLength,
+                multiWriteObjects.value, multiWriteObjects.valueLength, ops.size(),
+                multiWriteObjects.rules);
         if (results.length != reqs) {
-            log.error("multiWrite returned unexpected number of results. (requested:{}, returned:{})", reqs, results.length);
+            log.error("multiWrite returned unexpected number of results. " +
+                    "(requested:{}, returned:{})", reqs, results.length);
             failExists = true;
         }
 
@@ -630,7 +644,8 @@ public class RCClient implements IKVClient {
         return failExists;
     }
 
-    private static final ConcurrentHashMap<String, RCTable> TABLES = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, RCTable> TABLES =
+            new ConcurrentHashMap<>();
 
     @Override
     public IKVTable getTable(final String tableName) {

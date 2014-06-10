@@ -73,11 +73,13 @@ public class RCMultiEntryOperation implements IMultiEntryOperation, IModifiableM
     }
 
     public static IMultiEntryOperation create(final IKVTableID tableId, final byte[] key, final byte[] value) {
-        return new RCMultiEntryOperation(tableId, new Entry(key, value, RCClient.VERSION_NONEXISTENT), OPERATION.CREATE);
+        return new RCMultiEntryOperation(tableId,
+                new Entry(key, value, RCClient.VERSION_NONEXISTENT), OPERATION.CREATE);
     }
 
     public static IMultiEntryOperation forceCreate(final IKVTableID tableId, final byte[] key, final byte[] value) {
-        return new RCMultiEntryOperation(tableId, new Entry(key, value, RCClient.VERSION_NONEXISTENT), OPERATION.FORCE_CREATE);
+        return new RCMultiEntryOperation(tableId,
+                new Entry(key, value, RCClient.VERSION_NONEXISTENT), OPERATION.FORCE_CREATE);
     }
 
     /**
@@ -90,11 +92,13 @@ public class RCMultiEntryOperation implements IMultiEntryOperation, IModifiableM
         return new RCMultiEntryOperation(tableId, new Entry(key), OPERATION.READ);
     }
 
-    public static IMultiEntryOperation update(final IKVTableID tableId, final byte[] key, final byte[] value, final long version) {
+    public static IMultiEntryOperation update(final IKVTableID tableId,
+            final byte[] key, final byte[] value, final long version) {
         return new RCMultiEntryOperation(tableId, new Entry(key, value, version), OPERATION.UPDATE);
     }
 
-    public static IMultiEntryOperation delete(final IKVTableID tableId, final byte[] key, final byte[] value, final long version) {
+    public static IMultiEntryOperation delete(final IKVTableID tableId,
+            final byte[] key, final byte[] value, final long version) {
         return new RCMultiEntryOperation(tableId, new Entry(key, value, version), OPERATION.DELETE);
     }
 

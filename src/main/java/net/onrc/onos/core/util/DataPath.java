@@ -148,7 +148,8 @@ public class DataPath {
      * Convert the data path to a string.
      * <p/>
      * The string has the following form:
-     * [src=01:01:01:01:01:01:01:01/1111 flowEntry=<entry1> flowEntry=<entry2> flowEntry=<entry3> dst=02:02:02:02:02:02:02:02/2222]
+     * [src=01:01:01:01:01:01:01:01/1111 flowEntry=<entry1> flowEntry=<entry2>
+     * flowEntry=<entry3> dst=02:02:02:02:02:02:02:02/2222]
      *
      * @return the data path as a string.
      */

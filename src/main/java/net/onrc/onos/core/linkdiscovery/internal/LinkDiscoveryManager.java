@@ -769,7 +769,10 @@ public class LinkDiscoveryManager
         bb.rewind();
         bb.get(controllerTLVValue, 0, 8);
 
-        this.controllerTLV = new LLDPTLV().setType((byte) 0x0c).setLength((short) controllerTLVValue.length).setValue(controllerTLVValue);
+        this.controllerTLV = new LLDPTLV()
+                                .setType((byte) 0x0c)
+                                .setLength((short) controllerTLVValue.length)
+                                .setValue(controllerTLVValue);
     }
 
     @Override
@@ -868,7 +871,8 @@ public class LinkDiscoveryManager
             /*else if (sw <= remoteSwitch.getId()) {
                 if (log.isTraceEnabled()) {
                     log.trace("Getting BBDP from a different controller. myId {}: remoteId {}", myId, otherId);
-                    log.trace("and my controller id is smaller than the other, so quelching it. myPort {}: rPort {}", pi.getInPort(), remotePort);
+                    log.trace("and my controller id is smaller than the other, so quelching it. myPort {}: rPort {}",
+                    pi.getInPort(), remotePort);
                 }
                 //XXX ONOS: Fix the BDDP broadcast issue
                 //return Command.CONTINUE;

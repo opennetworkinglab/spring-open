@@ -125,7 +125,8 @@ public class PatriciaTree<V> implements IPatriciaTree<V> {
 
             while (node != null
                     && node.prefix.getPrefixLength() <= p.getPrefixLength()
-                    && key_match(node.prefix.getAddress(), node.prefix.getPrefixLength(), p.getAddress(), p.getPrefixLength()) == true) {
+                    && key_match(node.prefix.getAddress(), node.prefix.getPrefixLength(),
+                    p.getAddress(), p.getPrefixLength()) == true) {
                 if (node.prefix.getPrefixLength() == p.getPrefixLength()) {
                     //return addReference(node);
                     return node.rib;

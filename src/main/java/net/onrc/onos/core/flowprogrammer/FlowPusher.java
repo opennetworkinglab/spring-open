@@ -18,8 +18,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
@@ -71,6 +69,8 @@ import org.openflow.protocol.action.OFActionVirtualLanPriorityCodePoint;
 import org.openflow.protocol.factory.BasicFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * FlowPusher is a implementation of FlowPusherService.
@@ -956,7 +956,8 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         }
 
         if (log.isTraceEnabled()) {
-            log.trace("Installing flow entry {} into switch DPID: {} flowEntryId: {} srcMac: {} dstMac: {} inPort: {} outPort: {}"
+            log.trace("Installing flow entry {} into switch DPID: {} " +
+                    "flowEntryId: {} srcMac: {} dstMac: {} inPort: {} outPort: {}"
                     , flowEntry.flowEntryUserState()
                     , sw.getStringId()
                     , flowEntry.flowEntryId()

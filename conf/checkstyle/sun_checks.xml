@@ -148,7 +148,6 @@
             <!-- ONOS standard usage is 80 columns, but we allow up
              to 120 to not break the build. -->
             <property name="max" value="120"/>
-            <property name="severity" value="warning"/>
         </module>
         <module name="MethodLength">
             <property name="max" value="200"/>

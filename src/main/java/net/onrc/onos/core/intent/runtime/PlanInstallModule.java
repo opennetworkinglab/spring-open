@@ -100,7 +100,8 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
          * @param success
          * @param domainSwitchDpids
          */
-        private void sendNotifications(IntentOperationList intents, boolean installed, boolean success, Set<Long> domainSwitchDpids) {
+        private void sendNotifications(IntentOperationList intents,
+                boolean installed, boolean success, Set<Long> domainSwitchDpids) {
             IntentStateList states = new IntentStateList();
             for (IntentOperation i : intents) {
                 IntentState newState;
