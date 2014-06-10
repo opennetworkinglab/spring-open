@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
@@ -90,11 +91,13 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
 
     private IEventChannel<Long, IntentOperationList> opEventChannel;
     private final ReentrantLock lock = new ReentrantLock(true);
-    private HashSet<LinkEvent> unmatchedLinkEvents = new HashSet<>();
-    private Map<String, Set<Long>> intentInstalledMap = new ConcurrentHashMap<String, Set<Long>>();
     private static final String INTENT_OP_EVENT_CHANNEL_NAME = "onos.pathintent";
     private static final String INTENT_STATE_EVENT_CHANNEL_NAME = "onos.pathintent_state";
     private static final Logger log = LoggerFactory.getLogger(PathCalcRuntimeModule.class);
+
+    private HashSet<LinkEvent> unmatchedLinkEvents = new HashSet<>();
+    private ConcurrentMap<String, Set<Long>> intentInstalledMap = new ConcurrentHashMap<String, Set<Long>>();
+    private ConcurrentMap<String, Intent> staleIntents = new ConcurrentHashMap<String, Intent>();
 
     // ================================================================================
     // private methods
@@ -111,9 +114,19 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
             if (pathIntent.isPathFrozen()) {
                 continue;
             }
-            if (pathIntent.getState().equals(IntentState.INST_ACK) && // XXX: path intents in flight
-                    !reroutingOperation.contains(pathIntent.getParentIntent())) {
-                reroutingOperation.add(Operator.ADD, pathIntent.getParentIntent());
+            Intent parentIntent = pathIntent.getParentIntent();
+            if (parentIntent == null) {
+                continue;
+            }
+            if (pathIntent.getState().equals(IntentState.INST_ACK)) {
+                if (!reroutingOperation.contains(parentIntent)) {
+                    // reroute now
+                    reroutingOperation.add(Operator.ADD, parentIntent);
+                }
+            } else if (pathIntent.getState().equals(IntentState.INST_REQ)) {
+                // reroute after the completion of the current execution
+                staleIntents.put(parentIntent.getId(), parentIntent);
+                log.debug("pending reroute execution for intent ID:{}", parentIntent.getId());
             }
         }
         executeIntentOperations(reroutingOperation);
@@ -359,6 +372,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     public void entryUpdated(IntentStateList value) {
         // TODO draw state transition diagram in multiple ONOS instances and update this method
 
+        IntentOperationList opList = new IntentOperationList();
         lock.lock(); // TODO optimize locking using smaller steps
         try {
             log.trace("lock entryUpdated, lock obj is already locked? {}", lock.isLocked());
@@ -380,6 +394,19 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
                 }
 
                 boolean isChildIntent = ((ShortestPathIntent) parentIntent).getPathIntentId().equals(pathIntentId);
+
+                // Check necessity for retrying the intent execution.
+                // When the PathIntent(=isChildIntent) transitioned to INST_{ACK/NACK}
+                // but was marked as stale (e.g., has been requested to reroute by Topology event),
+                // then immediately enqueue the re-computation of parent intent.
+                if (isChildIntent && staleIntents.containsKey(parentIntent.getId()) && (
+                        nextPathIntentState.equals(IntentState.INST_ACK) ||
+                        nextPathIntentState.equals(IntentState.INST_NACK))) {
+                    opList.add(Operator.ADD, parentIntent);
+                    staleIntents.remove(parentIntent.getId());
+                    log.debug("retrying intent execution for intent ID:{}", parentIntent.getId());
+                }
+
                 switch (nextPathIntentState) {
                     case INST_ACK:
                         Set<Long> installedDpids = calcInstalledDpids(pathIntent, value.domainSwitchDpids);
@@ -426,6 +453,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
             lock.unlock();
             log.trace("unlock entryUpdated");
         }
+        executeIntentOperations(opList);
     }
 
     /***
