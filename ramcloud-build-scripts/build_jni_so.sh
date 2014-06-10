@@ -6,7 +6,7 @@ if [ -z "${JAVA_HOME}" ]; then
   if [ -z "${OPENJDK}" -a -d "/usr/lib/jvm/java-7-oracle" ]; then
     JAVA_HOME=/usr/lib/jvm/java-7-oracle
   else
-    JAVA_HOME=/usr/lib/jvm/default-java
+    JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   fi
   echo "Assuming JAVA_HOME=${JAVA_HOME}"
 fi
