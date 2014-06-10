@@ -152,6 +152,8 @@
         <configuration>
           <charset>UTF-8</charset>
           <locale>en</locale>
+          <author>false</author>
+          <excludePackageNames>net.floodlightcontroller.*:net.onrc.onos.core.datastore.serializers</excludePackageNames>
         </configuration>
       </plugin>
 <!-- Remove me when we're sure that system test no longer need JaCoCo
@@ -406,6 +408,8 @@
         <configuration>
           <charset>UTF-8</charset>
           <locale>en</locale>
+          <author>false</author>
+          <excludePackageNames>net.floodlightcontroller.*:net.onrc.onos.core.datastore.serializers</excludePackageNames>
         </configuration>
       </plugin>
       <plugin>
