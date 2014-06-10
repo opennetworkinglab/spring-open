@@ -1,20 +1,16 @@
 package net.onrc.onos.core.intent.runtime.web;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
-import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.intent.ApplicationIntent;
 import net.onrc.onos.api.rest.RestError;
 import net.onrc.onos.api.rest.RestErrorCodes;
-import net.onrc.onos.core.intent.ConstrainedShortestPathIntent;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
-import net.onrc.onos.core.intent.IntentOperation;
-import net.onrc.onos.core.intent.IntentOperationList;
-import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
-import net.onrc.onos.core.util.Dpid;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.data.Status;
@@ -32,12 +28,12 @@ import org.slf4j.LoggerFactory;
 public class IntentHighResource extends ServerResource {
     private static final Logger log = LoggerFactory.getLogger(IntentHighResource.class);
     // TODO need to assign proper application id.
-    private static final String APPLN_ID = "1";
+    private static final String APPLICATION_ID = "1";
 
     /**
      * Gets all high-level intents.
      *
-     * @return a Representation for a collection with all of the high-level intents.
+     * @return a Representation for a collection with all high-level intents.
      */
     @Get("json")
     public Representation retrieve() throws IOException {
@@ -55,19 +51,18 @@ public class IntentHighResource extends ServerResource {
      * Adds a collection of high-level intents.
      *
      * @param jsonIntent JSON representation of the intents to add.
-     * @return a Representation of a collection containing the intents that were
-     *         created.
+     * @return a Representation of a collection containing the intents that
+     * were added.
      */
     @Post("json")
     public Representation store(String jsonIntent) {
         IPathCalcRuntimeService pathRuntime =
             (IPathCalcRuntimeService) getContext().getAttributes()
                 .get(IPathCalcRuntimeService.class.getCanonicalName());
-        if (pathRuntime == null) {
-            log.warn("Failed to get path calc runtime");
-            return null;
-        }
 
+        //
+        // Extract the Application Intents
+        //
         ObjectMapper mapper = new ObjectMapper();
         ApplicationIntent[] addOperations = null;
         try {
@@ -77,7 +72,6 @@ public class IntentHighResource extends ServerResource {
         } catch (IOException ex) {
             log.error("Exception occurred parsing inbound JSON", ex);
         }
-
         if (addOperations == null) {
             setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             final RestError error =
@@ -86,57 +80,16 @@ public class IntentHighResource extends ServerResource {
         }
 
         //
-        // Process all intents one-by-one
+        // Add the intents
         //
-        // TODO: The Intent Type should be enum instead of a string,
-        // and we should use a switch statement below to process the
-        // different type of intents.
-        //
-        IntentOperationList intentOperations = new IntentOperationList();
-        for (ApplicationIntent oper : addOperations) {
-            String applnIntentId = APPLN_ID + ":" + oper.intentId();
-
-            IntentOperation.Operator operator = IntentOperation.Operator.ADD;
-            Dpid srcSwitchDpid = new Dpid(oper.srcSwitchDpid());
-            Dpid dstSwitchDpid = new Dpid(oper.dstSwitchDpid());
-
-            if (oper.intentType().equals("SHORTEST_PATH")) {
-                //
-                // Process Shortest-Path Intent
-                //
-                ShortestPathIntent spi =
-                    new ShortestPathIntent(applnIntentId,
-                                           srcSwitchDpid.value(),
-                                           oper.srcSwitchPort(),
-                                           MACAddress.valueOf(oper.matchSrcMac()).toLong(),
-                                           dstSwitchDpid.value(),
-                                           oper.dstSwitchPort(),
-                                           MACAddress.valueOf(oper.matchDstMac()).toLong());
-                spi.setPathFrozen(oper.isStaticPath());
-                intentOperations.add(operator, spi);
-            } else {
-                //
-                // Process Constrained Shortest-Path Intent
-                //
-                ConstrainedShortestPathIntent cspi =
-                    new ConstrainedShortestPathIntent(applnIntentId,
-                                                      srcSwitchDpid.value(),
-                                                      oper.srcSwitchPort(),
-                                                      MACAddress.valueOf(oper.matchSrcMac()).toLong(),
-                                                      dstSwitchDpid.value(),
-                                                      oper.dstSwitchPort(),
-                                                      MACAddress.valueOf(oper.matchDstMac()).toLong(),
-                                                      oper.bandwidth());
-                cspi.setPathFrozen(oper.isStaticPath());
-                intentOperations.add(operator, cspi);
-            }
+        if (pathRuntime.addApplicationIntents(APPLICATION_ID,
+                                              Arrays.asList(addOperations))) {
+            setStatus(Status.SUCCESS_CREATED);
+        } else {
+            setStatus(Status.SERVER_ERROR_INTERNAL);
         }
-        // Apply the Intent Operations
-        pathRuntime.executeIntentOperations(intentOperations);
 
-        setStatus(Status.SUCCESS_CREATED);
-
-        return toRepresentation(intentOperations, null);
+        return toRepresentation(addOperations, null);
     }
 
     /**
@@ -150,11 +103,31 @@ public class IntentHighResource extends ServerResource {
             (IPathCalcRuntimeService) getContext().getAttributes()
                 .get(IPathCalcRuntimeService.class.getCanonicalName());
 
-        // Delete all intents
-        // TODO: The implementation below is broken - waiting for the Java API
-        // TODO: The deletion should use synchronous Java API?
-        pathRuntime.purgeIntents();
-        setStatus(Status.SUCCESS_NO_CONTENT);
-        return null;      // TODO no reply yet from the purge intents call
+        //
+        // Get the optional query values: comma-separated list of Intent IDs
+        //
+        String intentIdValue = getQueryValue("intent_id");
+        boolean success;
+
+        //
+        // Delete the intents
+        //
+        if (intentIdValue != null) {
+            // Delete a collection of intents, specified by Intent IDs
+            List<String> intentIds = Arrays.asList(intentIdValue.split(","));
+            success = pathRuntime.removeApplicationIntents(APPLICATION_ID,
+                                                           intentIds);
+        } else {
+            // Delete all intents
+            success = pathRuntime.removeAllApplicationIntents(APPLICATION_ID);
+        }
+
+        if (success) {
+            setStatus(Status.SUCCESS_NO_CONTENT);
+        } else {
+            setStatus(Status.SERVER_ERROR_INTERNAL);
+        }
+
+        return null;
     }
 }

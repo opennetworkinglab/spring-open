@@ -17,7 +17,7 @@ public class IntentLowResource extends ServerResource {
     /**
      * Gets all low-level intents.
      *
-     * @return a Representation of a collection of all of the low-level intents.
+     * @return a Representation of a collection of all low-level intents.
      */
     @Get("json")
     public Representation retrieve() {

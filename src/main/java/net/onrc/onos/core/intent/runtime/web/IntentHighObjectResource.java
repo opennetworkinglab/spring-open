@@ -1,11 +1,12 @@
 package net.onrc.onos.core.intent.runtime.web;
 
+import java.util.Arrays;
+import java.util.List;
+
 import net.onrc.onos.api.rest.RestError;
 import net.onrc.onos.api.rest.RestErrorCodes;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
-import net.onrc.onos.core.intent.IntentOperation;
-import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 
 import org.restlet.data.Status;
@@ -19,7 +20,7 @@ import org.restlet.resource.ServerResource;
  */
 public class IntentHighObjectResource extends ServerResource {
     // TODO need to assign proper application id.
-    private static final String APPLN_ID = "1";
+    private static final String APPLICATION_ID = "1";
 
     /**
      * Gets a single high-level intent.
@@ -34,15 +35,14 @@ public class IntentHighObjectResource extends ServerResource {
             (IPathCalcRuntimeService) getContext().getAttributes()
                 .get(IPathCalcRuntimeService.class.getCanonicalName());
 
-        Representation result;
-
         String intentId = (String) getRequestAttributes().get("intent-id");
+        Representation result;
 
         //
         // Get a single high-level Intent: use the Intent ID to find it
         //
         IntentMap intentMap = pathRuntime.getHighLevelIntents();
-        String applnIntentId = APPLN_ID + ":" + intentId;
+        String applnIntentId = APPLICATION_ID + ":" + intentId;
         Intent intent = intentMap.getIntent(applnIntentId);
         if (intent != null) {
             result = toRepresentation(intent, null);
@@ -69,22 +69,14 @@ public class IntentHighObjectResource extends ServerResource {
                 .get(IPathCalcRuntimeService.class.getCanonicalName());
 
         String intentId = (String) getRequestAttributes().get("intent-id");
+        List<String> intentIds = Arrays.asList(intentId);
 
-        //
-        // Remove a single high-level Intent: use the Intent ID to find it
-        //
-        //
-        // TODO: The implementation below is broken - waiting for the Java API
-        // TODO: The deletion should use synchronous Java API?
-        IntentMap intentMap = pathRuntime.getHighLevelIntents();
-        String applnIntentId = APPLN_ID + ":" + intentId;
-        Intent intent = intentMap.getIntent(applnIntentId);
-        if (intent != null) {
-            IntentOperationList operations = new IntentOperationList();
-            operations.add(IntentOperation.Operator.REMOVE, intent);
-            pathRuntime.executeIntentOperations(operations);
+        if (pathRuntime.removeApplicationIntents(APPLICATION_ID, intentIds)) {
+            setStatus(Status.SUCCESS_NO_CONTENT);
+        } else {
+            setStatus(Status.SERVER_ERROR_INTERNAL);
         }
-        setStatus(Status.SUCCESS_NO_CONTENT);
+
         return null;
     }
 }

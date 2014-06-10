@@ -99,8 +99,13 @@ public class IntentMap {
         notifyEvents();
     }
 
+    /**
+     * Purge all Intents that are in a state allowing them to be removed.
+     */
     public void purge() {
         LinkedList<String> removeIds = new LinkedList<>();
+
+        // Collect the IDs of all intents that can be removed
         for (Entry<String, Intent> entry : intents.entrySet()) {
             Intent intent = entry.getValue();
             if (intent.getState() == IntentState.DEL_ACK
@@ -108,6 +113,19 @@ public class IntentMap {
                 removeIds.add(intent.getId());
             }
         }
+
+        purge(removeIds);
+    }
+
+    /**
+     * Purge a collection of Intents specified by Intent IDs.
+     *
+     * NOTE: The caller needs to make sure those intents are in a state
+     * that allows them to be removed.
+     *
+     * @param removeIds the collection of Intent IDs to purge.
+     */
+    public void purge(Collection<String> removeIds) {
         for (String intentId : removeIds) {
             removeIntent(intentId);
         }
@@ -216,6 +234,10 @@ public class IntentMap {
     }
 
     protected void notifyEvents() {
+        if (events.isEmpty()) {
+            return;
+        }
+
         for (ChangedListener listener : listeners) {
             listener.intentsChange(events);
         }

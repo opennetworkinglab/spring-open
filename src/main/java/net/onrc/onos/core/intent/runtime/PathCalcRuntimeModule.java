@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -18,12 +19,17 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
+import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.api.intent.ApplicationIntent;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
+import net.onrc.onos.core.intent.ConstrainedShortestPathIntent;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentMap;
+import net.onrc.onos.core.intent.IntentMap.ChangedEvent;
+import net.onrc.onos.core.intent.IntentMap.ChangedListener;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
@@ -38,6 +44,7 @@ import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +87,89 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         }
     }
 
+    /**
+     * A class to track the deletion of intents and purge them as appropriate.
+     */
+    private class DeleteIntentsTracker implements ChangedListener {
+        @Override
+        public void intentsChange(LinkedList<ChangedEvent> events) {
+            List<String> removeIntentIds = new LinkedList<String>();
+            List<String> removePathIds = new LinkedList<String>();
+
+            //
+            // Process the events one-by-one and collect the Intent IDs of
+            // those intents that should be purged.
+            //
+            for (ChangedEvent event : events) {
+                log.debug("DeleteIntentsTracker: Intent ID {}, eventType {}",
+                          event.intent.getId() , event.eventType);
+                PathIntent pathIntent = (PathIntent) pathIntents.getIntent(event.intent.getId());
+                if (pathIntent == null) {
+                    continue;
+                }
+
+                //
+                // Test whether the new Intent state allows the Intent
+                // to be purged.
+                //
+                boolean shouldPurge = false;
+                switch (event.eventType) {
+                case ADDED:
+                    break;
+                case REMOVED:
+                    break;
+                case STATE_CHANGED:
+                    IntentState state = pathIntent.getState();
+                    switch (state) {
+                        case INST_REQ:
+                            break;
+                        case INST_ACK:
+                            break;
+                        case INST_NACK:
+                            shouldPurge = true;
+                            break;
+                        case DEL_REQ:
+                            break;
+                        case DEL_ACK:
+                            shouldPurge = true;
+                            break;
+                        case DEL_PENDING:
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+                }
+
+                if (shouldPurge) {
+                    removePathIds.add(pathIntent.getId());
+                    Intent parentIntent = pathIntent.getParentIntent();
+                    if (parentIntent != null) {
+                        //
+                        // Remove the High-level Intent only if it was
+                        // explicitly deleted by the user via the API.
+                        //
+                        String intentId = parentIntent.getId();
+                        if (removedApplicationIntentIds.contains(intentId)) {
+                            removeIntentIds.add(intentId);
+                            removedApplicationIntentIds.remove(intentId);
+                        }
+                    }
+                }
+            }
+
+            // Purge the intents
+            if (!removeIntentIds.isEmpty()) {
+                highLevelIntents.purge(removeIntentIds);
+            }
+            if (!removePathIds.isEmpty()) {
+                pathIntents.purge(removePathIds);
+            }
+        }
+    }
+
     private PathCalcRuntime runtime;
     private IDatagridService datagridService;
     private ITopologyService topologyService;
@@ -98,6 +188,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
     private HashSet<LinkEvent> unmatchedLinkEvents = new HashSet<>();
     private ConcurrentMap<String, Set<Long>> intentInstalledMap = new ConcurrentHashMap<String, Set<Long>>();
     private ConcurrentMap<String, Intent> staleIntents = new ConcurrentHashMap<String, Intent>();
+    private DeleteIntentsTracker deleteIntentsTracker = new DeleteIntentsTracker();
+    private Set<String> removedApplicationIntentIds = new HashSet<String>();
 
     // ================================================================================
     // private methods
@@ -173,6 +265,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         highLevelIntents = new IntentMap();
         runtime = new PathCalcRuntime(topologyService.getTopology());
         pathIntents = new PathIntentMap();
+        pathIntents.addChangeListener(deleteIntentsTracker);
         opEventChannel = datagridService.createChannel(INTENT_OP_EVENT_CHANNEL_NAME, Long.class, IntentOperationList.class);
         datagridService.addListener(INTENT_STATE_EVENT_CHANNEL_NAME, this, Long.class, IntentStateList.class);
         topologyService.registerTopologyListener(this);
@@ -180,9 +273,128 @@ public class PathCalcRuntimeModule implements IFloodlightModule, IPathCalcRuntim
         restApi.addRestletRoutable(new IntentWebRoutable());
     }
 
-    // ================================================================================
+    // ======================================================================
     // IPathCalcRuntimeService implementations
-    // ================================================================================
+    // ======================================================================
+
+    /**
+     * Add Application Intents.
+     *
+     * @param appId the Application ID to use.
+     * @param appIntents the Application Intents to add.
+     * @return true on success, otherwise false.
+     */
+    @Override
+    public boolean addApplicationIntents(
+                        final String appId,
+                        Collection<ApplicationIntent> appIntents) {
+        //
+        // Process all intents one-by-one
+        //
+        // TODO: The Intent Type should be enum instead of a string,
+        // and we should use a switch statement below to process the
+        // different type of intents.
+        //
+        IntentOperationList intentOperations = new IntentOperationList();
+        for (ApplicationIntent appIntent : appIntents) {
+            String appIntentId = appId + ":" + appIntent.intentId();
+
+            IntentOperation.Operator operator = IntentOperation.Operator.ADD;
+            Dpid srcSwitchDpid = new Dpid(appIntent.srcSwitchDpid());
+            Dpid dstSwitchDpid = new Dpid(appIntent.dstSwitchDpid());
+
+            if (appIntent.intentType().equals("SHORTEST_PATH")) {
+                //
+                // Process Shortest-Path Intent
+                //
+                ShortestPathIntent spi =
+                    new ShortestPathIntent(appIntentId,
+                                           srcSwitchDpid.value(),
+                                           appIntent.srcSwitchPort(),
+                                           MACAddress.valueOf(appIntent.matchSrcMac()).toLong(),
+                                           dstSwitchDpid.value(),
+                                           appIntent.dstSwitchPort(),
+                                           MACAddress.valueOf(appIntent.matchDstMac()).toLong());
+                spi.setPathFrozen(appIntent.isStaticPath());
+                intentOperations.add(operator, spi);
+            } else if (appIntent.intentType().equals("CONSTRAINED_SHORTEST_PATH")) {
+                //
+                // Process Constrained Shortest-Path Intent
+                //
+                ConstrainedShortestPathIntent cspi =
+                    new ConstrainedShortestPathIntent(appIntentId,
+                                                      srcSwitchDpid.value(),
+                                                      appIntent.srcSwitchPort(),
+                                                      MACAddress.valueOf(appIntent.matchSrcMac()).toLong(),
+                                                      dstSwitchDpid.value(),
+                                                      appIntent.dstSwitchPort(),
+                                                      MACAddress.valueOf(appIntent.matchDstMac()).toLong(),
+                                                      appIntent.bandwidth());
+                cspi.setPathFrozen(appIntent.isStaticPath());
+                intentOperations.add(operator, cspi);
+            } else {
+                log.error("Unknown Application Intent Type: {}",
+                          appIntent.intentType());
+                return false;
+            }
+            removedApplicationIntentIds.remove(appIntentId);
+        }
+        // Apply the Intent Operations
+        executeIntentOperations(intentOperations);
+        return true;
+    }
+
+    /**
+     * Remove Application Intents.
+     *
+     * @param appId the Application ID to use.
+     * @param intentIds the Application Intent IDs to remove.
+     * @return true on success, otherwise false.
+     */
+    @Override
+    public boolean removeApplicationIntents(final String appId,
+                                            Collection<String> intentIds) {
+        IntentMap intentMap = getHighLevelIntents();
+
+        //
+        // Process all intents one-by-one
+        //
+        IntentOperationList operations = new IntentOperationList();
+        for (String intentId : intentIds) {
+            String appIntentId = appId + ":" + intentId;
+            Intent intent = intentMap.getIntent(appIntentId);
+            if (intent != null) {
+                operations.add(IntentOperation.Operator.REMOVE, intent);
+                removedApplicationIntentIds.add(appIntentId);
+            }
+        }
+        executeIntentOperations(operations);
+
+        return true;
+    }
+
+    /**
+     * Remove all Application Intents.
+     *
+     * @param appId the Application ID to use.
+     * @return true on success, otherwise false.
+     */
+    @Override
+    public boolean removeAllApplicationIntents(final String appId) {
+        IntentMap intentMap = getHighLevelIntents();
+
+        //
+        // Remove all intents
+        //
+        IntentOperationList operations = new IntentOperationList();
+        for (Intent intent : intentMap.getAllIntents()) {
+            operations.add(IntentOperation.Operator.REMOVE, intent);
+            removedApplicationIntentIds.add(intent.getId());
+        }
+        executeIntentOperations(operations);
+
+        return true;
+    }
 
     @Override
     public IntentOperationList executeIntentOperations(IntentOperationList list) {

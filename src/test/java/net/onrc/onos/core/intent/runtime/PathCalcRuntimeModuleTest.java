@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.Collection;
@@ -78,9 +79,7 @@ public class PathCalcRuntimeModuleTest {
 
         @Override
         public boolean matchesSafely(Collection<Intent> intents) {
-            assertThat(intents,
-                    hasItem(Matchers.<Intent>hasProperty("id", equalTo(id))));
-            return true;
+            return hasItem(Matchers.<Intent>hasProperty("id", equalTo(id))).matches(intents);
         }
 
         @Override
@@ -544,8 +543,8 @@ public class PathCalcRuntimeModuleTest {
         assertThat(processedPathIntents, notNullValue());
 
         //  Check that the low level intent 1 was correctly processed
-        assertThat(reroutedPathIntents,
-                hasIntentWithIdAndState("1___0", IntentState.DEL_ACK));
+        assertThat(reroutedPathIntents.getAllIntents(),
+                   not(hasIntentWithId("1___0")));
         assertThat(reroutedPathIntents,
                 hasIntentWithIdAndState("1___1", IntentState.INST_ACK));
 
