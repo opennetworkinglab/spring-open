@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentMap;
@@ -182,7 +181,7 @@ public class PathCalcRuntimeModuleTest {
      * high level intents contain a proper error entry for the bad path.
      */
     @Test
-    public void testInvalidSwitchName() throws FloodlightModuleException {
+    public void testInvalidSwitchName() {
         final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";
 
         // create shortest path intents
@@ -242,8 +241,7 @@ public class PathCalcRuntimeModuleTest {
      * entry for the deleted path.
      */
     @Test
-    public void testIntentRemoval() throws FloodlightModuleException {
-
+    public void testIntentRemoval() {
         // create shortest path intents
         final IntentOperationList opList = new IntentOperationList();
         opList.add(Operator.ADD,
@@ -339,15 +337,12 @@ public class PathCalcRuntimeModuleTest {
      * entry for the deleted link.
      */
     @Test
-    public void testIntentReroute() throws FloodlightModuleException {
-
+    public void testIntentReroute() {
         // create shortest path intents
         final IntentOperationList opList = new IntentOperationList();
-        final ShortestPathIntent pathIntent1 =
+        opList.add(Operator.ADD,
                 new ShortestPathIntent("1", 1L, 12L, LOCAL_PORT, 2L, 21L,
-                        LOCAL_PORT);
-
-        opList.add(Operator.ADD, pathIntent1);
+                        LOCAL_PORT));
         opList.add(Operator.ADD,
                 new ShortestPathIntent("2", 1L, 14L, LOCAL_PORT, 4L, 41L,
                         LOCAL_PORT));
@@ -547,6 +542,273 @@ public class PathCalcRuntimeModuleTest {
                    not(hasIntentWithId("1___0")));
         assertThat(reroutedPathIntents,
                 hasIntentWithIdAndState("1___1", IntentState.INST_ACK));
+
+        //  Check that the low level intent 2 was not affected
+        assertThat(reroutedPathIntents,
+                hasIntentWithIdAndState("2___0", IntentState.INST_ACK));
+
+        //  Check that the low level intent 3 was not affected
+        assertThat(reroutedPathIntents,
+                hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
+    }
+
+    /**
+     * Test the result of executing a path calculation on an
+     * Intent Operation List and then forcing a reroute and
+     * an interrupt of a topology change event while the reroute
+     * is processed.
+     * <p/>
+     * A 3 path list is created, one of the links is removed, then
+     * the removed link is restored.
+     * The test checks that if the high level intent was marked
+     * as stale when a topology changed event was received while
+     * processing reroute then the stale high level intent is executed
+     * once again after completion of its reroute.
+     */
+    @Test
+    public void testIntentRerouteWithTopologyEventInterrupt() {
+
+        // create shortest path intents
+        final IntentOperationList opList = new IntentOperationList();
+        opList.add(Operator.ADD,
+                new ShortestPathIntent("1", 1L, 12L, LOCAL_PORT, 2L, 21L,
+                        LOCAL_PORT));
+        opList.add(Operator.ADD,
+                new ShortestPathIntent("2", 1L, 14L, LOCAL_PORT, 4L, 41L,
+                        LOCAL_PORT));
+        opList.add(Operator.ADD,
+                new ShortestPathIntent("3", 2L, 23L, LOCAL_PORT, 3L, 32L,
+                        LOCAL_PORT));
+
+        // compile high-level intent operations into low-level intent
+        // operations (calculate paths)
+        final IntentOperationList pathIntentOpList =
+                runtime.executeIntentOperations(opList);
+        assertThat(pathIntentOpList, notNullValue());
+
+        final IntentMap highLevelIntents = runtime.getHighLevelIntents();
+        assertThat(highLevelIntents, notNullValue());
+
+        final Collection<Intent> allIntents = highLevelIntents.getAllIntents();
+        assertThat(allIntents, notNullValue());
+
+        //  Should be one operation per path
+        assertThat(pathIntentOpList, hasSize(opList.size()));
+
+        //  Should be a high level intent for each operation
+        assertThat(allIntents, hasSize(opList.size()));
+
+        // Check that we got a high level intent for each operation
+        assertThat(allIntents, hasIntentWithId("3"));
+        assertThat(allIntents, hasIntentWithId("2"));
+        assertThat(allIntents, hasIntentWithId("1"));
+
+        //  Check that the high level intent 1 was correctly processed
+        assertThat(highLevelIntents,
+                hasIntentWithIdAndState("1", IntentState.INST_REQ));
+
+        //  Check that the high level intent 2 was correctly processed
+        assertThat(highLevelIntents,
+                hasIntentWithIdAndState("2", IntentState.INST_REQ));
+
+        //  Check that the high level intent 3 was correctly processed
+        assertThat(highLevelIntents,
+                hasIntentWithIdAndState("3", IntentState.INST_REQ));
+
+        final IntentMap pathIntents = runtime.getPathIntents();
+        assertThat(pathIntents, notNullValue());
+
+        final Collection<Intent> allPathIntents = pathIntents.getAllIntents();
+        assertThat(allPathIntents, notNullValue());
+
+        // Check that we got a low level intent for each operation
+        assertThat(allPathIntents, hasIntentWithId("3___0"));
+        assertThat(allPathIntents, hasIntentWithId("2___0"));
+        assertThat(allPathIntents, hasIntentWithId("1___0"));
+
+        //  Check that the low level intent 1 was correctly processed
+        assertThat(pathIntents,
+                hasIntentWithIdAndState("1___0", IntentState.INST_REQ));
+
+        //  Check that the low level intent 2 was correctly processed
+        assertThat(pathIntents,
+                hasIntentWithIdAndState("2___0", IntentState.INST_REQ));
+
+        //  Check that the low level intent 3 was correctly processed
+        assertThat(pathIntents,
+                hasIntentWithIdAndState("3___0", IntentState.INST_REQ));
+
+        // Receive notification from south-bound
+        IntentStateList isl = new IntentStateList();
+        isl.put("1___0", IntentState.INST_ACK);
+        isl.put("2___0", IntentState.INST_ACK);
+        isl.put("3___0", IntentState.INST_ACK);
+        isl.domainSwitchDpids.add(1L);
+        isl.domainSwitchDpids.add(2L);
+        isl.domainSwitchDpids.add(3L);
+        isl.domainSwitchDpids.add(4L);
+        runtime.entryUpdated(isl);
+
+        // Now check the results
+        final IntentMap processedHighLevelIntents = runtime.getHighLevelIntents();
+        assertThat(processedHighLevelIntents, notNullValue());
+
+        //  Check that the high level intent 1 was correctly processed
+        assertThat(processedHighLevelIntents,
+                hasIntentWithIdAndState("1", IntentState.INST_ACK));
+
+        //  Check that the high level intent 2 was correctly processed
+        assertThat(processedHighLevelIntents,
+                hasIntentWithIdAndState("2", IntentState.INST_ACK));
+
+        //  Check that the high level intent 3 was correctly processed
+        assertThat(processedHighLevelIntents,
+                hasIntentWithIdAndState("3", IntentState.INST_ACK));
+
+        final IntentMap processedPathIntents = runtime.getPathIntents();
+        assertThat(processedPathIntents, notNullValue());
+
+        //  Check that the low level intent 1 was correctly processed
+        assertThat(processedPathIntents,
+                hasIntentWithIdAndState("1___0", IntentState.INST_ACK));
+
+        //  Check that the low level intent 2 was correctly processed
+        assertThat(processedPathIntents,
+                hasIntentWithIdAndState("2___0", IntentState.INST_ACK));
+
+        //  Check that the low level intent 3 was correctly processed
+        assertThat(processedPathIntents,
+                hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
+
+
+        //  Remove one of the links and check results
+        final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
+        final List<PortEvent> emptyPortEvents = new LinkedList<>();
+        final List<DeviceEvent> emptyDeviceEvents = new LinkedList<>();
+        final List<LinkEvent> addedLinkEvents = new LinkedList<>();
+        final List<LinkEvent> removedLinkEvents = new LinkedList<>();
+
+        final MockTopology topology = mocks.getTopology();
+        topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
+        topology.removeLink(2L, 21L, 1L, 12L);
+        final LinkEvent linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
+        final LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
+        removedLinkEvents.add(linkEvent1);
+        removedLinkEvents.add(linkEvent2);
+        runtime.topologyEvents(
+                emptySwitchEvents,
+                emptySwitchEvents,
+                emptyPortEvents,
+                emptyPortEvents,
+                addedLinkEvents,
+                removedLinkEvents,
+                emptyDeviceEvents,
+                emptyDeviceEvents);
+
+        //  Check the high level intents.
+        final IntentMap highLevelIntentsAfterReroute = runtime.getHighLevelIntents();
+        assertThat(highLevelIntentsAfterReroute, notNullValue());
+
+        //  Check the states of the high level intents
+        //  Check that the high level intent 1 was correctly processed
+        assertThat(highLevelIntentsAfterReroute,
+                hasIntentWithIdAndState("1", IntentState.REROUTE_REQ));
+
+        //  Check that the high level intent 2 was not affected
+        assertThat(highLevelIntentsAfterReroute,
+                hasIntentWithIdAndState("2", IntentState.INST_ACK));
+
+        //  Check that the high level intent 3 was not affected
+        assertThat(highLevelIntentsAfterReroute,
+                hasIntentWithIdAndState("3", IntentState.INST_ACK));
+
+        final IntentMap pathIntentsAfterReroute = runtime.getPathIntents();
+        assertThat(pathIntentsAfterReroute, notNullValue());
+
+        //  Check that the low level intent 1 was correctly processed
+        assertThat(pathIntentsAfterReroute,
+                hasIntentWithIdAndState("1___0", IntentState.DEL_REQ));
+        assertThat(pathIntentsAfterReroute,
+                hasIntentWithIdAndState("1___1", IntentState.INST_REQ));
+
+        //  Check that the low level intent 2 was not affected
+        assertThat(pathIntentsAfterReroute,
+                hasIntentWithIdAndState("2___0", IntentState.INST_ACK));
+
+        //  Check that the low level intent 3 was not affected
+        assertThat(pathIntentsAfterReroute,
+                hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
+
+        // Interrupt by topology changed event while the reroute
+        removedLinkEvents.clear();
+        addedLinkEvents.clear();
+        topology.addBidirectionalLinks(1L, 12L, 2L, 21L); // Restoration of the failure
+        addedLinkEvents.add(linkEvent1);
+        addedLinkEvents.add(linkEvent2);
+        runtime.topologyEvents(
+                emptySwitchEvents,
+                emptySwitchEvents,
+                emptyPortEvents,
+                emptyPortEvents,
+                addedLinkEvents,
+                removedLinkEvents,
+                emptyDeviceEvents,
+                emptyDeviceEvents);
+
+        //  Check the high level intents.
+        final IntentMap highLevelIntentsAfterInterrupt = runtime.getHighLevelIntents();
+        assertThat(highLevelIntentsAfterInterrupt, notNullValue());
+
+        //  Check the states of the high level intents
+        //  Check that the high level intent 1 was not affected
+        assertThat(highLevelIntentsAfterInterrupt,
+                hasIntentWithIdAndState("1", IntentState.REROUTE_REQ));
+
+        final IntentMap pathIntentsAfterInterrupt = runtime.getPathIntents();
+        assertThat(pathIntentsAfterInterrupt, notNullValue());
+
+        //  Check that the low level intent 1 was not affected
+        assertThat(pathIntentsAfterInterrupt,
+                hasIntentWithIdAndState("1___0", IntentState.DEL_REQ));
+        assertThat(pathIntentsAfterInterrupt,
+                hasIntentWithIdAndState("1___1", IntentState.INST_REQ));
+
+        // Receive notification from south-bound
+        isl = new IntentStateList();
+        isl.put("1___0", IntentState.DEL_ACK);
+        isl.put("1___1", IntentState.INST_ACK);
+        isl.domainSwitchDpids.add(1L);
+        isl.domainSwitchDpids.add(2L);
+        isl.domainSwitchDpids.add(4L);
+        runtime.entryUpdated(isl);
+
+        // Now check the results
+        final IntentMap reroutedHighLevelIntents = runtime.getHighLevelIntents();
+        assertThat(reroutedHighLevelIntents, notNullValue());
+
+        // Check that the high level intent 1 was correctly processed
+        // It should be rerouted once again
+        assertThat(reroutedHighLevelIntents,
+                hasIntentWithIdAndState("1", IntentState.REROUTE_REQ));
+
+        //  Check that the high level intent 2 was not affected
+        assertThat(reroutedHighLevelIntents,
+                hasIntentWithIdAndState("2", IntentState.INST_ACK));
+
+        //  Check that the high level intent 3 was not affected
+        assertThat(reroutedHighLevelIntents,
+                hasIntentWithIdAndState("3", IntentState.INST_ACK));
+
+        final IntentMap reroutedPathIntents = runtime.getPathIntents();
+        assertThat(processedPathIntents, notNullValue());
+
+        //  Check that the low level intent 1 was correctly processed
+        assertThat(reroutedPathIntents.getAllIntents(),
+                   not(hasIntentWithId("1___0")));
+        assertThat(reroutedPathIntents,
+                hasIntentWithIdAndState("1___1", IntentState.DEL_REQ));
+        assertThat(reroutedPathIntents,
+                hasIntentWithIdAndState("1___2", IntentState.INST_REQ));
 
         //  Check that the low level intent 2 was not affected
         assertThat(reroutedPathIntents,
