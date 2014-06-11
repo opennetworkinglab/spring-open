@@ -125,20 +125,20 @@ public class TestRestTopologyGet extends TestRestTopology {
     }
 
     /**
-     * Check that the JSON array returned for the devices element matches
+     * Check that the JSON array returned for the hosts element matches
      * the data in the mocked topology.
      *
-     * @param devices JSON array of switches
+     * @param hosts JSON array of hosts
      */
-    private void checkDevices(final JSONArray devices) {
-        // devices array should be empty
-        assertThat(devices.length(), is(equalTo(0)));
+    private void checkHosts(final JSONArray hosts) {
+        // hosts array should be empty
+        assertThat(hosts.length(), is(equalTo(0)));
     }
 
     /**
      * Test that the GET of all Topology REST call returns the proper result.
      * The call to get all Topology should return 3 items (switches, links,
-     * and devices), an HTTP status of OK, and the proper topology data.
+     * and hosts), an HTTP status of OK, and the proper topology data.
      */
     @Test
     public void testFetchOfAllTopology() throws Exception {
@@ -159,9 +159,9 @@ public class TestRestTopologyGet extends TestRestTopology {
         final JSONArray links = topology.getJSONArray("links");
         checkLinks(links);
 
-        // Check the devices array
-        final JSONArray devices = topology.getJSONArray("devices");
-        checkDevices(devices);
+        // Check the hosts array
+        final JSONArray hosts = topology.getJSONArray("hosts");
+        checkHosts(hosts);
     }
 
     /**
@@ -195,17 +195,17 @@ public class TestRestTopologyGet extends TestRestTopology {
     }
 
     /**
-     * Test that the GET of all devices REST call returns the proper result.
-     * The call to get all devices should return no devices.
+     * Test that the GET of all hosts REST call returns the proper result.
+     * The call to get all hosts should return no hosts.
      */
     @Test
-    public void testFetchOfAllDevices() throws Exception {
-        final ClientResource client = new ClientResource(getBaseRestTopologyUrl() + "/switches");
-        final JSONArray devices = getJSONArray(client);
+    public void testFetchOfAllHosts() throws Exception {
+        final ClientResource client = new ClientResource(getBaseRestTopologyUrl() + "/hosts");
+        final JSONArray hosts = getJSONArray(client);
 
         // HTTP status should be OK
         assertThat(client, hasStatusOf(Status.SUCCESS_OK));
 
-        checkSwitches(devices);
+        checkHosts(hosts);
     }
 }

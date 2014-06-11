@@ -55,8 +55,8 @@ public class TopologySerializer extends SerializerBase<Topology> {
         }
         jsonGenerator.writeEndArray();
 
-        // Output the devices array
-        jsonGenerator.writeArrayFieldStart("devices");
+        // Output the hosts array
+        jsonGenerator.writeArrayFieldStart("hosts");
         for (final Device device : topology.getDevices()) {
             jsonGenerator.writeObject(device);
         }

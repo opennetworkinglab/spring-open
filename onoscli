@@ -162,9 +162,9 @@ class OnosCli(Cmd):
             #
             Command("show", "Show command"),
             #
-            Command("show device", "Show devices"),
+            Command("show host", "Show hosts"),
             #
-            Command("show device all", "Show all devices", self.show_device_all),
+            Command("show host all", "Show all hosts", self.show_host_all),
             #
             Command("show intent", "Show intents"),
             #
@@ -300,10 +300,10 @@ class OnosCli(Cmd):
         # if len(result) != 0:
         #     self.print_json_result(result)
 
-    def show_device_all(self, args):
-        "CLI command callback: show device all"
+    def show_host_all(self, args):
+        "CLI command callback: show host all"
 
-        url = "http://%s:%s/wm/onos/topology/devices" % (self.onos_ip, self.onos_port)
+        url = "http://%s:%s/wm/onos/topology/hosts" % (self.onos_ip, self.onos_port)
         result = get_json(url)
         self.print_json_result(result)
 
