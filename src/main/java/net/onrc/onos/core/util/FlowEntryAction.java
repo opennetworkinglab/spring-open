@@ -177,8 +177,7 @@ public class FlowEntryAction {
                 String[] tokens = decode.split("port=");
                 if (tokens.length > 1 && tokens[1] != null) {
                     try {
-                        Short valueShort = Short.valueOf(tokens[1]);
-                        port = new PortNumber(valueShort);
+                        port = new PortNumber(tokens[1]);
                     } catch (NumberFormatException e) {
                         throw new IllegalArgumentException("Invalid action string");
                     }

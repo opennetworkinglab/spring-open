@@ -48,7 +48,7 @@ public class SwitchPortTest {
      */
     @Test
     public void testToString() {
-        assertEquals("00:00:00:00:00:00:00:01/-1", SWP2.toString());
+        assertEquals("00:00:00:00:00:00:00:01/65535", SWP2.toString());
     }
 
     /**

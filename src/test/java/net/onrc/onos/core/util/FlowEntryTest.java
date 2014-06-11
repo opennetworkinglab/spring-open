@@ -278,7 +278,7 @@ public class FlowEntryTest {
                 + " flowEntryActions=["
                 + "[type=ACTION_OUTPUT action=[port=9 maxLen=0]];"
                 // PORT_CONTROLLER((short) 0xfffd) = 65533 (-3)
-                + "[type=ACTION_OUTPUT action=[port=-3 maxLen=0]];"
+                + "[type=ACTION_OUTPUT action=[port=65533 maxLen=0]];"
                 + "[type=ACTION_SET_VLAN_VID action=[vlanId=3]];"
                 + "[type=ACTION_SET_VLAN_PCP action=[vlanPriority=4]];"
                 + "[type=ACTION_STRIP_VLAN action=[stripVlan=true]];"

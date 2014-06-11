@@ -143,8 +143,7 @@ public class LinkTupleTest {
      */
     @Test
     public void testToString() {
-        // FIXME when we start handling unsigned integer properly
-        assertEquals("(00:00:00:00:00:00:00:01/-1=>00:00:00:00:00:00:00:02/-2)",
+        assertEquals("(00:00:00:00:00:00:00:01/65535=>00:00:00:00:00:00:00:02/65534)",
                      L2.toString());
     }
 

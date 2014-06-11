@@ -42,7 +42,7 @@ public class SwitchPortSerializer extends SerializerBase<SwitchPort> {
         // (e.g., in class PortNumber itself).
         //
         jsonGenerator.writeNumberField("portNumber",
-                                       (0xffff & switchPort.getPortNumber().value()));
+                                       switchPort.getPortNumber().value());
 
         jsonGenerator.writeEndObject();
     }

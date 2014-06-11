@@ -146,8 +146,8 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
 
     public static ByteBuffer getLinkID(Dpid srcDpid, PortNumber srcPortNo,
                                        Dpid dstDpid, PortNumber dstPortNo) {
-        return getLinkID(srcDpid.value(), (long) srcPortNo.value(),
-                         dstDpid.value(), (long) dstPortNo.value());
+        return getLinkID(srcDpid.value(), srcPortNo.value(),
+                         dstDpid.value(), dstPortNo.value());
     }
 
     public static ByteBuffer getLinkID(Long srcDpid, Long srcPortNo,

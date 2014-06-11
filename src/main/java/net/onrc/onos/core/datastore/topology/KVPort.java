@@ -182,7 +182,7 @@ public class KVPort extends KVObject {
      * @param namespace namespace to create this object
      */
     public KVPort(final Dpid dpid, final PortNumber number, final String namespace) {
-        this(dpid.value(), (long) number.value(), namespace);
+        this(dpid.value(), number.value(), namespace);
     }
 
     /**

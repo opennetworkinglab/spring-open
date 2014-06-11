@@ -374,7 +374,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             ARP arp = (ARP) eth.getPayload();
             learnArp(arp);
             if (arp.getOpCode() == ARP.OP_REQUEST) {
-                handleArpRequest(sw.getDpid().value(), inPort.getNumber().value(),
+                handleArpRequest(sw.getDpid().value(), inPort.getNumber().shortValue(),
                         arp, eth);
             } else if (arp.getOpCode() == ARP.OP_REPLY) {
                 // For replies we simply send a notification via Hazelcast

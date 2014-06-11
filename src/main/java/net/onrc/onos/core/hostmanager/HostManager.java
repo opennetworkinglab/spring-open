@@ -283,7 +283,7 @@ public class HostManager implements IFloodlightModule,
                 deleteHost = new Host(host.getMacAddress(),
                         null,
                         switchPort.getDpid().value(),
-                        (long) switchPort.getNumber().value(),
+                        switchPort.getNumber().value(),
                         new Date(host.getLastSeenTime()));
                 break;
             }

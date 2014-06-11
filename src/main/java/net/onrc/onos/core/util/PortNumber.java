@@ -2,6 +2,8 @@ package net.onrc.onos.core.util;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.google.common.primitives.UnsignedInts;
+
 /**
  * Immutable class representing a port number.
  * <p/>
@@ -9,7 +11,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public final class PortNumber {
 
-    private final short value;
+    private final int value;
 
     /**
      * Default constructor.
@@ -24,7 +26,7 @@ public final class PortNumber {
      * @param other the object to copy from.
      */
     public PortNumber(PortNumber other) {
-        this.value = other.value();
+        this.value = other.value;
     }
 
     /**
@@ -33,27 +35,78 @@ public final class PortNumber {
      * @param value the value to use.
      */
     public PortNumber(short value) {
-        this.value = value;
+        this.value = (int) shortToUnsignedLong(value);
     }
 
     /**
-     * Get the value of the port.
+     * Constructor from an int.
+     *
+     * @param value the value to use. (Value will not be validated in any way.)
+     */
+    PortNumber(int value) {
+        this.value = value;
+    }
+
+    // TODO We may want a factory method version
+    //      which does the range validation of parsed value.
+    /**
+     * Constructor from decimal string.
+     *
+     * @param decStr decimal string representation of a port number
+     */
+    public PortNumber(String decStr) {
+        this(decStr, 10);
+    }
+
+    /**
+     * Constructor from string.
+     *
+     * @param s string representation of a port number
+     * @param radix the radix to use while parsing {@code s}
+     */
+    public PortNumber(String s, int radix) {
+        this(UnsignedInts.parseUnsignedInt(s, radix));
+    }
+
+    /**
+     * Convert unsigned short to unsigned long.
+     *
+     * @param portno unsigned integer representing port number
+     * @return port number as unsigned long
+     */
+    public static long shortToUnsignedLong(short portno) {
+        return UnsignedInts.toLong(0xffff & portno);
+    }
+
+    /**
+     * Gets the port number as short.
+     * <p/>
+     * Note: User of this method needs to be careful, handling unsigned value.
+     * @return number as short
+     */
+    public short shortValue() {
+        return (short) value;
+    }
+
+    /**
+     * Gets the value of the port as unsigned integer.
      *
      * @return the value of the port.
      */
     @JsonProperty("value")
-    public short value() {
+    public long value() {
+        // TODO Will require masking when we start storing 32bit port number.
         return value;
     }
 
     /**
-     * Convert the port value to a string.
+     * Convert the port value as unsigned integer to a string.
      *
      * @return the port value as a string.
      */
     @Override
     public String toString() {
-        return Short.toString(this.value);
+        return UnsignedInts.toString(value);
     }
 
     @Override

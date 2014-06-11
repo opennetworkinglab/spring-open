@@ -667,7 +667,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         // Match the Incoming Port
         PortNumber matchInPort = flowEntryMatch.inPort();
         if (matchInPort != null) {
-            match.setInputPort(matchInPort.value());
+            match.setInputPort(matchInPort.shortValue());
             match.setWildcards(match.getWildcards() & ~OFMatch.OFPFW_IN_PORT);
         }
 
@@ -792,10 +792,10 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         ActionEnqueue actionEnqueue = action.actionEnqueue();
 
         if (actionOutput != null) {
-            actionOutputPort.portNumber = actionOutput.port().value();
+            actionOutputPort.portNumber = actionOutput.port().shortValue();
             // XXX: The max length is hard-coded for now
             OFActionOutput ofa = new OFActionOutput(actionOutput.port()
-                                                    .value(), (short) 0xffff);
+                                                    .shortValue(), (short) 0xffff);
             openFlowActions.add(ofa);
         }
 
@@ -862,7 +862,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
 
         if (actionEnqueue != null) {
             OFActionEnqueue ofa =
-                new OFActionEnqueue(actionEnqueue.port().value(), actionEnqueue.queueId());
+                new OFActionEnqueue(actionEnqueue.port().shortValue(), actionEnqueue.queueId());
             openFlowActions.add(ofa);
         }
     }

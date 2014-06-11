@@ -331,7 +331,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         //This code assumes the host has only one port. It should be problem.
         Port destinationPort = ports.next();
-        short destinationPortNum = destinationPort.getNumber().value();
+        short destinationPortNum = destinationPort.getNumber().shortValue();
         Switch destinationSw = destinationPort.getSwitch();
         long destinationDpid = destinationSw.getDpid().value();
 
@@ -525,7 +525,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             outPort = (short) spfIntent.getDstPortNumber();
             log.debug("Path is empty. Maybe hosts on the same switch. outPort {}", outPort);
         } else {
-            outPort = graphPath.get(0).getSrc().getPortNumber().value();
+            outPort = graphPath.get(0).getSrc().getPortNumber().shortValue();
             log.debug("path{}, outPort {}", graphPath, outPort);
         }
 

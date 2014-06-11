@@ -30,13 +30,8 @@ public class PortSerializer extends SerializerBase<Port> {
         jsonGenerator.writeStringField(TopologyElement.TYPE, port.getType());
         jsonGenerator.writeStringField("state", "ACTIVE");
         jsonGenerator.writeStringField("dpid", port.getDpid().toString());
-        //
-        // FIXME: The solution below to preresent the "short" port number
-        // as an unsigned value is a hack. The fix should be elsewhere
-        // (e.g., in class PortNumber itself).
-        //
         jsonGenerator.writeNumberField("portNumber",
-                                       (0xffff & port.getNumber().value()));
+                                       port.getNumber().value());
         jsonGenerator.writeStringField("desc", port.getDescription());
         jsonGenerator.writeObjectFieldStart("stringAttributes");
         for (Entry<String, String> entry : port.getAllStringAttributes().entrySet()) {

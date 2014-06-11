@@ -134,7 +134,7 @@ public class PortEvent extends TopologyElement<PortEvent> {
     public static ByteBuffer getPortID(Dpid dpid, PortNumber number) {
         Validate.notNull(dpid);
         Validate.notNull(number);
-        return getPortID(dpid.value(), (long) number.value());
+        return getPortID(dpid.value(), number.value());
     }
 
     public static ByteBuffer getPortID(Long dpid, Long number) {

@@ -69,7 +69,7 @@ public class KVLink extends KVObject {
          */
         public SwitchPort(final Dpid srcDpid, final PortNumber srcPortNo) {
             this.dpid = srcDpid.value();
-            this.number = (long) srcPortNo.value();
+            this.number = srcPortNo.value();
         }
 
         /**
