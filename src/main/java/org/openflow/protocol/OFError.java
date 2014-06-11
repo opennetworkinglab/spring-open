@@ -133,7 +133,7 @@ public class OFError extends OFMessage implements OFMessageFactoryAware {
     }
 
     /**
-     * @param errorCode
+     * @param code
      *            the errorCode to set
      */
     public void setErrorCode(OFHelloFailedCode code) {

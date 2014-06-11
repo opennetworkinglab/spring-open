@@ -79,7 +79,6 @@ public class OnosDevice implements Serializable {
      *
      * @param macAddress
      * @param vlan
-     * @param ipv4Address
      * @param switchDPID
      * @param switchPort
      * @param lastSeenTimestamp

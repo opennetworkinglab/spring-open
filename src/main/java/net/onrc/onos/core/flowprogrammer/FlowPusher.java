@@ -975,7 +975,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
      *
      * @param sw
      * @param msg
-     * @param flowEntryId
+     * @param priority
      * @return
      */
     protected boolean addMessageImpl(IOFSwitch sw, OFMessage msg, MsgPriority priority) {

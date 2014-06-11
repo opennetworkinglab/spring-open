@@ -102,8 +102,8 @@ public class SingletonTask {
      * is used to manage the state of the task execution and can be shared
      * by more than one instance of the runnable.
      *
-     * @param context
-     * @param Task
+     * @param ses
+     * @param task
      */
     public SingletonTask(ScheduledExecutorService ses,
                          Runnable task) {

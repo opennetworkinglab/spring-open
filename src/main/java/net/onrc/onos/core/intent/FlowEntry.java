@@ -58,7 +58,7 @@ public class FlowEntry {
     /***
      * Sets hard timeout value in seconds.
      *
-     * @param the hard timeout value in seconds
+     * @param hardTimeout hard timeout value in seconds
      */
     public void setHardTimeout(int hardTimeout) {
         this.hardTimeout = hardTimeout;
@@ -67,7 +67,7 @@ public class FlowEntry {
     /***
      * Sets idle timeout value in seconds.
      *
-     * @param the idle timeout value in seconds
+     * @param idleTimeout idle timeout value in seconds
      */
     public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
@@ -85,7 +85,7 @@ public class FlowEntry {
     /***
      * Sets flowEntryId.
      *
-     * @param the flowEntryId to be set in cookie
+     * @param flowEntryId flowEntryId to be set in cookie
      */
     public void setFlowEntryId(long flowEntryId) {
         this.flowEntryId = flowEntryId;

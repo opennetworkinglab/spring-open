@@ -334,7 +334,7 @@ public class FlowPath implements Comparable<FlowPath> {
      * Compares this object with the specified object for order.
      * NOTE: The test is based on the Flow ID.
      *
-     * @param o the object to be compared.
+     * @param f the object to be compared.
      * @return a negative integer, zero, or a positive integer as this object
      * is less than, equal to, or greater than the specified object.
      */

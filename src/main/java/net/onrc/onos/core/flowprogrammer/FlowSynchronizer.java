@@ -364,7 +364,7 @@ public class FlowSynchronizer implements IFlowSyncService {
          * Returns true of the object is another Flow Entry ID with
          * the same value; otherwise, returns false.
          *
-         * @param Object to compare
+         * @param obj to compare
          * @return true if the object has the same Flow Entry ID.
          */
         @Override

@@ -79,7 +79,7 @@ public final class FlowEntryId {
      * Returns true of the object is another Flow Entry ID with
      * the same value; otherwise, returns false.
      *
-     * @param Object to compare
+     * @param obj to compare
      */
     @Override
     public boolean equals(Object obj) {
