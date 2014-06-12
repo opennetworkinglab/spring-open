@@ -22,21 +22,31 @@ import net.onrc.onos.core.topology.LinkEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-//import net.onrc.onos.core.topology.Topology;
 
 /**
- * @author Brian O'Connor <bocon@onlab.us>
+ * The PlanCalcRuntime class receives a list of intents and operations (IntentOperationList),
+ * and does the following:
+ * <ul>
+ * <li> Convert the Intent into FlowEntries.
+ * <li> Determine the dependency between FlowEntries.
+ * <li> Create sets of FlowEntries to be installed by the OpenFlow protocol.
+ * </ul>
  */
 
 public class PlanCalcRuntime {
 
-    //    Topology graph;
     private static final Logger log = LoggerFactory.getLogger(PlanCalcRuntime.class);
 
-    public PlanCalcRuntime(/*Topology graph*/) {
-//      this.graph = graph;
-    }
-
+    /**
+     * The method produces a plan from a list of IntentOperations.
+     * <p>
+     * In this context, a plan is a list of sets of flow entries. Flow entries within
+     * a set can be installed in parallel. Each set of flow entries is dependent on
+     * all previous sets in the list.
+     *
+     * @param intentOps list of IntentOperations (Intent + Operation) for plan computation
+     * @return plan (list of set of flow entries)
+     */
     public List<Set<FlowEntry>> computePlan(IntentOperationList intentOps) {
         long start = System.nanoTime();
         List<Collection<FlowEntry>> flowEntries = computeFlowEntries(intentOps);
@@ -48,6 +58,14 @@ public class PlanCalcRuntime {
         return plan;
     }
 
+    /**
+     * Converts PathIntents to FlowEntries so they can be installed.
+     * <p>
+     * Note: This method only supports ShortestPathIntents at the moment.
+     *
+     * @param intentOps list of IntentOperations
+     * @return a list of FlowEntry objects for each Intent in intentOps
+     */
     private List<Collection<FlowEntry>> computeFlowEntries(IntentOperationList intentOps) {
         List<Collection<FlowEntry>> flowEntries = new LinkedList<>();
         for (IntentOperation i : intentOps) {
@@ -66,31 +84,24 @@ public class PlanCalcRuntime {
             if (parent instanceof ShortestPathIntent) {
                 ShortestPathIntent pathIntent = (ShortestPathIntent) parent;
                 srcPort = pathIntent.getSrcPortNumber();
-//              Switch dstSwitch = graph.getSwitch(pathIntent.getDstSwitchDpid());
 
-                // srcMacAddress
                 if (pathIntent.getSrcMac() != ShortestPathIntent.EMPTYMACADDRESS) {
                     srcMac = MACAddress.valueOf(pathIntent.getSrcMac());
                 } else {
                     srcMac = null;
                 }
 
-                // dstMacAddress
                 if (pathIntent.getDstMac() != ShortestPathIntent.EMPTYMACADDRESS) {
                     dstMac = MACAddress.valueOf(pathIntent.getDstMac());
                 } else {
                     dstMac = null;
                 }
 
-                // srcIp
                 srcIP = pathIntent.getSrcIp();
-                // dstIp
                 dstIP = pathIntent.getDstIp();
 
-                // Switch dstSwitch = graph.getSwitch(pathIntent.getDstSwitchDpid());
                 lastDstSw = pathIntent.getDstSwitchDpid();
                 firstSrcSw = pathIntent.getSrcSwitchDpid();
-//              lastDstPort = dstSwitch.getPort(pathIntent.getDstPortNumber());
                 lastDstPort = pathIntent.getDstPortNumber();
                 idleTimeout = pathIntent.getIdleTimeout();
                 hardTimeout = pathIntent.getHardTimeout();
@@ -107,13 +118,7 @@ public class PlanCalcRuntime {
             }
             List<FlowEntry> entries = new ArrayList<>();
             for (LinkEvent linkEvent : intent.getPath()) {
-//              Link link = graph.getLink(linkEvent.getSrc().getDpid(),
-//                        linkEvent.getSrc().getNumber(),
-//                        linkEvent.getDst().getDpid(),
-//                        linkEvent.getDst().getNumber());
-//              Switch sw = link.getSrcSwitch();
                 long sw = linkEvent.getSrc().getDpid();
-//              dstPort = link.getSrcPort();
                 dstPort = linkEvent.getSrc().getNumber();
                 FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac,
                                              srcIP, dstIP, i.operator);
@@ -129,11 +134,9 @@ public class PlanCalcRuntime {
                     fe.setFlowEntryId(cookieId);
                 }
                 entries.add(fe);
-                //              srcPort = link.getDstPort();
                 srcPort = linkEvent.getDst().getNumber();
             }
             if (lastDstSw >= 0 && lastDstPort >= 0) {
-                //Switch sw = lastDstPort.getSwitch();
                 long sw = lastDstSw;
                 dstPort = lastDstPort;
                 FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac,
@@ -151,14 +154,22 @@ public class PlanCalcRuntime {
                 }
                 entries.add(fe);
             }
-            // install flow entries in reverse order
+            // reverse order of flow entries so they are installed backwards
             Collections.reverse(entries);
             flowEntries.add(entries);
         }
         return flowEntries;
     }
 
-    // This method is for a testing purpose. Please leave it right now.
+    /**
+     * TODO
+     *
+     * Note: This method is for a testing purpose. Please leave it right now.
+     *
+     * @param flowEntries
+     * @return
+     */
+    @SuppressWarnings("unused")
     private List<Set<FlowEntry>> simpleBuildPhases(List<Collection<FlowEntry>> flowEntries) {
         List<Set<FlowEntry>> plan = new ArrayList<>();
         Set<FlowEntry> phase = new HashSet<>();
@@ -170,9 +181,19 @@ public class PlanCalcRuntime {
         return plan;
     }
 
+    /**
+     * Merges the lists generated by computeFlowEntries() into install phases.
+     * <p>
+     * This function will also remove duplicate entries.
+     *
+     * @param flowEntries list of lists of flowEntries
+     * @return a list of sets of FlowEntries to be installed
+     */
     private List<Set<FlowEntry>> buildPhases(List<Collection<FlowEntry>> flowEntries) {
         Map<FlowEntry, Integer> map = new HashMap<>();
         List<Set<FlowEntry>> plan = new ArrayList<>();
+        // merge equal FlowEntries
+        //TODO: explore ways to merge FlowEntries that contain the same match condition
         for (Collection<FlowEntry> c : flowEntries) {
             for (FlowEntry e : c) {
                 Integer i = map.get(e);
@@ -190,7 +211,6 @@ public class PlanCalcRuntime {
                         break;
                 }
                 map.put(e, i);
-                // System.out.println(e + " " + e.getOperator());
             }
         }
 
