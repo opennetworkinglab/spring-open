@@ -22,11 +22,13 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
@@ -41,8 +43,11 @@ import net.onrc.onos.core.linkdiscovery.Link;
 import net.onrc.onos.core.linkdiscovery.LinkInfo;
 import net.onrc.onos.core.linkdiscovery.NodePortTuple;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
+import org.openflow.protocol.OFMessage;
+import org.openflow.protocol.OFPhysicalPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -378,5 +383,42 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         topology.addOrUpdateLink(lt, info);
         assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
         assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
+    }
+
+    /**
+     * This test case verifies that LinkDiscoveryManager.sendDiscoveryMessage()
+     * performs "write" operation on the specified IOFSwitch object 
+     * with a LLDP packet
+     * 
+     * @throws IOException
+     */
+    @Test
+    public void testSendDiscoveryMessage() throws IOException{
+        LinkDiscoveryManager topology = getTopology();
+
+        // Mock up our expected behavior
+        IOFSwitch swTest = createMockSwitch(3L);
+        getMockFloodlightProvider().getSwitches().put(3L, swTest);
+        
+        short portNum = 1;
+        OFPhysicalPort ofpPort = new OFPhysicalPort();
+        ofpPort.setPortNumber(portNum);
+        
+        /* sendDiscoverMessage() should perform the following actions on 
+         * IOFSwitch object
+         * 	- getPort() with argument as "1"
+         * 	- write() with OFPacketOut
+         * 	- flush()
+         */
+        expect(swTest.getPort(portNum)).andReturn(ofpPort).atLeastOnce();
+        swTest.write(EasyMock.anyObject(OFMessage.class), EasyMock.anyObject(FloodlightContext.class));
+        EasyMock.expectLastCall().times(1);
+        swTest.flush();
+        EasyMock.expectLastCall().once();
+        replay(swTest);
+        
+        topology.sendDiscoveryMessage(3L, portNum, true, false);
+        
+        verify(swTest);
     }
 }
