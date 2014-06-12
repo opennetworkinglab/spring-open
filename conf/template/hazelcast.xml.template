@@ -9,6 +9,10 @@
       try to follow the schema defined in the xsd when possible.
   -->
 
+  <group>
+    <name>__HC_CLUSTER__</name>
+  </group>
+
   <properties>
     <property name="hazelcast.logging.type">slf4j</property>
     <property name="hazelcast.version.check.enabled">false</property>

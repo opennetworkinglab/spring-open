@@ -37,6 +37,7 @@ if [ ! -f ${ONOS_CONF} ]; then
 fi
 
 ### Variables read from ONOS config file ###
+ONOS_CLUSTER_NAME=$(read-conf ${ONOS_CONF}  onos.cluster.name             "onos")
 ONOS_HOST_NAME=$(read-conf ${ONOS_CONF}     host.name                     `hostname`)
 ONOS_HOST_IP=$(read-conf ${ONOS_CONF}       host.ip)
 ONOS_HOST_ROLE=$(read-conf ${ONOS_CONF}     host.role)
@@ -355,6 +356,8 @@ function create-hazelcast-conf {
       fi
     elif [[ $line =~ __HC_PORT__ ]]; then
       echo $line | sed -e "s|__HC_PORT__|${HC_HOST_PORT}|"
+    elif [[ $line =~ __HC_CLUSTER__ ]]; then
+      echo $line | sed -e "s|__HC_CLUSTER__|${ONOS_CLUSTER_NAME}|"
     else
       echo "${line}"
     fi
@@ -370,7 +373,7 @@ function create-ramcloud-conf {
 
   local temp_rc=`begin-conf-creation ${RAMCLOUD_CONF}`
 
-  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName "ONOS-RC")
+  local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName ${ONOS_CLUSTER_NAME})
 
   # TODO make ZooKeeper address configurable.
   echo "ramcloud.locator=zk:localhost:2181" > ${temp_rc}
@@ -677,7 +680,7 @@ function start-coord {
   local rc_locator=$(read-conf ${RAMCLOUD_CONF} ramcloud.locator "zk:localhost:2181")
 
   # RAMCloud cluster name
-  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName "ONOS-RC")
+  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName ${ONOS_CLUSTER_NAME})
 
   # RAMCloud transport timeout
   local rc_timeout=$(read-conf ${ONOS_CONF} ramcloud.timeout 1000)
@@ -727,7 +730,7 @@ function del-coord-info {
   # Configuration for ZK address, port
   local rc_locator=$(read-conf ${RAMCLOUD_CONF} ramcloud.locator "zk:localhost:2181")
   # RAMCloud cluster name
-  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName "ONOS-RC")
+  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName ${ONOS_CLUSTER_NAME})
   # RAMCloud option deadServerTimeout
   # (note RC default is 250ms, setting relaxed ONOS default to 1000ms)
   local rc_coord_deadServerTimeout=$(read-conf ${ONOS_CONF} ramcloud.coordinator.deadServerTimeout 1000)
@@ -809,7 +812,7 @@ function start-server {
   # Configuration for ZK address, port
   local rc_locator=$(read-conf ${RAMCLOUD_CONF} ramcloud.locator "zk:localhost:2181")
   # RAMCloud cluster name
-  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName "ONOS-RC")
+  local rc_cluster_name=$(read-conf ${RAMCLOUD_CONF} ramcloud.clusterName ${ONOS_CLUSTER_NAME})
   # RAMCloud transport timeout
   local rc_timeout=$(read-conf ${ONOS_CONF} ramcloud.timeout 1000)
   # replication factor (-r) config
@@ -932,6 +935,9 @@ function start-onos {
     echo "          Run \"\$ $0 setup\" to create."
     exit 1
     fi
+
+  # specify ZooKeeper(curator) namespace
+  JVM_OPTS="${JVM_OPTS} -Dzookeeper.namespace=${ONOS_CLUSTER_NAME}"
 
   # specify hazelcast.xml to datagrid
   JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datagrid.HazelcastDatagrid.datagridConfig=${HC_CONF}"

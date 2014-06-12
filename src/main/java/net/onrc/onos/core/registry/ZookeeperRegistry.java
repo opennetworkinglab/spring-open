@@ -68,7 +68,12 @@ public class ZookeeperRegistry implements IFloodlightModule,
     // configuration parameter
     private String connectionString = "localhost:2181";
 
-    private static final String NAMESPACE = "onos";
+    /**
+     * JVM Option to specify ZooKeeper namespace.
+     */
+    public static final String ZK_NAMESPACE_KEY = "zookeeper.namespace";
+    private static final String DEFAULT_NAMESPACE = "onos";
+    private String namespace = DEFAULT_NAMESPACE;
     private static final String SWITCH_LATCHES_PATH = "/switches";
     private static final String CLUSTER_LEADER_PATH = "/cluster/leader";
 
@@ -570,6 +575,12 @@ public class ZookeeperRegistry implements IFloodlightModule,
         }
         log.info("Setting Zookeeper connection string to {}", this.connectionString);
 
+        namespace = System.getProperty(ZK_NAMESPACE_KEY, DEFAULT_NAMESPACE).trim();
+        if (namespace.isEmpty()) {
+            namespace = DEFAULT_NAMESPACE;
+        }
+        log.info("Setting Zookeeper namespace to {}", namespace);
+
         restApi = context.getServiceImpl(IRestApiService.class);
 
         switches = new ConcurrentHashMap<String, SwitchLeadershipData>();
@@ -581,7 +592,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
                 SESSION_TIMEOUT, CONNECTION_TIMEOUT, retryPolicy);
 
         curatorFrameworkClient.start();
-        curatorFrameworkClient = curatorFrameworkClient.usingNamespace(NAMESPACE);
+        curatorFrameworkClient = curatorFrameworkClient.usingNamespace(namespace);
 
         distributedIdCounter = new DistributedAtomicLong(
                 curatorFrameworkClient,

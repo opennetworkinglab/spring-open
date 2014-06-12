@@ -3,6 +3,10 @@
 	xmlns="http://www.hazelcast.com/schema/config"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
+  <group>
+    <name>onos</name>
+  </group>
+
   <properties>
     <property name="hazelcast.logging.type">slf4j</property>
     <property name="hazelcast.version.check.enabled">false</property>
