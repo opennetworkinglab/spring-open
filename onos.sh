@@ -254,11 +254,11 @@ function create-zk-conf {
   echo -n "Creating ${ZK_CONF} ... "
   
   # Create the ZooKeeper lib directory
-  if [ ! -d ${ZK_LIB_DIR} ]; then
+  if [[ ! ( -w ${ZK_LIB_DIR} && -d ${ZK_LIB_DIR} ) ]]; then
       local SUDO=${SUDO:-sudo}
       local whoami=`whoami`
       {
-          ${SUDO} mkdir ${ZK_LIB_DIR}
+          ${SUDO} mkdir -p ${ZK_LIB_DIR}
           ${SUDO} chown ${whoami} ${ZK_LIB_DIR}
       } || {
           echo "FAILED"
