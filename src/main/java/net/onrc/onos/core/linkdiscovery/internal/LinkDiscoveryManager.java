@@ -989,9 +989,13 @@ public class LinkDiscoveryManager
         NodePortTuple nptSrc = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
         NodePortTuple nptDst = new NodePortTuple(lt.getDst(), lt.getDstPort());
         removeFromQuarantineQueue(nptSrc);
-        removeFromMaintenanceQueue(nptSrc);
         removeFromQuarantineQueue(nptDst);
-        removeFromMaintenanceQueue(nptDst);
+
+        // XXX ONOS: Don't remove the port from the maintenance queue here
+        // because it sometimes prevents BDDPs from being sent and causes
+        // links to flap
+        // removeFromMaintenanceQueue(nptSrc);
+        // removeFromMaintenanceQueue(nptDst);
 
         // Consume this message
         return Command.STOP;
