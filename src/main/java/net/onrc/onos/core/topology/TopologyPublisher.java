@@ -137,22 +137,28 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
                 (long) update.getSrcPort(), update.getDst(),
                 (long) update.getDstPort());
 
-        if (!registryService.hasControl(update.getDst())) {
-            // Don't process or send a link event if we're not master for the
-            // destination switch
-            log.debug("Not the master for dst switch {}. Suppressed link event {}.",
-                    update.getDst(), linkEvent);
-            return;
-        }
-
         switch (update.getOperation()) {
             case LINK_ADDED:
+                if (!registryService.hasControl(update.getDst())) {
+                    // Don't process or send a link event if we're not master for the
+                    // destination switch
+                    log.debug("Not the master for dst switch {}. Suppressed link add event {}.",
+                            update.getDst(), linkEvent);
+                    return;
+                }
                 topologyDiscoveryInterface.putLinkDiscoveryEvent(linkEvent);
                 break;
             case LINK_UPDATED:
                 // We don't use the LINK_UPDATED event (unsure what it means)
                 break;
             case LINK_REMOVED:
+                if (!registryService.hasControl(update.getDst())) {
+                    // Don't process or send a link event if we're not master for the
+                    // destination switch
+                    log.debug("Not the master for dst switch {}. Suppressed link remove event {}.",
+                            update.getDst(), linkEvent);
+                    return;
+                }
                 topologyDiscoveryInterface.removeLinkDiscoveryEvent(linkEvent);
                 break;
             default:
