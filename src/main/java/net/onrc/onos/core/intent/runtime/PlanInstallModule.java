@@ -37,7 +37,15 @@ import org.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The PlanInstallModule contains the PlanCalcRuntime and PlanInstallRuntime.
+ * <p>
+ * It is responsible for converting Intents into FlowMods and seeing that
+ * they are properly installed.
+ */
+
 public class PlanInstallModule implements IFloodlightModule, IOFMessageListener {
+
     protected volatile IFloodlightProviderService floodlightProvider;
     protected volatile ITopologyService topologyService;
     protected volatile IDatagridService datagridService;
@@ -52,12 +60,18 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
     private static final String INTENT_STATE_EVENT_CHANNEL_NAME = "onos.pathintent_state";
     private ConcurrentMap<String, Intent> parentIntentMap = new ConcurrentHashMap<String, Intent>();
 
+    /**
+     * EventListener for Intent updates from the PathCalcRuntime module.
+     */
     class EventListener extends Thread
             implements IEventChannelListener<Long, IntentOperationList> {
 
         private BlockingQueue<IntentOperationList> intentQueue = new LinkedBlockingQueue<>();
         private Long key = Long.valueOf(0);
 
+        /**
+         * Poll the Intent queue for events.
+         */
         @Override
         public void run() {
             while (true) {
@@ -65,8 +79,6 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
                     IntentOperationList intents = intentQueue.take();
                     //TODO: consider draining the remaining intent lists
                     //      and processing in one big batch
-//                  List<IntentOperationList> remaining = new LinkedList<>();
-//                  intentQueue.drainTo(remaining);
 
                     processIntents(intents);
                 } catch (InterruptedException e) {
@@ -75,6 +87,13 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
             }
         }
 
+        /**
+         * Process events received from the event queue.
+         * <p>
+         * First, compute a plan, and then install it.
+         *
+         * @param intents list of new Intent events
+         */
         private void processIntents(IntentOperationList intents) {
             log("start_processIntents");
             log.debug("Processing OperationList {}", intents);
@@ -95,10 +114,11 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         /***
          * This function is for sending intent state notification to other ONOS instances.
          * The argument of "domainSwitchDpids" is required for dispatching this ONOS's managed switches.
-         * @param intents
-         * @param installed
-         * @param success
-         * @param domainSwitchDpids
+         *
+         * @param intents list of intents
+         * @param installed true if Intents were installed
+         * @param success true if updates succeeded
+         * @param domainSwitchDpids set of affected switches
          */
         private void sendNotifications(IntentOperationList intents,
                 boolean installed, boolean success, Set<Long> domainSwitchDpids) {
@@ -133,22 +153,34 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
                        states, states.domainSwitchDpids);
             }
 
-            intentStateChannel.addTransientEntry(key, states);
-            // XXX: Send notifications using the same key every time
+            // Send notifications using the same key every time
             // and receive them by entryAdded() and entryUpdated()
-            // key += 1;
+            intentStateChannel.addTransientEntry(key, states);
         }
 
+        /**
+         * Uses the entryUpdated() method. This should only be called once
+         * because we always use the same key.
+         */
         @Override
         public void entryAdded(IntentOperationList value) {
             entryUpdated(value);
         }
 
+        /*
+         * (non-Javadoc)
+         * @see net.onrc.onos.core.datagrid.IEventChannelListener#entryRemoved(java.lang.Object)
+         */
         @Override
         public void entryRemoved(IntentOperationList value) {
             // This channel is a queue, so this method is not needed
         }
 
+        /**
+         * Adds the new intents to the event queue.
+         *
+         * @param list of new intents
+         */
         @Override
         public void entryUpdated(IntentOperationList value) {
             putIntentOpsInfoInParentMap(value);
@@ -166,6 +198,11 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
             }
         }
 
+        /**
+         * Add intent information to parent map.
+         *
+         * @param intentOps list of Intents and new states
+         */
         private void putIntentOpsInfoInParentMap(IntentOperationList intentOps) {
             for (IntentOperation i : intentOps) {
                 if (!(i.intent instanceof PathIntent)) {
@@ -184,10 +221,21 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         }
     }
 
+    /**
+     * Formatted log for debugging.
+     * TODO: merge this into debugging framework
+     *
+     * @param step the step of computation
+     */
     public static void log(String step) {
         log.debug("Time:{}, Step:{}", System.nanoTime(), step);
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.module.IFloodlightModule#init
+     * (net.floodlightcontroller.core.module.FloodlightModuleContext)
+     */
     @Override
     public void init(FloodlightModuleContext context)
             throws FloodlightModuleException {
@@ -200,6 +248,11 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         eventListener = new EventListener();
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.module.IFloodlightModule#startUp
+     * (net.floodlightcontroller.core.module.FloodlightModuleContext)
+     */
     @Override
     public void startUp(FloodlightModuleContext context) {
         // start subscriber
@@ -215,6 +268,10 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         floodlightProvider.addOFMessageListener(OFType.FLOW_REMOVED, this);
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.module.IFloodlightModule#getModuleDependencies()
+     */
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         Collection<Class<? extends IFloodlightService>> l =
@@ -226,18 +283,29 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         return l;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.module.IFloodlightModule#getModuleServices()
+     */
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
         // no services, for now
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.module.IFloodlightModule#getServiceImpls()
+     */
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
         // no services, for now
         return null;
     }
 
+    /**
+     * Handles FlowRemoved messages from the switches.
+     */
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
         if (msg.getType().equals(OFType.FLOW_REMOVED) &&
@@ -281,6 +349,13 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         return Command.CONTINUE;
     }
 
+    /**
+     * Check to see if the flow's source switch entry is removed/expired.
+     *
+     * @param dpid DPID of affected switch
+     * @param shortestPathIntentId Intent to check
+     * @return
+     */
     private boolean isFlowSrcRemoved(long dpid, String shortestPathIntentId) {
         Intent intent =  parentIntentMap.get(shortestPathIntentId);
         ShortestPathIntent spfIntent = null;
@@ -300,18 +375,30 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         return false;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.IListener#getName()
+     */
     @Override
     public String getName() {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.IListener#isCallbackOrderingPrereq(java.lang.Object, java.lang.String)
+     */
     @Override
     public boolean isCallbackOrderingPrereq(OFType type, String name) {
         // TODO Auto-generated method stub
         return false;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see net.floodlightcontroller.core.IListener#isCallbackOrderingPostreq(java.lang.Object, java.lang.String)
+     */
     @Override
     public boolean isCallbackOrderingPostreq(OFType type, String name) {
         // TODO Auto-generated method stub
