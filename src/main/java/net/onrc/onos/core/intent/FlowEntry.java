@@ -1,6 +1,7 @@
 package net.onrc.onos.core.intent;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import net.floodlightcontroller.util.MACAddress;
@@ -11,7 +12,8 @@ import net.onrc.onos.core.util.FlowEntryId;
 import net.onrc.onos.core.util.FlowEntryUserState;
 
 /**
- * @author Brian O'Connor <bocon@onlab.us>
+ * A class to represent an OpenFlow FlowMod.
+ * It is OpenFlow v.1.0-centric and contains a Match and an Action.
  */
 
 public class FlowEntry {
@@ -23,6 +25,18 @@ public class FlowEntry {
     protected int idleTimeout = 0;
     protected long flowEntryId;
 
+    /**
+     * Constructor.
+     *
+     * @param sw switch's DPID
+     * @param srcPort source port on switch
+     * @param dstPort output port on switch
+     * @param srcMac source Ethernet MAC address
+     * @param dstMac destination Ethernet MAC address
+     * @param srcIpAddress source IP address
+     * @param dstIpAddress destination IP address
+     * @param operator OpenFlow operation/command (add, remove, etc.)
+     */
 // CHECKSTYLE:OFF suppress the warning about too many parameters
     public FlowEntry(long sw, long srcPort, long dstPort,
                      MACAddress srcMac, MACAddress dstMac,
@@ -37,7 +51,34 @@ public class FlowEntry {
         this.flowEntryId = hashCode();
     }
 
-    /***
+    /**
+     * Gets the switch for this FlowEntry.
+     *
+     * @return the switch's DPID
+     */
+    public long getSwitch() {
+        return sw;
+    }
+
+    /**
+     * Gets the operator (i.e. add, remove, error).
+     *
+     * @return the operator
+     */
+    public Operator getOperator() {
+        return operator;
+    }
+
+    /**
+     * Sets the FlowMod operation (i.e. add, remove, error).
+     *
+     * @param op the operator
+     */
+    public void setOperator(Operator op) {
+        operator = op;
+    }
+
+    /**
      * Gets hard timeout value in seconds.
      *
      * @return the hard timeout value in seconds
@@ -46,16 +87,7 @@ public class FlowEntry {
         return hardTimeout;
     }
 
-    /***
-     * Gets idle timeout value in seconds.
-     *
-     * @return the idle timeout value in seconds
-     */
-    public int getIdleTimeout() {
-        return idleTimeout;
-    }
-
-    /***
+    /**
      * Sets hard timeout value in seconds.
      *
      * @param hardTimeout hard timeout value in seconds
@@ -64,7 +96,16 @@ public class FlowEntry {
         this.hardTimeout = hardTimeout;
     }
 
-    /***
+    /**
+     * Gets idle timeout value in seconds.
+     *
+     * @return the idle timeout value in seconds
+     */
+    public int getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    /**
      * Sets idle timeout value in seconds.
      *
      * @param idleTimeout idle timeout value in seconds
@@ -73,16 +114,16 @@ public class FlowEntry {
         this.idleTimeout = idleTimeout;
     }
 
-    /***
+    /**
      * Gets flowEntryId.
      *
-     * @param the flowEntryId to be set in cookie
+     * @return the flowEntryId to be set in cookie
      */
     public long getFlowEntryId() {
         return flowEntryId;
     }
 
-    /***
+    /**
      * Sets flowEntryId.
      *
      * @param flowEntryId flowEntryId to be set in cookie
@@ -91,23 +132,11 @@ public class FlowEntry {
         this.flowEntryId = flowEntryId;
     }
 
-    @Override
-    public String toString() {
-        return match + "->" + actions;
-    }
-
-    public long getSwitch() {
-        return sw;
-    }
-
-    public Operator getOperator() {
-        return operator;
-    }
-
-    public void setOperator(Operator op) {
-        operator = op;
-    }
-
+    /**
+     * Converts the FlowEntry in to a legacy FlowEntry object.
+     *
+     * @return an equivalent legacy FlowEntry object
+     */
     public net.onrc.onos.core.util.FlowEntry getFlowEntry() {
         net.onrc.onos.core.util.FlowEntry entry = new net.onrc.onos.core.util.FlowEntry();
         entry.setDpid(new Dpid(sw));
@@ -133,12 +162,29 @@ public class FlowEntry {
         return entry;
     }
 
-
+    /**
+     * Returns a String representation of this FlowEntry.
+     *
+     * @return the FlowEntry as a String
+     */
     @Override
-    public int hashCode() {
-        return match.hashCode();
+    public String toString() {
+        return match + "->" + actions;
     }
 
+    /**
+     * Generates hash using Objects.hash() on the match and actions.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(match, actions);
+    }
+
+    /**
+     * Flow Entries are equal if their matches and action sets are equal.
+     *
+     * @return true if equal, false otherwise
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof FlowEntry)) {

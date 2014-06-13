@@ -3,10 +3,15 @@ package net.onrc.onos.core.intent;
 import net.onrc.onos.core.util.FlowEntryAction;
 
 /**
- * @author Brian O'Connor <bocon@onlab.us>
+ * An abstract class that represents an OpenFlow action.
  */
 
 public abstract class Action {
 
+    /**
+     * This function converts the Action into a legacy FlowEntryAction.
+     *
+     * @return an equivalent FlowEntryAction object
+     */
     public abstract FlowEntryAction getFlowEntryAction();
 }
