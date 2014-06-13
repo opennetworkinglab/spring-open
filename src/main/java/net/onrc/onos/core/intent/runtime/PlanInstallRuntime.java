@@ -13,7 +13,6 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.FlowEntry;
-//import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Pair;
 
 import org.openflow.protocol.OFBarrierReply;
@@ -21,33 +20,55 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Brian O'Connor <bocon@onlab.us>
+ * This class is responsible for installing plans (lists of sets of FlowEntries) into local switches.
+ * In this context, a local switch is a switch for which this ONOS instance is the master.
+ * It also is responsible for sending barrier messages between sets.
  */
 
 public class PlanInstallRuntime {
-    //    Topology graph;
+
     IFlowPusherService pusher;
     IFloodlightProviderService provider;
     private static final Logger log = LoggerFactory.getLogger(PlanInstallRuntime.class);
 
-    public PlanInstallRuntime(//Topology graph,
-                              IFloodlightProviderService provider,
+    /**
+     * Constructor.
+     *
+     * @param provider the FloodlightProviderService for list of local switches
+     * @param pusher the FlowPusherService to use for FlowEntry installation
+     */
+    public PlanInstallRuntime(IFloodlightProviderService provider,
                               IFlowPusherService pusher) {
-//      this.graph = graph;
         this.provider = provider;
         this.pusher = pusher;
     }
 
+    /**
+     * This class is a temporary class for collecting FlowMod installation information. It is
+     * largely used for debugging purposes, and it should not be depended on for other purposes.
+     * <p>
+     * TODO: This class should be wrapped into a more generic debugging framework when available.
+     */
     private static class FlowModCount {
         IOFSwitch sw;
         long modFlows = 0;
         long delFlows = 0;
         long errors = 0;
 
+        /**
+         * Constructor.
+         *
+         * @param sw the switch for FlowMod statistics collection
+         */
         FlowModCount(IOFSwitch sw) {
             this.sw = sw;
         }
 
+        /**
+         * Include the FlowEntry in this switch statistics object.
+         *
+         * @param entry the FlowEntry to count
+         */
         void addFlowEntry(FlowEntry entry) {
             switch (entry.getOperator()) {
                 case ADD:
@@ -64,6 +85,11 @@ public class PlanInstallRuntime {
             }
         }
 
+        /**
+         * Returns a string representation of this object.
+         *
+         * @return string representation of this object
+         */
         @Override
         public String toString() {
             return "sw:" + sw.getStringId() + ": modify " + modFlows + " delete " + delFlows + " error " + errors;
@@ -71,6 +97,18 @@ public class PlanInstallRuntime {
 
         static Map<IOFSwitch, FlowModCount> map = new HashMap<>();
 
+        /**
+         * This function is used for collecting statistics information. It should be called for
+         * every FlowEntry that is pushed to the switch for accurate statistics.
+         * <p>
+         * This class maintains a map of Switches and FlowModCount collection objects, which
+         * are used for collection.
+         * <p>
+         * TODO: This should be refactored to use a more generic mechanism when available.
+         *
+         * @param sw the switch that entry is being pushed to
+         * @param entry the FlowEntry being pushed
+         */
         static void countFlowEntry(IOFSwitch sw, FlowEntry entry) {
             FlowModCount count = map.get(sw);
             if (count == null) {
@@ -80,10 +118,16 @@ public class PlanInstallRuntime {
             count.addFlowEntry(entry);
         }
 
+        /**
+         * Reset the statistics collection. It should be called when required for debugging.
+         */
         static void startCount() {
             map.clear();
         }
 
+        /**
+         * Print out the statistics information when required for debugging.
+         */
         static void printCount() {
             StringBuilder result = new StringBuilder();
 
@@ -98,6 +142,18 @@ public class PlanInstallRuntime {
         }
     }
 
+    /**
+     * This function should be called to install the FlowEntries in the plan.
+     * <p>
+     * Each set of FlowEntries can be installed together, but all entries should be installed
+     * proceeded to the next set.
+     * <p>
+     * TODO: This method lack coordination between the other ONOS instances before proceeded
+     * with the next set of entries
+     *
+     * @param plan list of set of FlowEntries for installation on local switches
+     * @return true (we assume installation is successful)
+     */
     public boolean installPlan(List<Set<FlowEntry>> plan) {
         long start = System.nanoTime();
         Map<Long, IOFSwitch> switches = provider.getSwitches();
@@ -128,8 +184,8 @@ public class PlanInstallRuntime {
             pusher.pushFlowEntries(entries);
             long step3 = System.nanoTime();
 
-            // TODO: insert a barrier after each phase on each modifiedSwitch
-            // TODO: wait for confirmation messages before proceeding
+            // insert a barrier after each phase on each modifiedSwitch
+            // wait for confirmation messages before proceeding
             List<Pair<IOFSwitch, OFMessageFuture<OFBarrierReply>>> barriers = new ArrayList<>();
             for (IOFSwitch sw : modifiedSwitches) {
                 barriers.add(new Pair<>(sw, pusher.barrierAsync(sw)));
