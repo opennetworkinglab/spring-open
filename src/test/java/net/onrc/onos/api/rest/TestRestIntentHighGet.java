@@ -1,6 +1,7 @@
 package net.onrc.onos.api.rest;
 
 
+import com.google.common.net.InetAddresses;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
@@ -35,7 +36,9 @@ import static org.hamcrest.Matchers.notNullValue;
 public class TestRestIntentHighGet extends TestRestIntent {
     private static final Long LOCAL_PORT = 0xFFFEL;
     private static final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";
-
+    private static final String IP_ADDRESS_1 = "127.0.0.1";
+    private static final String IP_ADDRESS_2 = "127.0.0.2";
+    private static final String IP_ADDRESS_3 = "127.0.0.3";
 
     /**
      * Create the web server, PathCalcRuntime, and mocks required for
@@ -62,17 +65,24 @@ public class TestRestIntentHighGet extends TestRestIntent {
      * Make a set of Intents that can be used as test data.
      */
     private void makeDefaultIntents() {
+        final int ipAddress1AsInt = InetAddresses.coerceToInteger(
+                InetAddresses.forString(IP_ADDRESS_1));
+        final int ipAddress2AsInt = InetAddresses.coerceToInteger(
+                InetAddresses.forString(IP_ADDRESS_2));
+        final int ipAddress3AsInt = InetAddresses.coerceToInteger(
+                InetAddresses.forString(IP_ADDRESS_3));
+
         // create shortest path intents
         final IntentOperationList opList = new IntentOperationList();
         opList.add(IntentOperation.Operator.ADD,
                 new ShortestPathIntent(BAD_SWITCH_INTENT_NAME, 111L, 12L,
                         LOCAL_PORT, 2L, 21L, LOCAL_PORT));
         opList.add(IntentOperation.Operator.ADD,
-                new ShortestPathIntent("1:2", 1L, 14L, LOCAL_PORT, 4L, 41L,
-                        LOCAL_PORT));
+                new ShortestPathIntent("1:2", 1L, 14L, LOCAL_PORT, ipAddress1AsInt,
+                                       4L, 41L, LOCAL_PORT, ipAddress2AsInt));
         opList.add(IntentOperation.Operator.ADD,
-                new ShortestPathIntent("1:3", 2L, 23L, LOCAL_PORT, 3L, 32L,
-                        LOCAL_PORT));
+                new ShortestPathIntent("1:3", 2L, 23L, LOCAL_PORT, ipAddress2AsInt,
+                                       3L, 32L, LOCAL_PORT, ipAddress3AsInt));
 
         // compile high-level intent operations into low-level intent
         // operations (calculate paths)
@@ -169,5 +179,23 @@ public class TestRestIntentHighGet extends TestRestIntent {
         assertThat(intent.get("id"), is(equalTo("1:2")));
         assertThat(intent, hasKey("state"));
         assertThat(intent.get("state"), is(equalTo("INST_REQ")));
+
+        assertThat(intent, hasKey("srcSwitchDpid"));
+        assertThat(intent.get("srcSwitchDpid"), is(equalTo("00:00:00:00:00:00:00:01")));
+        assertThat(intent, hasKey("srcPortNumber"));
+        assertThat(intent.get("srcPortNumber"), is(equalTo("14")));
+        assertThat(intent, hasKey("srcMac"));
+        assertThat(intent.get("srcMac"), is(equalTo("00:00:00:00:00:00:ff:fe")));
+        assertThat(intent, hasKey("srcMac"));
+        assertThat(intent.get("srcIp"), is(equalTo(IP_ADDRESS_1)));
+
+        assertThat(intent, hasKey("dstSwitchDpid"));
+        assertThat(intent.get("dstSwitchDpid"), is(equalTo("00:00:00:00:00:00:00:04")));
+        assertThat(intent, hasKey("dstPortNumber"));
+        assertThat(intent.get("dstPortNumber"), is(equalTo("41")));
+        assertThat(intent, hasKey("dstMac"));
+        assertThat(intent.get("dstMac"), is(equalTo("00:00:00:00:00:00:ff:fe")));
+        assertThat(intent, hasKey("dstMac"));
+        assertThat(intent.get("dstIp"), is(equalTo(IP_ADDRESS_2)));
     }
 }

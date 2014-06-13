@@ -1,5 +1,8 @@
 package net.onrc.onos.core.topology;
 
+import net.onrc.onos.core.topology.web.serializers.SwitchPortSerializer;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -8,6 +11,7 @@ import java.nio.ByteBuffer;
  * TODO: We probably want common base class/interface for Self-Contained Event Object.
  */
 public class PortEvent {
+    @JsonSerialize(using = SwitchPortSerializer.class)
     public static class SwitchPort {
         public final Long dpid;
         public final Long number;

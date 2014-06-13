@@ -3,12 +3,16 @@ package net.onrc.onos.core.topology;
 import java.nio.ByteBuffer;
 
 import net.onrc.onos.core.topology.PortEvent.SwitchPort;
+import net.onrc.onos.core.topology.web.serializers.LinkEventSerializer;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  * Self-contained Link event Object.
  * <p/>
  * TODO: We probably want common base class/interface for Self-Contained Event Object.
  */
+
+@JsonSerialize(using = LinkEventSerializer.class)
 public class LinkEvent {
     protected final SwitchPort src;
     protected final SwitchPort dst;

@@ -1,11 +1,14 @@
 package net.onrc.onos.core.intent;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.topology.web.serializers.ShortestPathIntentSerializer;
 import net.onrc.onos.core.util.Dpid;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  * @author Toshio Koide (t-koide@onlab.us)
  */
+@JsonSerialize(using = ShortestPathIntentSerializer.class)
 public class ShortestPathIntent extends Intent {
     public static final long EMPTYMACADDRESS = 0;
     public static final int EMPTYIPADDRESS = 0;
