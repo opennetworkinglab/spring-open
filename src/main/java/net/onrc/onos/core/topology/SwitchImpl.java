@@ -1,5 +1,7 @@
 package net.onrc.onos.core.topology;
 
+import net.onrc.onos.core.util.Dpid;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,12 +20,16 @@ import java.util.Set;
  */
 public class SwitchImpl extends TopologyObject implements Switch {
 
-    private Long dpid;
+    private Dpid dpid;
     // These needs to be ConcurrentCollecton if allowing the topology to be
     // accessed concurrently
     private final Map<Long, Port> ports;
 
     public SwitchImpl(Topology topology, Long dpid) {
+        this(topology, new Dpid(dpid));
+    }
+
+    public SwitchImpl(Topology topology, Dpid dpid) {
         super(topology);
         this.dpid = dpid;
         ports = new HashMap<Long, Port>();
@@ -31,7 +37,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public Long getDpid() {
-        return dpid;
+        return dpid.value();
     }
 
     @Override
