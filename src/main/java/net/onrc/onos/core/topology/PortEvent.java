@@ -4,6 +4,7 @@ import net.onrc.onos.core.topology.web.serializers.SwitchPortSerializer;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * Self-contained Port event Object.
@@ -105,6 +106,25 @@ public class PortEvent {
 
     public Long getNumber() {
         return id.number;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof PortEvent)) {
+            return false;
+        }
+
+        PortEvent that = (PortEvent) o;
+        return Objects.equals(this.id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 
     @Override

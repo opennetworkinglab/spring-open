@@ -3,6 +3,7 @@ package net.onrc.onos.core.topology;
 import net.onrc.onos.core.util.Dpid;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * Self-contained Switch Object.
@@ -26,6 +27,25 @@ public class SwitchEvent {
 
     public Long getDpid() {
         return dpid.value();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof SwitchEvent)) {
+            return false;
+        }
+
+        SwitchEvent that = (SwitchEvent) o;
+        return Objects.equals(this.dpid, that.dpid);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(dpid);
     }
 
     @Override
