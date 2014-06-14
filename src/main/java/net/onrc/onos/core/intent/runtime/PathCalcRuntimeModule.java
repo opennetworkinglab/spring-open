@@ -359,6 +359,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     public boolean removeApplicationIntents(final String appId,
                                             Collection<String> intentIds) {
         IntentMap intentMap = getHighLevelIntents();
+        List<String> removeIntentIds = new LinkedList<String>();
 
         //
         // Process all intents one-by-one
@@ -368,10 +369,26 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             String appIntentId = appId + ":" + intentId;
             Intent intent = intentMap.getIntent(appIntentId);
             if (intent != null) {
+                if (intent.getState() == IntentState.INST_NACK) {
+                    // TODO: A hack to remove intents stuck in INST_NACK state
+                    removeIntentIds.add(intent.getId());
+                    continue;
+                }
                 operations.add(IntentOperation.Operator.REMOVE, intent);
                 removedApplicationIntentIds.add(appIntentId);
             }
         }
+
+        // Purge intents
+        if (!removeIntentIds.isEmpty()) {
+            lock.lock(); // TODO optimize locking using smaller steps
+            try {
+                highLevelIntents.purge(removeIntentIds);
+            } finally {
+                lock.unlock();
+            }
+        }
+
         executeIntentOperations(operations);
 
         return true;
@@ -386,15 +403,32 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     @Override
     public boolean removeAllApplicationIntents(final String appId) {
         IntentMap intentMap = getHighLevelIntents();
+        List<String> removeIntentIds = new LinkedList<String>();
 
         //
         // Remove all intents
         //
         IntentOperationList operations = new IntentOperationList();
         for (Intent intent : intentMap.getAllIntents()) {
+            if (intent.getState() == IntentState.INST_NACK) {
+                // TODO: A hack to remove intents stuck in INST_NACK state
+                removeIntentIds.add(intent.getId());
+                continue;
+            }
             operations.add(IntentOperation.Operator.REMOVE, intent);
             removedApplicationIntentIds.add(intent.getId());
         }
+
+        // Purge intents
+        if (!removeIntentIds.isEmpty()) {
+            lock.lock(); // TODO optimize locking using smaller steps
+            try {
+                highLevelIntents.purge(removeIntentIds);
+            } finally {
+                lock.unlock();
+            }
+        }
+
         executeIntentOperations(operations);
 
         return true;
