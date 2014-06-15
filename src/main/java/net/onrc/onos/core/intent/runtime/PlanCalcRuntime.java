@@ -167,7 +167,7 @@ public class PlanCalcRuntime {
      * Note: This method is for a testing purpose. Please leave it right now.
      *
      * @param flowEntries
-     * @return
+     * @return a list of phases, where each phase is a set of FlowEntries
      */
     @SuppressWarnings("unused")
     private List<Set<FlowEntry>> simpleBuildPhases(List<Collection<FlowEntry>> flowEntries) {

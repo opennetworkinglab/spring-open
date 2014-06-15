@@ -183,10 +183,11 @@ public class KVLink extends KVObject {
 
     /**
      * Gets an instance from LinkID in default namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key LinkID
      * @return KVLink instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVLink createFromKey(final byte[] key) {
         return createFromKey(key, DEFAULT_NAMESPACE);
@@ -194,11 +195,12 @@ public class KVLink extends KVObject {
 
     /**
      * Gets an instance from LinkID in specified namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key LinkID
      * @param namespace namespace to create this object in
      * @return KVLink instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVLink createFromKey(final byte[] key, final String namespace) {
         long[] linkTuple = getLinkTupleFromKey(key);

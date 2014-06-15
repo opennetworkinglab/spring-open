@@ -977,7 +977,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
      * @param sw
      * @param msg
      * @param priority
-     * @return
+     * @return true if the message was added successfully, otherwise false
      */
     protected boolean addMessageImpl(IOFSwitch sw, OFMessage msg, MsgPriority priority) {
         FlowPusherThread thread = getProcessingThread(sw);

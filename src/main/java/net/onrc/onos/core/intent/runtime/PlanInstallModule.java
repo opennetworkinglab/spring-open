@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
  * It is responsible for converting Intents into FlowMods and seeing that
  * they are properly installed.
  */
-
 public class PlanInstallModule implements IFloodlightModule, IOFMessageListener {
 
     protected volatile IFloodlightProviderService floodlightProvider;
@@ -354,7 +353,8 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
      *
      * @param dpid DPID of affected switch
      * @param shortestPathIntentId Intent to check
-     * @return
+     * @return true if the flow's source switch entry is removed or expired,
+     * otherwise false.
      */
     private boolean isFlowSrcRemoved(long dpid, String shortestPathIntentId) {
         Intent intent =  parentIntentMap.get(shortestPathIntentId);

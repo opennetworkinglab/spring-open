@@ -153,10 +153,11 @@ public class KVPort extends KVObject {
 
     /**
      * Gets an instance from PortID in default namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key PortID
      * @return {@link KVPort} instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVPort createFromKey(final byte[] key) {
         return createFromKey(key, DEFAULT_NAMESPACE);
@@ -164,11 +165,12 @@ public class KVPort extends KVObject {
 
     /**
      * Gets an instance from PortID in specified namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key PortID
      * @param namespace namespace to create this object.
      * @return {@link KVPort} instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVPort createFromKey(final byte[] key, final String namespace) {
         long[] pair = getPortPairFromKey(key);

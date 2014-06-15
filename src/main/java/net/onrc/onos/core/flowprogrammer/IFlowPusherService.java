@@ -119,7 +119,6 @@ public interface IFlowPusherService extends IFloodlightService {
      *
      * @param sw        Switch to which message is pushed.
      * @param flowEntry FlowEntry object used for creating message.
-     * @return true if message is successfully added to a queue.
      */
     void pushFlowEntry(IOFSwitch sw, FlowEntry flowEntry);
 
@@ -132,7 +131,6 @@ public interface IFlowPusherService extends IFloodlightService {
      *
      * @param sw        Switch to which message is pushed.
      * @param flowEntry FlowEntry object used for creating message.
-     * @return true if message is successfully added to a queue.
      */
     void pushFlowEntry(IOFSwitch sw, FlowEntry flowEntry,
                        MsgPriority priority);

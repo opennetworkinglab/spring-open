@@ -34,7 +34,7 @@ public interface ILinkDiscoveryService extends IFloodlightService {
      * Returns link type of a given link.
      *
      * @param info
-     * @return
+     * @return the link type
      */
     public ILinkDiscovery.LinkType getLinkType(Link lt, LinkInfo info);
 

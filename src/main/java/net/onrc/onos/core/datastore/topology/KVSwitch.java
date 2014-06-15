@@ -118,10 +118,11 @@ public class KVSwitch extends KVObject {
 
     /**
      * Gets an instance from SwitchID in default namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key SwitchID
      * @return {@link KVSwitch} instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVSwitch createFromKey(final byte[] key) {
         return new KVSwitch(getDpidFromKey(key));
@@ -129,11 +130,12 @@ public class KVSwitch extends KVObject {
 
     /**
      * Gets an instance from SwitchID in specified namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key SwitchID
      * @param namespace namespace to create this object
      * @return {@link KVSwitch} instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVSwitch createFromKey(final byte[] key, final String namespace) {
         return new KVSwitch(getDpidFromKey(key), namespace);

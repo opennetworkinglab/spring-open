@@ -80,14 +80,14 @@ public interface IOFSwitch {
      * FIXME: remove getChannel(). All access to the channel should be through
      * wrapper functions in IOFSwitch
      *
-     * @return
+     * @return the channel to the switch
      */
     public Channel getChannel();
 
     /**
      * Returns switch features from features Reply
      *
-     * @return
+     * @return the switch buffers
      */
     public int getBuffers();
 
@@ -216,21 +216,21 @@ public interface IOFSwitch {
     /**
      * Get the datapathId of the switch
      *
-     * @return
+     * @return switch dpid as a long
      */
     public long getId();
 
     /**
      * Get a string version of the ID for this switch
      *
-     * @return
+     * @return switch dpid as a String
      */
     public String getStringId();
 
     /**
      * Retrieves attributes of this switch
      *
-     * @return
+     * @return attributes of the switch
      */
     public Map<Object, Object> getAttributes();
 
@@ -244,7 +244,7 @@ public interface IOFSwitch {
     /**
      * Returns the next available transaction id
      *
-     * @return
+     * @return next available transaction id
      */
     public int getNextTransactionId();
 
@@ -382,7 +382,7 @@ public interface IOFSwitch {
     /**
      * Get the portBroadcastCacheHits
      *
-     * @return
+     * @return port broadcast cache hits
      */
     public Map<Short, Long> getPortBroadcastHits();
 

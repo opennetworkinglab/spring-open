@@ -22,24 +22,32 @@ package net.onrc.onos.core.packet;
  */
 public interface IPacket {
     /**
-     * @return
+     * Gets the payload of the packet.
+     *
+     * @return the payload of the packet
      */
     public IPacket getPayload();
 
     /**
-     * @param packet
-     * @return
+     * Sets the payload of the packet.
+     *
+     * @param packet the inner packet to set as the payload
+     * @return this IPacket
      */
     public IPacket setPayload(IPacket packet);
 
     /**
-     * @return
+     * Gets the parent (outer) packet.
+     *
+     * @return the parent packet
      */
     public IPacket getParent();
 
     /**
-     * @param packet
-     * @return
+     * Sets the parent (outer) packet.
+     *
+     * @param packet the parent packet
+     * @return this IPacket
      */
     public IPacket setParent(IPacket packet);
 
@@ -69,7 +77,7 @@ public interface IPacket {
     /**
      * Clone this packet and its payload packet but not its parent.
      *
-     * @return
+     * @return a cloned copy of this packet
      */
     public Object clone();
 }

@@ -13,7 +13,7 @@ import java.util.List;
  * The {@link Path} object doesn't contain lists of hops along the path.
  * Rather, it contains details about the egress {@link Interface} and
  * {@code next_hop} IP address. Implicitly, it represents paths from every
- * other ingress port to the {@Interface}.
+ * other ingress port to the {@code Interface}.
  * <p/>
  * Once flow mods are pushed to realize the path in the network, the
  * {@link Path} object will contain a list of pushed flow mods. These are used
@@ -95,7 +95,7 @@ public class Path {
      * Gets the list of flow mods that were installed to realize this path in
      * the network.
      *
-     * @return the list of {@link PushedFlowMods}
+     * @return the list of {@link PushedFlowMod}s
      */
     public List<PushedFlowMod> getFlowMods() {
         return Collections.unmodifiableList(flowMods);
@@ -105,7 +105,7 @@ public class Path {
      * Sets the list of flow mods that were installed to realize this path in
      * the network.
      *
-     * @param flowMods the list of {@link PushedFlowMods}
+     * @param flowMods the list of {@link PushedFlowMod}s
      */
     public void setFlowMods(List<PushedFlowMod> flowMods) {
         this.flowMods = flowMods;

@@ -78,7 +78,7 @@ public interface IPatriciaTree<V> {
 
     /**
      * Represents an entry in the patricia tree. The {@code Entry} is a mapping
-     * from {@link Prefix} to a {@link V} value object.
+     * from {@link Prefix} to a value object of type {@code V}.
      *
      * @param <V> the class of objects stored in the tree
      */

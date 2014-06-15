@@ -46,7 +46,7 @@ public interface IOFSwitchListener {
     /**
      * The name assigned to this listener
      *
-     * @return
+     * @return the name of the listener
      */
     public String getName();
 }

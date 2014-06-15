@@ -23,7 +23,7 @@ public interface IFloodlightModule {
      * Return the list of interfaces that this module implements.
      * All interfaces must inherit IFloodlightService
      *
-     * @return
+     * @return a list of class objects of services the module implements
      */
 
     public Collection<Class<? extends IFloodlightService>> getModuleServices();

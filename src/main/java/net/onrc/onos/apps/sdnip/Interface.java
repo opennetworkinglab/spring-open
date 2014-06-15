@@ -25,7 +25,7 @@ import com.google.common.net.InetAddresses;
  *
  * Each interface has a name, which is a unique identifying String that is used
  * to reference this interface in the configuration (for example, to map
- * {@link BgpPeers} to {@code Interfaces}.
+ * {@link BgpPeer}s to {@code Interfaces}.
  */
 public class Interface {
     private final String name;

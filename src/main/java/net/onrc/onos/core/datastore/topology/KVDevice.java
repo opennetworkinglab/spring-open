@@ -106,10 +106,11 @@ public class KVDevice extends KVObject {
 
     /**
      * Gets an instance from DeviceID in default namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key DeviceID
      * @return KVDevice instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVDevice createFromKey(final byte[] key) {
         return createFromKey(key, DEFAULT_NAMESPACE);
@@ -117,11 +118,12 @@ public class KVDevice extends KVObject {
 
     /**
      * Gets an instance from DeviceID in specified namespace.
+     * <p/>
+     * Note: You need to call `read()` to get the DB content.
      *
      * @param key DeviceID
      * @param namespace namespace to create this object in
      * @return KVDevice instance
-     * @note You need to call `read()` to get the DB content.
      */
     public static KVDevice createFromKey(final byte[] key, final String namespace) {
         return new KVDevice(getMacFromKey(key), namespace);

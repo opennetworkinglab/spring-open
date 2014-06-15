@@ -151,9 +151,10 @@ public class KVObject {
 
     /**
      * Return user-defined object properties.
+     * <p/>
+     * Note: Will not trigger deserialization.
      *
      * @return Will return null, if never been set, or was not deserialized
-     * @note Will not trigger deserialization
      */
     protected Map<Object, Object> getPropertyMap() {
         return this.propertyMap;
@@ -227,7 +228,7 @@ public class KVObject {
     }
 
     /**
-     * Deserialize and set {@link propertyMap}.
+     * Deserialize and set {@link #propertyMap}.
      *
      * @param kryo  serializer to use
      * @param bytes Kryo serialized Map object

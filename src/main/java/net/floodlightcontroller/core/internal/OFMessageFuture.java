@@ -98,7 +98,6 @@ public abstract class OFMessageFuture<V> implements Future<V> {
      *
      * @param sw
      * @param msg
-     * @return
      */
     protected abstract void handleReply(IOFSwitch sw, OFMessage msg);
 

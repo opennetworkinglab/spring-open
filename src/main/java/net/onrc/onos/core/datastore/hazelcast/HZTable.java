@@ -50,7 +50,7 @@ public class HZTable implements IKVTable, IKVTableID {
      * increment version, avoiding versionNonexistant.
      *
      * @param version
-     * @return
+     * @return the next version number
      */
     protected static long getNextVersion(final long version) {
         long nextVersion = version + 1;
