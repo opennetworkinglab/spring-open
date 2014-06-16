@@ -644,6 +644,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                         !(parentIntent instanceof ShortestPathIntent)) {
                     continue;
                 }
+                String parentIntentId = parentIntent.getId();
 
                 boolean isChildIntent = ((ShortestPathIntent) parentIntent).getPathIntentId().equals(pathIntentId);
 
@@ -651,12 +652,12 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                 // When the PathIntent(=isChildIntent) transitioned to INST_{ACK/NACK}
                 // but was marked as stale (e.g., has been requested to reroute by Topology event),
                 // then immediately enqueue the re-computation of parent intent.
-                if (isChildIntent && staleIntents.containsKey(parentIntent.getId()) && (
+                if (isChildIntent && staleIntents.containsKey(parentIntentId) && (
                         nextPathIntentState.equals(IntentState.INST_ACK) ||
                         nextPathIntentState.equals(IntentState.INST_NACK))) {
                     opList.add(Operator.ADD, parentIntent);
-                    staleIntents.remove(parentIntent.getId());
-                    log.debug("retrying intent execution for intent ID:{}", parentIntent.getId());
+                    staleIntents.remove(parentIntentId);
+                    log.debug("retrying intent execution for intent ID:{}", parentIntentId);
                 }
 
                 switch (nextPathIntentState) {
@@ -671,8 +672,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                     case DEL_PENDING:
                         if (isChildIntent) {
                             log.debug("put the state highLevelIntentStates ID {}, state {}",
-                                    parentIntent.getId(), nextPathIntentState);
-                            highLevelIntentStates.put(parentIntent.getId(), nextPathIntentState);
+                                    parentIntentId, nextPathIntentState);
+                            highLevelIntentStates.put(parentIntentId, nextPathIntentState);
                         }
                         log.debug("put the state pathIntentStates ID {}, state {}",
                                 pathIntentId, nextPathIntentState);
@@ -680,12 +681,12 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                         break;
                     case DEL_ACK:
                         if (isChildIntent) {
-                            if (intentInstalledMap.containsKey(parentIntent.getId())) {
-                                 intentInstalledMap.remove(parentIntent.getId());
+                            if (intentInstalledMap.containsKey(pathIntentId)) {
+                                 intentInstalledMap.remove(pathIntentId);
                             }
                             log.debug("put the state highLevelIntentStates ID {}, state {}",
-                                    parentIntent.getId(), nextPathIntentState);
-                            highLevelIntentStates.put(parentIntent.getId(), nextPathIntentState);
+                                    parentIntentId, nextPathIntentState);
+                            highLevelIntentStates.put(parentIntentId, nextPathIntentState);
                         }
                         log.debug("put the state pathIntentStates ID {}, state {}",
                                 pathIntentId, nextPathIntentState);
@@ -720,16 +721,15 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
      * @return The result of whether a pathIntent has been installed or not.
      */
     private boolean isFlowInstalled(PathIntent pathIntent, Set<Long> installedDpids) {
-        String parentIntentId = pathIntent.getParentIntent().getId();
-        log.debug("parentIntentId {}", parentIntentId);
+        String pathIntentId = pathIntent.getId();
 
-        if (intentInstalledMap.containsKey(parentIntentId)) {
+        if (intentInstalledMap.containsKey(pathIntentId)) {
             if (!installedDpids.isEmpty()) {
-                intentInstalledMap.get(parentIntentId).addAll(installedDpids);
+                intentInstalledMap.get(pathIntentId).addAll(installedDpids);
             }
         } else {
             // This is the creation of an entry.
-            intentInstalledMap.put(parentIntentId, installedDpids);
+            intentInstalledMap.put(pathIntentId, installedDpids);
         }
 
         Set<Long> allSwitchesForPath = new HashSet<Long>();
@@ -741,13 +741,15 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         }
         allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
 
-        if (log.isTraceEnabled()) {
-            log.trace("All switches {}, installed installedDpids {}",
-                    allSwitchesForPath, intentInstalledMap.get(parentIntentId));
+        if (log.isDebugEnabled()) {
+            log.debug("checking flow installation. ID:{}, dpids:{}, installed:{}",
+                    pathIntentId,
+                    allSwitchesForPath,
+                    intentInstalledMap.get(pathIntentId));
         }
 
-        if (allSwitchesForPath.equals(intentInstalledMap.get(parentIntentId))) {
-            intentInstalledMap.remove(parentIntentId);
+        if (allSwitchesForPath.equals(intentInstalledMap.get(pathIntentId))) {
+            intentInstalledMap.remove(pathIntentId);
             return true;
         }
 
