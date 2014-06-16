@@ -8,12 +8,14 @@
 # $ONOS_LOGBACK    : path of logback config file (~/ONOS/conf/logback.`hostname`.xml)
 # $ONOS_LOGDIR     : path of log output directory (~/ONOS/onos-logs)
 # $ONOS_LOGBASE    : base name of log output file (onos.`hostname`)
+# $ONOS_DEBUG      : option to enable debugger for ONOS (false)
 # $RAMCLOUD_HOME   : path of root directory of RAMCloud repository (~/ramcloud)
 # $RAMCLOUD_BRANCH : branch name of RAMCloud to use (master)
 # $ZK_HOME         : path of root directory of ZooKeeper (~/zookeeper-3.4.6)
 # $ZK_LIB_DIR      : path of ZooKeeper library (/var/lib/zookeeper)
 # $ZK_LOG_DIR      : path of ZooKeeper log output directory (~/ONOS/onos-logs/zk-`hostname`)
-# $JVM_OPTS        : JVM options ONOS starts with
+# $JVM_OPTS        : JVM options to add when starting ONOS
+# $JVM_DEBUG_PORT  : port to use for remote debugging ONOS process, when $ONOS_DEBUG is enabled (22007)
 # $ZK_CONF         : path of ZooKeeper config file (~/ONOS/conf/zoo.cfg)
 # $HC_CONF         : path of Hazelcast config file (~/ONOS/conf/hazelcast.xml)
 # $RAMCLOUD_CONF   : path of RAMCloud config file (~/ONOS/conf/ramcloud.conf)
@@ -95,6 +97,7 @@ LOGS="$ONOS_LOG $ONOS_STDOUT_LOG $ONOS_STDERR_LOG $PCAP_LOG"
 
 ONOS_PROPS=${ONOS_PROPS:-${ONOS_CONF_DIR}/onos.properties}
 JMX_PORT=${JMX_PORT:-7189}
+JVM_DEBUG_PORT=${JVM_DEBUG_PORT:-22007}
 
 # Set JVM options
 JVM_OPTS="${JVM_OPTS:-}"
@@ -960,6 +963,11 @@ function start-onos {
     JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datastore.hazelcast.baseConfig=${HC_CONF}"
   fi
 
+  # check for jvm debug flag
+  if [ "${ONOS_DEBUG}" = "true" ]; then
+    JVM_OPTS="${JVM_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${JVM_DEBUG_PORT}"
+  fi
+
   # Run ONOS
 
   # Need to cd ONOS_HOME. onos.properties currently specify hazelcast config path relative to CWD
@@ -999,7 +1007,7 @@ case "$1" in
     if [ ! -z "$2" ]; then
       mode_parameter=$2
     fi
-    
+
     case "${mode_parameter}" in
       single-node)
         zk start
