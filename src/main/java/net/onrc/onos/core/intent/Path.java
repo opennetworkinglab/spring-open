@@ -9,13 +9,11 @@ import java.util.ListIterator;
 import net.onrc.onos.core.topology.LinkEvent;
 
 /**
- * Base class for Path representation.
- *
- * @author Toshio Koide (t-koide@onlab.us)
+ * Base class for Path representation, which implements the List interface.
  */
 public class Path implements List<LinkEvent> {
 
-    private List<LinkEvent> links;
+    private final List<LinkEvent> links;
 
     /**
      * Default constructor to create an empty path.
@@ -24,6 +22,11 @@ public class Path implements List<LinkEvent> {
         links = new LinkedList<LinkEvent>();
     }
 
+    /**
+     * Returns a string representation of the path.
+     *
+     * @return "[LinkEvent src->dst],..."
+     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

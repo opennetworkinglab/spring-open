@@ -10,15 +10,27 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent.SwitchPort;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * In addition to maintaining the Intent ID to Intent mapping of its
+ * superclass, this class maintains a mapping from switch port to
+ * PathIntent. It is used to quickly identify Intents that are affected
+ * when a network event involves a particular switch port.
  */
 public class PathIntentMap extends IntentMap {
-    private HashMap<Long, HashMap<Long, HashSet<PathIntent>>> intents;
+    private final HashMap<Long, HashMap<Long, HashSet<PathIntent>>> intents;
 
+    /**
+     * Constructor.
+     */
     public PathIntentMap() {
         intents = new HashMap<>();
     }
 
+    /**
+     * Retrieve all PathIntents that contain the specified switch port.
+     *
+     * @param swPort the switch port to retrieve Intents for.
+     * @return a set of all intents that contain swPort
+     */
     private HashSet<PathIntent> get(SwitchPort swPort) {
         Long dpid = swPort.getDpid();
         Long port = swPort.getNumber();
@@ -35,10 +47,22 @@ public class PathIntentMap extends IntentMap {
         return targetIntents;
     }
 
+    /**
+     * Add a PathIntent to a particular switch port.
+     *
+     * @param swPort switch port
+     * @param intent Path Intent
+     */
     private void put(SwitchPort swPort, PathIntent intent) {
         get(swPort).add(intent);
     }
 
+    /**
+     * Add a PathIntent to the map. The function will automatically
+     * update the map with all switch ports contained in the Intent.
+     *
+     * @param intent the PathIntent
+     */
     @Override
     protected void putIntent(Intent intent) {
         if (!(intent instanceof PathIntent)) {
@@ -53,6 +77,11 @@ public class PathIntentMap extends IntentMap {
         }
     }
 
+    /**
+     * Removes a PathIntent from the map, including all switch ports.
+     *
+     * @param intentId the ID of the PathIntent to be removed
+     */
     @Override
     protected void removeIntent(String intentId) {
         PathIntent intent = (PathIntent) getIntent(intentId);
@@ -63,12 +92,25 @@ public class PathIntentMap extends IntentMap {
         super.removeIntent(intentId);
     }
 
+    /**
+     * Retrieve all intents that use a particular link.
+     *
+     * @param linkEvent the link to look up
+     * @return a collection of PathIntents that use the link
+     */
     public Collection<PathIntent> getIntentsByLink(LinkEvent linkEvent) {
         return getIntentsByPort(
                 linkEvent.getSrc().getDpid(),
                 linkEvent.getSrc().getNumber());
     }
 
+    /**
+     * Retrieve all intents that use a particular port.
+     *
+     * @param dpid the switch's DPID
+     * @param port the switch's port
+     * @return a collection of PathIntents that use the port
+     */
     public Collection<PathIntent> getIntentsByPort(Long dpid, Long port) {
         HashMap<Long, HashSet<PathIntent>> portToIntents = intents.get(dpid);
         if (portToIntents != null) {
@@ -80,6 +122,12 @@ public class PathIntentMap extends IntentMap {
         return new HashSet<>();
     }
 
+    /**
+     * Retrieve all intents that use a particular switch.
+     *
+     * @param dpid the switch's DPID
+     * @return a collection of PathIntents that use the switch
+     */
     public Collection<PathIntent> getIntentsByDpid(Long dpid) {
         HashSet<PathIntent> result = new HashSet<>();
         HashMap<Long, HashSet<PathIntent>> portToIntents = intents.get(dpid);
@@ -92,10 +140,10 @@ public class PathIntentMap extends IntentMap {
     }
 
     /**
-     * calculate available bandwidth of specified link.
+     * Calculate available bandwidth of specified link.
      *
-     * @param link
-     * @return
+     * @param link the Link
+     * @return the available bandwidth
      */
     public Double getAvailableBandwidth(Link link) {
         if (link == null) {

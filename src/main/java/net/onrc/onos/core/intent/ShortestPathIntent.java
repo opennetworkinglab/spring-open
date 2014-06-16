@@ -6,7 +6,9 @@ import net.onrc.onos.core.util.Dpid;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * The ShortestPathIntent is a simple, "high-level" intent that
+ * provides shortest path connectivity between two end points in
+ * the network.
  */
 @JsonSerialize(using = ShortestPathIntentSerializer.class)
 public class ShortestPathIntent extends Intent {
@@ -44,17 +46,29 @@ public class ShortestPathIntent extends Intent {
      * @param dstMac Destination Host MAC Address
      */
     public ShortestPathIntent(String id,
-                              long srcSwitch, long srcPort, long srcMac,
-                              long dstSwitch, long dstPort, long dstMac) {
-        //super(id);
+            long srcSwitch, long srcPort, long srcMac,
+            long dstSwitch, long dstPort, long dstMac) {
         this(id, srcSwitch, srcPort, srcMac, EMPTYIPADDRESS, dstSwitch, dstPort, dstMac, EMPTYIPADDRESS);
     }
 
+    /**
+     * Constructor.
+     *
+     * @param id Intent ID
+     * @param srcSwitch Source Switch DPID
+     * @param srcPort Source Port
+     * @param srcMac Source Host MAC Address
+     * @param srcIp Source IP Address
+     * @param dstSwitch Destination Switch DPID
+     * @param dstPort Destination Port
+     * @param dstMac Destination Host MAC Address
+     * @param dstIp Destination IP Address
+     */
     // CHECKSTYLE:OFF suppress the warning about too many parameters
     public ShortestPathIntent(String id,
-                              long srcSwitch, long srcPort, long srcMac, int srcIp,
-                              long dstSwitch, long dstPort, long dstMac, int dstIp ) {
-    // CHECKSTYLE:ON
+            long srcSwitch, long srcPort, long srcMac, int srcIp,
+            long dstSwitch, long dstPort, long dstMac, int dstIp ) {
+        // CHECKSTYLE:ON
         super(id);
         this.srcSwitchDpid = srcSwitch;
         this.srcPortNumber = srcPort;
@@ -120,10 +134,38 @@ public class ShortestPathIntent extends Intent {
         return dstMacAddress;
     }
 
-    public void setPathIntent(PathIntent pathIntent) {
+    /**
+     * Get the source IP address.
+     *
+     * @return source IP address
+     */
+    public int getSrcIp() {
+        return srcIpAddress;
+    }
+
+    /**
+     * Get the destination IP address.
+     *
+     * @return destination IP address
+     */
+    public int getDstIp() {
+        return dstIpAddress;
+    }
+
+    /**
+     * Set the low-level PathIntent ID.
+     *
+     * @param pathIntent new PathIntent
+     */
+    public void setPathIntentId(PathIntent pathIntent) {
         pathIntentId = pathIntent.getId();
     }
 
+    /**
+     * Get the low-level PathIntent ID.
+     *
+     * @return the ID of the low-level PathIntent
+     */
     public String getPathIntentId() {
         return pathIntentId;
     }
@@ -168,18 +210,32 @@ public class ShortestPathIntent extends Intent {
         this.firstSwitchHardTimeout = firstSwitchHardTimeout;
     }
 
+    /**
+     * Generates a hash code using the Intent ID.
+     *
+     * @return hashcode
+     */
     @Override
     public int hashCode() {
-        // TODO: Is this the intended behavior?
-        return (super.hashCode());
+        return super.hashCode();
     }
 
+    /**
+     * Compares two intent object by type (class) and Intent ID.
+     *
+     * @param obj other Intent
+     * @return true if equal, false otherwise
+     */
     @Override
     public boolean equals(Object obj) {
-        // TODO: Is this the intended behavior?
-        return (super.equals(obj));
+        return super.equals(obj);
     }
 
+    /**
+     * Returns a String representation of this Intent.
+     *
+     * @return comma separated list of Intent parameters
+     */
     @Override
     public String toString() {
         return String.format("id:%s, state:%s, srcDpid:%s, srcPort:%d, " +
@@ -191,11 +247,4 @@ public class ShortestPathIntent extends Intent {
                 MACAddress.valueOf(dstMacAddress), Integer.toString(dstIpAddress));
     }
 
-    public int getSrcIp() {
-        return srcIpAddress;
-    }
-
-    public int getDstIp() {
-        return dstIpAddress;
-    }
 }

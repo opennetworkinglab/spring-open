@@ -1,7 +1,9 @@
 package net.onrc.onos.core.intent;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * This class is merely an Intent and an associated operation.
+ * <p>
+ * It exists so that the pair can be serialized for notifications and persistence.
  */
 public class IntentOperation {
     public enum Operator {
@@ -26,14 +28,28 @@ public class IntentOperation {
     public Operator operator;
     public Intent intent;
 
+    /**
+     * Default Constructor.
+     */
     protected IntentOperation() {
     }
 
+    /**
+     * Constructor.
+     *
+     * @param operator the operation to perform for this Intent
+     * @param intent the Intent
+     */
     public IntentOperation(Operator operator, Intent intent) {
         this.operator = operator;
         this.intent = intent;
     }
 
+    /**
+     * Returns a string representation of the operation and Intent.
+     *
+     * @return "operator, (Intent ID)"
+     */
     @Override
     public String toString() {
         return operator.toString() + ", (" + intent.toString() + ")";

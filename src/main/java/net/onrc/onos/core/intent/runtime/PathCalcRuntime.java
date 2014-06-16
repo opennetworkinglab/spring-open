@@ -115,7 +115,7 @@ public class PathCalcRuntime implements IFloodlightService {
                     // create and add operation(s)
                     if (oldPathIntentId == null) {
                         // operation for new path-intent
-                        spIntent.setPathIntent(newPathIntent);
+                        spIntent.setPathIntentId(newPathIntent);
                         pathIntentOpList.add(Operator.ADD, newPathIntent);
                         log.debug("new intent:{}", newPathIntent);
                     } else {
@@ -126,7 +126,7 @@ public class PathCalcRuntime implements IFloodlightService {
                             log.debug("skip intent:{}", newPathIntent);
                         } else {
                             // update existing path-intent (reroute)
-                            spIntent.setPathIntent(newPathIntent);
+                            spIntent.setPathIntentId(newPathIntent);
                             pathIntentOpList.add(Operator.REMOVE, oldPathIntent);
                             pathIntentOpList.add(Operator.ADD, newPathIntent);
                             log.debug("update intent:{} -> {}", oldPathIntent, newPathIntent);

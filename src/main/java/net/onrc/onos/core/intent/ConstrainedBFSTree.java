@@ -9,13 +9,11 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Switch;
 
 /**
- * This class creates bandwidth constrained breadth first tree
- * and returns paths from root switch to leaf switches
- * which satisfies the bandwidth condition.
- * If bandwidth parameter is not specified, the normal breadth first tree will be calculated.
- * The paths are snapshot paths at the point of the class instantiation.
- *
- * @author Toshio Koide (t-koide@onlab.us)
+ * This class creates bandwidth constrained breadth first tree and returns paths
+ * from root switch to leaf switches which satisfies the bandwidth condition. If
+ * bandwidth parameter is not specified, the normal breadth first tree will be
+ * calculated. The paths are snapshot paths at the point of the class
+ * instantiation.
  */
 public class ConstrainedBFSTree {
     LinkedList<Switch> switchQueue = new LinkedList<>();
@@ -26,11 +24,23 @@ public class ConstrainedBFSTree {
     PathIntentMap intents = null;
     double bandwidth = 0.0; // 0.0 means no limit for bandwidth (normal BFS tree)
 
+    /**
+     * Constructor.
+     *
+     * @param rootSwitch root of the BFS tree
+     */
     public ConstrainedBFSTree(Switch rootSwitch) {
         this.rootSwitch = rootSwitch;
         calcTree();
     }
 
+    /**
+     * Constructor.
+     *
+     * @param rootSwitch root switch of the BFS tree
+     * @param intents map of Intents
+     * @param bandwidth
+     */
     public ConstrainedBFSTree(Switch rootSwitch, PathIntentMap intents, double bandwidth) {
         this.rootSwitch = rootSwitch;
         this.intents = intents;
@@ -38,6 +48,9 @@ public class ConstrainedBFSTree {
         calcTree();
     }
 
+    /**
+     * Calculates the BFS tree using any provided constraints and Intents.
+     */
     protected void calcTree() {
         switchQueue.add(rootSwitch);
         switchSearched.add(rootSwitch);
@@ -49,7 +62,7 @@ public class ConstrainedBFSTree {
                     continue;
                 }
                 if (intents != null &&
-                    intents.getAvailableBandwidth(link) < bandwidth) {
+                        intents.getAvailableBandwidth(link) < bandwidth) {
                     continue;
                 }
                 switchQueue.add(reachedSwitch);
@@ -59,6 +72,12 @@ public class ConstrainedBFSTree {
         }
     }
 
+    /**
+     * Return the computed path from the root switch to the leaf switch.
+     *
+     * @param leafSwitch the leaf switch
+     * @return the Path from the root switch to the leaf switch
+     */
     public Path getPath(Switch leafSwitch) {
         Path path = paths.get(leafSwitch);
         Long rootSwitchDpid = rootSwitch.getDpid();
