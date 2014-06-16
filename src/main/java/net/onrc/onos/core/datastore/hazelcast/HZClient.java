@@ -189,6 +189,16 @@ public final class HZClient implements IKVClient {
                 VersionedValueSerializableFactory.class);
     }
 
+
+    /**
+     * Gets the HazelcastInstance object.
+     *
+     * @return HazelcastInstance
+     */
+    HazelcastInstance getHZInstance() {
+        return hazelcastInstance;
+    }
+
     @Override
     public IKVTable getTable(final String tableName) {
         IMap<byte[], VersionedValue> map = hazelcastInstance.getMap(MAP_PREFIX + tableName);
