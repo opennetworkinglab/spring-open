@@ -522,7 +522,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         }
 
         for (PacketToPush packet : packets) {
-            log.debug("Start packetToPush to sw {}, outPort {}, path {}", packet.dpid, existingFlow.firstOutPort, path);
+            log.debug("Start packetToPush to sw {}, outPort {}, path {}",
+                    packet.dpid, existingFlow.firstOutPort, path);
             packetService.sendPacket(packet.eth, new SwitchPort(
                             packet.dpid, existingFlow.firstOutPort));
         }
@@ -532,12 +533,22 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     public void intentsChange(LinkedList<ChangedEvent> events) {
         for (ChangedEvent event : events) {
             log.debug("path intent ID {}, eventType {}", event.intent.getId() , event.eventType);
-            PathIntent pathIntent = (PathIntent) pathIntentMap.getIntent(event.intent.getId());
+
+            PathIntent pathIntent = null;
+            if (event.intent instanceof PathIntent) {
+                pathIntent = (PathIntent) event.intent;
+                log.trace("pathIntent {}", pathIntent);
+            }
+
             if (pathIntent == null) {
+                log.trace("pathIntent is null. "
+                        + "Remove the intent info from the local cache and return.");
                 continue;
             }
 
             if (!(pathIntent.getParentIntent() instanceof ShortestPathIntent)) {
+                log.trace("parentIntent is not ShortestPathIntent. return."
+                        + " Remove the intent info from the local cache and return.");
                 continue;
             }
 
@@ -545,6 +556,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                 case ADDED:
                     break;
                 case REMOVED:
+                    flowRemoved(pathIntent);
                     break;
                 case STATE_CHANGED:
                     IntentState state = pathIntent.getState();
@@ -562,6 +574,8 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                             flowRemoved(pathIntent);
                             break;
                         case DEL_PENDING:
+                            break;
+                        case REROUTE_REQ:
                             break;
                         default:
                             break;
