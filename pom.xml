@@ -84,7 +84,26 @@
         <artifactId>guice-maven-plugin</artifactId>
         <version>2.11.0</version>
       </plugin>
-      <!-- compile -->
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>2.5</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.8</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.6</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.3</version>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -104,7 +123,6 @@
         <executions>
         </executions>
       </plugin>
-      <!-- test -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -115,7 +133,7 @@
           <excludedGroups>net.onrc.onos.core.util.IntegrationTest</excludedGroups>
         </configuration>
       </plugin>
-      <!-- exec:java -->
+      <!-- TODO exec:java no longer used remove at some point? -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -126,27 +144,6 @@
         <executions>
         </executions>
       </plugin>
-      <!--
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>lib/gen-java</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -180,7 +177,7 @@
         </executions>
       </plugin>
 -->
-      <!--
+      <!-- Uncomment when publishing javadoc to github in the future.
       <plugin>
         <groupId>com.github.github</groupId>
         <artifactId>site-maven-plugin</artifactId>
@@ -204,6 +201,7 @@
       -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.4</version>
         <configuration>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -378,13 +376,6 @@
     <excludeDefaults>true</excludeDefaults>
     <outputDirectory>${project.build.directory}/site</outputDirectory>
     <plugins>
-      <!--
-      <plugin>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>guice-maven-plugin</artifactId>
-        <version>2.11.0</version>
-      </plugin>
-      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
@@ -397,7 +388,6 @@
           <reportSet>
             <reports>
               <report>dependencies</report>
-              <!--report>maven-emma-plugin</report-->
               <report>scm</report>
             </reports>
           </reportSet>
