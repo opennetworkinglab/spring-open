@@ -50,12 +50,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * The PathCalcRuntimeModule contains the PathCalcRuntime and PersistIntent.
+ * <p>
+ * It is responsible for converting operations for application level intents
+ * into operations for path level intents and send the converted operations
+ * to PlanCalcRuntimeModule in order to calculate flow entries and install them.
  */
 public class PathCalcRuntimeModule implements IFloodlightModule,
                                     IPathCalcRuntimeService,
                                     ITopologyListener,
                                     IEventChannelListener<Long, IntentStateList> {
+
+    /**
+     * Logging object for performance measurement.
+     * TODO: merge this into measurement framework
+     */
     static class PerfLog {
         private String step;
         private long time;
@@ -70,6 +79,10 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         }
     }
 
+    /**
+     * Formatted logger for performance measurement.
+     * TODO: merge this into measurement framework
+     */
     static class PerfLogger {
         private LinkedList<PerfLog> logData = new LinkedList<>();
 
@@ -198,6 +211,13 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     // private methods
     // ================================================================================
 
+    /**
+     * Creates operations (IntentOperationList) for Application-level
+     * intents that should be rerouted because of topology change,
+     * and execute the created operations.
+     *
+     * @param oldPaths a list of invalid path intents (which should be rerouted)
+     */
     private void reroutePaths(Collection<Intent> oldPaths) {
         if (oldPaths == null || oldPaths.isEmpty()) {
             return;
@@ -227,11 +247,86 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         executeIntentOperations(reroutingOperation);
     }
 
+    /**
+     * Checks whether the entire path's flow entries are installed or not.
+     *
+     * @param pathIntent : The pathIntent to be checked
+     * @param installedDpids : The dpids installed on one ONOS instance
+     * @return The result of whether a pathIntent has been installed or not.
+     */
+    private boolean isFlowInstalled(PathIntent pathIntent, Set<Long> installedDpids) {
+        String pathIntentId = pathIntent.getId();
+
+        if (intentInstalledMap.containsKey(pathIntentId)) {
+            if (!installedDpids.isEmpty()) {
+                intentInstalledMap.get(pathIntentId).addAll(installedDpids);
+            }
+        } else {
+            // This is the creation of an entry.
+            intentInstalledMap.put(pathIntentId, installedDpids);
+        }
+
+        Set<Long> allSwitchesForPath = new HashSet<Long>();
+        ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
+
+        for (LinkEvent linkEvent : pathIntent.getPath()) {
+            long sw = linkEvent.getSrc().getDpid();
+            allSwitchesForPath.add(sw);
+        }
+        allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
+
+        if (log.isDebugEnabled()) {
+            log.debug("checking flow installation. ID:{}, dpids:{}, installed:{}",
+                    pathIntentId,
+                    allSwitchesForPath,
+                    intentInstalledMap.get(pathIntentId));
+        }
+
+        if (allSwitchesForPath.equals(intentInstalledMap.get(pathIntentId))) {
+            intentInstalledMap.remove(pathIntentId);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Enumerates switch dpids along the specified path and inside the specified domain.
+     *
+     * @param pathIntent the path for enumeration
+     * @param domainSwitchDpids a set of the domain switch dpids
+     * @return a set of switch dpids along the specified path and inside the specified domain
+     */
+    private Set<Long> calcInstalledDpids(PathIntent pathIntent, Set<Long> domainSwitchDpids) {
+        Set<Long> allSwitchesForPath = new HashSet<Long>();
+        ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
+
+        for (LinkEvent linkEvent : pathIntent.getPath()) {
+            long sw = linkEvent.getSrc().getDpid();
+
+            if (domainSwitchDpids.contains(sw)) {
+                allSwitchesForPath.add(sw);
+            }
+        }
+
+        if (domainSwitchDpids.contains(spfIntent.getDstSwitchDpid())) {
+            allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("All switches for a path {}, domain switch dpids {}", allSwitchesForPath, domainSwitchDpids);
+        }
+
+        return allSwitchesForPath;
+    }
 
     // ================================================================================
     // IFloodlightModule implementations
     // ================================================================================
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
         Collection<Class<? extends IFloodlightService>> l = new ArrayList<>(1);
@@ -239,6 +334,9 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         return l;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
         Map<Class<? extends IFloodlightService>, IFloodlightService> m = new HashMap<>();
@@ -246,6 +344,9 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         return m;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         Collection<Class<? extends IFloodlightService>> l = new ArrayList<>(2);
@@ -255,6 +356,9 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         return l;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         datagridService = context.getServiceImpl(IDatagridService.class);
@@ -263,6 +367,9 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         restApi = context.getServiceImpl(IRestApiService.class);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void startUp(FloodlightModuleContext context) {
         highLevelIntents = new IntentMap();
@@ -282,11 +389,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     // ======================================================================
 
     /**
-     * Add Application Intents.
-     *
-     * @param appId the Application ID to use.
-     * @param appIntents the Application Intents to add.
-     * @return true on success, otherwise false.
+     * {@inheritDoc}
      */
     @Override
     public boolean addApplicationIntents(
@@ -349,11 +452,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     }
 
     /**
-     * Remove Application Intents.
-     *
-     * @param appId the Application ID to use.
-     * @param intentIds the Application Intent IDs to remove.
-     * @return true on success, otherwise false.
+     * {@inheritDoc}
      */
     @Override
     public boolean removeApplicationIntents(final String appId,
@@ -395,10 +494,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     }
 
     /**
-     * Remove all Application Intents.
-     *
-     * @param appId the Application ID to use.
-     * @return true on success, otherwise false.
+     * {@inheritDoc}
      */
     @Override
     public boolean removeAllApplicationIntents(final String appId) {
@@ -434,6 +530,9 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IntentOperationList executeIntentOperations(IntentOperationList list) {
 
@@ -513,16 +612,25 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IntentMap getHighLevelIntents() {
         return highLevelIntents;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IntentMap getPathIntents() {
         return pathIntents;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void purgeIntents() {
         highLevelIntents.purge();
@@ -534,6 +642,9 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     // ================================================================================
 
     // CHECKSTYLE:OFF suppress warning about too many parameters
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void topologyEvents(Collection<SwitchEvent> addedSwitchEvents,
                                    Collection<SwitchEvent> removedSwitchEvents,
@@ -609,16 +720,25 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     // IEventChannelListener implementations
     // ================================================================================
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void entryAdded(IntentStateList value) {
         entryUpdated(value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void entryRemoved(IntentStateList value) {
         // do nothing
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @SuppressWarnings("fallthrough")
     @Override
     public void entryUpdated(IntentStateList value) {
@@ -711,71 +831,5 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             log.trace("unlock entryUpdated");
         }
         executeIntentOperations(opList);
-    }
-
-    /***
-     * This function is to check whether the entire path's flow entries are installed or not.
-     *
-     * @param pathIntent : The pathIntent to be checked
-     * @param installedDpids : The dpids installed on one ONOS instance
-     * @return The result of whether a pathIntent has been installed or not.
-     */
-    private boolean isFlowInstalled(PathIntent pathIntent, Set<Long> installedDpids) {
-        String pathIntentId = pathIntent.getId();
-
-        if (intentInstalledMap.containsKey(pathIntentId)) {
-            if (!installedDpids.isEmpty()) {
-                intentInstalledMap.get(pathIntentId).addAll(installedDpids);
-            }
-        } else {
-            // This is the creation of an entry.
-            intentInstalledMap.put(pathIntentId, installedDpids);
-        }
-
-        Set<Long> allSwitchesForPath = new HashSet<Long>();
-        ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
-
-        for (LinkEvent linkEvent : pathIntent.getPath()) {
-            long sw = linkEvent.getSrc().getDpid();
-            allSwitchesForPath.add(sw);
-        }
-        allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
-
-        if (log.isDebugEnabled()) {
-            log.debug("checking flow installation. ID:{}, dpids:{}, installed:{}",
-                    pathIntentId,
-                    allSwitchesForPath,
-                    intentInstalledMap.get(pathIntentId));
-        }
-
-        if (allSwitchesForPath.equals(intentInstalledMap.get(pathIntentId))) {
-            intentInstalledMap.remove(pathIntentId);
-            return true;
-        }
-
-        return false;
-    }
-
-    private Set<Long> calcInstalledDpids(PathIntent pathIntent, Set<Long> domainSwitchDpids) {
-        Set<Long> allSwitchesForPath = new HashSet<Long>();
-        ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
-
-        for (LinkEvent linkEvent : pathIntent.getPath()) {
-            long sw = linkEvent.getSrc().getDpid();
-
-            if (domainSwitchDpids.contains(sw)) {
-                allSwitchesForPath.add(sw);
-            }
-        }
-
-        if (domainSwitchDpids.contains(spfIntent.getDstSwitchDpid())) {
-            allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
-        }
-
-        if (log.isTraceEnabled()) {
-            log.trace("All switches for a path {}, domain switch dpids {}", allSwitchesForPath, domainSwitchDpids);
-        }
-
-        return allSwitchesForPath;
     }
 }

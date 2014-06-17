@@ -8,11 +8,11 @@ import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperationList;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * Interface class used by PathCalcRuntimeModule class to operate intents.
  */
 public interface IPathCalcRuntimeService extends IFloodlightService {
     /**
-     * Add Application Intents.
+     * Adds Application Intents.
      *
      * @param appId the Application ID to use.
      * @param appIntents the Application Intents to add.
@@ -23,7 +23,7 @@ public interface IPathCalcRuntimeService extends IFloodlightService {
                 Collection<ApplicationIntent> appIntents);
 
     /**
-     * Remove Application Intents.
+     * Removes Application Intents.
      *
      * @param appId the Application ID to use.
      * @param intentIds the Application Intent IDs to remove.
@@ -33,18 +33,50 @@ public interface IPathCalcRuntimeService extends IFloodlightService {
                                             Collection<String> intentIds);
 
     /**
-     * Remove all Application Intents.
+     * Removes all Application Intents.
      *
      * @param appId the Application ID to use.
      * @return true on success, otherwise false.
      */
     public boolean removeAllApplicationIntents(final String appId);
 
+    /**
+     * Executes Application-level Intent operations.
+     * <p>
+     * IntentOperationList accepts ADD and REMOVE operations at the same time
+     * in order to update intents in one shot. It converts application-level
+     * intent operations into path-level intent operations, and send them to
+     * PlanCalcModule.
+     *
+     * @param list a list of intent operations
+     * @return the converted path-level intent operations
+     */
     public IntentOperationList executeIntentOperations(IntentOperationList list);
 
+    /**
+     * Retrieves application-level intents.
+     * <p>
+     * It returns IntentMap object. This object has listener to listen the
+     * additions, the removals and the status changes of intents.
+     *
+     * @return application-level intents.
+     */
     public IntentMap getHighLevelIntents();
 
+    /**
+     * Retrieves path-level intents.
+     * <p>
+     * It returns IntentMap object. This object has listener to listen the
+     * additions, the removals and the status changes of intents.
+     *
+     * @return path-level intents.
+     */
     public IntentMap getPathIntents();
 
+    /**
+     * Purges invalid intents.
+     * <p>
+     * It removes all uninstalled or failed application/path level intents.
+     */
     public void purgeIntents();
 }

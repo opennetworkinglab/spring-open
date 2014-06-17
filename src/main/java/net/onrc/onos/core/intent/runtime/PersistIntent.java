@@ -21,7 +21,9 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
 
 /**
- * @author nickkaranatsios
+ * The module used by PathCalcRuntimeModule class.
+ * <p>
+ * It persists intent operations into persistent storage.
  */
 public class PersistIntent {
     private static final Logger log = LoggerFactory.getLogger(PersistIntent.class);
@@ -37,7 +39,11 @@ public class PersistIntent {
     private long rangeEnd;
     private IdBlock idBlock = null;
 
-
+    /**
+     * Constructor.
+     *
+     * @param controllerRegistry the Registry Service to use.
+     */
     public PersistIntent(final IControllerRegistryService controllerRegistry) {
         this.controllerRegistry = controllerRegistry;
         table = DataStoreClient.getClient().getTable(INTENT_JOURNAL);
@@ -47,6 +53,21 @@ public class PersistIntent {
         kryo = new KryoFactory(1).newKryo();
     }
 
+    private long getNextBlock() {
+        // XXX This method is not thread safe, may lose allocated IdBlock
+        idBlock = controllerRegistry.allocateUniqueIdBlock(range);
+        nextId = new AtomicLong(idBlock.getStart());
+        rangeEnd = idBlock.getEnd();
+        return nextId.get();
+    }
+
+    /**
+     * Provides the unique key for persisting.
+     * <p>
+     * This key is necessary for persistIfLeader() method.
+     *
+     * @return a key for persisting.
+     */
     public long getKey() {
         long key;
         if (idBlock == null) {
@@ -60,14 +81,13 @@ public class PersistIntent {
         return key;
     }
 
-    private long getNextBlock() {
-        // XXX This method is not thread safe, may lose allocated IdBlock
-        idBlock = controllerRegistry.allocateUniqueIdBlock(range);
-        nextId = new AtomicLong(idBlock.getStart());
-        rangeEnd = idBlock.getEnd();
-        return nextId.get();
-    }
-
+    /**
+     * Persist intent operations into persistent storage only if this instance was a leader.
+     *
+     * @param key a unique key
+     * @param operations intent operations
+     * @return true if succeeded, otherwise false.
+     */
     public boolean persistIfLeader(long key, IntentOperationList operations) {
         boolean leader = true;
         boolean ret = false;

@@ -24,18 +24,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * The runtime used by PathCalcRuntimeModule class.
+ * <p>
+ * It calculates shortest-path and constrained-shortest-path.
  */
 public class PathCalcRuntime implements IFloodlightService {
     private Topology topology;
     private static final Logger log = LoggerFactory.getLogger(PathCalcRuntime.class);
 
+    /**
+     * Constructor.
+     *
+     * @param topology a topology object to use for the path calculation.
+     */
     public PathCalcRuntime(Topology topology) {
         this.topology = topology;
     }
 
     /**
-     * calculate shortest-path and constrained-shortest-path intents into low-level path intents.
+     * Calculates shortest-path and constrained-shortest-path intents into low-level path intents.
      *
      * @param intentOpList IntentOperationList having instances of ShortestPathIntent/ConstrainedShortestPathIntent
      * @param pathIntents  a set of current low-level intents
