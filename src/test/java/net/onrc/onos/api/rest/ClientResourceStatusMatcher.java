@@ -11,7 +11,7 @@ import org.restlet.resource.ClientResource;
  * Hamcrest Matcher to determine if a Restlet ClientResource object's status
  * matches a given status.
  */
-public class ClientResourceStatusMatcher extends TypeSafeMatcher<ClientResource> {
+public final class ClientResourceStatusMatcher extends TypeSafeMatcher<ClientResource> {
     private Status status;
 
     /**

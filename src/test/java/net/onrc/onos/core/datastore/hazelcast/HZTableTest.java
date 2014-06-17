@@ -192,7 +192,8 @@ public class HZTableTest {
     }
 
     @Test(expected = ObjectDoesntExistException.class)
-    public void testUpdateByteArrayByteArrayLongFailNoOldValue() throws ObjectDoesntExistException, WrongVersionException {
+    public void testUpdateByteArrayByteArrayLongFailNoOldValue()
+            throws ObjectDoesntExistException, WrongVersionException {
         final byte[] key = name.getMethodName().getBytes(StandardCharsets.UTF_8);
         final byte[] value = "SomeValue".getBytes(StandardCharsets.UTF_8);
 
@@ -204,7 +205,8 @@ public class HZTableTest {
     }
 
     @Test(expected = WrongVersionException.class)
-    public void testUpdateByteArrayByteArrayLongFailWrongVersion() throws ObjectDoesntExistException, WrongVersionException {
+    public void testUpdateByteArrayByteArrayLongFailWrongVersion()
+            throws ObjectDoesntExistException, WrongVersionException {
         final byte[] key = name.getMethodName().getBytes(StandardCharsets.UTF_8);
         final byte[] oldValue = "OldValue".getBytes(StandardCharsets.UTF_8);
         final byte[] value = "SomeValue".getBytes(StandardCharsets.UTF_8);
@@ -250,7 +252,8 @@ public class HZTableTest {
     }
 
     @Test
-    public void testUpdateByteArrayByteArraySuccessIgnoreVersion() throws ObjectDoesntExistException, WrongVersionException {
+    public void testUpdateByteArrayByteArraySuccessIgnoreVersion()
+            throws ObjectDoesntExistException, WrongVersionException {
         final byte[] key = name.getMethodName().getBytes(StandardCharsets.UTF_8);
         final byte[] oldValue = "OldValue".getBytes(StandardCharsets.UTF_8);
         final byte[] value = "SomeValue".getBytes(StandardCharsets.UTF_8);
@@ -341,9 +344,9 @@ public class HZTableTest {
 
     @Test
     public void testGetAllEntries() {
-        final int DATASETSIZE = 100;
+        final int dataSetSize = 100;
         final Map<byte[], VersionedValue> testdata = new TreeMap<>(ByteArrayComparator.BYTEARRAY_COMPARATOR);
-        for (int i = 0; i < DATASETSIZE; ++i) {
+        for (int i = 0; i < dataSetSize; ++i) {
             final byte[] key = (name.getMethodName() + i).getBytes(StandardCharsets.UTF_8);
             final byte[] value = ("Value" + i).getBytes(StandardCharsets.UTF_8);
 

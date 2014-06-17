@@ -18,7 +18,6 @@ import net.onrc.onos.core.util.IntegrationTest;
 import net.onrc.onos.core.util.Port;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openflow.protocol.OFBarrierRequest;
@@ -102,7 +101,7 @@ public class FlowPusherTest {
     @Test
     public void testMassiveAddMessage() {
         // Some number larger than FlowPusher.MAX_MESSAGE_SEND
-        final int NUM_MSG = FlowPusher.MAX_MESSAGE_SEND * 2;
+        final int numMsg = FlowPusher.MAX_MESSAGE_SEND * 2;
 
         beginInitMock();
 
@@ -114,7 +113,7 @@ public class FlowPusherTest {
 
         List<OFMessage> messages = new ArrayList<OFMessage>();
 
-        for (int i = 0; i < NUM_MSG; ++i) {
+        for (int i = 0; i < numMsg; ++i) {
             OFMessage msg = EasyMock.createMock(OFMessage.class);
             EasyMock.expect(msg.getXid()).andReturn(i).anyTimes();
             EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
@@ -158,13 +157,13 @@ public class FlowPusherTest {
      */
     @Test
     public void testMultiSwitchAddMessage() {
-        final int NUM_SWITCH = 10;
-        final int NUM_MSG = 100;    // messages per thread
+        final int numSwitch = 10;
+        final int numMsg = 100;    // messages per thread
 
         beginInitMock();
 
         Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
-        for (int i = 0; i < NUM_SWITCH; ++i) {
+        for (int i = 0; i < numSwitch; ++i) {
             IOFSwitch sw = EasyMock.createMock(IOFSwitch.class);
             EasyMock.expect(sw.getId()).andReturn((long) i).anyTimes();
             sw.flush();
@@ -173,7 +172,7 @@ public class FlowPusherTest {
 
             List<OFMessage> messages = new ArrayList<OFMessage>();
 
-            for (int j = 0; j < NUM_MSG; ++j) {
+            for (int j = 0; j < numMsg; ++j) {
                 OFMessage msg = EasyMock.createMock(OFMessage.class);
                 EasyMock.expect(msg.getXid()).andReturn(j).anyTimes();
                 EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
@@ -224,13 +223,13 @@ public class FlowPusherTest {
      */
     @Test
     public void testMultiThreadedAddMessage() {
-        final int NUM_THREAD = 10;
-        final int NUM_MSG = 100;    // messages per thread
+        final int numThreads = 10;
+        final int numMsg = 100;    // messages per thread
 
         beginInitMock();
 
         Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
-        for (int i = 0; i < NUM_THREAD; ++i) {
+        for (int i = 0; i < numThreads; ++i) {
             IOFSwitch sw = EasyMock.createMock(IOFSwitch.class);
             EasyMock.expect(sw.getId()).andReturn((long) i).anyTimes();
             sw.flush();
@@ -239,7 +238,7 @@ public class FlowPusherTest {
 
             List<OFMessage> messages = new ArrayList<OFMessage>();
 
-            for (int j = 0; j < NUM_MSG; ++j) {
+            for (int j = 0; j < numMsg; ++j) {
                 OFMessage msg = EasyMock.createMock(OFMessage.class);
                 EasyMock.expect(msg.getXid()).andReturn(j).anyTimes();
                 EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
@@ -257,7 +256,7 @@ public class FlowPusherTest {
         }
 
         endInitMock();
-        initPusher(NUM_THREAD);
+        initPusher(numThreads);
 
         for (IOFSwitch sw : swMap.keySet()) {
             for (OFMessage msg : swMap.get(sw)) {
@@ -292,14 +291,14 @@ public class FlowPusherTest {
      */
     @Test
     public void testRateLimitedAddMessage() {
-        final long LIMIT_RATE = 100; // [bytes/ms]
-        final int NUM_MSG = 1000;
+        final long limitRate = 100; // [bytes/ms]
+        final int numMsg = 1000;
 
         // Accuracy of FlowPusher's rate calculation can't be measured by unit test
         // because switch doesn't return BARRIER_REPLY.
         // In unit test we use approximate way to measure rate. This value is
         // acceptable margin of measured rate.
-        final double ACCEPTABLE_RATE = LIMIT_RATE * 1.2;
+        final double acceptableRate = limitRate * 1.2;
 
         beginInitMock();
 
@@ -312,7 +311,7 @@ public class FlowPusherTest {
 
         List<OFMessage> messages = new ArrayList<OFMessage>();
 
-        for (int i = 0; i < NUM_MSG; ++i) {
+        for (int i = 0; i < numMsg; ++i) {
             OFMessage msg = EasyMock.createMock(OFMessage.class);
             EasyMock.expect(msg.getXid()).andReturn(1).anyTimes();
             EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
@@ -348,7 +347,7 @@ public class FlowPusherTest {
         initPusher(1);
 
         pusher.createQueue(sw);
-        pusher.setRate(sw, LIMIT_RATE);
+        pusher.setRate(sw, limitRate);
 
         long beginTime = System.currentTimeMillis();
         for (OFMessage msg : messages) {
@@ -366,8 +365,8 @@ public class FlowPusherTest {
             fail("Failed to sleep");
         }
 
-        double measuredRate = NUM_MSG * 100 / (barrierTime - beginTime);
-        assertTrue(measuredRate < ACCEPTABLE_RATE);
+        double measuredRate = numMsg * 100 / (barrierTime - beginTime);
+        assertTrue(measuredRate < acceptableRate);
 
         for (OFMessage msg : messages) {
             EasyMock.verify(msg);

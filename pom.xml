@@ -59,6 +59,7 @@
           <propertiesLocation>${basedir}/conf/checkstyle/checkstyle_maven.properties</propertiesLocation>
           <failsOnError>false</failsOnError>
           <logViolationsToConsole>true</logViolationsToConsole>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
         </configuration>
         <executions>
           <execution>
@@ -428,6 +429,7 @@
               (under build and reporting)
           -->
           <propertiesLocation>${basedir}/conf/checkstyle/checkstyle_maven.properties</propertiesLocation>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
         </configuration>
         <reportSets>
           <reportSet>

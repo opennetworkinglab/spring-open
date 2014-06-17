@@ -105,7 +105,8 @@ public class FlowEntryActionTest {
         act.setActionSetVlanPriority(actVlan);
 
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_SET_VLAN_PCP, act.actionType());
-        assertEquals("vlan priority should be the same", actVlan.vlanPriority(), act.actionSetVlanPriority().vlanPriority());
+        assertEquals("vlan priority should be the same", actVlan.vlanPriority(),
+                act.actionSetVlanPriority().vlanPriority());
 
         FlowEntryAction actCopy = new FlowEntryAction(act);
         FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());

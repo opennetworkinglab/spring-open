@@ -66,7 +66,7 @@ public class IntentTestMocks {
             moduleContext = createMock(FloodlightModuleContext.class);
             final IEventChannel<Long, IntentOperationList> intentOperationChannel =
                     createMock(IEventChannel.class);
-            final IEventChannel<Long, IntentStateList>intentStateChannel =
+            final IEventChannel<Long, IntentStateList> intentStateChannel =
                     createMock(IEventChannel.class);
             persistIntent = PowerMock.createMock(PersistIntent.class);
             restApi = createMock(IRestApiService.class);

@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @PrepareForTest(PathCalcRuntimeModule.class)
 public class TestRestIntentHighDelete extends TestRestIntent {
     private static final Long LOCAL_PORT = 0xFFFEL;
+    private static final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";
 
 
     /**
@@ -56,7 +57,6 @@ public class TestRestIntentHighDelete extends TestRestIntent {
      * Make a set of Intents that can be used as test data.
      */
     private void makeDefaultIntents() {
-        final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";
 
         // create shortest path intents
         final IntentOperationList opList = new IntentOperationList();

@@ -387,28 +387,28 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
 
     /**
      * This test case verifies that LinkDiscoveryManager.sendDiscoveryMessage()
-     * performs "write" operation on the specified IOFSwitch object 
-     * with a LLDP packet
-     * 
+     * performs "write" operation on the specified IOFSwitch object
+     * with a LLDP packet.
+     *
      * @throws IOException
      */
     @Test
-    public void testSendDiscoveryMessage() throws IOException{
+    public void testSendDiscoveryMessage() throws IOException {
         LinkDiscoveryManager topology = getTopology();
 
         // Mock up our expected behavior
         IOFSwitch swTest = createMockSwitch(3L);
         getMockFloodlightProvider().getSwitches().put(3L, swTest);
-        
+
         short portNum = 1;
         OFPhysicalPort ofpPort = new OFPhysicalPort();
         ofpPort.setPortNumber(portNum);
-        
-        /* sendDiscoverMessage() should perform the following actions on 
+
+        /* sendDiscoverMessage() should perform the following actions on
          * IOFSwitch object
-         * 	- getPort() with argument as "1"
-         * 	- write() with OFPacketOut
-         * 	- flush()
+         * - getPort() with argument as "1"
+         * - write() with OFPacketOut
+         * - flush()
          */
         expect(swTest.getPort(portNum)).andReturn(ofpPort).atLeastOnce();
         swTest.write(EasyMock.anyObject(OFMessage.class), EasyMock.anyObject(FloodlightContext.class));
@@ -416,9 +416,9 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         swTest.flush();
         EasyMock.expectLastCall().once();
         replay(swTest);
-        
+
         topology.sendDiscoveryMessage(3L, portNum, true, false);
-        
+
         verify(swTest);
     }
 }

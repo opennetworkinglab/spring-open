@@ -6,6 +6,6 @@
   </local-check-config>
   <fileset name="all" enabled="true" check-config-name="ONOS" local="true">
     <file-match-pattern match-pattern="." include-pattern="true"/>
-    <file-match-pattern match-pattern="src/test/.*" include-pattern="false"/>
+    <file-match-pattern match-pattern="src/test/.*" include-pattern="true"/>
   </fileset>
 </fileset-config>

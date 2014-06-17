@@ -60,7 +60,8 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     protected static final String CONTROLLER_ID = "controller2013";
 
     /**
-     * Initialize {@link ZookeeperRegistry} Object and inject initial value with {@link ZookeeperRegistry#init(FloodlightModuleContext)} method.
+     * Initialize {@link ZookeeperRegistry} Object and inject initial value with
+     * {@link ZookeeperRegistry#init(FloodlightModuleContext)} method.
      * This setup code also tests {@link ZookeeperRegistry#init(FloodlightModuleContext)} method itself.
      */
     @Override
@@ -99,7 +100,9 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
 
     /**
      * Test if {@link ZookeeperRegistry#registerController(String)} method can go through without exception.
-     * (Exceptions are usually out of test target, but {@link ZookeeperRegistry#registerController(String)} throws an exception in case of invalid registration.)
+     * (Exceptions are usually out of test target,
+     * but {@link ZookeeperRegistry#registerController(String)}
+     * throws an exception in case of invalid registration.)
      */
     @Test
     public void testRegisterController() {
@@ -137,7 +140,8 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
 
     /**
      * Test if {@link ZookeeperRegistry#getAllControllers()} returns all controllers.
-     * Controllers to be returned are injected while setup. See {@link ZookeeperRegistryTest#createCuratorFrameworkMock()}
+     * Controllers to be returned are injected while setup.
+     * See {@link ZookeeperRegistryTest#createCuratorFrameworkMock()}
      * to what controllers are injected using mock {@link ServiceCache}.
      *
      * @throws Exception
@@ -158,8 +162,9 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     }
 
     /**
-     * Test if {@link ZookeeperRegistry#requestControl(long, net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback)}
-     * correctly take control of specific switch. Because {@link ZookeeperRegistry#requestControl(long, net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback)}
+     * Test if {@link ZookeeperRegistry#requestControl(long, IControllerRegistryService.ControlChangeCallback)}
+     * correctly take control of specific switch.
+     * Because {@link ZookeeperRegistry#requestControl(long, IControllerRegistryService.ControlChangeCallback)}
      * doesn't return values, inject mock {@link LeaderLatch} object and verify latch is correctly set up.
      *
      * @throws Exception
@@ -175,7 +180,9 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         EasyMock.replay(latch);
 
         PowerMock.expectNew(LeaderLatch.class,
-                EasyMock.anyObject(CuratorFramework.class), EasyMock.anyObject(String.class), EasyMock.anyObject(String.class))
+                EasyMock.anyObject(CuratorFramework.class),
+                EasyMock.anyObject(String.class),
+                EasyMock.anyObject(String.class))
                 .andReturn(latch).once();
         PowerMock.replay(LeaderLatch.class);
 
@@ -217,7 +224,9 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         EasyMock.replay(latch);
 
         PowerMock.expectNew(LeaderLatch.class,
-                EasyMock.anyObject(CuratorFramework.class), EasyMock.anyObject(String.class), EasyMock.anyObject(String.class))
+                EasyMock.anyObject(CuratorFramework.class),
+                EasyMock.anyObject(String.class),
+                EasyMock.anyObject(String.class))
                 .andReturn(latch).once();
         PowerMock.replay(LeaderLatch.class);
 
@@ -234,7 +243,8 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     }
 
     /**
-     * Test if {@link ZookeeperRegistry#hasControl(long)} returns correct status whether controller has control of specific switch.
+     * Test if {@link ZookeeperRegistry#hasControl(long)} returns
+     * correct status whether controller has control of specific switch.
      *
      * @throws Exception
      */
@@ -254,7 +264,9 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         EasyMock.replay(latch);
 
         PowerMock.expectNew(LeaderLatch.class,
-                EasyMock.anyObject(CuratorFramework.class), EasyMock.anyObject(String.class), EasyMock.anyObject(String.class))
+                EasyMock.anyObject(CuratorFramework.class),
+                EasyMock.anyObject(String.class),
+                EasyMock.anyObject(String.class))
                 .andReturn(latch);
         PowerMock.replay(LeaderLatch.class);
 
@@ -281,8 +293,10 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     }
 
     /**
-     * Test if {@link ZookeeperRegistry#getControllerForSwitch(long)} correctly returns controller ID of specific switch.
-     * Relation between controllers and switches are defined by {@link ZookeeperRegistryTest#setPathChildrenCache()} function.
+     * Test if {@link ZookeeperRegistry#getControllerForSwitch(long)}
+     * correctly returns controller ID of specific switch.
+     * Relation between controllers and switches are defined by
+     * {@link ZookeeperRegistryTest#setPathChildrenCache()} function.
      *
      * @throws Throwable
      */
@@ -353,18 +367,18 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     @Test
     public void testAllocateUniqueIdBlock() {
         // Number of blocks to be verified that any of them has unique block
-        final int NUM_BLOCKS = 100;
-        ArrayList<IdBlock> blocks = new ArrayList<IdBlock>(NUM_BLOCKS);
+        final int numBlocks = 100;
+        ArrayList<IdBlock> blocks = new ArrayList<IdBlock>(numBlocks);
 
-        for (int i = 0; i < NUM_BLOCKS; ++i) {
+        for (int i = 0; i < numBlocks; ++i) {
             IdBlock block = registry.allocateUniqueIdBlock();
             assertNotNull(block);
             blocks.add(block);
         }
 
-        for (int i = 0; i < NUM_BLOCKS; ++i) {
+        for (int i = 0; i < numBlocks; ++i) {
             IdBlock block1 = blocks.get(i);
-            for (int j = i + 1; j < NUM_BLOCKS; ++j) {
+            for (int j = i + 1; j < numBlocks; ++j) {
                 IdBlock block2 = blocks.get(j);
                 IdBlock lower, higher;
 
@@ -428,7 +442,9 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         EasyMock.replay(daLong);
         PowerMock.expectNew(DistributedAtomicLong.class,
                 new Class<?>[]{CuratorFramework.class, String.class, RetryPolicy.class},
-                EasyMock.anyObject(CuratorFramework.class), EasyMock.anyObject(String.class), EasyMock.anyObject(RetryPolicy.class)).
+                EasyMock.anyObject(CuratorFramework.class),
+                EasyMock.anyObject(String.class),
+                EasyMock.anyObject(RetryPolicy.class)).
                 andReturn(daLong).anyTimes();
         PowerMock.replay(DistributedAtomicLong.class);
 
@@ -445,10 +461,14 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         EasyMock.replay(listenerContainer);
 
         // Mock PathChildrenCache
-        PathChildrenCache pathChildrenCacheMain = createPathChildrenCacheMock(CONTROLLER_ID, new String[]{"/switches"}, listenerContainer);
-        PathChildrenCache pathChildrenCache1 = createPathChildrenCacheMock("controller1", new String[]{HexString.toHexString(1000L)}, listenerContainer);
-        PathChildrenCache pathChildrenCache2 = createPathChildrenCacheMock("controller2", new String[]{
-                HexString.toHexString(1001L), HexString.toHexString(1002L)}, listenerContainer);
+        PathChildrenCache pathChildrenCacheMain = createPathChildrenCacheMock(
+                CONTROLLER_ID, new String[] {"/switches"}, listenerContainer);
+        PathChildrenCache pathChildrenCache1 = createPathChildrenCacheMock("controller1",
+                new String[] {HexString.toHexString(1000L)}, listenerContainer);
+        PathChildrenCache pathChildrenCache2 = createPathChildrenCacheMock("controller2",
+                new String[] {
+                        HexString.toHexString(1001L), HexString.toHexString(1002L)},
+                listenerContainer);
 
         // Mock PathChildrenCache constructor
         PowerMock.expectNew(PathChildrenCache.class,
@@ -474,7 +494,8 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
 
         // Mock ServiceCacheBuilder
         ServiceCacheBuilder<ControllerService> serviceCacheBuilder = EasyMock.createMock(ServiceCacheBuilder.class);
-        EasyMock.expect(serviceCacheBuilder.name(EasyMock.anyObject(String.class))).andReturn(serviceCacheBuilder).once();
+        EasyMock.expect(serviceCacheBuilder.name(EasyMock.anyObject(String.class)))
+            .andReturn(serviceCacheBuilder).once();
         EasyMock.expect(serviceCacheBuilder.build()).andReturn(serviceCache).once();
         EasyMock.replay(serviceCacheBuilder);
 
@@ -536,8 +557,11 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
      * @return Mock PathChildrenCache object
      * @throws Exception
      */
-    private PathChildrenCache createPathChildrenCacheMock(final String controllerId, final String[] paths,
-                                                          ListenerContainer<PathChildrenCacheListener> listener) throws Exception {
+    private PathChildrenCache createPathChildrenCacheMock(
+                final String controllerId,
+                final String[] paths,
+                ListenerContainer<PathChildrenCacheListener> listener)
+                    throws Exception {
         PathChildrenCache pathChildrenCache = EasyMock.createMock(PathChildrenCache.class);
 
         EasyMock.expect(pathChildrenCache.getListenable()).andReturn(listener).anyTimes();
@@ -582,12 +606,18 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
      * @throws Exception
      */
     private void setPathChildrenCache() throws Exception {
-        pathChildrenCacheListener.childEvent(client,
-                createChildrenCacheEventMock("controller1", HexString.toHexString(1000L), PathChildrenCacheEvent.Type.CHILD_ADDED));
-        pathChildrenCacheListener.childEvent(client,
-                createChildrenCacheEventMock("controller2", HexString.toHexString(1001L), PathChildrenCacheEvent.Type.CHILD_ADDED));
-        pathChildrenCacheListener.childEvent(client,
-                createChildrenCacheEventMock("controller2", HexString.toHexString(1002L), PathChildrenCacheEvent.Type.CHILD_ADDED));
+        pathChildrenCacheListener.childEvent(
+                client,
+                createChildrenCacheEventMock("controller1", HexString.toHexString(1000L),
+                        PathChildrenCacheEvent.Type.CHILD_ADDED));
+        pathChildrenCacheListener.childEvent(
+                client,
+                createChildrenCacheEventMock("controller2", HexString.toHexString(1001L),
+                        PathChildrenCacheEvent.Type.CHILD_ADDED));
+        pathChildrenCacheListener.childEvent(
+                client,
+                createChildrenCacheEventMock("controller2", HexString.toHexString(1002L),
+                        PathChildrenCacheEvent.Type.CHILD_ADDED));
     }
 
     /**

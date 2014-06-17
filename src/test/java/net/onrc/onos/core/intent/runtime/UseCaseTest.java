@@ -167,11 +167,16 @@ public class UseCaseTest {
     public void createConstrainedShortestPaths() throws FloodlightModuleException {
         // create constrained shortest path intents
         IntentOperationList opList = new IntentOperationList();
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("1", 1L, 12L, LOCAL_PORT, 2L, 21L, LOCAL_PORT, 400.0));
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("2", 1L, 14L, LOCAL_PORT, 4L, 41L, LOCAL_PORT, 400.0));
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("3", 2L, 24L, LOCAL_PORT, 4L, 42L, LOCAL_PORT, 400.0));
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("4", 2L, 23L, LOCAL_PORT, 3L, 32L, LOCAL_PORT, 400.0));
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("5", 3L, 34L, LOCAL_PORT, 4L, 43L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("1", 1L, 12L,
+                LOCAL_PORT, 2L, 21L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("2", 1L, 14L,
+                LOCAL_PORT, 4L, 41L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("3", 2L, 24L,
+                LOCAL_PORT, 4L, 42L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("4", 2L, 23L,
+                LOCAL_PORT, 3L, 32L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("5", 3L, 34L,
+                LOCAL_PORT, 4L, 43L, LOCAL_PORT, 400.0));
 
         // compile high-level intent operations into low-level intent operations (calculate paths)
         PathCalcRuntimeModule runtime1 = new PathCalcRuntimeModule();
@@ -192,11 +197,16 @@ public class UseCaseTest {
     public void createMixedShortestPaths() throws FloodlightModuleException {
         // create constrained & best effort shortest path intents
         IntentOperationList opList = new IntentOperationList();
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("1", 1L, 12L, LOCAL_PORT, 2L, 21L, LOCAL_PORT, 400.0));
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("2", 1L, 14L, LOCAL_PORT, 4L, 41L, LOCAL_PORT, 400.0));
-        opList.add(Operator.ADD, new ShortestPathIntent("3", 2L, 24L, LOCAL_PORT, 4L, 42L, LOCAL_PORT));
-        opList.add(Operator.ADD, new ShortestPathIntent("4", 2L, 23L, LOCAL_PORT, 3L, 32L, LOCAL_PORT));
-        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("5", 3L, 34L, LOCAL_PORT, 4L, 43L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("1", 1L, 12L,
+                LOCAL_PORT, 2L, 21L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("2", 1L, 14L,
+                LOCAL_PORT, 4L, 41L, LOCAL_PORT, 400.0));
+        opList.add(Operator.ADD, new ShortestPathIntent("3", 2L, 24L, LOCAL_PORT, 4L,
+                42L, LOCAL_PORT));
+        opList.add(Operator.ADD, new ShortestPathIntent("4", 2L, 23L, LOCAL_PORT, 3L,
+                32L, LOCAL_PORT));
+        opList.add(Operator.ADD, new ConstrainedShortestPathIntent("5", 3L, 34L,
+                LOCAL_PORT, 4L, 43L, LOCAL_PORT, 400.0));
 
         // compile high-level intent operations into low-level intent operations (calculate paths)
         PathCalcRuntimeModule runtime1 = new PathCalcRuntimeModule();

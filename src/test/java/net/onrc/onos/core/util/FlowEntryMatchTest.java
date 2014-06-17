@@ -307,7 +307,14 @@ public class FlowEntryMatchTest {
         FlowEntryMatch def = new FlowEntryMatch();
         assertEquals("match default", def.toString(), "[]");
 
-        assertEquals("match set", match.toString(), "[inPort=1 srcMac=01:02:03:04:05:06 dstMac=06:05:04:03:02:01 ethernetFrameType=2 vlanId=3 vlanPriority=4 srcIPv4Net=127.0.0.1/32 dstIPv4Net=127.0.0.2/32 ipProto=5 ipToS=6 srcTcpUdpPort=7 dstTcpUdpPort=8]");
+        assertEquals(
+                "match set",
+                match.toString(),
+                "[inPort=1 srcMac=01:02:03:04:05:06 dstMac=06:05:04:03:02:01"
+                + " ethernetFrameType=2 vlanId=3 vlanPriority=4"
+                + " srcIPv4Net=127.0.0.1/32"
+                + " dstIPv4Net=127.0.0.2/32 ipProto=5 ipToS=6"
+                + " srcTcpUdpPort=7 dstTcpUdpPort=8]");
     }
 
 }

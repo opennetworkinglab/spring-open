@@ -242,7 +242,8 @@ public class StandaloneRegistryTest {
     }
 
     /**
-     * Test if {@link StandaloneRegistry#requestControl(long, ControlChangeCallback)} can correctly take control for switch so that callback is called.
+     * Test if {@link StandaloneRegistry#requestControl(long, ControlChangeCallback)}
+     * can correctly take control for switch so that callback is called.
      *
      * @throws RegistryException
      * @throws InterruptedException
@@ -272,7 +273,8 @@ public class StandaloneRegistryTest {
     }
 
     /**
-     * Test if {@link StandaloneRegistry#releaseControl(long)} can correctly release the control so that callback is called.
+     * Test if {@link StandaloneRegistry#releaseControl(long)}
+     * can correctly release the control so that callback is called.
      *
      * @throws InterruptedException
      * @throws RegistryException
@@ -473,16 +475,16 @@ public class StandaloneRegistryTest {
     @Test
     public void testAllocateUniqueIdBlock() {
         // Number of blocks to be verified that any of them has unique block
-        final int NUM_BLOCKS = 100;
-        ArrayList<IdBlock> blocks = new ArrayList<IdBlock>(NUM_BLOCKS);
+        final int numBlocks = 100;
+        ArrayList<IdBlock> blocks = new ArrayList<IdBlock>(numBlocks);
 
-        for (int i = 0; i < NUM_BLOCKS; ++i) {
+        for (int i = 0; i < numBlocks; ++i) {
             blocks.add(registry.allocateUniqueIdBlock());
         }
 
-        for (int i = 0; i < NUM_BLOCKS; ++i) {
+        for (int i = 0; i < numBlocks; ++i) {
             IdBlock block1 = blocks.get(i);
-            for (int j = i + 1; j < NUM_BLOCKS; ++j) {
+            for (int j = i + 1; j < numBlocks; ++j) {
                 IdBlock block2 = blocks.get(j);
                 IdBlock lower, higher;
 

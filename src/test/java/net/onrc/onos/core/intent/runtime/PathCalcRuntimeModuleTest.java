@@ -170,6 +170,8 @@ public class PathCalcRuntimeModuleTest {
         mocks.tearDownIntentMocks();
     }
 
+    private static final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";
+
     /**
      * Test the result of executing a path calculation on an
      * Intent Operation List which contains a path that references a
@@ -182,7 +184,6 @@ public class PathCalcRuntimeModuleTest {
      */
     @Test
     public void testInvalidSwitchName() {
-        final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";
 
         // create shortest path intents
         final IntentOperationList opList = new IntentOperationList();
@@ -327,6 +328,7 @@ public class PathCalcRuntimeModuleTest {
                 hasIntentWithIdAndState("3", IntentState.INST_REQ));
     }
 
+    // CHECKSTYLE:OFF method too long
     /**
      * Test the result of executing a path calculation on an
      * Intent Operation List and then forcing a reroute.
@@ -450,7 +452,6 @@ public class PathCalcRuntimeModuleTest {
         assertThat(processedPathIntents,
                 hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
 
-
         //  Remove one of the links and check results
         final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
         final List<PortEvent> emptyPortEvents = new LinkedList<>();
@@ -465,15 +466,10 @@ public class PathCalcRuntimeModuleTest {
         LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
-        runtime.topologyEvents(
-                emptySwitchEvents,
-                emptySwitchEvents,
-                emptyPortEvents,
-                emptyPortEvents,
-                addedLinkEvents,
-                removedLinkEvents,
-                emptyDeviceEvents,
-                emptyDeviceEvents);
+        runtime.topologyEvents(emptySwitchEvents, emptySwitchEvents,
+                    emptyPortEvents, emptyPortEvents,
+                    addedLinkEvents, removedLinkEvents,
+                    emptyDeviceEvents, emptyDeviceEvents);
 
         //  Check the high level intents.
         final IntentMap highLevelIntentsAfterReroute = runtime.getHighLevelIntents();
@@ -818,4 +814,6 @@ public class PathCalcRuntimeModuleTest {
         assertThat(reroutedPathIntents,
                 hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
     }
+    // CHECKSTYLE:ON method too long
+
 }

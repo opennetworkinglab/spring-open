@@ -65,11 +65,12 @@ public class PrefixTest {
         assertEquals(p1.hashCode(), p3.hashCode());
     }
 
+    private static final int MAX_PREFIX_LENGTH = 32;
+
     @Test
     public void testPrefixReturnsSame() {
         //Create a prefix of all 1s for each prefix length.
         //Check that Prefix doesn't mangle it
-        final int MAX_PREFIX_LENGTH = 32;
         for (int prefixLength = 1; prefixLength <= MAX_PREFIX_LENGTH; prefixLength++) {
             byte[] address = new byte[MAX_PREFIX_LENGTH / Byte.SIZE];
 

@@ -97,7 +97,7 @@ public class TestRestIntent extends TestRest {
      * Utility function to locate an intent in a JSON collection
      * that has the given id.
      * The JSON collection of intents looks like:
-     *  <code>
+     *  {@code
      *      MAP =
      *        [0] =
      *          MAP =
@@ -112,7 +112,7 @@ public class TestRestIntent extends TestRest {
      *            id = "3"
      *            ...
      *        ...
-     *  </code>
+     *  }
      *
      * @param intents collection map to search
      * @param id id of the intent to look for
@@ -120,7 +120,7 @@ public class TestRestIntent extends TestRest {
      */
     Map<String, String> findIntentWithId(final Collection<Map<String, String>> intents,
                                          final String id) {
-        for (final Map<String, String>intentMap : intents) {
+        for (final Map<String, String> intentMap : intents) {
             if (id.equals(intentMap.get("id"))) {
                 return intentMap;
             }
@@ -139,7 +139,7 @@ public class TestRestIntent extends TestRest {
      */
     @SuppressWarnings("unchecked")
     Collection<Map<String, String>> getIntentsCollection(final ClientResource client) {
-        return (Collection<Map<String, String>>)client.get(Collection.class);
+        return client.get(Collection.class);
     }
 
     /**
@@ -152,6 +152,6 @@ public class TestRestIntent extends TestRest {
      */
     @SuppressWarnings("unchecked")
     Map<String, String> getIntent(final ClientResource client) {
-        return (Map<String, String>)client.get(Map.class);
+        return client.get(Map.class);
     }
 }

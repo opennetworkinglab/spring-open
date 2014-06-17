@@ -85,7 +85,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
 
         expect(datagridService.createChannel("onos.device", Long.class, OnosDevice.class))
         .andReturn(eventChannel).once();
-        expect(topology.getOutgoingLink((long)1,(long)100)).andReturn(null).anyTimes();
+        expect(topology.getOutgoingLink(1L, 100L)).andReturn(null).anyTimes();
         expect(datagridService.addListener(
                 eq("onos.device"),
                 anyObject(IEventChannelListener.class),
@@ -97,8 +97,8 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
         replay(networkGraphService);
         replay(controllerRegistryService);
 
-        modContext.addService(IDatagridService.class,datagridService);
-        modContext.addService(ITopologyService.class,networkGraphService);
+        modContext.addService(IDatagridService.class, datagridService);
+        modContext.addService(ITopologyService.class, networkGraphService);
         modContext.addService(IFloodlightProviderService.class, floodLightProvider);
         modContext.getServiceImpl(IFloodlightProviderService.class);
         sw1Dpid = 1L;
@@ -224,11 +224,11 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
     }
 
     /**
-     * Test set operation on lastSeenTimstamp field in OnosDevice
+     * Test set operation on lastSeenTimstamp field in OnosDevice.
      */
     @Test
     public void testSetLastSeenTimestamp() {
-        Ethernet eth = (Ethernet)pkt1;
+        Ethernet eth = (Ethernet) pkt1;
         OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
 
         floodLightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(OnosDeviceManager.class));
@@ -241,7 +241,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testGetSourceDeviceFromPacket() {
-        byte[] address = new byte[] {0x00,0x44,0x33,0x22,0x11,0x01};
+        byte[] address = new byte[] {0x00, 0x44, 0x33, 0x22, 0x11, 0x01};
         MACAddress srcMac = new MACAddress(address);
         OnosDevice dev1 = new OnosDevice(srcMac,
                 null,
@@ -252,24 +252,24 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
         /*
          * test DHCP packet case
          */
-        Ethernet eth = (Ethernet)pkt3;
+        Ethernet eth = (Ethernet) pkt3;
         OnosDevice dev2 = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
         assertEquals(dev1, dev2);
 
         /*
          * test ARP packet case
          */
-        eth = (Ethernet)pkt4;
+        eth = (Ethernet) pkt4;
         dev2 = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
         assertEquals(dev1, dev2);
     }
 
     /**
-     * This test will invoke addOnosDevice to add a new device through Packet pkt1
+     * This test will invoke addOnosDevice to add a new device through Packet pkt1.
      */
     @Test
     public void testProcessPacketInAddNewDevice() {
-        Ethernet eth = (Ethernet)pkt1;
+        Ethernet eth = (Ethernet) pkt1;
         Long longmac = eth.getSourceMAC().toLong();
         OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
 
@@ -281,7 +281,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
         EasyMock.expectLastCall();
         replay(floodLightProvider, eventChannel);
 
-        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet)pkt1);
+        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet) pkt1);
         assertEquals(Command.CONTINUE, cmd);
 
         verify(eventChannel);
@@ -289,11 +289,11 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
 
     /**
      * This test will test return Command.STOP path in processPacketIn method
-     * by injecting a broadcast packet
+     * by injecting a broadcast packet.
      */
     @Test
     public void testProcessPacketInStop() {
-        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet)pkt0);
+        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet) pkt0);
         assertEquals(Command.STOP, cmd);
     }
 
@@ -302,37 +302,37 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testProcessPacketInSamePacket() {
-        Ethernet eth = (Ethernet)pkt2;
+        Ethernet eth = (Ethernet) pkt2;
         OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
         odm.entryAdded(srcDevice);
         srcDevice.setLastSeenTimestamp(lastSeenTimestamp);
 
-        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet)pkt2);
+        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet) pkt2);
         assertEquals(Command.CONTINUE, cmd);
         assertTrue(lastSeenTimestamp.before(srcDevice.getLastSeenTimestamp()));
     }
 
     /**
-     * This tests the packet with the same MAC but the second one without IP address
+     * This tests the packet with the same MAC but the second one without IP address.
      */
     @Test
     public void testProcessPacketInNoIpAddress() {
-        Ethernet eth = (Ethernet)pkt3;
+        Ethernet eth = (Ethernet) pkt3;
         OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
         odm.entryAdded(srcDevice);
         srcDevice.setLastSeenTimestamp(lastSeenTimestamp);
 
-        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet)pkt2);
+        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet) pkt2);
         assertEquals(Command.CONTINUE, cmd);
         assertTrue(lastSeenTimestamp.before(srcDevice.getLastSeenTimestamp()));
     }
 
     /**
-     * Test add a device from the information from packet
+     * Test add a device from the information from packet.
      */
     @Test
     public void testAddOnosDevice() {
-        Ethernet eth = (Ethernet)pkt1;
+        Ethernet eth = (Ethernet) pkt1;
         Long longmac = eth.getSourceMAC().toLong();
         OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
 
@@ -350,11 +350,11 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
     }
 
     /**
-     * Test delete a device
+     * Test delete a device.
      */
     @Test
     public void testDeleteOnosDevice() {
-        Ethernet eth = (Ethernet)pkt1;
+        Ethernet eth = (Ethernet) pkt1;
         Long longmac = eth.getSourceMAC().toLong();
         OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
 
@@ -372,11 +372,11 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
     }
 
     /**
-     * Test delete a device by using its source mac address
+     * Test delete a device by using its source mac address.
      */
     @Test
     public void testDeleteOnosDeviceByMac() {
-        Ethernet eth = (Ethernet)pkt1;
+        Ethernet eth = (Ethernet) pkt1;
         MACAddress mac = eth.getSourceMAC();
         Long longmac = mac.toLong();
         OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
