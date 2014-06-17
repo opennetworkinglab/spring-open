@@ -22,7 +22,7 @@ public class FlowEntryTest {
 
     Dpid dpid = new Dpid(0xCAFE);
 
-    Port inport = new Port((short) 1);
+    PortNumber inport = new PortNumber((short) 1);
     byte[] byte1 = {1, 2, 3, 4, 5, 6};
     byte[] byte2 = {6, 5, 4, 3, 2, 1};
     MACAddress mac1 = new MACAddress(byte1);
@@ -38,8 +38,8 @@ public class FlowEntryTest {
     Byte ipToS = Byte.valueOf((byte) 6);
     Short tport1 = Short.valueOf((short) 7);
     Short tport2 = Short.valueOf((short) 8);
-    Port outport = new Port((short) 9);
-    Port queueport = new Port((short) 10);
+    PortNumber outport = new PortNumber((short) 9);
+    PortNumber queueport = new PortNumber((short) 10);
     int queueId = 11;
 
     FlowEntryErrorState errorState = new FlowEntryErrorState((short) 12, (short) 13);

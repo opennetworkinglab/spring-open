@@ -13,7 +13,7 @@ public class FlowEntryMatchTest {
 
     FlowEntryMatch match;
 
-    Port inport = new Port((short) 1);
+    PortNumber inport = new PortNumber((short) 1);
     byte[] byte1 = {1, 2, 3, 4, 5, 6};
     byte[] byte2 = {6, 5, 4, 3, 2, 1};
     MACAddress mac1 = new MACAddress(byte1);

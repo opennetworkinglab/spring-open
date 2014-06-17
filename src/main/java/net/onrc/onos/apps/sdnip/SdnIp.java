@@ -52,7 +52,7 @@ import net.onrc.onos.core.util.FlowPathFlags;
 import net.onrc.onos.core.util.FlowPathType;
 import net.onrc.onos.core.util.FlowPathUserState;
 import net.onrc.onos.core.util.IPv4Net;
-import net.onrc.onos.core.util.Port;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -219,7 +219,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             bgpdAttachmentPoint = new SwitchPort(
                     new Dpid(config.getBgpdAttachmentDpid()),
-                    new Port(config.getBgpdAttachmentPort()));
+                    new PortNumber(config.getBgpdAttachmentPort()));
 
             bgpdMacAddress = config.getBgpdMacAddress();
             vlan = config.getVlan();
@@ -542,7 +542,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         // Create the DataPath object: dstSwitchPort
         SwitchPort dstPort =
             new SwitchPort(new Dpid(egressInterface.getDpid()),
-                           new Port(egressInterface.getPort()));
+                           new PortNumber(egressInterface.getPort()));
 
         // We only need one flow mod per switch, so pick one interface on each switch
         Map<Long, Interface> srcInterfaces = new HashMap<Long, Interface>();
@@ -564,7 +564,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             // Create DataPath object: srcSwitchPort
             SwitchPort srcPort =
                 new SwitchPort(new Dpid(srcInterface.getDpid()),
-                               new Port(srcInterface.getPort()));
+                               new PortNumber(srcInterface.getPort()));
 
             DataPath dataPath = new DataPath();
             dataPath.setSrcPort(srcPort);
@@ -774,7 +774,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         // Create the DataPath object: dstSwitchPort
         SwitchPort dstPort =
             new SwitchPort(new Dpid(dstInterface.getDpid()),
-                           new Port(dstInterface.getPort()));
+                           new PortNumber(dstInterface.getPort()));
 
         for (Interface srcInterface : interfaces.values()) {
 
@@ -788,7 +788,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             // Create the DataPath object: srcSwitchPort
             SwitchPort srcPort =
                 new SwitchPort(new Dpid(srcInterface.getDpid()),
-                               new Port(srcInterface.getPort()));
+                               new PortNumber(srcInterface.getPort()));
 
             DataPath dataPath = new DataPath();
             dataPath.setSrcPort(srcPort);
@@ -863,7 +863,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                                bgpdAttachmentPoint.port());
             SwitchPort dstPort =
                 new SwitchPort(new Dpid(peerInterface.getDpid()),
-                               new Port(peerInterface.getSwitchPort().port()));
+                               new PortNumber(peerInterface.getSwitchPort().port()));
             ShortestPathIntent fwdIntent = new ShortestPathIntent(fwdIntentId,
                     srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP,
                     dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP);
@@ -929,7 +929,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             SwitchPort dstPort =
                 new SwitchPort(new Dpid(peerInterface.getDpid()),
-                               new Port(peerInterface.getSwitchPort().port()));
+                               new PortNumber(peerInterface.getSwitchPort().port()));
             dataPath.setDstPort(dstPort);
 
             flowPath.setDataPath(dataPath);
@@ -981,7 +981,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             SwitchPort reverseSrcPort =
                     new SwitchPort(new Dpid(peerInterface.getDpid()),
-                            new Port(peerInterface.getSwitchPort().port()));
+                            new PortNumber(peerInterface.getSwitchPort().port()));
             reverseDataPath.setSrcPort(reverseSrcPort);
             flowPath.setDataPath(reverseDataPath);
 

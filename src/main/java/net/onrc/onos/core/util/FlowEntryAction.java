@@ -58,7 +58,7 @@ public class FlowEntryAction {
      * Action structure for ACTION_OUTPUT: Output to switch port.
      */
     public static class ActionOutput {
-        private Port port;    // Output port
+        private PortNumber port;    // Output port
         private short maxLen;    // Max. length (in bytes) to send to controller
         // if the port is set to PORT_CONTROLLER
 
@@ -77,7 +77,7 @@ public class FlowEntryAction {
          */
         public ActionOutput(ActionOutput other) {
             if (other.port != null) {
-                this.port = new Port(other.port);
+                this.port = new PortNumber(other.port);
             }
             this.maxLen = other.maxLen;
         }
@@ -101,7 +101,7 @@ public class FlowEntryAction {
          * @param maxLen the maximum length (in bytes) to send to controller
          *               if the port is set to PORT_CONTROLLER.
          */
-        public ActionOutput(Port port, short maxLen) {
+        public ActionOutput(PortNumber port, short maxLen) {
             this.port = port;
             this.maxLen = maxLen;
         }
@@ -111,7 +111,7 @@ public class FlowEntryAction {
          *
          * @param port the output port to set.
          */
-        public ActionOutput(Port port) {
+        public ActionOutput(PortNumber port) {
             this.port = port;
             this.maxLen = 0;
         }
@@ -122,7 +122,7 @@ public class FlowEntryAction {
          * @return the output port.
          */
         @JsonProperty("port")
-        public Port port() {
+        public PortNumber port() {
             return this.port;
         }
 
@@ -177,7 +177,7 @@ public class FlowEntryAction {
                 if (tokens.length > 1 && tokens[1] != null) {
                     try {
                         Short valueShort = Short.valueOf(tokens[1]);
-                        port = new Port(valueShort);
+                        port = new PortNumber(valueShort);
                     } catch (NumberFormatException e) {
                         throw new IllegalArgumentException("Invalid action string");
                     }
@@ -908,7 +908,7 @@ public class FlowEntryAction {
      * Action structure for ACTION_ENQUEUE: Output to queue on port.
      */
     public static class ActionEnqueue {
-        private Port port;    // Port that queue belongs. Should
+        private PortNumber port;    // Port that queue belongs. Should
         // refer to a valid physical port
         // (i.e. < PORT_MAX) or PORT_IN_PORT
         private int queueId;    // Where to enqueue the packets
@@ -928,7 +928,7 @@ public class FlowEntryAction {
          */
         public ActionEnqueue(ActionEnqueue other) {
             if (other.port != null) {
-                this.port = new Port(other.port);
+                this.port = new PortNumber(other.port);
             }
             this.queueId = other.queueId;
         }
@@ -951,7 +951,7 @@ public class FlowEntryAction {
          * @param port    the port to set.
          * @param queueId the queue ID on the port.
          */
-        public ActionEnqueue(Port port, int queueId) {
+        public ActionEnqueue(PortNumber port, int queueId) {
             this.port = port;
             this.queueId = queueId;
         }
@@ -962,7 +962,7 @@ public class FlowEntryAction {
          * @return the port.
          */
         @JsonProperty("port")
-        public Port port() {
+        public PortNumber port() {
             return this.port;
         }
 
@@ -1015,7 +1015,7 @@ public class FlowEntryAction {
                 if (tokens.length > 1 && tokens[1] != null) {
                     try {
                         Short valueShort = Short.valueOf(tokens[1]);
-                        port = new Port(valueShort);
+                        port = new PortNumber(valueShort);
                     } catch (NumberFormatException e) {
                         throw new IllegalArgumentException("Invalid action string");
                     }
@@ -1201,7 +1201,7 @@ public class FlowEntryAction {
      *
      * @param port the output port to set.
      */
-    public void setActionOutput(Port port) {
+    public void setActionOutput(PortNumber port) {
         actionOutput = new ActionOutput(port);
         actionType = ActionValues.ACTION_OUTPUT;
     }
@@ -1212,7 +1212,7 @@ public class FlowEntryAction {
      * @param maxLen the maximum length (in bytes) to send to controller.
      */
     public void setActionOutputToController(short maxLen) {
-        Port port = new Port(Port.PortValues.PORT_CONTROLLER);
+        PortNumber port = new PortNumber(PortNumber.PortValues.PORT_CONTROLLER);
         actionOutput = new ActionOutput(port, maxLen);
         actionType = ActionValues.ACTION_OUTPUT;
     }
@@ -1554,7 +1554,7 @@ public class FlowEntryAction {
      * @param port    the port to set.
      * @param queueId the queue ID to set.
      */
-    public void setActionEnqueue(Port port, int queueId) {
+    public void setActionEnqueue(PortNumber port, int queueId) {
         actionEnqueue = new ActionEnqueue(port, queueId);
         actionType = ActionValues.ACTION_ENQUEUE;
     }

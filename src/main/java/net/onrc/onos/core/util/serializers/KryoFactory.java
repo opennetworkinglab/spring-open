@@ -49,7 +49,7 @@ import net.onrc.onos.core.util.IPv4;
 import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.IPv6;
 import net.onrc.onos.core.util.IPv6Net;
-import net.onrc.onos.core.util.Port;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.Switch;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -182,7 +182,7 @@ public class KryoFactory {
         kryo.register(IPv6Net.class);
         kryo.register(byte[].class);
         kryo.register(MACAddress.class);
-        kryo.register(Port.class);
+        kryo.register(PortNumber.class);
         kryo.register(Switch.class);
         // kryo.register(SwitchPort.class);
 

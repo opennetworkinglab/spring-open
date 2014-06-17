@@ -43,7 +43,7 @@ import net.onrc.onos.core.util.FlowEntryMatch;
 import net.onrc.onos.core.util.FlowEntryUserState;
 import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.Pair;
-import net.onrc.onos.core.util.Port;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.openflow.protocol.OFBarrierReply;
 import org.openflow.protocol.OFBarrierRequest;
@@ -668,7 +668,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         match.setWildcards(OFMatch.OFPFW_ALL);
 
         // Match the Incoming Port
-        Port matchInPort = flowEntryMatch.inPort();
+        PortNumber matchInPort = flowEntryMatch.inPort();
         if (matchInPort != null) {
             match.setInputPort(matchInPort.value());
             match.setWildcards(match.getWildcards() & ~OFMatch.OFPFW_IN_PORT);
@@ -904,7 +904,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         final FlowEntryMatch flowEntryMatch = flowEntry.flowEntryMatch();
         final OFMatch match = computeMatch(flowEntryMatch);
 
-        final Port matchInPort = flowEntryMatch.inPort();
+        final PortNumber matchInPort = flowEntryMatch.inPort();
         final MACAddress matchSrcMac = flowEntryMatch.srcMac();
         final MACAddress matchDstMac = flowEntryMatch.dstMac();
 

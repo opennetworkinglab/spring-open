@@ -20,7 +20,7 @@ public class FlowEntryActionTest {
     @Test
     public void testSetActionOutputActionOutput() {
         FlowEntryAction act = new FlowEntryAction();
-        ActionOutput actout = new FlowEntryAction.ActionOutput(new Port((short) 42));
+        ActionOutput actout = new FlowEntryAction.ActionOutput(new PortNumber((short) 42));
         act.setActionOutput(actout);
 
         assertEquals("action output", FlowEntryAction.ActionValues.ACTION_OUTPUT, act.actionType());
@@ -39,7 +39,7 @@ public class FlowEntryActionTest {
     @Test
     public void testSetActionOutputPort() {
         FlowEntryAction act = new FlowEntryAction();
-        act.setActionOutput(new Port((short) 42));
+        act.setActionOutput(new PortNumber((short) 42));
 
         FlowEntryAction actCopy = new FlowEntryAction(act);
         FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
@@ -56,7 +56,7 @@ public class FlowEntryActionTest {
         act.setActionOutputToController((short) 0);
 
         FlowEntryAction actCopy = new FlowEntryAction();
-        actCopy.setActionOutput(new Port(Port.PortValues.PORT_CONTROLLER));
+        actCopy.setActionOutput(new PortNumber(PortNumber.PortValues.PORT_CONTROLLER));
 
         FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
@@ -396,7 +396,7 @@ public class FlowEntryActionTest {
     @Test
     public void testSetActionEnqueueActionEnqueue() {
         FlowEntryAction act = new FlowEntryAction();
-        ActionEnqueue enq = new FlowEntryAction.ActionEnqueue(new Port((short) 42), 1);
+        ActionEnqueue enq = new FlowEntryAction.ActionEnqueue(new PortNumber((short) 42), 1);
         act.setActionEnqueue(enq);
 
         assertEquals("action type", FlowEntryAction.ActionValues.ACTION_ENQUEUE, act.actionType());
@@ -415,7 +415,7 @@ public class FlowEntryActionTest {
     @Test
     public void testSetActionEnqueuePortInt() {
         FlowEntryAction act = new FlowEntryAction();
-        act.setActionEnqueue(new Port((short) 42), 1);
+        act.setActionEnqueue(new PortNumber((short) 42), 1);
 
         FlowEntryAction actCopy = new FlowEntryAction(act);
         FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());

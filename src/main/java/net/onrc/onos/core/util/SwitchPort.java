@@ -8,7 +8,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public final class SwitchPort {
     private final Dpid dpid;        // The DPID of the switch
-    private final Port port;        // The port of the switch
+    private final PortNumber port;        // The port of the switch
 
     /**
      * Default constructor.
@@ -24,7 +24,7 @@ public final class SwitchPort {
      * @param dpid the DPID to use.
      * @param port the port to use.
      */
-    public SwitchPort(Dpid dpid, Port port) {
+    public SwitchPort(Dpid dpid, PortNumber port) {
         this.dpid = dpid;
         this.port = port;
     }
@@ -37,7 +37,7 @@ public final class SwitchPort {
      */
     public SwitchPort(long dpid, short port) {
         this.dpid = new Dpid(dpid);
-        this.port = new Port(port);
+        this.port = new PortNumber(port);
     }
 
     /**
@@ -56,7 +56,7 @@ public final class SwitchPort {
      * @return the port value of the Switch-Port.
      */
     @JsonProperty("port")
-    public Port port() {
+    public PortNumber port() {
         return port;
     }
 

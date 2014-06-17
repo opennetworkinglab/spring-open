@@ -8,6 +8,7 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.util.FlowEntryMatch;
 import net.onrc.onos.core.util.IPv4;
 import net.onrc.onos.core.util.IPv4Net;
+import net.onrc.onos.core.util.PortNumber;
 
 /**
  * A class to represent the OpenFlow match.
@@ -125,7 +126,7 @@ public class Match {
             IPv4Net dstIP = new IPv4Net(dstIPv4, IPV4_PREFIX_LEN);
             match.enableDstIPv4Net(dstIP);
         }
-        match.enableInPort(new net.onrc.onos.core.util.Port((short) srcPort));
+        match.enableInPort(new PortNumber((short) srcPort));
         return match;
     }
 

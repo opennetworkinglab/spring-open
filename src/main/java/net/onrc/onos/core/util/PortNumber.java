@@ -3,10 +3,11 @@ package net.onrc.onos.core.util;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
- * The class representing a network port of a switch.
- * This class is immutable.
+ * Immutable class representing a port number.
+ * <p/>
+ * Current implementation supports only OpenFlow 1.0 (16 bit unsigned) port number.
  */
-public final class Port {
+public final class PortNumber {
     /**
      * Special port values.
      * <p/>
@@ -14,39 +15,39 @@ public final class Port {
      * (pp 18-19).
      */
     public enum PortValues {
-        /* Maximum number of physical switch ports. */
+        /** Maximum number of physical switch ports. */
         PORT_MAX((short) 0xff00),
 
     /* Fake output "ports". */
 
-        /* Send the packet out the input port. This
+        /** Send the packet out the input port. This
            virtual port must be explicitly used
            in order to send back out of the input
            port. */
         PORT_IN_PORT((short) 0xfff8),
 
-        /* Perform actions in flow table.
+        /** Perform actions in flow table.
            NB: This can only be the destination
            port for packet-out messages. */
         PORT_TABLE((short) 0xfff9),
 
-        /* Process with normal L2/L3 switching. */
+        /** Process with normal L2/L3 switching. */
         PORT_NORMAL((short) 0xfffa),
 
-        /* All physical ports except input port and
+        /** All physical ports except input port and
            those disabled by STP. */
         PORT_FLOOD((short) 0xfffb),
 
-        /* All physical ports except input port. */
+        /** All physical ports except input port. */
         PORT_ALL((short) 0xfffc),
 
-        /* Send to controller. */
+        /** Send to controller. */
         PORT_CONTROLLER((short) 0xfffd),
 
-        /* Local openflow "port". */
+        /** Local openflow "port". */
         PORT_LOCAL((short) 0xfffe),
 
-        /* Not associated with a physical port. */
+        /** Not associated with a physical port. */
         PORT_NONE((short) 0xffff);
 
         private final short value;    // The value
@@ -75,7 +76,7 @@ public final class Port {
     /**
      * Default constructor.
      */
-    public Port() {
+    protected PortNumber() {
         this.value = 0;
     }
 
@@ -84,7 +85,7 @@ public final class Port {
      *
      * @param other the object to copy from.
      */
-    public Port(Port other) {
+    public PortNumber(PortNumber other) {
         this.value = other.value();
     }
 
@@ -93,7 +94,7 @@ public final class Port {
      *
      * @param value the value to use.
      */
-    public Port(short value) {
+    public PortNumber(short value) {
         this.value = value;
     }
 
@@ -102,7 +103,7 @@ public final class Port {
      *
      * @param value the value to use.
      */
-    public Port(PortValues value) {
+    public PortNumber(PortValues value) {
         this.value = value.value();
     }
 
@@ -128,19 +129,17 @@ public final class Port {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Port)) {
+        if (!(other instanceof PortNumber)) {
             return false;
         }
 
-        Port otherPort = (Port) other;
+        PortNumber otherPort = (PortNumber) other;
 
         return value == otherPort.value;
     }
 
     @Override
     public int hashCode() {
-        int hash = 17;
-        hash += 31 * hash + (int) value;
-        return hash;
+        return value;
     }
 }

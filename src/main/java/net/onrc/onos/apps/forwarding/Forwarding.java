@@ -39,6 +39,7 @@ import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.FlowPath;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.util.HexString;
@@ -340,10 +341,10 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         // TODO eliminate cast
         SwitchPort srcSwitchPort = new SwitchPort(
                 new Dpid(sw.getDpid()),
-                new net.onrc.onos.core.util.Port((short) inPort.getNumber().longValue()));
+                new PortNumber((short) inPort.getNumber().longValue()));
         SwitchPort dstSwitchPort = new SwitchPort(
                 new Dpid(destinationDpid),
-                new net.onrc.onos.core.util.Port(destinationPort));
+                new PortNumber(destinationPort));
 
         MACAddress srcMacAddress = MACAddress.valueOf(eth.getSourceMACAddress());
         MACAddress dstMacAddress = MACAddress.valueOf(eth.getDestinationMACAddress());

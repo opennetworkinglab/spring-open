@@ -19,7 +19,7 @@ import net.onrc.onos.core.util.FlowId;
 import net.onrc.onos.core.util.FlowPath;
 import net.onrc.onos.core.util.FlowPathType;
 import net.onrc.onos.core.util.FlowPathUserState;
-import net.onrc.onos.core.util.Port;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.restlet.resource.Get;
@@ -84,9 +84,9 @@ public class GetNGFlowsSummaryResource extends ServerResource {
 
             // Setup the Source and Destination DPID and Port
             Dpid srcDpid = new Dpid(spIntent.getSrcSwitchDpid());
-            Port srcPort = new Port((short) spIntent.getSrcPortNumber());
+            PortNumber srcPort = new PortNumber((short) spIntent.getSrcPortNumber());
             Dpid dstDpid = new Dpid(spIntent.getDstSwitchDpid());
-            Port dstPort = new Port((short) spIntent.getDstPortNumber());
+            PortNumber dstPort = new PortNumber((short) spIntent.getDstPortNumber());
             SwitchPort srcSwitchPort = new SwitchPort(srcDpid, srcPort);
             SwitchPort dstSwitchPort = new SwitchPort(dstDpid, dstPort);
             flowPath.dataPath().setSrcPort(srcSwitchPort);

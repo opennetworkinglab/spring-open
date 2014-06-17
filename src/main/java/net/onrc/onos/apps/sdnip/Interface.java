@@ -3,7 +3,7 @@ package net.onrc.onos.apps.sdnip;
 import java.net.InetAddress;
 
 import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.Port;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.annotate.JsonCreator;
@@ -73,7 +73,7 @@ public class Interface {
     public SwitchPort getSwitchPort() {
         //TODO SwitchPort, Dpid and Port are mutable, but they could probably
         //be made immutable which would prevent the need to copy
-        return new SwitchPort(new Dpid(dpid), new Port(port));
+        return new SwitchPort(new Dpid(dpid), new PortNumber(port));
     }
 
     /**

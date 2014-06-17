@@ -1,6 +1,7 @@
 package net.onrc.onos.core.intent;
 
 import net.onrc.onos.core.util.FlowEntryAction;
+import net.onrc.onos.core.util.PortNumber;
 
 /**
  * A class to represent the OpenFlow forwarding action.
@@ -23,6 +24,7 @@ class ForwardAction extends Action {
      *
      * @return the destination port as a String
      */
+    @Override
     public String toString() {
         return Long.toString(dstPort);
     }
@@ -35,7 +37,7 @@ class ForwardAction extends Action {
     @Override
     public FlowEntryAction getFlowEntryAction() {
         FlowEntryAction action = new FlowEntryAction();
-        action.setActionOutput(new net.onrc.onos.core.util.Port((short) dstPort));
+        action.setActionOutput(new PortNumber((short) dstPort));
         return action;
     }
 
@@ -44,6 +46,7 @@ class ForwardAction extends Action {
      *
      * @return hashcode
      */
+    @Override
     public int hashCode() {
         return (int) dstPort;
     }
@@ -54,6 +57,7 @@ class ForwardAction extends Action {
      * @param o another object to compare to this
      * @return true if equal, false otherwise
      */
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof ForwardAction)) {
             return false;

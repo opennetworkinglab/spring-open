@@ -73,7 +73,7 @@ public class FlowEntryMatch {
         private boolean enabled;    // Set to true, if matching is enabled
     }
 
-    private Field<Port> inPort;        // Matching input switch port
+    private Field<PortNumber> inPort;        // Matching input switch port
     private Field<MACAddress> srcMac;    // Matching source MAC address
     private Field<MACAddress> dstMac;    // Matching destination MAC address
     private Field<Short> ethernetFrameType; // Matching Ethernet frame type
@@ -142,7 +142,7 @@ public class FlowEntryMatch {
      * @return the matching input switch port.
      */
     @JsonProperty("inPort")
-    public Port inPort() {
+    public PortNumber inPort() {
         if (inPort != null) {
             return inPort.value();
         }
@@ -155,8 +155,8 @@ public class FlowEntryMatch {
      * @param newInPort the input switch port value to enable for matching.
      */
     @JsonProperty("inPort")
-    public void enableInPort(Port newInPort) {
-        this.inPort = new Field<Port>(newInPort);
+    public void enableInPort(PortNumber newInPort) {
+        this.inPort = new Field<PortNumber>(newInPort);
     }
 
     /**

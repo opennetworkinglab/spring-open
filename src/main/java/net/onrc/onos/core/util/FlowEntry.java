@@ -19,10 +19,10 @@ public class FlowEntry {
     private FlowEntryMatch flowEntryMatch;    // The Flow Entry Match
     private FlowEntryActions flowEntryActions;    // The Flow Entry Actions
     private Dpid dpid;                // The Switch DPID
-    private Port inPort;        // The Switch incoming port. Used only
+    private PortNumber inPort;        // The Switch incoming port. Used only
     // when the entry is used to return
     // Shortest Path computation.
-    private Port outPort;        // The Switch outgoing port. Used only
+    private PortNumber outPort;        // The Switch outgoing port. Used only
     // when the entry is used to return
     // Shortest Path computation.
     private FlowEntryUserState flowEntryUserState; // The Flow Entry User state
@@ -327,7 +327,7 @@ public class FlowEntry {
      * @return the Switch incoming port.
      */
     @JsonProperty("inPort")
-    public Port inPort() {
+    public PortNumber inPort() {
         return inPort;
     }
 
@@ -339,7 +339,7 @@ public class FlowEntry {
      * @param inPort the Switch incoming port to set.
      */
     @JsonProperty("inPort")
-    public void setInPort(Port inPort) {
+    public void setInPort(PortNumber inPort) {
         this.inPort = inPort;
     }
 
@@ -351,7 +351,7 @@ public class FlowEntry {
      * @return the Switch outgoing port.
      */
     @JsonProperty("outPort")
-    public Port outPort() {
+    public PortNumber outPort() {
         return outPort;
     }
 
@@ -363,7 +363,7 @@ public class FlowEntry {
      * @param outPort the Switch outgoing port to set.
      */
     @JsonProperty("outPort")
-    public void setOutPort(Port outPort) {
+    public void setOutPort(PortNumber outPort) {
         this.outPort = outPort;
     }
 
