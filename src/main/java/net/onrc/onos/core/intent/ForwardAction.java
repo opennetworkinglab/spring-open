@@ -51,7 +51,7 @@ class ForwardAction extends Action {
     /**
      * Objects are equal if they share a destination port.
      *
-     * @params o another object to compare to this
+     * @param o another object to compare to this
      * @return true if equal, false otherwise
      */
     public boolean equals(Object o) {
