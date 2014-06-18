@@ -5,7 +5,6 @@ import java.io.IOException;
 import net.onrc.onos.core.topology.Device;
 import net.onrc.onos.core.topology.Port;
 
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
@@ -19,8 +18,7 @@ public class DeviceSerializer extends SerializerBase<Device> {
 
     @Override
     public void serialize(Device dev, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider) throws IOException,
-        JsonGenerationException {
+        SerializerProvider serializerProvider) throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("mac", dev.getMacAddress().toString());
         jsonGenerator.writeFieldName("attachmentPoints");

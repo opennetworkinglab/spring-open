@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import net.onrc.onos.core.topology.Link;
 
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
@@ -19,7 +18,7 @@ public class LinkSerializer extends SerializerBase<Link> {
     @Override
     public void serialize(Link link, JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
-            throws IOException, JsonGenerationException {
+            throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("src-switch",
                 HexString.toHexString(link.getSrcSwitch().getDpid()));

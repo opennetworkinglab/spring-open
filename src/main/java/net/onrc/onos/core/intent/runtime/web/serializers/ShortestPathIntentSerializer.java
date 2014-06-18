@@ -1,4 +1,4 @@
-package net.onrc.onos.core.topology.web.serializers;
+package net.onrc.onos.core.intent.runtime.web.serializers;
 
 
 import com.google.common.net.InetAddresses;

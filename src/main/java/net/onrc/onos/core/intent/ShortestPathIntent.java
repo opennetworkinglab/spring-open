@@ -1,7 +1,7 @@
 package net.onrc.onos.core.intent;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.topology.web.serializers.ShortestPathIntentSerializer;
+import net.onrc.onos.core.intent.runtime.web.serializers.ShortestPathIntentSerializer;
 import net.onrc.onos.core.util.Dpid;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
