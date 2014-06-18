@@ -17,6 +17,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ArpCacheTest {
+
+    static {
+        // configuration to quickly fall back to instance mode for faster test run
+        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
+    }
+
     ArpCache arpCache;
     InetAddress ip1, ip2;
     MACAddress mac, mac2;

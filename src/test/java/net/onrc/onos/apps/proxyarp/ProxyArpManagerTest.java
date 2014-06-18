@@ -42,6 +42,12 @@ import org.junit.Test;
 //@PrepareOnlyThisForTest({ ProxyArpManager.class })
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ProxyArpManagerTest {
+
+    static {
+        // configuration to quickly fall back to instance mode for faster test run
+        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
+    }
+
     String defaultStrAgingMsec = "60000";
     String defaultStrCleanupMsec = "60000";
 
