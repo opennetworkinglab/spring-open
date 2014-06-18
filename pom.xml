@@ -256,6 +256,7 @@
               <ignore>org.slf4j.*</ignore>
             </ignores>
             <excludes>
+              <exclude>edu/stanford/ramcloud/**/*.class</exclude>
               <exclude>org/openflow/**/*.class</exclude>
               <exclude>net/floodlightcontroller/**/web/**/*.class</exclude>
             </excludes>
