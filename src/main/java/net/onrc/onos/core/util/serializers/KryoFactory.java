@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.proxyarp.ArpCacheNotification;
@@ -30,7 +31,6 @@ import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.TopologyEvent;
 import net.onrc.onos.core.util.CallerId;
 import net.onrc.onos.core.util.DataPath;
-import net.onrc.onos.core.util.DataPathEndpoints;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.FlowEntry;
 import net.onrc.onos.core.util.FlowEntryAction;
@@ -51,7 +51,6 @@ import net.onrc.onos.core.util.IPv6;
 import net.onrc.onos.core.util.IPv6Net;
 import net.onrc.onos.core.util.Port;
 import net.onrc.onos.core.util.Switch;
-// import net.onrc.onos.core.util.SwitchPort;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -152,7 +151,6 @@ public class KryoFactory {
         // FlowPath and related classes
         kryo.register(CallerId.class);
         kryo.register(DataPath.class);
-        kryo.register(DataPathEndpoints.class);
         kryo.register(Dpid.class);
         kryo.register(FlowEntryAction.class);
         kryo.register(FlowEntryAction.ActionEnqueue.class);
@@ -190,7 +188,7 @@ public class KryoFactory {
 
         // New data model-related classes
         kryo.register(DeviceEvent.class);
-        kryo.register(InetAddress.class);
+        kryo.register(LinkedList.class);
         kryo.register(LinkEvent.class);
         kryo.register(PortEvent.class);
         kryo.register(PortEvent.SwitchPort.class);
@@ -214,7 +212,6 @@ public class KryoFactory {
 
         // Device-related classes
         kryo.register(HashSet.class);
-        kryo.register(Inet4Address.class);
         kryo.register(OnosDevice.class);
         kryo.register(Date.class);
 
@@ -224,6 +221,10 @@ public class KryoFactory {
         kryo.register(SinglePacketOutNotification.class);
         kryo.register(ArpReplyNotification.class);
         kryo.register(ArpCacheNotification.class);
+        // TODO check if InetAddress related is still used
+        // TODO check if InetAddress can be correctly serialized
+        kryo.register(InetAddress.class);
+        kryo.register(Inet4Address.class);
 
         return kryo;
     }
