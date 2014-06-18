@@ -55,7 +55,6 @@ public class PathCalcRuntime implements IFloodlightService {
 
         // TODO optimize locking of Topology
         topology.acquireReadLock();
-        log.debug("Topology: {}", topology.getLinks());
 
         for (IntentOperation intentOp : intentOpList) {
             switch (intentOp.operator) {
@@ -73,10 +72,9 @@ public class PathCalcRuntime implements IFloodlightService {
                     Switch srcSwitch = topology.getSwitch(spIntent.getSrcSwitchDpid());
                     Switch dstSwitch = topology.getSwitch(spIntent.getDstSwitchDpid());
                     if (srcSwitch == null || dstSwitch == null) {
-                        log.error("Switch not found. src:{}, dst:{}, Topology:{}",
+                        log.debug("Switch not found. src:{}, dst:{}",
                                 spIntent.getSrcSwitchDpid(),
-                                spIntent.getDstSwitchDpid(),
-                                topology.getLinks());
+                                spIntent.getDstSwitchDpid());
                         pathIntentOpList.add(Operator.ERROR, new ErrorIntent(
                                 ErrorType.SWITCH_NOT_FOUND,
                                 "Switch not found.",
@@ -98,7 +96,7 @@ public class PathCalcRuntime implements IFloodlightService {
                     }
                     Path path = tree.getPath(dstSwitch);
                     if (path == null) {
-                        log.error("Path not found. Intent: {}, Topology: {}", spIntent.toString(), topology.getLinks());
+                        log.debug("Path not found. Intent: {}", spIntent.toString());
                         pathIntentOpList.add(Operator.ERROR, new ErrorIntent(
                                 ErrorType.PATH_NOT_FOUND,
                                 "Path not found.",
