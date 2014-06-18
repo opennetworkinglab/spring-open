@@ -185,7 +185,7 @@ public class TestRestIntentHighGet extends TestRestIntent {
         assertThat(intent, hasKey("srcPortNumber"));
         assertThat(intent.get("srcPortNumber"), is(equalTo("14")));
         assertThat(intent, hasKey("srcMac"));
-        assertThat(intent.get("srcMac"), is(equalTo("00:00:00:00:00:00:ff:fe")));
+        assertThat(intent.get("srcMac"), is(equalTo("00:00:00:00:ff:fe")));
         assertThat(intent, hasKey("srcMac"));
         assertThat(intent.get("srcIp"), is(equalTo(IP_ADDRESS_1)));
 
@@ -194,7 +194,7 @@ public class TestRestIntentHighGet extends TestRestIntent {
         assertThat(intent, hasKey("dstPortNumber"));
         assertThat(intent.get("dstPortNumber"), is(equalTo("41")));
         assertThat(intent, hasKey("dstMac"));
-        assertThat(intent.get("dstMac"), is(equalTo("00:00:00:00:00:00:ff:fe")));
+        assertThat(intent.get("dstMac"), is(equalTo("00:00:00:00:ff:fe")));
         assertThat(intent, hasKey("dstMac"));
         assertThat(intent.get("dstIp"), is(equalTo(IP_ADDRESS_2)));
     }

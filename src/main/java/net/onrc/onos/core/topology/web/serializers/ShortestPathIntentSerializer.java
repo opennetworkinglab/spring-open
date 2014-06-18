@@ -2,6 +2,7 @@ package net.onrc.onos.core.topology.web.serializers;
 
 
 import com.google.common.net.InetAddresses;
+import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -57,7 +58,7 @@ public class ShortestPathIntentSerializer extends SerializerBase<ShortestPathInt
         jsonGenerator.writeStringField("srcPortNumber",
                                        Long.toString(intent.getSrcPortNumber()));
         jsonGenerator.writeStringField("srcMac",
-                                       HexString.toHexString(intent.getSrcMac()));
+                MACAddress.valueOf(intent.getSrcMac()).toString());
         jsonGenerator.writeStringField("srcIp",
                                        toIPAddressString(intent.getSrcIp()));
 
@@ -66,7 +67,7 @@ public class ShortestPathIntentSerializer extends SerializerBase<ShortestPathInt
         jsonGenerator.writeStringField("dstPortNumber",
                                        Long.toString(intent.getDstPortNumber()));
         jsonGenerator.writeStringField("dstMac",
-                                       HexString.toHexString(intent.getDstMac()));
+                MACAddress.valueOf(intent.getDstMac()).toString());
         jsonGenerator.writeStringField("dstIp",
                                        toIPAddressString(intent.getDstIp()));
 
