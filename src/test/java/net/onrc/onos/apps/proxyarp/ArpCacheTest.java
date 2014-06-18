@@ -23,6 +23,8 @@ public class ArpCacheTest {
         System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
     }
 
+    private static final int SHORTENED_TIMEOUT_MS = 500;
+
     ArpCache arpCache;
     InetAddress ip1, ip2;
     MACAddress mac, mac2;
@@ -31,7 +33,7 @@ public class ArpCacheTest {
     @Before
     public void setUp() throws Exception {
         arpCache = new ArpCache();
-        arpCache.setArpEntryTimeoutConfig(1000);
+        arpCache.setArpEntryTimeoutConfig(SHORTENED_TIMEOUT_MS);
         mac = MACAddress.valueOf("00:01:02:03:04:05");
         ip1 = InetAddress.getByAddress(new byte[]{10, 0, 0, 1});
         mac2 = MACAddress.valueOf("00:01:02:03:04:06");
@@ -84,7 +86,7 @@ public class ArpCacheTest {
         testUpdate();
 
         try {
-            Thread.sleep(3000);
+            Thread.sleep(2 * SHORTENED_TIMEOUT_MS);
         } catch (InterruptedException e) {
             fail();
         }
