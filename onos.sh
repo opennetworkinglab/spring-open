@@ -174,16 +174,27 @@ function print_usage {
   echo "${usage}"
 }
 
+# rotate-log [log-filename] [max rotations]
+# Example:
+#  foobar.log -> foobar.log.1
+#  foobar.log.1 -> foobar.log.2
+#  foobar.log.gz -> foobar.log.1.gz
 function rotate-log {
   local logfile=$1
   local nr_max=${2:-10}
   if [ -f $logfile ]; then
+    # TODO treating only .gz now. probably want more generic solution
+    local basename=${logfile%%.gz}
+    local append=""
+    if [ "$basename" != "$logfile" ]; then
+      append=".gz"
+    fi
     for i in `seq $(expr $nr_max - 1) -1 1`; do
-      if [ -f ${logfile}.${i} ]; then
-        mv -f ${logfile}.${i} ${logfile}.`expr $i + 1`
+      if [ -f ${basename}.${i}${append} ]; then
+        mv -f ${basename}.${i}${append} ${basename}.`expr $i + 1`${append}
       fi
     done
-    mv $logfile $logfile.1
+    mv ${basename}${append} ${basename}.1${append}
   fi
 }
 
@@ -920,7 +931,6 @@ function start-onos {
   for rolled_log in ${rolled_log_shellpat}; do
     if [ -f ${rolled_log} ]; then
       rotate-log ${rolled_log}
-      # NOTE: renamed file will end up with an extension like .log.gz.1
     fi
   done
 
