@@ -2,7 +2,9 @@ package net.onrc.onos.api.rest;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
+import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
+import net.onrc.onos.core.intent.runtime.IntentStateList;
 import net.onrc.onos.core.intent.runtime.IntentTestMocks;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
@@ -162,5 +164,20 @@ public class TestRestIntent extends TestRest {
     @SuppressWarnings("unchecked")
     Map<String, String> getIntent(final ClientResource client) {
         return client.get(Map.class);
+    }
+
+    /**
+     * Modify the state of an intent by directly calling the Intent state
+     * machine.  Needed in unit tests because of mocking of back end
+     * components.
+     *
+     * @param intentId id of the intent to modify
+     * @param newState assign this state to the intent
+     */
+    public void modifyIntentState(final String intentId,
+                                  final Intent.IntentState newState) {
+        final IntentStateList intentStateList = new IntentStateList();
+        intentStateList.put(intentId, newState);
+        getRuntime().entryUpdated(intentStateList);
     }
 }

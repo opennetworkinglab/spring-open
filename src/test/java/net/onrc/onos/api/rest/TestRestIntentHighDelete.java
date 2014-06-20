@@ -1,5 +1,6 @@
 package net.onrc.onos.api.rest;
 
+import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
@@ -86,7 +87,7 @@ public class TestRestIntentHighDelete extends TestRestIntent {
      * Once the Intents are removed, an empty list should be
      * returned by the fetch of all high level Intents.
      */
-    // @Test The delete API does not currently work properly.
+    @Test
     public void testDeleteOfAllIntents() {
 
         makeDefaultIntents();
@@ -96,6 +97,10 @@ public class TestRestIntentHighDelete extends TestRestIntent {
 
         // HTTP status should be NO CONTENT
         assertThat(deleteClient, hasStatusOf(Status.SUCCESS_NO_CONTENT));
+
+        // trigger the back end deletion of the Intents
+        modifyIntentState("1:2___0", Intent.IntentState.DEL_ACK);
+        modifyIntentState("1:3___0", Intent.IntentState.DEL_ACK);
 
         //  Now query the intents to make sure they all got deleted
         final ClientResource client = new ClientResource(getHighRestIntentUrl());
@@ -115,7 +120,7 @@ public class TestRestIntentHighDelete extends TestRestIntent {
      * Once the Intent is removed, an empty list should be
      * returned by the fetch of the Intent.
      */
-    // @Test Intent delete currently does not work
+    @Test
     public void testDeleteOfSingleExistingIntent() {
 
         makeDefaultIntents();
@@ -126,6 +131,9 @@ public class TestRestIntentHighDelete extends TestRestIntent {
 
         // HTTP status should be NO CONTENT
         assertThat(deleteClient, hasStatusOf(Status.SUCCESS_NO_CONTENT));
+
+        // trigger the back end deletion of the Intent.
+        modifyIntentState("1:2___0", Intent.IntentState.DEL_ACK);
 
         ClientResource client = new ClientResource(intentUrl);
         try {
