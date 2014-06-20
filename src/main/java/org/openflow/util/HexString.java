@@ -22,7 +22,7 @@ import java.math.BigInteger;
 public class HexString {
     /**
      * Convert a string of bytes to a ':' separated hex string
-     * @param bytes
+     * @param bytes byte array to be converted to a hex string
      * @return "0f:ca:fe:de:ad:be:ef"
      */
     public static String toHexString(byte[] bytes) {

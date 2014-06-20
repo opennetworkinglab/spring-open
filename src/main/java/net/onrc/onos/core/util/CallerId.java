@@ -19,7 +19,7 @@ public final class CallerId {
     /**
      * Copy constructor.
      *
-     * @param otherCallerId
+     * @param otherCallerId the caller ID copied from
      */
     public CallerId(CallerId otherCallerId) {
         // Note: make a full copy if we change value to a mutable type

@@ -178,7 +178,7 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         /**
          * Adds the new intents to the event queue.
          *
-         * @param list of new intents
+         * @param value list of new intents
          */
         @Override
         public void entryUpdated(IntentOperationList value) {

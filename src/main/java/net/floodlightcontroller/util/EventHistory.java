@@ -153,7 +153,7 @@ public class EventHistory<T> {
      * for the next event of the same type
      *
      * @param t
-     * @param op
+     * @param action
      * @return
      */
 

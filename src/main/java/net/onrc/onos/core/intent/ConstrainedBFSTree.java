@@ -39,7 +39,7 @@ public class ConstrainedBFSTree {
      *
      * @param rootSwitch root switch of the BFS tree
      * @param intents map of Intents
-     * @param bandwidth
+     * @param bandwidth bandwidth constraint
      */
     public ConstrainedBFSTree(Switch rootSwitch, PathIntentMap intents, double bandwidth) {
         this.rootSwitch = rootSwitch;

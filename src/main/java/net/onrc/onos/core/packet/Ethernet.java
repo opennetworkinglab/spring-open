@@ -282,7 +282,7 @@ public class Ethernet extends BasePacket {
     /**
      * Checks to see if a string is a valid MAC address.
      *
-     * @param macAddress
+     * @param macAddress MAC address to be checked
      * @return True if macAddress is a valid MAC, False otherwise
      */
     public static boolean isMACAddress(String macAddress) {
@@ -315,7 +315,7 @@ public class Ethernet extends BasePacket {
      * Accepts a MAC address and returns the corresponding long, where the
      * MAC bytes are set on the lower order bytes of the long.
      *
-     * @param macAddress
+     * @param macAddress MAC address to be converted to long value
      * @return a long containing the mac address bytes
      */
     public static long toLong(byte[] macAddress) {
@@ -325,7 +325,7 @@ public class Ethernet extends BasePacket {
     /**
      * Convert a long MAC address to a byte array.
      *
-     * @param macAddress
+     * @param macAddress MAC address to be converted to a byte array
      * @return the bytes of the mac address
      */
     public static byte[] toByteArray(long macAddress) {
