@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Unit test for {@link StandaloneRegistry}.
- *
- * @author Naoki Shiota
  */
 public class StandaloneRegistryTest {
 
@@ -47,8 +45,6 @@ public class StandaloneRegistryTest {
      * specific times (specified by constructor parameter). Particularly, the first time callback
      * called is supposed for registration, this class has an independent latch to wait for
      * the first callback.
-     *
-     * @author Naoki Shiota
      */
     public static class LoggingCallback implements ControlChangeCallback {
         private LinkedList<Long> dpidsCalledback = new LinkedList<Long>();

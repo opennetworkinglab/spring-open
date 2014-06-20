@@ -52,8 +52,6 @@ import com.google.common.base.Charsets;
 /**
  * A registry service that uses Zookeeper. All data is stored in Zookeeper,
  * so this can be used as a global registry in a multi-node ONOS cluster.
- *
- * @author jono
  */
 public class ZookeeperRegistry implements IFloodlightModule,
                                           IControllerRegistryService {

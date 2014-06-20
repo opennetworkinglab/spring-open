@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
  * immediately kicks synchronization to keep switch's flow table latest state.
  * Adversely, when a switch is removed from network, FlowProgrammer immediately
  * stops synchronization.
- *
- * @author Brian
  */
 public class FlowProgrammer implements IFloodlightModule,
         IOFSwitchListener {

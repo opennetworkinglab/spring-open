@@ -6,7 +6,8 @@ package net.onrc.onos.core.main;
 import net.floodlightcontroller.core.IOFSwitch;
 
 /**
- * @author y-higuchi
+ * Additional interface added to IOFSwitch by ONOS
+ * to represent remote Switch.
  */
 public interface IOnosRemoteSwitch extends IOFSwitch {
 

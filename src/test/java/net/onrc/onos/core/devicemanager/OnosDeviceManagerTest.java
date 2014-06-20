@@ -41,8 +41,6 @@ import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFType;
 
 /**
- * @author patrick.liu@huawei.com
- *         <p/>
  *         Unit tests for the Device Manager module (OnosDeviceManger).
  *         These test cases check the result of add/delete device and
  *         verify the result of processPacketIn through inject faked packets

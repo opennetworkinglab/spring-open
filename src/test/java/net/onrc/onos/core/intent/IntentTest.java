@@ -9,7 +9,7 @@ import java.util.HashSet;
 import org.junit.Test;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * Unit tests for Intent.
  */
 public class IntentTest {
     @Test

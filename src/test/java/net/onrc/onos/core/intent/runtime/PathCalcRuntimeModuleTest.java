@@ -37,8 +37,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
- * @author Ray Milkey (ray@onlab.us)
- *         <p/>
  *         Unit tests for the Path Calculation Runtime module (PathCalcRuntimeModule).
  *         These test cases check the results of creating paths, deleting paths, and
  *         rerouting paths.  The topology, controller registry, and data grid are

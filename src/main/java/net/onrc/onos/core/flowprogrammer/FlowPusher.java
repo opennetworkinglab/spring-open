@@ -81,8 +81,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * Each processing thread reads messages from queues and sends it to switches
  * in round-robin. Processing thread also calculates rate of sending to suppress
  * excessive message sending.
- *
- * @author Naoki Shiota
  */
 public final class FlowPusher implements IFlowPusherService, IOFMessageListener {
     private static final Logger log = LoggerFactory.getLogger(FlowPusher.class);
@@ -112,8 +110,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
     /**
      * SwitchQueue represents message queue attached to a switch.
      * This consists of queue itself and variables used for limiting sending rate.
-     *
-     * @author Naoki Shiota
      */
     private static class SwitchQueue {
         List<Queue<SwitchQueueEntry>> rawQueues;
@@ -238,8 +234,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
 
     /**
      * BarrierInfo holds information to specify barrier message sent to switch.
-     *
-     * @author Naoki
      */
     private static final class BarrierInfo {
         final long dpid;
@@ -303,8 +297,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
 
     /**
      * Main thread that reads messages from queues and sends them to switches.
-     *
-     * @author Naoki Shiota
      */
     private class FlowPusherThread extends Thread {
         private Map<IOFSwitch, SwitchQueue> assignedQueues

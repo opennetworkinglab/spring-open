@@ -9,8 +9,6 @@ import net.onrc.onos.core.topology.TopologyImpl;
 /**
  * A mock class of Topology.
  * This class should be used only by test codes.
- *
- * @author Toshio Koide (t-koide@onlab.us)
  */
 public class MockTopology extends TopologyImpl {
     // TODO this class doesn't seem like it should extend TopologyImpl. It

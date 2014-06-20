@@ -50,8 +50,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * Temporary test cases for the ONS2014 demo.
  * These test cases should be modified and be moved to appropriate classes
  * (ex. PathCalcRuntimeModuleTest, PlanInstallModuleTest, etc.)
- *
- * @author Toshio Koide (t-koide@onlab.us)
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PathCalcRuntimeModule.class)

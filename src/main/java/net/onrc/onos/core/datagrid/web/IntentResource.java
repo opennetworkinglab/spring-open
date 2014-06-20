@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author nickkaranatsios
+ * old REST API implementation for the Intents.
  */
 public class IntentResource extends ServerResource {
     private static final Logger log = LoggerFactory.getLogger(IntentResource.class);

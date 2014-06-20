@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import net.floodlightcontroller.util.MACAddress;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * Device Object stored in In-memory Topology.
  */
 public class DeviceImpl extends TopologyObject implements Device {
 

@@ -8,8 +8,6 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 /**
  * FlowSyncService is a service to synchronize GraphDB and switch's flow table.
  * FlowSyncService offers APIs to trigger and interrupt synchronization explicitly.
- *
- * @author Brian
  */
 public interface IFlowSyncService extends IFloodlightService {
     public Future<SyncResult> synchronize(IOFSwitch sw);

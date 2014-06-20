@@ -43,8 +43,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * Unit test for {@link ZookeeperRegistry}.
  * NOTE: {@link FloodlightTestCase} conflicts with PowerMock. If FloodLight-related methods need to be tested,
  * implement another test class to test them.
- *
- * @author Naoki Shiota
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ZookeeperRegistry.class, CuratorFramework.class, CuratorFrameworkFactory.class,

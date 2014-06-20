@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * Unit tests for IntentMap class.
  */
 public class IntentMapTest {
 

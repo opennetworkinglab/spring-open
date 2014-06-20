@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * Unit tests for ConstrainedBFSTree class.
  */
 public class ConstrainedBFSTreeTest {
     static final long LOCAL_PORT = 0xFFFEL;

@@ -13,7 +13,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 /**
- * @author Toshio Koide (t-koide@onlab.us)
+ * Unit tests for ConstrainedShortestPathIntent class.
  */
 public class ConstrainedShortestPathIntentTest {
     @Before

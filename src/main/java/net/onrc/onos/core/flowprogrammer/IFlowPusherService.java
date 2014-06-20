@@ -17,8 +17,6 @@ import org.openflow.protocol.OFMessage;
  * read a message from queue and send it to switch in order.
  * To guarantee message has been installed, FlowPusherService can add barrier
  * message to queue and can notify when barrier message is sent to switch.
- *
- * @author Naoki Shiota
  */
 public interface IFlowPusherService extends IFloodlightService {
     public static enum MsgPriority {

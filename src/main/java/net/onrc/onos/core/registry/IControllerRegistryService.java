@@ -19,8 +19,6 @@ import net.floodlightcontroller.core.module.IFloodlightService;
  * control of a switch (MASTER role) at once. Controllers therefore need a
  * mechanism that enables them to decide who should control a each switch.
  * The registry service provides this mechanism.
- *
- * @author jono
  */
 public interface IControllerRegistryService extends IFloodlightService {
 

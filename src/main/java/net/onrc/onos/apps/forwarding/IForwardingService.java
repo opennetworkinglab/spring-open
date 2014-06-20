@@ -10,8 +10,6 @@ import net.onrc.onos.core.util.FlowPath;
  * notified when a flow has been installed.
  * <p/>
  * This should be refactored to a listener framework in the future.
- *
- * @author jono
  */
 public interface IForwardingService extends IFloodlightService {
     /**

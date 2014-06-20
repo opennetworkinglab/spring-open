@@ -32,8 +32,6 @@ import org.slf4j.LoggerFactory;
  * In addition to IFlowSyncService, FlowSynchronizer periodically reads flow
  * tables from switches and compare them with GraphDB to drop unnecessary
  * flows and/or to install missing flows.
- *
- * @author Brian
  */
 public class FlowSynchronizer implements IFlowSyncService {
 
@@ -78,8 +76,6 @@ public class FlowSynchronizer implements IFlowSyncService {
 
     /**
      * Synchronizer represents main thread of synchronization.
-     *
-     * @author Brian
      */
     protected class Synchronizer implements Callable<SyncResult> {
         IOFSwitch sw;
@@ -254,8 +250,6 @@ public class FlowSynchronizer implements IFlowSyncService {
     /**
      * FlowEntryWrapper represents abstract FlowEntry which is embodied
      * by FlowEntryId (from GraphDB) or OFFlowStatisticsReply (from switch).
-     *
-     * @author Brian
      */
     class FlowEntryWrapper {
         FlowEntryId flowEntryId;

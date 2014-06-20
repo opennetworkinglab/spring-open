@@ -10,8 +10,6 @@ import org.junit.Test;
 
 /**
  * Unit tests for the ErrorIntent class.
- *
- * @author Toshio Koide (t-koide@onlab.us)
  */
 public class ErrorIntentTest {
 

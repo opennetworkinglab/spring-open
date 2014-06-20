@@ -8,7 +8,7 @@ import net.floodlightcontroller.core.IOFSwitchListener;
 import org.openflow.protocol.OFPhysicalPort;
 
 /**
- * @author y-higuchi
+ * Extra event handler added to IOFSwitchListener by ONOS.
  */
 public interface IOFSwitchPortListener extends IOFSwitchListener {
 
