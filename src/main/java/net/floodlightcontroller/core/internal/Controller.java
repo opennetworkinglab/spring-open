@@ -1648,12 +1648,14 @@ public class Controller implements IFloodlightProviderService {
     protected Role getInitialRole(Map<String, String> configParams) {
         Role role = null;
         String roleString = configParams.get("role");
+        FileInputStream fs = null;
         if (roleString == null) {
             String rolePath = configParams.get("rolepath");
             if (rolePath != null) {
                 Properties properties = new Properties();
                 try {
-                    properties.load(new FileInputStream(rolePath));
+                    fs = new FileInputStream(rolePath);
+                    properties.load(fs);
                     roleString = properties.getProperty("floodlight.role");
                 } catch (IOException exc) {
                     // Don't treat it as an error if the file specified by the
@@ -1661,6 +1663,14 @@ public class Controller implements IFloodlightProviderService {
                     // HA mechanism by just creating/setting the floodlight.role
                     // property in that file without having to modify the
                     // floodlight properties.
+                } finally {
+                    if (fs != null) {
+                        try {
+                            fs.close();
+                        } catch (IOException e) {
+                            log.error("Exception while closing resource ", e);
+                        }
+                    }
                 }
             }
         }

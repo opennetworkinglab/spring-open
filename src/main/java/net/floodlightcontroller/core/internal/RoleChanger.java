@@ -118,7 +118,7 @@ public class RoleChanger {
     protected long lastSubmitTime;
     protected Thread workerThread;
     protected long timeout;
-    protected static long DEFAULT_TIMEOUT = 15L * 1000 * 1000 * 1000L; // 15s
+    protected final static long DEFAULT_TIMEOUT = 15L * 1000 * 1000 * 1000L; // 15s
     protected final static Logger log = LoggerFactory.getLogger(RoleChanger.class);
 
     /**
