@@ -591,6 +591,17 @@
       <artifactId>zookeeper</artifactId>
       <version>3.4.6</version>
       <scope>runtime</scope>
+      <!-- Excluding log4j. ONOS uses logback-classic for SLF4J. -->
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
