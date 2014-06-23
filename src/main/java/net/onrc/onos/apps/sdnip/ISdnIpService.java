@@ -2,6 +2,8 @@ package net.onrc.onos.apps.sdnip;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 
+import com.googlecode.concurrenttrees.radix.RadixTree;
+
 /**
  * The API exported by the main SDN-IP class. This is the interface between the
  * REST handlers and the SDN-IP module.
@@ -9,13 +11,14 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 public interface ISdnIpService extends IFloodlightService {
 
     /**
-     * Gets a reference to SDN-IP's PATRICIA tree which stores the route table.
+     * Gets a reference to SDN-IP's radix tree which stores the route table
+     * learnt through BGP.
      *
      * XXX This is a poor API because it exposes internal state of SDN-IP.
      *
-     * @return the PATRICIA tree.
+     * @return the radix tree
      */
-    public IPatriciaTree<RibEntry> getPtree();
+    public RadixTree<RibEntry> getPtree();
 
     /**
      * Gets the IP address of REST server on the BGPd side. This is used to

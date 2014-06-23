@@ -21,6 +21,6 @@ public class SdnIpWebRoutableNew implements RestletRoutable {
 
     @Override
     public String basePath() {
-        return "/wm/bgpNew";
+        return "/wm/sdnip";
     }
 }

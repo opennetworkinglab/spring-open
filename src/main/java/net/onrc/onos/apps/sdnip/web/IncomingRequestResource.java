@@ -3,7 +3,6 @@ package net.onrc.onos.apps.sdnip.web;
 import java.util.Iterator;
 
 import net.onrc.onos.apps.sdnip.ISdnIpService;
-import net.onrc.onos.apps.sdnip.IPatriciaTree;
 import net.onrc.onos.apps.sdnip.Prefix;
 import net.onrc.onos.apps.sdnip.RestClient;
 import net.onrc.onos.apps.sdnip.RibEntry;
@@ -16,6 +15,9 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.googlecode.concurrenttrees.common.KeyValuePair;
+import com.googlecode.concurrenttrees.radix.RadixTree;
 
 /**
  * REST resource that handles REST calls from BGPd. This is the interface BGPd
@@ -38,27 +40,26 @@ public class IncomingRequestResource extends ServerResource {
                 get(ISdnIpService.class.getCanonicalName());
 
         if (dest == null) {
-            IPatriciaTree<RibEntry> ptree = sdnIp.getPtree();
+            RadixTree<RibEntry> radixTree = sdnIp.getPtree();
             output.append("{\n  \"rib\": [\n");
             boolean printed = false;
 
-            synchronized (ptree) {
-                Iterator<IPatriciaTree.Entry<RibEntry>> it = ptree.iterator();
-                while (it.hasNext()) {
-                    IPatriciaTree.Entry<RibEntry> entry = it.next();
+            Iterator<KeyValuePair<RibEntry>> it =
+                    radixTree.getKeyValuePairsForKeysStartingWith("").iterator();
+            while (it.hasNext()) {
+                KeyValuePair<RibEntry> entry = it.next();
 
-                    if (printed) {
-                        output.append(",\n");
-                    }
-
-                    output.append("    {\"prefix\": \"");
-                    output.append(entry.getPrefix());
-                    output.append("\", \"nexthop\": \"");
-                    output.append(entry.getValue().getNextHop().getHostAddress());
-                    output.append("\"}");
-
-                    printed = true;
+                if (printed) {
+                    output.append(",\n");
                 }
+
+                output.append("    {\"prefix\": \"");
+                output.append(entry.getKey());
+                output.append("\", \"nexthop\": \"");
+                output.append(entry.getValue().getNextHop().getHostAddress());
+                output.append("\"}");
+
+                printed = true;
             }
 
             output.append("\n  ]\n}\n");

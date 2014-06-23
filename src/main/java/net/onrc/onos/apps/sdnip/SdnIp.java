@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.proxyarp.IArpRequester;
 import net.onrc.onos.apps.proxyarp.IProxyArpService;
 import net.onrc.onos.apps.sdnip.RibUpdate.Operation;
+import net.onrc.onos.apps.sdnip.web.SdnIpWebRoutable;
 import net.onrc.onos.apps.sdnip.web.SdnIpWebRoutableNew;
 import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
@@ -55,6 +57,7 @@ import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -78,6 +81,10 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.net.InetAddresses;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.googlecode.concurrenttrees.radix.RadixTree;
+import com.googlecode.concurrenttrees.radix.node.concrete.DefaultByteArrayNodeFactory;
+import com.googlecode.concurrenttrees.radixinverted.ConcurrentInvertedRadixTree;
+import com.googlecode.concurrenttrees.radixinverted.InvertedRadixTree;
 
 public class SdnIp implements IFloodlightModule, ISdnIpService,
         IArpRequester,
@@ -90,8 +97,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     private IRestApiService restApi;
     private IProxyArpService proxyArp;
 
-    private IPatriciaTree<RibEntry> ptree;
-    private IPatriciaTree<Interface> interfacePtree;
+    private InvertedRadixTree<RibEntry> bgpRoutes;
+    private InvertedRadixTree<Interface> interfaceRoutes;
+
     private BlockingQueue<RibUpdate> ribUpdates;
 
     private String bgpdRestIp;
@@ -236,8 +244,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         // Populate the interface Patricia Tree
         for (Interface intf : interfaces.values()) {
-            Prefix prefix = new Prefix(intf.getIpAddress().getAddress(), intf.getPrefixLength());
-            interfacePtree.put(prefix, intf);
+            Prefix prefix = new Prefix(intf.getIpAddress().getAddress(),
+                    intf.getPrefixLength());
+            interfaceRoutes.put(prefix.toBinaryString(), intf);
         }
     }
 
@@ -274,8 +283,10 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     public void init(FloodlightModuleContext context)
             throws FloodlightModuleException {
 
-        ptree = new PatriciaTree<RibEntry>(32);
-        interfacePtree = new PatriciaTree<Interface>(32);
+        bgpRoutes = new ConcurrentInvertedRadixTree<>(
+                new DefaultByteArrayNodeFactory());
+        interfaceRoutes = new ConcurrentInvertedRadixTree<>(
+                new DefaultByteArrayNodeFactory());
 
         ribUpdates = new LinkedBlockingQueue<RibUpdate>();
 
@@ -335,7 +346,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public void startUp(FloodlightModuleContext context) {
-        //restApi.addRestletRoutable(new SdnIpWebRoutable());
+        restApi.addRestletRoutable(new SdnIpWebRoutable());
         restApi.addRestletRoutable(new SdnIpWebRoutableNew());
         floodlightProvider.addOFSwitchListener(this);
 
@@ -344,13 +355,13 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     }
 
     @Override
-    public IPatriciaTree<RibEntry> getPtree() {
-        return ptree;
+    public RadixTree<RibEntry> getPtree() {
+        return bgpRoutes;
     }
 
     @Override
     public void clearPtree() {
-        ptree = new PatriciaTree<RibEntry>(32);
+        log.warn("Clear table operation not supported");
     }
 
     @Override
@@ -371,43 +382,48 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             return;
         }
 
-        response = response.replaceAll("\"", "'");
-        JSONObject jsonObj = (JSONObject) JSONSerializer.toJSON(response);
-        JSONArray ribArray = jsonObj.getJSONArray("rib");
-        String inboundRouterId = jsonObj.getString("router-id");
+        try {
+            response = response.replaceAll("\"", "'");
+            JSONObject jsonObj = (JSONObject) JSONSerializer.toJSON(response);
+            JSONArray ribArray = jsonObj.getJSONArray("rib");
+            String inboundRouterId = jsonObj.getString("router-id");
 
-        int size = ribArray.size();
+            int size = ribArray.size();
 
-        log.info("Retrived RIB of {} entries from BGPd", size);
+            log.info("Retrived RIB of {} entries from BGPd", size);
 
-        for (int j = 0; j < size; j++) {
-            JSONObject ribEntry = ribArray.getJSONObject(j);
-            String prefix = ribEntry.getString("prefix");
-            String nexthop = ribEntry.getString("nexthop");
+            for (int j = 0; j < size; j++) {
+                JSONObject ribEntry = ribArray.getJSONObject(j);
+                String prefix = ribEntry.getString("prefix");
+                String nexthop = ribEntry.getString("nexthop");
 
-            // Insert each rib entry into the local rib
-            String[] substring = prefix.split("/");
-            String prefix1 = substring[0];
-            String mask1 = substring[1];
+                // Insert each rib entry into the local rib
+                String[] substring = prefix.split("/");
+                String prefix1 = substring[0];
+                String mask1 = substring[1];
 
-            Prefix p;
-            try {
-                p = new Prefix(prefix1, Integer.parseInt(mask1));
-            } catch (NumberFormatException e) {
-                log.warn("Wrong mask format in RIB JSON: {}", mask1);
-                continue;
-            } catch (IllegalArgumentException e1) {
-                log.warn("Wrong prefix format in RIB JSON: {}", prefix1);
-                continue;
+                Prefix p;
+                try {
+                    p = new Prefix(prefix1, Integer.parseInt(mask1));
+                } catch (NumberFormatException e) {
+                    log.warn("Wrong mask format in RIB JSON: {}", mask1);
+                    continue;
+                } catch (IllegalArgumentException e1) {
+                    log.warn("Wrong prefix format in RIB JSON: {}", prefix1);
+                    continue;
+                }
+
+                RibEntry rib = new RibEntry(inboundRouterId, nexthop);
+
+                try {
+                    ribUpdates.put(new RibUpdate(Operation.UPDATE, p, rib));
+                } catch (InterruptedException e) {
+                    log.debug("Interrupted while pushing onto update queue");
+                }
             }
-
-            RibEntry rib = new RibEntry(inboundRouterId, nexthop);
-
-            try {
-                ribUpdates.put(new RibUpdate(Operation.UPDATE, p, rib));
-            } catch (InterruptedException e) {
-                log.debug("Interrupted while pushing onto update queue");
-            }
+        } catch (JSONException e) {
+            // TODO don't parse JSON manually
+            log.error("Error parsing inital route table JSON:", e);
         }
     }
 
@@ -427,7 +443,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             log.debug("Processing prefix add {}", prefix);
 
-            RibEntry rib = ptree.put(prefix, update.getRibEntry());
+            RibEntry rib = bgpRoutes.put(prefix.toBinaryString(), update.getRibEntry());
 
             if (rib != null && !rib.equals(update.getRibEntry())) {
                 // There was an existing nexthop for this prefix. This update supersedes that,
@@ -611,7 +627,10 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         synchronized (this) {
             Prefix prefix = update.getPrefix();
 
-            if (ptree.remove(prefix, update.getRibEntry())) {
+            //if (ptree.remove(prefix, update.getRibEntry())) {
+            // TODO check the change of logic here - remove doesn't check that the
+            // rib entry was what we expected (and we can't do this concurrently)
+            if (bgpRoutes.remove(prefix.toBinaryString())) {
                 /*
                  * Only delete flows if an entry was actually removed from the tree.
                  * If no entry was removed, the <prefix, nexthop> wasn't there so
@@ -868,8 +887,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                     srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP,
                     dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP);
             ShortestPathIntent bwdIntent = new ShortestPathIntent(bwdIntentId,
-                    srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP,
-                    dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP);
+                    dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP,
+                    srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP);
             IntentOperation.Operator operator = IntentOperation.Operator.ADD;
             operations.add(operator, fwdIntent);
             operations.add(operator, bwdIntent);
@@ -1118,7 +1137,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             for (RibUpdate update : prefixesToPush) {
                 // These will always be adds
 
-                RibEntry rib = ptree.lookup(update.getPrefix());
+                RibEntry rib = bgpRoutes.getValueForExactKey(
+                        update.getPrefix().toBinaryString());
                 if (rib != null && rib.equals(update.getRibEntry())) {
                     log.debug("Pushing prefix {} next hop {}", update.getPrefix(),
                             rib.getNextHop().getHostAddress());
@@ -1352,7 +1372,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     private boolean validateUpdate(RibUpdate update) {
         RibEntry newEntry = update.getRibEntry();
-        RibEntry oldEntry = ptree.lookup(update.getPrefix());
+        RibEntry oldEntry = bgpRoutes.getValueForExactKey(
+                update.getPrefix().toBinaryString());
 
         //If there is no existing entry we must assume this is the most recent
         //update. However this might not always be the case as we might have a
@@ -1374,6 +1395,21 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         return newEntry.getSysUpTime() == oldEntry.getSysUpTime() &&
                newEntry.getSequenceNum() > oldEntry.getSequenceNum();
+    }
+
+    private Interface longestInterfacePrefixMatch(InetAddress address) {
+        Prefix prefixToSearchFor = new Prefix(address.getAddress(),
+                Prefix.MAX_PREFIX_LENGTH);
+        Iterator<Interface> it =
+                interfaceRoutes.getValuesForKeysPrefixing(
+                        prefixToSearchFor.toBinaryString()).iterator();
+        Interface intf = null;
+        // Find the last prefix, which will be the longest prefix
+        while (it.hasNext()) {
+            intf = it.next();
+        }
+
+        return intf;
     }
 
     // The code below should be reimplemented after removal of Floodlight's
@@ -1430,7 +1466,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public String getName() {
-        return "SdnIp";
+        return "sdnip";
     }
 
     /*
@@ -1439,13 +1475,13 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public boolean isInterfaceAddress(InetAddress address) {
-        Interface intf = interfacePtree.match(new Prefix(address.getAddress(), 32));
+        Interface intf = longestInterfacePrefixMatch(address);
         return (intf != null && intf.getIpAddress().equals(address));
     }
 
     @Override
     public boolean inConnectedNetwork(InetAddress address) {
-        Interface intf = interfacePtree.match(new Prefix(address.getAddress(), 32));
+        Interface intf = longestInterfacePrefixMatch(address);
         return (intf != null && !intf.getIpAddress().equals(address));
     }
 
@@ -1461,7 +1497,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public Interface getOutgoingInterface(InetAddress dstIpAddress) {
-        return interfacePtree.match(new Prefix(dstIpAddress.getAddress(), 32));
+        return longestInterfacePrefixMatch(dstIpAddress);
     }
 
     @Override

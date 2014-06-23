@@ -19,10 +19,18 @@ public class Prefix {
     /**
      * The length of addresses this class can represent prefixes of, in bytes.
      */
-    public static final int ADDRESS_LENGTH = 4;
+    public static final int ADDRESS_LENGTH_BYTES = 4;
+
+    /**
+     * The length of addresses this class can represent prefixes of, in bits.
+     */
+    public static final int MAX_PREFIX_LENGTH = Byte.SIZE * ADDRESS_LENGTH_BYTES;
+
+    public static final int MIN_PREFIX_LENGTH = 0;
 
     private final int prefixLength;
     private final byte[] address;
+    private final String binaryString;
 
     // For verifying the arguments and pretty printing
     private final InetAddress inetAddress;
@@ -32,26 +40,28 @@ public class Prefix {
      * a prefix length.
      * <p/>
      * The valid values for addr and prefixLength are bounded by
-     * {@link #ADDRESS_LENGTH}.
+     * {@link #ADDRESS_LENGTH_BYTES}.
      * <p/>
      * A valid addr array satisfies
-     * {@code addr.length == }{@value #ADDRESS_LENGTH}.
+     * {@code addr.length == }{@value #ADDRESS_LENGTH_BYTES}.
      * <p/>
      * A valid prefixLength satisfies
-     * {@code (prefixLength > 0 && prefixLength <=} {@link Byte#SIZE}
-     * {@code * }{@value #ADDRESS_LENGTH}{@code )}.
+     * {@code (prefixLength >= 0 && prefixLength <=} {@link Byte#SIZE}
+     * {@code * }{@value #ADDRESS_LENGTH_BYTES}{@code )}.
      *
      * @param addr a byte array representing the address
      * @param prefixLength length of the prefix of the specified address
      */
     public Prefix(byte[] addr, int prefixLength) {
-        if (addr == null || addr.length != ADDRESS_LENGTH ||
-                prefixLength < 0 || prefixLength > ADDRESS_LENGTH * Byte.SIZE) {
+        if (addr == null || addr.length != ADDRESS_LENGTH_BYTES ||
+                prefixLength < MIN_PREFIX_LENGTH ||
+                prefixLength > MAX_PREFIX_LENGTH) {
             throw new IllegalArgumentException();
         }
 
         address = canonicalizeAddress(addr, prefixLength);
         this.prefixLength = prefixLength;
+        binaryString = createBinaryString();
 
         try {
             inetAddress = InetAddress.getByAddress(address);
@@ -71,13 +81,15 @@ public class Prefix {
         byte[] addr = null;
         addr = InetAddresses.forString(strAddress).getAddress();
 
-        if (addr == null || addr.length != ADDRESS_LENGTH ||
-                prefixLength < 0 || prefixLength > ADDRESS_LENGTH * Byte.SIZE) {
+        if (addr == null || addr.length != ADDRESS_LENGTH_BYTES ||
+                prefixLength < MIN_PREFIX_LENGTH ||
+                prefixLength > MAX_PREFIX_LENGTH) {
             throw new IllegalArgumentException();
         }
 
         address = canonicalizeAddress(addr, prefixLength);
         this.prefixLength = prefixLength;
+        binaryString = createBinaryString();
 
         try {
             inetAddress = InetAddress.getByAddress(address);
@@ -86,12 +98,28 @@ public class Prefix {
         }
     }
 
+    /**
+     * This method takes a byte array passed in by the user and ensures it
+     * conforms to the format we want. The byte array can contain anything,
+     * but only some of the bits are significant. The bits after
+     * prefixLengthValue are not significant, and this method will zero them
+     * out in order to ensure there is a canonical representation for each
+     * prefix. This simplifies the equals and hashcode methods, because once we
+     * have a canonical byte array representation we can simply compare byte
+     * arrays to test equality.
+     *
+     * @param addressValue the byte array to canonicalize
+     * @param prefixLengthValue The length of the prefix. Bits up to and including
+     * prefixLength are significant, bits following prefixLength are not
+     * significant and will be zeroed out.
+     * @return the canonicalized representation of the prefix
+     */
     private byte[] canonicalizeAddress(byte[] addressValue,
                                        int prefixLengthValue) {
         byte[] result = new byte[addressValue.length];
 
         if (prefixLengthValue == 0) {
-            for (int i = 0; i < ADDRESS_LENGTH; i++) {
+            for (int i = 0; i < ADDRESS_LENGTH_BYTES; i++) {
                 result[i] = 0;
             }
 
@@ -102,7 +130,7 @@ public class Prefix {
 
         //Set all bytes after the end of the prefix to 0
         int lastByteIndex = (prefixLengthValue - 1) / Byte.SIZE;
-        for (int i = lastByteIndex; i < ADDRESS_LENGTH; i++) {
+        for (int i = lastByteIndex; i < ADDRESS_LENGTH_BYTES; i++) {
             result[i] = 0;
         }
 
@@ -119,6 +147,31 @@ public class Prefix {
         result[lastByteIndex] = (byte) (lastByte & mask);
 
         return result;
+    }
+
+    /**
+     * Creates the binary string representation of the prefix.
+     * The strings length is equal to prefixLength.
+     *
+     * @return the binary string representation
+     */
+    private String createBinaryString() {
+        if (prefixLength == 0) {
+            return "";
+        }
+
+        StringBuilder result = new StringBuilder(prefixLength);
+        for (int i = 0; i < address.length; i++) {
+            byte b = address[i];
+            for (int j = 0; j < Byte.SIZE; j++) {
+                byte mask = (byte) (0x80 >>> j);
+                result.append(((b & mask) == 0) ? "0" : "1");
+                if (i * Byte.SIZE + j == prefixLength - 1) {
+                    return result.toString();
+                }
+            }
+        }
+        return result.toString();
     }
 
     /**
@@ -162,6 +215,15 @@ public class Prefix {
     @Override
     public String toString() {
         return inetAddress.getHostAddress() + "/" + prefixLength;
+    }
+
+    /**
+     * Gets a binary string representation of the prefix.
+     *
+     * @return a binary string representation
+     */
+    public String toBinaryString() {
+        return binaryString;
     }
 
     /**
