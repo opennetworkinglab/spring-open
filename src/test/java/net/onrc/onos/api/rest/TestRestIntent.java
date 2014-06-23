@@ -94,6 +94,15 @@ public class TestRestIntent extends TestRest {
     }
 
     /**
+     * Fetch the URL to use for Low Level Intents REST API calls.
+     *
+     * @return low level intents REST API URL
+     */
+    String getLowRestIntentUrl() {
+        return getBaseRestIntentUrl() + "/low";
+    }
+
+    /**
      * Utility function to locate an intent in a JSON collection
      * that has the given id.
      * The JSON collection of intents looks like:

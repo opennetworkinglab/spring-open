@@ -1,6 +1,10 @@
 package net.onrc.onos.api.rest;
 
 import net.floodlightcontroller.restserver.RestletRoutable;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.restlet.resource.ClientResource;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -90,5 +94,39 @@ public class TestRest {
         final Random random = new Random();
 
         return portStartRange + (random.nextInt(portEndRange - portStartRange));
+    }
+
+    /**
+     * Get the JSON object representation for the top level object referred
+     * to by the given client.
+     *
+     * @param client the ClientResource that references the JSON object
+     * @return JSONObject that represents the object, null if it can't be
+     *         fetched
+     */
+    protected static JSONObject getJSONObject(final ClientResource client) {
+        try {
+            final String responseJSONString = client.get(String.class);
+            return new JSONObject(responseJSONString);
+        } catch (JSONException jsonException) {
+            return null;
+        }
+    }
+
+    /**
+     * Get the JSON array representation for the array referred to by
+     * the given client.
+     *
+     * @param client the ClientResource that references the JSON array
+     * @return JSONArray that represents the array, null if it can't be
+     *         fetched.
+     */
+    protected static JSONArray getJSONArray(final ClientResource client) {
+        try {
+            final String responseJSONString = client.get(String.class);
+            return new JSONArray(responseJSONString);
+        } catch (JSONException jsonException) {
+            return null;
+        }
     }
 }
