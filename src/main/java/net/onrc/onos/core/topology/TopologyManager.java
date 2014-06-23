@@ -59,7 +59,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     public static final String EVENT_CHANNEL_NAME = "onos.topology";
     private EventHandler eventHandler = new EventHandler();
 
-    private final TopologyDatastore datastore;
+    private TopologyDatastore datastore;
     private final TopologyImpl topology = new TopologyImpl();
     private final IControllerRegistryService registryService;
     private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
@@ -1240,5 +1240,15 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         return collection;
+    }
+    /**
+     * Replaces the internal datastore instance.
+     *
+     * @param dataStore instance
+     *
+     * @exclude Backdoor for unit testing purpose only, do not use.
+     */
+    void debugReplaceDataStore(final TopologyDatastore dataStoreService) {
+        this.datastore = dataStoreService;
     }
 }
