@@ -167,17 +167,19 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             //
             // The main loop
             //
-            try {
-                while (true) {
-                    EventEntry<TopologyEvent> eventEntry = topologyEvents.take();
+            while (true) {
+                try {
+                    EventEntry<TopologyEvent> eventEntry =
+                        topologyEvents.take();
                     collection.add(eventEntry);
                     topologyEvents.drainTo(collection);
 
                     processEvents(collection);
                     collection.clear();
+                } catch (Exception exception) {
+                    log.debug("Exception processing Topology Events: ",
+                              exception);
                 }
-            } catch (Exception exception) {
-                log.debug("Exception processing Topology Events: ", exception);
             }
         }
 
