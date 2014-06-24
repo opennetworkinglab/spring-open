@@ -25,7 +25,7 @@ public class ApplicationIntent {
      *
      * @return the Intent ID.
      */
-    public String intentId() {
+    public String getIntentId() {
         return this.intentId;
     }
 
@@ -47,7 +47,7 @@ public class ApplicationIntent {
      *
      * @return the Intent type.
      */
-    public String intentType() {
+    public String getIntentType() {
         return this.intentType;
     }
 
@@ -93,7 +93,7 @@ public class ApplicationIntent {
      *
      * @return the Source Switch DPID.
      */
-    public String srcSwitchDpid() {
+    public String getSrcSwitchDpid() {
         return this.srcSwitchDpid;
     }
 
@@ -111,7 +111,7 @@ public class ApplicationIntent {
      *
      * @return the Source Switch Port.
      */
-    public int srcSwitchPort() {
+    public int getSrcSwitchPort() {
         return this.srcSwitchPort;
     }
 
@@ -129,7 +129,7 @@ public class ApplicationIntent {
      *
      * @return the Destination Switch DPID.
      */
-    public String dstSwitchDpid() {
+    public String getDstSwitchDpid() {
         return this.dstSwitchDpid;
     }
 
@@ -147,7 +147,7 @@ public class ApplicationIntent {
      *
      * @return the Destination Switch Port.
      */
-    public int dstSwitchPort() {
+    public int getDstSwitchPort() {
         return this.dstSwitchPort;
     }
 
@@ -165,7 +165,7 @@ public class ApplicationIntent {
      *
      * @return the bandwidth for Constrained Shortest Path.
      */
-    public double bandwidth() {
+    public double getBandwidth() {
         return this.bandwidth;
     }
 
@@ -183,7 +183,7 @@ public class ApplicationIntent {
      *
      * @return the matching source MAC address.
      */
-    public String matchSrcMac() {
+    public String getMatchSrcMac() {
         return this.matchSrcMac;
     }
 
@@ -201,7 +201,7 @@ public class ApplicationIntent {
      *
      * @return the matching destination MAC address.
      */
-    public String matchDstMac() {
+    public String getMatchDstMac() {
         return this.matchDstMac;
     }
 

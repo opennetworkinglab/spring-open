@@ -151,6 +151,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                             break;
                         case DEL_PENDING:
                             break;
+                        case REROUTE_REQ:
+                            break;
                         default:
                             break;
                     }
@@ -404,44 +406,44 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         //
         IntentOperationList intentOperations = new IntentOperationList();
         for (ApplicationIntent appIntent : appIntents) {
-            String appIntentId = appId + ":" + appIntent.intentId();
+            String appIntentId = appId + ":" + appIntent.getIntentId();
 
             IntentOperation.Operator operator = IntentOperation.Operator.ADD;
-            Dpid srcSwitchDpid = new Dpid(appIntent.srcSwitchDpid());
-            Dpid dstSwitchDpid = new Dpid(appIntent.dstSwitchDpid());
+            Dpid srcSwitchDpid = new Dpid(appIntent.getSrcSwitchDpid());
+            Dpid dstSwitchDpid = new Dpid(appIntent.getDstSwitchDpid());
 
-            if (appIntent.intentType().equals("SHORTEST_PATH")) {
+            if (appIntent.getIntentType().equals("SHORTEST_PATH")) {
                 //
                 // Process Shortest-Path Intent
                 //
                 ShortestPathIntent spi =
                     new ShortestPathIntent(appIntentId,
                                            srcSwitchDpid.value(),
-                                           appIntent.srcSwitchPort(),
-                                           MACAddress.valueOf(appIntent.matchSrcMac()).toLong(),
+                                           appIntent.getSrcSwitchPort(),
+                                           MACAddress.valueOf(appIntent.getMatchSrcMac()).toLong(),
                                            dstSwitchDpid.value(),
-                                           appIntent.dstSwitchPort(),
-                                           MACAddress.valueOf(appIntent.matchDstMac()).toLong());
+                                           appIntent.getDstSwitchPort(),
+                                           MACAddress.valueOf(appIntent.getMatchDstMac()).toLong());
                 spi.setPathFrozen(appIntent.isStaticPath());
                 intentOperations.add(operator, spi);
-            } else if (appIntent.intentType().equals("CONSTRAINED_SHORTEST_PATH")) {
+            } else if (appIntent.getIntentType().equals("CONSTRAINED_SHORTEST_PATH")) {
                 //
                 // Process Constrained Shortest-Path Intent
                 //
                 ConstrainedShortestPathIntent cspi =
                     new ConstrainedShortestPathIntent(appIntentId,
                                                       srcSwitchDpid.value(),
-                                                      appIntent.srcSwitchPort(),
-                                                      MACAddress.valueOf(appIntent.matchSrcMac()).toLong(),
+                                                      appIntent.getSrcSwitchPort(),
+                                                      MACAddress.valueOf(appIntent.getMatchSrcMac()).toLong(),
                                                       dstSwitchDpid.value(),
-                                                      appIntent.dstSwitchPort(),
-                                                      MACAddress.valueOf(appIntent.matchDstMac()).toLong(),
-                                                      appIntent.bandwidth());
+                                                      appIntent.getDstSwitchPort(),
+                                                      MACAddress.valueOf(appIntent.getMatchDstMac()).toLong(),
+                                                      appIntent.getBandwidth());
                 cspi.setPathFrozen(appIntent.isStaticPath());
                 intentOperations.add(operator, cspi);
             } else {
                 log.error("Unknown Application Intent Type: {}",
-                          appIntent.intentType());
+                          appIntent.getIntentType());
                 return false;
             }
             removedApplicationIntentIds.remove(appIntentId);
