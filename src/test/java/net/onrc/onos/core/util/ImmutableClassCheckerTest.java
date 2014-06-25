@@ -12,14 +12,13 @@ import static org.hamcrest.Matchers.is;
  * checker.
  */
 public class ImmutableClassCheckerTest {
-    // CHECKSTYLE:OFF test data intentionally not final
     /**
      * Test class for non final class check.
      */
+    // CHECKSTYLE IGNORE FinalClass FOR NEXT 1 LINES
     static class NonFinal {
         private NonFinal() { }
     }
-    // CHECKSTYLE:ON
 
     /**
      * Check that a non final class correctly produces an error.
