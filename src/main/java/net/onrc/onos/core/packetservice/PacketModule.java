@@ -26,6 +26,8 @@ import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.protocol.OFMessage;
@@ -161,10 +163,11 @@ public class PacketModule implements IOFMessageListener, IPacketService,
 
         Switch topologySwitch;
         Port inPort;
+        final Dpid dpid = new Dpid(sw.getId());
+        topology.acquireReadLock();
         try {
-            topology.acquireReadLock();
-            topologySwitch = topology.getSwitch(sw.getId());
-            inPort = topology.getPort(sw.getId(), (long) pi.getInPort());
+            topologySwitch = topology.getSwitch(dpid);
+            inPort = topology.getPort(dpid, new PortNumber(pi.getInPort()));
         } finally {
             topology.releaseReadLock();
         }

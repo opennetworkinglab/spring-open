@@ -4,6 +4,9 @@ import java.nio.ByteBuffer;
 
 import net.onrc.onos.core.topology.PortEvent.SwitchPort;
 import net.onrc.onos.core.topology.web.serializers.LinkEventSerializer;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
+
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
@@ -39,6 +42,12 @@ public class LinkEvent {
                 link.getDstPort().getNumber());
     }
 
+    public LinkEvent(Dpid srcDpid, PortNumber srcPortNo,
+                     Dpid dstDpid, PortNumber dstPortNo) {
+        src = new SwitchPort(srcDpid, srcPortNo);
+        dst = new SwitchPort(dstDpid, dstPortNo);
+    }
+
     public SwitchPort getSrc() {
         return src;
     }
@@ -53,6 +62,12 @@ public class LinkEvent {
     }
 
     public static final int LINKID_BYTES = 2 + PortEvent.PORTID_BYTES * 2;
+
+    public static ByteBuffer getLinkID(Dpid srcDpid, PortNumber srcPortNo,
+                                       Dpid dstDpid, PortNumber dstPortNo) {
+            return getLinkID(srcDpid.value(), (long) srcPortNo.value(),
+                             dstDpid.value(), (long) dstPortNo.value());
+    }
 
     public static ByteBuffer getLinkID(Long srcDpid, Long srcPortNo,
                                        Long dstDpid, Long dstPortNo) {

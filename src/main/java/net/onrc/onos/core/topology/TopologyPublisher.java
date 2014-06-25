@@ -96,11 +96,11 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
             for (Switch sw : switches) {
                 try {
                     String controller =
-                            registryService.getControllerForSwitch(sw.getDpid());
+                            registryService.getControllerForSwitch(sw.getDpid().value());
                     if (controller == null) {
                         log.debug("Requesting control to set switch {} INACTIVE",
-                                HexString.toHexString(sw.getDpid()));
-                        registryService.requestControl(sw.getDpid(), this);
+                                sw.getDpid());
+                        registryService.requestControl(sw.getDpid().value(), this);
                     }
                 } catch (RegistryException e) {
                     log.error("Caught RegistryException in cleanup thread", e);

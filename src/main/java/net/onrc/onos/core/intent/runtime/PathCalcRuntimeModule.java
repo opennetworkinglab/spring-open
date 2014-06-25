@@ -272,7 +272,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
 
         for (LinkEvent linkEvent : pathIntent.getPath()) {
-            long sw = linkEvent.getSrc().getDpid();
+            long sw = linkEvent.getSrc().getDpid().value();
             allSwitchesForPath.add(sw);
         }
         allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
@@ -304,7 +304,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
 
         for (LinkEvent linkEvent : pathIntent.getPath()) {
-            long sw = linkEvent.getSrc().getDpid();
+            long sw = linkEvent.getSrc().getDpid().value();
 
             if (domainSwitchDpids.contains(sw)) {
                 allSwitchesForPath.add(sw);
@@ -702,13 +702,15 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
 
             p.log("begin_getIntentsByPort");
             for (PortEvent portEvent : removedPortEvents) {
-                affectedPaths.addAll(pathIntents.getIntentsByPort(portEvent.getDpid(), portEvent.getNumber()));
+                affectedPaths.addAll(pathIntents.getIntentsByPort(
+                        portEvent.getDpid().value(),
+                        (long) portEvent.getNumber().value()));
             }
             p.log("end_getIntentsByPort");
 
             p.log("begin_getIntentsByDpid");
             for (SwitchEvent switchEvent : removedSwitchEvents) {
-                affectedPaths.addAll(pathIntents.getIntentsByDpid(switchEvent.getDpid()));
+                affectedPaths.addAll(pathIntents.getIntentsByDpid(switchEvent.getDpid().value()));
             }
             p.log("end_getIntentsByDpid");
         }

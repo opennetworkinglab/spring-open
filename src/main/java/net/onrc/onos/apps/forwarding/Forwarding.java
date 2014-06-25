@@ -262,7 +262,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         }
 
         packetService.broadcastPacketOutEdge(eth,
-                new SwitchPort(sw.getDpid(), inPort.getNumber().shortValue()));
+                new SwitchPort(sw.getDpid(), inPort.getNumber()));
     }
 
     private void handlePacketIn(Switch sw, Port inPort, Ethernet eth) {
@@ -333,18 +333,17 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         }
 
         //This code assumes the device has only one port. It should be problem.
-        net.onrc.onos.core.topology.Port portObject = ports.next();
-        short destinationPort = portObject.getNumber().shortValue();
-        Switch switchObject = portObject.getSwitch();
-        long destinationDpid = switchObject.getDpid();
+        Port destinationPort = ports.next();
+        short destinationPortNum = destinationPort.getNumber().value();
+        Switch destinationSw = destinationPort.getSwitch();
+        long destinationDpid = destinationSw.getDpid().value();
 
-        // TODO eliminate cast
         SwitchPort srcSwitchPort = new SwitchPort(
-                new Dpid(sw.getDpid()),
-                new PortNumber((short) inPort.getNumber().longValue()));
+                sw.getDpid(),
+                inPort.getNumber());
         SwitchPort dstSwitchPort = new SwitchPort(
-                new Dpid(destinationDpid),
-                new PortNumber(destinationPort));
+                destinationSw.getDpid(),
+                destinationPort.getNumber());
 
         MACAddress srcMacAddress = MACAddress.valueOf(eth.getSourceMACAddress());
         MACAddress dstMacAddress = MACAddress.valueOf(eth.getDestinationMACAddress());
@@ -412,7 +411,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     net.onrc.onos.core.intent.Path path = pathIntent.getPath();
                     long outPort = -1;
 
-                    if (spfIntent.getDstSwitchDpid() == sw.getDpid()) {
+                    if (spfIntent.getDstSwitchDpid() == sw.getDpid().value()) {
                         log.trace("The packet-in sw dpid {} is on the path.", sw.getDpid());
                         isflowEntryForThisSwitch = true;
                         outPort = spfIntent.getDstPortNumber();
@@ -421,10 +420,10 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     for (Iterator<LinkEvent> i = path.iterator(); i.hasNext();) {
                         LinkEvent le = i.next();
 
-                        if (le.getSrc().dpid.equals(sw.getDpid())) {
+                        if (new Dpid(le.getSrc().dpid).equals(sw.getDpid())) {
                             log.trace("The packet-in sw dpid {} is on the path.", sw.getDpid());
                             isflowEntryForThisSwitch = true;
-                            outPort = le.getSrc().getNumber();
+                            outPort = le.getSrc().getNumber().value();
                             break;
                         }
                     }
@@ -443,21 +442,21 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
                         log.debug("Sending packet out from sw {}, outport{}", sw.getDpid(), outPort);
                         packetService.sendPacket(eth, new SwitchPort(
-                                sw.getDpid(), (short) outPort));
+                                sw.getDpid(), new PortNumber((short) outPort)));
                     }
                 } else {
                     // Flow path has not yet been installed to switches so save the
                     // packet out for later
                     log.trace("Put a packet into the waiting list. flowId {}", existingFlow.intentId);
-                    waitingPackets.put(existingFlow.intentId, new PacketToPush(eth, sw.getDpid()));
+                    waitingPackets.put(existingFlow.intentId, new PacketToPush(eth, sw.getDpid().value()));
                 }
                 return;
             }
 
             String intentId = Long.toString(controllerRegistryService.getNextUniqueId());
             ShortestPathIntent intent = new ShortestPathIntent(intentId,
-                    sw.getDpid(), inPort.getNumber(), srcMacAddress.toLong(),
-                    destinationDpid, destinationPort, dstMacAddress.toLong());
+                    sw.getDpid().value(), inPort.getNumber().value(), srcMacAddress.toLong(),
+                    destinationDpid, destinationPortNum, dstMacAddress.toLong());
 
             intent.setIdleTimeout(idleTimeout + SRC_SWITCH_TIMEOUT_ADJUST_SECOND);
             intent.setFirstSwitchIdleTimeout(idleTimeout);
@@ -467,7 +466,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     new Object[]{srcMacAddress, srcSwitchPort, dstMacAddress, dstSwitchPort});
 
              // Add to waiting lists
-            waitingPackets.put(intentId, new PacketToPush(eth, sw.getDpid()));
+            waitingPackets.put(intentId, new PacketToPush(eth, sw.getDpid().value()));
             log.trace("Put a Packet in the wating list. intent ID {}, related pathspec {}", intentId, pathspec);
             pendingFlows.put(pathspec, new PushedFlow(intentId));
             log.trace("Put a Path {} in the pending flow, intent ID {}", pathspec, intentId);
@@ -529,7 +528,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             outPort = (short) spfIntent.getDstPortNumber();
             log.debug("Path is empty. Maybe devices on the same switch. outPort {}", outPort);
         } else {
-            outPort = graphPath.get(0).getSrc().getNumber().shortValue();
+            outPort = graphPath.get(0).getSrc().getNumber().value();
             log.debug("path{}, outPort {}", graphPath, outPort);
         }
 

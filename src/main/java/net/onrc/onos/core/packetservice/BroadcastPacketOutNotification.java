@@ -4,6 +4,8 @@ import java.util.Map;
 
 import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.Port;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -89,8 +91,8 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
             Port globalPort;
             topology.acquireReadLock();
             try {
-                globalPort = topology.getPort(entry.getKey(),
-                    entry.getValue().longValue());
+                globalPort = topology.getPort(new Dpid(entry.getKey()),
+                    new PortNumber(entry.getValue()));
             } finally {
                 topology.releaseReadLock();
             }

@@ -25,8 +25,8 @@ public class SwitchEvent {
         this.dpid = new Dpid(dpid);
     }
 
-    public Long getDpid() {
-        return dpid.value();
+    public Dpid getDpid() {
+        return dpid;
     }
 
     @Override

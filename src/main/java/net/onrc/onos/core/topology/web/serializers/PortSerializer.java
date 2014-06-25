@@ -7,7 +7,6 @@ import net.onrc.onos.core.topology.Port;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
-import org.openflow.util.HexString;
 
 public class PortSerializer extends SerializerBase<Port> {
 
@@ -21,8 +20,8 @@ public class PortSerializer extends SerializerBase<Port> {
             throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("state", "ACTIVE");
-        jsonGenerator.writeStringField("dpid", HexString.toHexString(port.getDpid()));
-        jsonGenerator.writeNumberField("number", port.getNumber());
+        jsonGenerator.writeStringField("dpid", port.getDpid().toString());
+        jsonGenerator.writeNumberField("number", port.getNumber().value());
         jsonGenerator.writeStringField("desc", port.getDescription());
         jsonGenerator.writeEndObject();
     }

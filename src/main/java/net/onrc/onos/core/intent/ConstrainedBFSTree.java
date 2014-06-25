@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.Dpid;
 
 /**
  * This class creates bandwidth constrained breadth first tree and returns paths
@@ -18,7 +19,7 @@ import net.onrc.onos.core.topology.Switch;
 public class ConstrainedBFSTree {
     LinkedList<Switch> switchQueue = new LinkedList<>();
     HashSet<Switch> switchSearched = new HashSet<>();
-    HashMap<Long, LinkEvent> upstreamLinks = new HashMap<>();
+    HashMap<Dpid, LinkEvent> upstreamLinks = new HashMap<>();
     HashMap<Switch, Path> paths = new HashMap<>();
     Switch rootSwitch;
     PathIntentMap intents = null;
@@ -80,10 +81,10 @@ public class ConstrainedBFSTree {
      */
     public Path getPath(Switch leafSwitch) {
         Path path = paths.get(leafSwitch);
-        Long rootSwitchDpid = rootSwitch.getDpid();
+        Dpid rootSwitchDpid = rootSwitch.getDpid();
         if (path == null && switchSearched.contains(leafSwitch)) {
             path = new Path();
-            Long sw = leafSwitch.getDpid();
+            Dpid sw = leafSwitch.getDpid();
             while (!sw.equals(rootSwitchDpid)) {
                 LinkEvent upstreamLink = upstreamLinks.get(sw);
                 path.add(0, upstreamLink);

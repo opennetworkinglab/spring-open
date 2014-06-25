@@ -2,6 +2,9 @@ package net.onrc.onos.core.topology;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.web.serializers.TopologySerializer;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -12,51 +15,75 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = TopologySerializer.class)
 public interface Topology {
+
     /**
-     * Get the switch for a given switch DPID.
+     * Gets the switch for a given switch DPID.
      *
      * @param dpid the switch dpid.
      * @return the switch if found, otherwise null.
      */
-    public Switch getSwitch(Long dpid);
+    public Switch getSwitch(Dpid dpid);
 
     /**
-     * Get all switches in the network.
+     * Gets all switches in the network.
      *
      * @return all switches in the network.
      */
     public Iterable<Switch> getSwitches();
 
     /**
-     * Get the port on a switch.
+     * Gets the port on a switch.
      *
      * @param dpid   the switch DPID.
      * @param number the switch port number.
      * @return the switch port if found, otherwise null.
      */
-    public Port getPort(Long dpid, Long number);
+    public Port getPort(Dpid dpid, PortNumber number);
 
     /**
-     * Get the outgoing link from a switch port.
+     * Gets the port on a switch.
+     *
+     * @param port port identifier
+     * @return the switch port if found, otherwise null.
+     */
+    public Port getPort(SwitchPort port);
+
+    /**
+     * Gets the outgoing link from a switch port.
      *
      * @param dpid   the switch DPID.
      * @param number the switch port number.
      * @return the outgoing link if found, otherwise null.
      */
-    public Link getOutgoingLink(Long dpid, Long number);
-    // TODO See if we should change <dpid, port_num> pairs to SwitchPort
+    public Link getOutgoingLink(Dpid dpid, PortNumber number);
 
     /**
-     * Get the incoming link to a switch port.
+     * Gets the outgoing link from a switch port.
+     *
+     * @param port port identifier
+     * @return the switch port if found, otherwise null.
+     */
+    public Link getOutgoingLink(SwitchPort port);
+
+    /**
+     * Gets the incoming link to a switch port.
      *
      * @param dpid   the switch DPID.
      * @param number the switch port number.
      * @return the incoming link if found, otherwise null.
      */
-    public Link getIncomingLink(Long dpid, Long number);
+    public Link getIncomingLink(Dpid dpid, PortNumber number);
 
     /**
-     * Get the outgoing link from a switch and a port to another switch and
+     * Gets the incoming link to a switch port.
+     *
+     * @param port port identifier
+     * @return the switch port if found, otherwise null.
+     */
+    public Link getIncomingLink(SwitchPort port);
+
+    /**
+     * Gets the outgoing link from a switch and a port to another switch and
      * a port.
      *
      * @param srcDpid   the source switch DPID.
@@ -65,11 +92,11 @@ public interface Topology {
      * @param dstNumber the destination switch port number.
      * @return the outgoing link if found, otherwise null.
      */
-    public Link getLink(Long srcDpid, Long srcNumber, Long dstDpid,
-                        Long dstNumber);
+    public Link getLink(Dpid srcDpid, PortNumber srcNumber,
+                        Dpid dstDpid, PortNumber dstNumber);
 
     /**
-     * Get all links in the network.
+     * Gets all links in the network.
      * <p/>
      * TODO: Not clear if this method is needed. Remove if not used.
      *
@@ -78,7 +105,7 @@ public interface Topology {
     public Iterable<Link> getLinks();
 
     /**
-     * Get the network device for a given MAC address.
+     * Gets the network device for a given MAC address.
      *
      * @param address the MAC address to use.
      * @return the network device for the MAC address if found, otherwise null.

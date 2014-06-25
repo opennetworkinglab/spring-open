@@ -2,6 +2,8 @@ package net.onrc.onos.core.intent;
 
 import static org.junit.Assert.assertEquals;
 import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.serializers.KryoFactory;
 
 import org.junit.After;
@@ -16,6 +18,15 @@ import com.esotericsoftware.kryo.io.Output;
  * Unit tests for PathIntent.
  */
 public class PathIntentTest {
+
+    private static final Dpid DPID_1 = new Dpid(1L);
+    private static final Dpid DPID_2 = new Dpid(2L);
+    private static final Dpid DPID_3 = new Dpid(3L);
+    private static final Dpid DPID_4 = new Dpid(4L);
+
+    private static final PortNumber PORT_NUMBER_1 = new PortNumber((short) 1);
+    private static final PortNumber PORT_NUMBER_2 = new PortNumber((short) 2);
+
     @Before
     public void setUp() throws Exception {
     }
@@ -68,20 +79,20 @@ public class PathIntentTest {
         assertEquals("11", pathIntent2.getId());
         Path path2 = pathIntent2.getPath();
 
-        assertEquals(Long.valueOf(1L), path2.get(0).getSrc().getDpid());
-        assertEquals(Long.valueOf(1L), path2.get(0).getSrc().getNumber());
-        assertEquals(Long.valueOf(2L), path2.get(0).getDst().getDpid());
-        assertEquals(Long.valueOf(2L), path2.get(0).getDst().getNumber());
+        assertEquals(DPID_1, path2.get(0).getSrc().getDpid());
+        assertEquals(PORT_NUMBER_1, path2.get(0).getSrc().getNumber());
+        assertEquals(DPID_2, path2.get(0).getDst().getDpid());
+        assertEquals(PORT_NUMBER_2, path2.get(0).getDst().getNumber());
 
-        assertEquals(Long.valueOf(2L), path2.get(1).getSrc().getDpid());
-        assertEquals(Long.valueOf(1L), path2.get(1).getSrc().getNumber());
-        assertEquals(Long.valueOf(3L), path2.get(1).getDst().getDpid());
-        assertEquals(Long.valueOf(2L), path2.get(1).getDst().getNumber());
+        assertEquals(DPID_2, path2.get(1).getSrc().getDpid());
+        assertEquals(PORT_NUMBER_1, path2.get(1).getSrc().getNumber());
+        assertEquals(DPID_3, path2.get(1).getDst().getDpid());
+        assertEquals(PORT_NUMBER_2, path2.get(1).getDst().getNumber());
 
-        assertEquals(Long.valueOf(3L), path2.get(2).getSrc().getDpid());
-        assertEquals(Long.valueOf(1L), path2.get(2).getSrc().getNumber());
-        assertEquals(Long.valueOf(4L), path2.get(2).getDst().getDpid());
-        assertEquals(Long.valueOf(2L), path2.get(2).getDst().getNumber());
+        assertEquals(DPID_3, path2.get(2).getSrc().getDpid());
+        assertEquals(PORT_NUMBER_1, path2.get(2).getSrc().getNumber());
+        assertEquals(DPID_4, path2.get(2).getDst().getDpid());
+        assertEquals(PORT_NUMBER_2, path2.get(2).getDst().getNumber());
 
         assertEquals(123.45, pathIntent2.getBandwidth(), 0.0);
 

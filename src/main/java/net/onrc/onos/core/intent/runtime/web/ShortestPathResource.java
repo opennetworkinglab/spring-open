@@ -11,7 +11,6 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Dpid;
-
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
@@ -53,8 +52,8 @@ public class ShortestPathResource extends ServerResource {
         Topology topology = topologyService.getTopology();
         topology.acquireReadLock();
         try {
-            Switch srcSwitch = topology.getSwitch(srcDpid.value());
-            Switch dstSwitch = topology.getSwitch(dstDpid.value());
+            Switch srcSwitch = topology.getSwitch(srcDpid);
+            Switch dstSwitch = topology.getSwitch(dstDpid);
             if ((srcSwitch == null) || (dstSwitch == null)) {
                 return null;
             }
@@ -65,7 +64,8 @@ public class ShortestPathResource extends ServerResource {
             }
             List<Link> links = new LinkedList<>();
             for (LinkEvent linkEvent : path) {
-                Link link = topology.getLink(linkEvent.getSrc().getDpid(),
+                Link link = topology.getLink(
+                        linkEvent.getSrc().getDpid(),
                         linkEvent.getSrc().getNumber(),
                         linkEvent.getDst().getDpid(),
                         linkEvent.getDst().getNumber());

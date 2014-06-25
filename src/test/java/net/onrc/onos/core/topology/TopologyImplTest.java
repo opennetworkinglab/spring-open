@@ -1,14 +1,13 @@
 package net.onrc.onos.core.topology;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 import java.util.Iterator;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +25,9 @@ public class TopologyImplTest {
     private TopologyImpl testTopology;
     private static final Long SWITCH_HOST_PORT = 1L;
     private static final Long SWITCH_PORT_1 = 2L;
+    private static final PortNumber PORT_NUMBER_1 = new PortNumber(SWITCH_PORT_1.shortValue());
     private static final Long SWITCH_PORT_2 = 3L;
+    private static final PortNumber PORT_NUMBER_2 = new PortNumber(SWITCH_PORT_2.shortValue());
 
     // Set the test network size, it should be larger than 3
     private static final long TEST_SWITCH_NUM = 100L;
@@ -53,12 +54,12 @@ public class TopologyImplTest {
         // Create one bidirectional link b/w two switches to construct a ring topology
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
             LinkImpl testLinkEast = new LinkImpl(testTopology,
-                    testTopology.getPort(switchID, SWITCH_PORT_2),
-                    testTopology.getPort(switchID % TEST_SWITCH_NUM + 1, SWITCH_PORT_1)
+                    testTopology.getPort(new Dpid(switchID), PORT_NUMBER_2),
+                    testTopology.getPort(new Dpid(switchID % TEST_SWITCH_NUM + 1), PORT_NUMBER_1)
                     );
             LinkImpl testLinkWest = new LinkImpl(testTopology,
-                    testTopology.getPort(switchID % TEST_SWITCH_NUM + 1, SWITCH_PORT_1),
-                    testTopology.getPort(switchID, SWITCH_PORT_2)
+                    testTopology.getPort(new Dpid(switchID % TEST_SWITCH_NUM + 1), PORT_NUMBER_1),
+                    testTopology.getPort(new Dpid(switchID), PORT_NUMBER_2)
                     );
             testTopology.putLink(testLinkEast);
             testTopology.putLink(testLinkWest);
@@ -76,17 +77,18 @@ public class TopologyImplTest {
     @Test
     public void testGetSwitch() {
         // Verify the switch is in the graphDB
-        assertNotNull(testTopology.getSwitch(TEST_SWITCH_NUM - 1));
+        assertNotNull(testTopology.getSwitch(new Dpid(TEST_SWITCH_NUM - 1)));
 
         // Verify there is no such switch in the graphDB
-        assertNull(testTopology.getSwitch(TEST_SWITCH_NUM + 1));
-        long swID = 0;
+        assertNull(testTopology.getSwitch(new Dpid(TEST_SWITCH_NUM + 1)));
         long index = 0;
         Iterator<Switch> itr =  testTopology.getSwitches().iterator();
         while (itr.hasNext()) {
             index++;
-            swID = itr.next().getDpid();
-            assertTrue(swID >= 1 && swID <= TEST_SWITCH_NUM);
+            Dpid swID = itr.next().getDpid();
+            assertThat(swID.value(),
+                    is(both(greaterThanOrEqualTo(1L))
+                       .and(lessThanOrEqualTo(TEST_SWITCH_NUM))));
         }
 
         // Verify the total number of switches
@@ -98,13 +100,14 @@ public class TopologyImplTest {
      */
     @Test
     public void testGetPort() {
+        PortNumber bogusPortNum = new PortNumber((short) (SWITCH_PORT_2 + 1));
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
             // Verify ports are in the graphDB
-            assertNotNull(testTopology.getSwitch(switchID).getPort(SWITCH_PORT_1));
-            assertNotNull(testTopology.getSwitch(switchID).getPort(SWITCH_PORT_2));
+            assertNotNull(testTopology.getSwitch(new Dpid(switchID)).getPort(PORT_NUMBER_1));
+            assertNotNull(testTopology.getSwitch(new Dpid(switchID)).getPort(PORT_NUMBER_2));
 
             // Verify there is no such port in the graphDB
-            assertNull(testTopology.getSwitch(switchID).getPort(SWITCH_PORT_2 + 1));
+            assertNull(testTopology.getSwitch(new Dpid(switchID)).getPort(bogusPortNum));
         }
     }
 
@@ -113,11 +116,11 @@ public class TopologyImplTest {
      */
     @Test
     public void testGetLink() {
-        long sw1ID = 1L;
-        long sw2ID = 3L;
+        Dpid sw1ID = new Dpid(1L);
+        Dpid sw3ID = new Dpid(3L);
 
         // Verify there is no such link b/w these two switches
-        assertNull((testTopology.getSwitch(sw1ID)).getLinkToNeighbor(sw2ID));
+        assertNull((testTopology.getSwitch(sw1ID)).getLinkToNeighbor(sw3ID));
         long index = 0;
         Iterator<Link> itr = testTopology.getLinks().iterator();
         while (itr.hasNext()) {
@@ -125,11 +128,12 @@ public class TopologyImplTest {
             Link objectLink = itr.next();
             Switch srcSw = (objectLink.getSrcSwitch());
             Switch dstSw = (objectLink.getDstSwitch());
-            if (srcSw.getDpid() < TEST_SWITCH_NUM && dstSw.getDpid() < TEST_SWITCH_NUM) {
-                // Verify the link relationship
-                assertTrue((srcSw.getDpid() == dstSw.getDpid() - 1
-                        || (srcSw.getDpid() == dstSw.getDpid() + 1)));
-            }
+
+            // confirm link is forming a link
+            final long smallerDpid = Math.min(srcSw.getDpid().value(), dstSw.getDpid().value());
+            final long largerDpid = Math.max(srcSw.getDpid().value(), dstSw.getDpid().value());
+            assertThat(largerDpid - smallerDpid,
+                is(either(equalTo(1L)).or(equalTo(TEST_SWITCH_NUM - 1))));
         }
 
         // Verify the total number of links
@@ -141,12 +145,13 @@ public class TopologyImplTest {
      */
     @Test
     public void testGetOutgoingLink() {
+        PortNumber bogusPortNum = new PortNumber((short) (SWITCH_PORT_2 + 1));
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
-            assertNotNull(testTopology.getOutgoingLink(switchID, SWITCH_PORT_1));
-            assertNotNull(testTopology.getOutgoingLink(switchID, SWITCH_PORT_2));
+            assertNotNull(testTopology.getOutgoingLink(new Dpid(switchID), PORT_NUMBER_1));
+            assertNotNull(testTopology.getOutgoingLink(new Dpid(switchID), PORT_NUMBER_2));
 
             // Verify there is no such link in the graphDB
-            assertNull(testTopology.getOutgoingLink(switchID, SWITCH_PORT_1 + 2));
+            assertNull(testTopology.getOutgoingLink(new Dpid(switchID), bogusPortNum));
         }
     }
 
@@ -155,13 +160,17 @@ public class TopologyImplTest {
      */
     @Test
     public void testGetIncomingLink() {
+        PortNumber bogusPortNum = new PortNumber((short) (SWITCH_PORT_2 + 1));
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
             // Verify the links are in the graphDB
-            assertNotNull(testTopology.getIncomingLink(switchID, SWITCH_PORT_1));
-            assertNotNull(testTopology.getIncomingLink(switchID, SWITCH_PORT_2));
+            assertNotNull(testTopology.getIncomingLink(
+                                           new Dpid(switchID), PORT_NUMBER_1));
+            assertNotNull(testTopology.getIncomingLink(
+                                           new Dpid(switchID), PORT_NUMBER_2));
 
             // Verify there is no such link in the graphDB
-            assertNull(testTopology.getIncomingLink(switchID, SWITCH_PORT_1 + 2));
+            assertNull(testTopology.getIncomingLink(
+                                        new Dpid(switchID), bogusPortNum));
         }
     }
 
@@ -213,7 +222,8 @@ public class TopologyImplTest {
             testTopology.removeLink(objectLink);
 
             // Verify the link was removed successfully
-            assertNull(testTopology.getLink(srcSw.getDpid(), srcPort.getNumber(),
+            assertNull(testTopology.getLink(
+                    srcSw.getDpid(), srcPort.getNumber(),
                     dstSw.getDpid(), dstPort.getNumber()));
         }
 
@@ -227,14 +237,14 @@ public class TopologyImplTest {
     @Test
     public void testRemoveSwitch() {
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
-            Iterator<Device> itr = testTopology.getSwitch(switchID).getDevices().iterator();
+            Iterator<Device> itr = testTopology.getSwitch(new Dpid(switchID)).getDevices().iterator();
             while (itr.hasNext()) {
                 testTopology.removeDevice((Device) itr);
             }
             testTopology.removeSwitch(switchID);
 
             // Verify the switch has been removed from the graphDB successfully
-            assertNull(testTopology.getSwitch(switchID));
+            assertNull(testTopology.getSwitch(new Dpid(switchID)));
         }
 
         // Verify all switches have been removed successfully

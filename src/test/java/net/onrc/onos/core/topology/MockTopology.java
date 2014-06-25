@@ -1,6 +1,8 @@
 package net.onrc.onos.core.topology;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 /**
  * A mock class of Topology.
@@ -25,8 +27,16 @@ public class MockTopology extends TopologyImpl {
 
     public Link[] addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
         Link[] links = new Link[2];
-        links[0] = new LinkImpl(this, getPort(srcDpid, srcPortNo), getPort(dstDpid, dstPortNo));
-        links[1] = new LinkImpl(this, getPort(dstDpid, dstPortNo), getPort(srcDpid, srcPortNo));
+        final Dpid srcDpidObj = new Dpid(srcDpid);
+        final Dpid dstDpidObj = new Dpid(dstDpid);
+        final PortNumber srcPortNum = new PortNumber(srcPortNo.shortValue());
+        final PortNumber dstPortNum = new PortNumber(dstPortNo.shortValue());
+        links[0] = new LinkImpl(this,
+                getPort(srcDpidObj, srcPortNum),
+                getPort(dstDpidObj, dstPortNum));
+        links[1] = new LinkImpl(this,
+                getPort(dstDpidObj, dstPortNum),
+                getPort(srcDpidObj, srcPortNum));
 
         putLink(links[0]);
         putLink(links[1]);
@@ -135,6 +145,14 @@ public class MockTopology extends TopologyImpl {
     }
 
     public void removeLink(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
-        removeLink(getLink(srcDpid, srcPortNo, dstDpid, dstPortNo));
+        removeLink(getLink(new Dpid(srcDpid),
+                           new PortNumber(srcPortNo.shortValue()),
+                           new Dpid(dstDpid),
+                           new PortNumber(dstPortNo.shortValue())));
+    }
+
+    public void removeLink(Dpid srcDpid, PortNumber srcPortNo,
+                           Dpid dstDpid, PortNumber dstPortNo) {
+        super.removeLink(getLink(srcDpid, srcPortNo, dstDpid, dstPortNo));
     }
 }

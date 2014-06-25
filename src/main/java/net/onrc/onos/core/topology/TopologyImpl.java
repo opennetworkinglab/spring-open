@@ -8,6 +8,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.slf4j.Logger;
@@ -18,7 +20,7 @@ public class TopologyImpl implements Topology {
     private static final Logger log = LoggerFactory.getLogger(TopologyImpl.class);
 
     // DPID -> Switch
-    private final ConcurrentMap<Long, Switch> switches;
+    private final ConcurrentMap<Dpid, Switch> switches;
     private final ConcurrentMap<MACAddress, Device> mac2Device;
 
     private final ConcurrentMap<SwitchPort, Link> outgoingLinks;
@@ -38,7 +40,7 @@ public class TopologyImpl implements Topology {
     }
 
     @Override
-    public Switch getSwitch(Long dpid) {
+    public Switch getSwitch(Dpid dpid) {
         // TODO Check if it is safe to directly return this Object.
         return switches.get(dpid);
     }
@@ -48,6 +50,10 @@ public class TopologyImpl implements Topology {
     }
 
     protected void removeSwitch(Long dpid) {
+        switches.remove(new Dpid(dpid));
+    }
+
+    protected void removeSwitch(Dpid dpid) {
         switches.remove(dpid);
     }
 
@@ -58,7 +64,7 @@ public class TopologyImpl implements Topology {
     }
 
     @Override
-    public Port getPort(Long dpid, Long number) {
+    public Port getPort(Dpid dpid, PortNumber number) {
         Switch sw = getSwitch(dpid);
         if (sw != null) {
             return sw.getPort(number);
@@ -67,18 +73,34 @@ public class TopologyImpl implements Topology {
     }
 
     @Override
-    public Link getOutgoingLink(Long dpid, Long number) {
-        return outgoingLinks.get(new SwitchPort(dpid, number.shortValue()));
+    public Port getPort(SwitchPort port) {
+        return getPort(port.dpid(), port.port());
     }
 
     @Override
-    public Link getIncomingLink(Long dpid, Long number) {
-        return incomingLinks.get(new SwitchPort(dpid, number.shortValue()));
+    public Link getOutgoingLink(Dpid dpid, PortNumber number) {
+        return outgoingLinks.get(new SwitchPort(dpid, number));
     }
 
     @Override
-    public Link getLink(Long srcDpid, Long srcNumber, Long dstDpid,
-                        Long dstNumber) {
+    public Link getOutgoingLink(SwitchPort port) {
+        return outgoingLinks.get(port);
+    }
+
+    @Override
+    public Link getIncomingLink(Dpid dpid, PortNumber number) {
+        return incomingLinks.get(new SwitchPort(dpid, number));
+    }
+
+    @Override
+    public Link getIncomingLink(SwitchPort port) {
+        return incomingLinks.get(port);
+    }
+
+    @Override
+    public Link getLink(Dpid srcDpid, PortNumber srcNumber,
+                        Dpid dstDpid, PortNumber dstNumber) {
+
         Link link = getOutgoingLink(srcDpid, srcNumber);
         if (link == null) {
             return null;

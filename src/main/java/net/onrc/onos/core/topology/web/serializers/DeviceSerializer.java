@@ -8,7 +8,6 @@ import net.onrc.onos.core.topology.Port;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
-import org.openflow.util.HexString;
 
 public class DeviceSerializer extends SerializerBase<Device> {
 
@@ -25,8 +24,9 @@ public class DeviceSerializer extends SerializerBase<Device> {
         jsonGenerator.writeStartArray();
         for (Port port : dev.getAttachmentPoints()) {
             jsonGenerator.writeStartObject();
-            jsonGenerator.writeStringField("dpid", HexString.toHexString(port.getDpid()));
-            jsonGenerator.writeNumberField("port", port.getNumber());
+            jsonGenerator.writeStringField("dpid", port.getDpid().toString());
+            // XXX Should port number be treated as unsigned?
+            jsonGenerator.writeNumberField("port", port.getNumber().value());
             jsonGenerator.writeEndObject();
         }
         jsonGenerator.writeEndArray();

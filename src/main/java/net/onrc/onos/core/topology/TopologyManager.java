@@ -25,8 +25,8 @@ import net.onrc.onos.core.datastore.topology.KVPort;
 import net.onrc.onos.core.datastore.topology.KVSwitch;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.PortEvent.SwitchPort;
+import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.EventEntry;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,11 +100,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     // FIXME Replace with concurrent variant.
     //   #removeSwitchDiscoveryEvent(SwitchEvent) runs in different thread.
     //
-    private Map<Long, Map<ByteBuffer, PortEvent>> discoveredAddedPortEvents =
+    private Map<Dpid, Map<ByteBuffer, PortEvent>> discoveredAddedPortEvents =
             new HashMap<>();
-    private Map<Long, Map<ByteBuffer, LinkEvent>> discoveredAddedLinkEvents =
+    private Map<Dpid, Map<ByteBuffer, LinkEvent>> discoveredAddedLinkEvents =
             new HashMap<>();
-    private Map<Long, Map<ByteBuffer, DeviceEvent>> discoveredAddedDeviceEvents =
+    private Map<Dpid, Map<ByteBuffer, DeviceEvent>> discoveredAddedDeviceEvents =
             new HashMap<>();
 
     //
@@ -978,10 +978,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      */
     @GuardedBy("topology.writeLock")
     private void addLink(LinkEvent linkEvent) {
-        Port srcPort = topology.getPort(linkEvent.getSrc().dpid,
-                linkEvent.getSrc().number);
-        Port dstPort = topology.getPort(linkEvent.getDst().dpid,
-                linkEvent.getDst().number);
+        Port srcPort = topology.getPort(linkEvent.getSrc().getDpid(),
+                linkEvent.getSrc().getNumber());
+        Port dstPort = topology.getPort(linkEvent.getDst().getDpid(),
+                linkEvent.getDst().getNumber());
         if ((srcPort == null) || (dstPort == null)) {
             log.debug("{} reordered because {} port is null", linkEvent,
                     (srcPort == null) ? "src" : "dst");
@@ -1035,16 +1035,16 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      */
     @GuardedBy("topology.writeLock")
     private void removeLink(LinkEvent linkEvent) {
-        Port srcPort = topology.getPort(linkEvent.getSrc().dpid,
-                linkEvent.getSrc().number);
+        Port srcPort = topology.getPort(linkEvent.getSrc().getDpid(),
+                linkEvent.getSrc().getNumber());
         if (srcPort == null) {
             log.warn("Src Port for Link {} already removed, ignoring",
                     linkEvent);
             return;
         }
 
-        Port dstPort = topology.getPort(linkEvent.getDst().dpid,
-                linkEvent.getDst().number);
+        Port dstPort = topology.getPort(linkEvent.getDst().getDpid(),
+                linkEvent.getDst().getNumber());
         if (dstPort == null) {
             log.warn("Dst Port for Link {} already removed, ignoring",
                     linkEvent);
@@ -1097,7 +1097,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         boolean attachmentFound = false;
         for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
             // Attached Ports must exist
-            Port port = topology.getPort(swp.dpid, swp.number);
+            Port port = topology.getPort(swp.getDpid(), swp.getNumber());
             if (port == null) {
                 // Reordered event: delay the event in local cache
                 ByteBuffer id = deviceEvent.getIDasByteBuffer();
@@ -1150,7 +1150,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         // Process each attachment point
         for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
             // Attached Ports must exist
-            Port port = topology.getPort(swp.dpid, swp.number);
+            Port port = topology.getPort(swp.getDpid(), swp.getNumber());
             if (port == null) {
                 log.warn("Port for the attachment point {} did not exist. skipping attachment point mutation", swp);
                 continue;

@@ -3,6 +3,8 @@ package net.onrc.onos.core.topology;
 import java.util.Collection;
 
 import net.onrc.onos.core.topology.web.serializers.SwitchSerializer;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -19,7 +21,7 @@ public interface Switch extends StringAttributes {
      *
      * @return data path ID (dpid)
      */
-    public Long getDpid();
+    public Dpid getDpid();
 
     /**
      * Gets all the ports on this switch.
@@ -35,7 +37,7 @@ public interface Switch extends StringAttributes {
      * @return {@link Port} with {@code number} on this switch, or {@code null}
      *         if this switch did not have a port for specified port number
      */
-    public Port getPort(Long number);
+    public Port getPort(PortNumber number);
 
     // Graph traversal API
 
@@ -69,7 +71,7 @@ public interface Switch extends StringAttributes {
      * @return {@link Link} to neighbor switch {@code dpid} or {@code null} if
      *         link does not exist.
      */
-    public Link getLinkToNeighbor(Long dpid);
+    public Link getLinkToNeighbor(Dpid dpid);
 
     // XXX Iterable or Collection?
     /**

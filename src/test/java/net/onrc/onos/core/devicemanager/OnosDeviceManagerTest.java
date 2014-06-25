@@ -32,6 +32,8 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MockTopology;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -83,7 +85,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
 
         expect(datagridService.createChannel("onos.device", Long.class, OnosDevice.class))
         .andReturn(eventChannel).once();
-        expect(topology.getOutgoingLink(1L, 100L)).andReturn(null).anyTimes();
+        expect(topology.getOutgoingLink(new Dpid(1L), new PortNumber((short) 100))).andReturn(null).anyTimes();
         expect(datagridService.addListener(
                 eq("onos.device"),
                 anyObject(IEventChannelListener.class),

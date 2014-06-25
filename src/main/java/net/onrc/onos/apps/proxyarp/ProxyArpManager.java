@@ -33,6 +33,8 @@ import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.util.HexString;
@@ -372,7 +374,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             ARP arp = (ARP) eth.getPayload();
             learnArp(arp);
             if (arp.getOpCode() == ARP.OP_REQUEST) {
-                handleArpRequest(sw.getDpid(), inPort.getNumber().shortValue(),
+                handleArpRequest(sw.getDpid().value(), inPort.getNumber().value(),
                         arp, eth);
             } else if (arp.getOpCode() == ARP.OP_REPLY) {
                 // For replies we simply send a notification via Hazelcast
@@ -476,14 +478,14 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                         continue;
                     }
 
-                    short outPort = portObject.getNumber().shortValue();
+                    PortNumber outPort = portObject.getNumber();
                     Switch outSwitchObject = portObject.getSwitch();
-                    long outSwitch = outSwitchObject.getDpid();
+                    Dpid outSwitch = outSwitchObject.getDpid();
 
                     if (log.isTraceEnabled()) {
                         log.trace("Probing device {} on port {}/{}",
                                 new Object[]{macAddress,
-                                        HexString.toHexString(outSwitch), outPort});
+                                        outSwitch, outPort});
                     }
 
                     packetService.sendPacket(

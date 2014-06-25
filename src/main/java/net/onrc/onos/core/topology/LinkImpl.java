@@ -34,22 +34,22 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Switch getSrcSwitch() {
-        return topology.getSwitch(srcPort.dpid().value());
+        return topology.getSwitch(srcPort.dpid());
     }
 
     @Override
     public Port getSrcPort() {
-        return topology.getPort(srcPort.dpid().value(), (long) srcPort.port().value());
+        return topology.getPort(srcPort.dpid(), srcPort.port());
     }
 
     @Override
     public Switch getDstSwitch() {
-        return topology.getSwitch(dstPort.dpid().value());
+        return topology.getSwitch(dstPort.dpid());
     }
 
     @Override
     public Port getDstPort() {
-        return topology.getPort(dstPort.dpid().value(), (long) dstPort.port().value());
+        return topology.getPort(dstPort.dpid(), dstPort.port());
     }
 
     @Override

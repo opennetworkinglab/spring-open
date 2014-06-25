@@ -97,7 +97,7 @@ public class GetNGFlowsSummaryResource extends ServerResource {
             FlowEntry flowEntry;
             ArrayList<FlowEntry> flowEntries = new ArrayList<>();
             for (LinkEvent linkEvent : path) {
-                Dpid dpid = new Dpid(linkEvent.getSrc().getDpid());
+                Dpid dpid = linkEvent.getSrc().getDpid();
                 flowEntry = new FlowEntry();
                 flowEntry.setDpid(dpid);
                 flowEntries.add(flowEntry);

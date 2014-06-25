@@ -7,7 +7,6 @@ import net.onrc.onos.core.topology.Link;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
-import org.openflow.util.HexString;
 
 public class LinkSerializer extends SerializerBase<Link> {
 
@@ -21,13 +20,14 @@ public class LinkSerializer extends SerializerBase<Link> {
             throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("src-switch",
-                HexString.toHexString(link.getSrcSwitch().getDpid()));
+                link.getSrcSwitch().getDpid().toString());
+        // XXX port number as unsigned?
         jsonGenerator.writeNumberField("src-port",
-                link.getSrcPort().getNumber());
+                link.getSrcPort().getNumber().value());
         jsonGenerator.writeStringField("dst-switch",
-                HexString.toHexString(link.getDstSwitch().getDpid()));
+                link.getDstSwitch().getDpid().toString());
         jsonGenerator.writeNumberField("dst-port",
-                link.getDstPort().getNumber());
+                link.getDstPort().getNumber().value());
         jsonGenerator.writeEndObject();
     }
 

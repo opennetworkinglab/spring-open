@@ -11,6 +11,8 @@ import net.onrc.onos.core.datastore.serializers.Topology.PortProperty;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
 import net.onrc.onos.core.datastore.utils.KVObject;
 import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +60,17 @@ public class KVPort extends KVObject {
     private final Long number;
 
     private STATUS status;
+
+    /**
+     * Generate a PortID from port pair (dpid, number).
+     *
+     * @param dpid DPID of a switch it reside on.
+     * @param number port number of this
+     * @return PortID
+     */
+    public static byte[] getPortID(final Dpid dpid, final PortNumber number) {
+        return PortEvent.getPortID(dpid, number).array();
+    }
 
     /**
      * Generate a PortID from port pair (dpid, number).
@@ -149,6 +162,27 @@ public class KVPort extends KVObject {
         this.dpid = dpid;
         this.number = number;
         this.status = STATUS.INACTIVE;
+    }
+
+    /**
+     * KVPort constructor for default namespace.
+     *
+     * @param dpid DPID of the switch this port is on
+     * @param number port number of this port
+     */
+    public KVPort(final Dpid dpid, final PortNumber number) {
+        this(dpid, number, DEFAULT_NAMESPACE);
+    }
+
+    /**
+     * KVPort constructor for specified namespace.
+     *
+     * @param dpid DPID of the switch this port is on
+     * @param number port number of this port
+     * @param namespace namespace to create this object
+     */
+    public KVPort(final Dpid dpid, final PortNumber number, final String namespace) {
+        this(dpid.value(), (long) number.value(), namespace);
     }
 
     /**

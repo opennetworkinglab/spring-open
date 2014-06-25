@@ -1,6 +1,10 @@
 package net.onrc.onos.core.topology;
 
 import net.onrc.onos.core.topology.web.serializers.SwitchPortSerializer;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
+
+import org.apache.commons.lang.Validate;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.nio.ByteBuffer;
@@ -12,6 +16,8 @@ import java.util.Objects;
  * TODO: We probably want common base class/interface for Self-Contained Event Object.
  */
 public class PortEvent {
+
+    // TODO eliminate this class and use util.SwitchPort if possible
     @JsonSerialize(using = SwitchPortSerializer.class)
     public static class SwitchPort {
         public final Long dpid;
@@ -31,12 +37,16 @@ public class PortEvent {
             this.number = number;
         }
 
-        public Long getDpid() {
-            return dpid;
+        public SwitchPort(Dpid dpid, PortNumber number) {
+            this(dpid.value(), (long) number.value());
         }
 
-        public Long getNumber() {
-            return number;
+        public Dpid getDpid() {
+            return new Dpid(dpid);
+        }
+
+        public PortNumber getNumber() {
+            return new PortNumber(number.shortValue());
         }
 
         @Override
@@ -100,12 +110,16 @@ public class PortEvent {
         this.id = new SwitchPort(dpid, number);
     }
 
-    public Long getDpid() {
-        return id.dpid;
+    public PortEvent(Dpid dpid, PortNumber number) {
+        this.id = new SwitchPort(dpid, number);
     }
 
-    public Long getNumber() {
-        return id.number;
+    public Dpid getDpid() {
+        return id.getDpid();
+    }
+
+    public PortNumber getNumber() {
+        return id.getNumber();
     }
 
     @Override
@@ -133,6 +147,12 @@ public class PortEvent {
     }
 
     public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
+
+    public static ByteBuffer getPortID(Dpid dpid, PortNumber number) {
+        Validate.notNull(dpid);
+        Validate.notNull(number);
+        return getPortID(dpid.value(), (long) number.value());
+    }
 
     public static ByteBuffer getPortID(Long dpid, Long number) {
         if (dpid == null) {

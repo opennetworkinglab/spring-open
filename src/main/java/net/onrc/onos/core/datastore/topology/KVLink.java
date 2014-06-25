@@ -11,6 +11,8 @@ import net.onrc.onos.core.datastore.serializers.Topology.LinkProperty;
 import net.onrc.onos.core.datastore.utils.KVObject;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +42,7 @@ public class KVLink extends KVObject {
         }
     };
 
+    // TODO eliminate this class and util SwitchPort.
     /**
      * Internal data structure to represent a port on a switch.
      */
@@ -56,6 +59,17 @@ public class KVLink extends KVObject {
         public SwitchPort(final Long dpid, final Long number) {
             this.dpid = dpid;
             this.number = number;
+        }
+
+        /**
+         * Constructor.
+         *
+         * @param dpid datapath ID of this switch port
+         * @param number port number of this port on switch({@code dpid})
+         */
+        public SwitchPort(final Dpid srcDpid, final PortNumber srcPortNo) {
+            this.dpid = srcDpid.value();
+            this.number = (long) srcPortNo.value();
         }
 
         /**
@@ -96,6 +110,21 @@ public class KVLink extends KVObject {
     private final SwitchPort src;
     private final SwitchPort dst;
     private STATUS status;
+
+    /**
+     * Generate a LinkID from Link 4-tuples.
+     *
+     * @param srcDpid source DPID
+     * @param srcPortNo source port number
+     * @param dstDpid destination DPID
+     * @param dstPortNo destination port number
+     * @return LinkID
+     */
+    public static byte[] getLinkID(final Dpid srcDpid, final PortNumber srcPortNo,
+                                   final Dpid dstDpid, final PortNumber dstPortNo) {
+        return LinkEvent.getLinkID(srcDpid, srcPortNo,
+                                   dstDpid, dstPortNo).array();
+    }
 
     /**
      * Generate a LinkID from Link 4-tuples.
@@ -170,6 +199,41 @@ public class KVLink extends KVObject {
      */
     public KVLink(final Long srcDpid, final Long srcPortNo,
                   final Long dstDpid, final Long dstPortNo,
+                  final String namespace) {
+        super(DataStoreClient.getClient()
+                .getTable(namespace + LINK_TABLE_SUFFIX),
+                getLinkID(srcDpid, srcPortNo, dstDpid, dstPortNo),
+                namespace);
+
+        src = new SwitchPort(srcDpid, srcPortNo);
+        dst = new SwitchPort(dstDpid, dstPortNo);
+        status = STATUS.INACTIVE;
+    }
+
+    /**
+     * KVLink constructor for default namespace.
+     *
+     * @param srcDpid source DPID
+     * @param srcPortNo source port number
+     * @param dstDpid destination DPID
+     * @param dstPortNo destination port number
+     */
+    public KVLink(final Dpid srcDpid, final PortNumber srcPortNo,
+            final Dpid dstDpid, final PortNumber dstPortNo) {
+        this(srcDpid, srcPortNo, dstDpid, dstPortNo, DEFAULT_NAMESPACE);
+    }
+
+    /**
+     * KVLink constructor for specified namespace.
+     *
+     * @param srcDpid source DPID
+     * @param srcPortNo source port number
+     * @param dstDpid destination DPID
+     * @param dstPortNo destination port number
+     * @param namespace namespace to create this object
+     */
+    public KVLink(final Dpid srcDpid, final PortNumber srcPortNo,
+                  final Dpid dstDpid, final PortNumber dstPortNo,
                   final String namespace) {
         super(DataStoreClient.getClient()
                 .getTable(namespace + LINK_TABLE_SUFFIX),

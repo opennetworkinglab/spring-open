@@ -8,7 +8,6 @@ import net.onrc.onos.core.topology.Switch;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
-import org.openflow.util.HexString;
 
 public class SwitchSerializer extends SerializerBase<Switch> {
 
@@ -21,7 +20,7 @@ public class SwitchSerializer extends SerializerBase<Switch> {
                           SerializerProvider serializerProvider) throws IOException {
 
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField("dpid", HexString.toHexString(sw.getDpid()));
+        jsonGenerator.writeStringField("dpid", sw.getDpid().toString());
         jsonGenerator.writeStringField("state", "ACTIVE");
         jsonGenerator.writeArrayFieldStart("ports");
         for (Port port : sw.getPorts()) {

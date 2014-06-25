@@ -2,6 +2,7 @@ package net.onrc.onos.apps.proxyarp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -30,6 +31,8 @@ import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -67,8 +70,8 @@ public class ProxyArpManagerTest {
     byte[] srcByteMac, dstByteMac;
     MACAddress dstMac, srcMac, cachedMac1, cachedMac2;
     InetAddress srcIp, dstIp, cachedIp1, cachedIp2;
-    Long sw1Dpid;
-    Short sw1Inport, sw1Outport;
+    Dpid sw1Dpid;
+    PortNumber sw1Inport, sw1Outport;
     Short vlanId;
     ARP arpRequest, arpReply, rarpRequest;
     Ethernet ethArpRequest, ethArpReply, ethRarpRequest, ethArpOtherOp;
@@ -113,9 +116,9 @@ public class ProxyArpManagerTest {
         cachedIp1 = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(cachedStrIp1));
         cachedIp2 = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(cachedStrIp2));
 
-        sw1Dpid = 1L;
-        sw1Inport = 1;
-        sw1Outport = 2;
+        sw1Dpid = new Dpid(1L);
+        sw1Inport = new PortNumber((short) 1);
+        sw1Outport = new PortNumber((short) 2);
         vlanId = 1;
 
         //Made tested packets
@@ -223,8 +226,8 @@ public class ProxyArpManagerTest {
     }
 
     private void prepareExpectForGeneral() {
-        EasyMock.expect(inPort1.getNumber()).andReturn((long) sw1Inport).anyTimes();
-        EasyMock.expect(outPort1.getNumber()).andReturn((long) sw1Outport).anyTimes();
+        EasyMock.expect(inPort1.getNumber()).andReturn(sw1Inport).anyTimes();
+        EasyMock.expect(outPort1.getNumber()).andReturn(sw1Outport).anyTimes();
         EasyMock.expect(outPort1.getOutgoingLink()).andReturn(null).anyTimes();
         EasyMock.expect(outPort1.getIncomingLink()).andReturn(null).anyTimes();
         EasyMock.expect(outPort1.getSwitch()).andReturn(sw1).anyTimes();

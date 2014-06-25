@@ -4,8 +4,6 @@ import net.onrc.onos.core.topology.PortEvent.SwitchPort;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
-import org.openflow.util.HexString;
-
 import java.io.IOException;
 
 /**
@@ -36,9 +34,9 @@ public class SwitchPortSerializer extends SerializerBase<SwitchPort> {
         jsonGenerator.writeStartObject();
 
         jsonGenerator.writeStringField("dpid",
-                                       HexString.toHexString(switchPort.getDpid()));
+                                       switchPort.getDpid().toString());
         jsonGenerator.writeStringField("portNumber",
-                                       Long.toString(switchPort.getNumber()));
+                                       switchPort.getNumber().toString());
 
         jsonGenerator.writeEndObject();
     }

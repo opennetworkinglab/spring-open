@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
@@ -18,7 +20,7 @@ public class PortImpl extends TopologyObject implements Port {
 
     private Switch sw;
 
-    private Long number;
+    private PortNumber number;
     private String description;
 
     private final SwitchPort switchPort;
@@ -27,22 +29,27 @@ public class PortImpl extends TopologyObject implements Port {
     // accessed concurrently
     protected Set<Device> devices;
 
-    public PortImpl(Topology topology, Switch parentSwitch, Long number) {
+    public PortImpl(Topology topology, Switch parentSwitch, PortNumber number) {
         super(topology);
         this.sw = parentSwitch;
         this.number = number;
         this.devices = new HashSet<>();
 
-        switchPort = new SwitchPort(parentSwitch.getDpid(), number.shortValue());
+        switchPort = new SwitchPort(parentSwitch.getDpid(),
+                                    number);
+    }
+
+    public PortImpl(Topology topology, Switch parentSwitch, Long number) {
+        this(topology, parentSwitch, new PortNumber(number.shortValue()));
     }
 
     @Override
-    public Long getDpid() {
+    public Dpid getDpid() {
         return sw.getDpid();
     }
 
     @Override
-    public Long getNumber() {
+    public PortNumber getNumber() {
         return number;
     }
 
@@ -73,14 +80,14 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public Link getOutgoingLink() {
-        return topology.getOutgoingLink(switchPort.dpid().value(),
-                (long) switchPort.port().value());
+        return topology.getOutgoingLink(switchPort.dpid(),
+                                        switchPort.port());
     }
 
     @Override
     public Link getIncomingLink() {
-        return topology.getIncomingLink(switchPort.dpid().value(),
-                (long) switchPort.port().value());
+        return topology.getIncomingLink(switchPort.dpid(),
+                                        switchPort.port());
     }
 
     @Override
@@ -132,7 +139,7 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public String toString() {
-        return String.format("%d:%d",
+        return String.format("%s:%s",
                 getSwitch().getDpid(),
                 getNumber());
     }

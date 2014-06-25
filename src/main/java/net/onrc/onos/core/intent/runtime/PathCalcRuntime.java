@@ -19,6 +19,7 @@ import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +70,8 @@ public class PathCalcRuntime implements IFloodlightService {
                     }
 
                     ShortestPathIntent spIntent = (ShortestPathIntent) intentOp.intent;
-                    Switch srcSwitch = topology.getSwitch(spIntent.getSrcSwitchDpid());
-                    Switch dstSwitch = topology.getSwitch(spIntent.getDstSwitchDpid());
+                    Switch srcSwitch = topology.getSwitch(new Dpid(spIntent.getSrcSwitchDpid()));
+                    Switch dstSwitch = topology.getSwitch(new Dpid(spIntent.getDstSwitchDpid()));
                     if (srcSwitch == null || dstSwitch == null) {
                         log.debug("Switch not found. src:{}, dst:{}",
                                 spIntent.getSrcSwitchDpid(),

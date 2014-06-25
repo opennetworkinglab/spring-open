@@ -1,6 +1,8 @@
 package net.onrc.onos.core.topology;
 
 import net.onrc.onos.core.topology.web.serializers.PortSerializer;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -19,14 +21,14 @@ public interface Port extends StringAttributes {
      *
      * @return data path ID (dpid)
      */
-    public Long getDpid();
+    public Dpid getDpid();
 
     /**
      * Gets the port number of this port.
      *
      * @return port number
      */
-    public Long getNumber();
+    public PortNumber getNumber();
 
     /**
      * Gets a {@link SwitchPort} that represents this Port's dpid and port

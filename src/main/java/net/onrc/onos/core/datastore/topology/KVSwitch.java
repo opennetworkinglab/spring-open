@@ -10,6 +10,7 @@ import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
 import net.onrc.onos.core.datastore.serializers.Topology.SwitchProperty;
 import net.onrc.onos.core.datastore.utils.KVObject;
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,6 +115,25 @@ public class KVSwitch extends KVObject {
         this.dpid = dpid;
         this.status = STATUS.INACTIVE;
         // may need to store namespace here or at KVObject.
+    }
+
+    /**
+     * KVSwitch constructor for default namespace.
+     *
+     * @param dpid dpid of this switch
+     */
+    public KVSwitch(final Dpid dpid) {
+        this(dpid, KVObject.DEFAULT_NAMESPACE);
+    }
+
+    /**
+     * KVSwitch constructor for specified namespace.
+     *
+     * @param dpid dpid of this switch
+     * @param namespace namespace to create this object
+     */
+    public KVSwitch(final Dpid dpid, final String namespace) {
+        this(dpid.value(), namespace);
     }
 
     /**

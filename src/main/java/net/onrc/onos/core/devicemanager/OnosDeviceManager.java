@@ -28,6 +28,8 @@ import net.onrc.onos.core.topology.Device;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
@@ -120,12 +122,12 @@ public class OnosDeviceManager implements IFloodlightModule,
             log.trace("Receive PACKET_IN swId {}, portId {}", sw.getId(), pi.getInPort());
         }
 
-        long dpid = sw.getId();
-        short portId = pi.getInPort();
+        final Dpid dpid = new Dpid(sw.getId());
+        final PortNumber portNum = new PortNumber(pi.getInPort());
         Long mac = eth.getSourceMAC().toLong();
 
         OnosDevice srcDevice =
-                getSourceDeviceFromPacket(eth, dpid, portId);
+                getSourceDeviceFromPacket(eth, dpid.value(), portNum.value());
 
         if (srcDevice == null) {
             return Command.STOP;
@@ -137,11 +139,11 @@ public class OnosDeviceManager implements IFloodlightModule,
         // the Topology module.
         topology.acquireReadLock();
         try {
-            if (topology.getOutgoingLink(dpid, (long) portId) != null ||
-                    topology.getIncomingLink(dpid, (long) portId) != null) {
+            if (topology.getOutgoingLink(dpid, portNum) != null ||
+                    topology.getIncomingLink(dpid, portNum) != null) {
                 log.debug("Stop adding OnosDevice {} as " +
                     "there is a link on the port: dpid {} port {}",
-                    srcDevice.getMacAddress(), dpid, portId);
+                    srcDevice.getMacAddress(), dpid, portNum);
                 return Command.CONTINUE;
             }
         } finally {
@@ -282,8 +284,8 @@ public class OnosDeviceManager implements IFloodlightModule,
                 // We don't handle vlan now and multiple attachment points.
                 deleteDevice = new OnosDevice(dev.getMacAddress(),
                         null,
-                        switchPort.getDpid(),
-                        switchPort.getNumber(),
+                        switchPort.getDpid().value(),
+                        (long) switchPort.getNumber().value(),
                         new Date(dev.getLastSeenTime()));
                 break;
             }
