@@ -19,9 +19,7 @@ package net.onrc.onos.core.linkdiscovery.internal;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,8 +52,6 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.floodlightcontroller.util.EventHistory;
-import net.floodlightcontroller.util.EventHistory.EvAction;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscovery;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.LDUpdate;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.UpdateOperation;
@@ -1131,14 +1127,6 @@ public class LinkDiscoveryManager
                 updateOperation = UpdateOperation.LINK_ADDED;
                 linkChanged = true;
 
-                // Add to event history
-                evHistTopoLink(lt.getSrc(),
-                        lt.getDst(),
-                        lt.getSrcPort(),
-                        lt.getDstPort(),
-                        newInfo.getSrcPortState(), newInfo.getDstPortState(),
-                        getLinkType(lt, newInfo),
-                        EvAction.LINK_ADDED, "LLDP Recvd");
             } else {
                 // Since the link info is already there, we need to
                 // update the right fields.
@@ -1186,15 +1174,6 @@ public class LinkDiscoveryManager
                     if (log.isTraceEnabled()) {
                         log.trace("Updated link {}", lt);
                     }
-                    // Add to event history
-                    evHistTopoLink(lt.getSrc(),
-                            lt.getDst(),
-                            lt.getSrcPort(),
-                            lt.getDstPort(),
-                            newInfo.getSrcPortState(), newInfo.getDstPortState(),
-                            getLinkType(lt, newInfo),
-                            EvAction.LINK_PORT_STATE_UPDATED,
-                            "LLDP Recvd");
                 }
             }
 
@@ -1262,15 +1241,6 @@ public class LinkDiscoveryManager
                         getLinkType(lt, info),
                         UpdateOperation.LINK_REMOVED));
                 controller.publishUpdate(update);
-
-                // Update Event History
-                evHistTopoLink(lt.getSrc(),
-                        lt.getDst(),
-                        lt.getSrcPort(),
-                        lt.getDstPort(),
-                        0, 0, // Port states
-                        ILinkDiscovery.LinkType.INVALID_LINK,
-                        EvAction.LINK_DELETED, reason);
 
                 // TODO  Whenever link is removed, it has to checked if
                 // the switchports must be added to quarantine.
@@ -1443,14 +1413,12 @@ public class LinkDiscoveryManager
      */
     @Override
     public void addedSwitch(IOFSwitch sw) {
-
         if (sw.getEnabledPorts() != null) {
             for (Short p : sw.getEnabledPortNumbers()) {
                 processNewPort(sw.getId(), p);
             }
         }
-        // Update event history
-        evHistTopoSwitch(sw, EvAction.SWITCH_CONNECTED, "None");
+
         LinkUpdate update = new LinkUpdate(new LDUpdate(sw.getId(), null,
                 UpdateOperation.SWITCH_UPDATED));
         controller.publishUpdate(update);
@@ -1463,7 +1431,7 @@ public class LinkDiscoveryManager
     public void removedSwitch(IOFSwitch iofSwitch) {
         // Update event history
         long sw = iofSwitch.getId();
-        evHistTopoSwitch(iofSwitch, EvAction.SWITCH_DISCONNECTED, "None");
+
         List<Link> eraseList = new ArrayList<Link>();
         lock.writeLock().lock();
         try {
@@ -1748,13 +1716,6 @@ public class LinkDiscoveryManager
         this.maintenanceQueue = new LinkedBlockingQueue<NodePortTuple>();
         // Added by ONOS
         this.remoteSwitches = new HashMap<Long, IOnosRemoteSwitch>();
-
-        this.evHistTopologySwitch =
-                new EventHistory<EventHistoryTopologySwitch>("Topology: Switch");
-        this.evHistTopologyLink =
-                new EventHistory<EventHistoryTopologyLink>("Topology: Link");
-        this.evHistTopologyCluster =
-                new EventHistory<EventHistoryTopologyCluster>("Topology: Cluster");
     }
 
     @Override
@@ -1824,88 +1785,6 @@ public class LinkDiscoveryManager
             restApi.addRestletRoutable(new LinkDiscoveryWebRoutable());
         }
         setControllerTLV();
-    }
-
-    // ****************************************************
-    // Topology Manager's Event History members and methods
-    // ****************************************************
-
-    // Topology Manager event history
-    public EventHistory<EventHistoryTopologySwitch> evHistTopologySwitch;
-    public EventHistory<EventHistoryTopologyLink> evHistTopologyLink;
-    public EventHistory<EventHistoryTopologyCluster> evHistTopologyCluster;
-    public EventHistoryTopologySwitch evTopoSwitch;
-    public EventHistoryTopologyLink evTopoLink;
-    public EventHistoryTopologyCluster evTopoCluster;
-
-    // Switch Added/Deleted
-    private void evHistTopoSwitch(IOFSwitch sw, EvAction actn, String reason) {
-        if (evTopoSwitch == null) {
-            evTopoSwitch = new EventHistoryTopologySwitch();
-        }
-        evTopoSwitch.dpid = sw.getId();
-        if ((sw.getChannel() != null) &&
-                (SocketAddress.class.isInstance(
-                        sw.getChannel().getRemoteAddress()))) {
-            evTopoSwitch.ipv4Addr =
-                    IPv4.toIPv4Address(((InetSocketAddress) (sw.getChannel().
-                            getRemoteAddress())).getAddress().getAddress());
-            evTopoSwitch.l4Port =
-                    ((InetSocketAddress) (sw.getChannel().
-                            getRemoteAddress())).getPort();
-        } else {
-            evTopoSwitch.ipv4Addr = 0;
-            evTopoSwitch.l4Port = 0;
-        }
-        evTopoSwitch.reason = reason;
-        evTopoSwitch = evHistTopologySwitch.put(evTopoSwitch, actn);
-    }
-
-    // CHECKSTYLE:OFF suppress warning about too many parameters
-    private void evHistTopoLink(long srcDpid, long dstDpid, short srcPort,
-                                short dstPort, int srcPortState, int dstPortState,
-                                ILinkDiscovery.LinkType linkType,
-                                EvAction actn, String reason) {
-    // CHECKSTYLE:ON
-
-        if (evTopoLink == null) {
-            evTopoLink = new EventHistoryTopologyLink();
-        }
-        evTopoLink.srcSwDpid = srcDpid;
-        evTopoLink.dstSwDpid = dstDpid;
-        evTopoLink.srcSwport = srcPort & 0xffff;
-        evTopoLink.dstSwport = dstPort & 0xffff;
-        evTopoLink.srcPortState = srcPortState;
-        evTopoLink.dstPortState = dstPortState;
-        evTopoLink.reason = reason;
-        switch (linkType) {
-            case DIRECT_LINK:
-                evTopoLink.linkType = "DIRECT_LINK";
-                break;
-            case MULTIHOP_LINK:
-                evTopoLink.linkType = "MULTIHOP_LINK";
-                break;
-            case TUNNEL:
-                evTopoLink.linkType = "TUNNEL";
-                break;
-            case INVALID_LINK:
-            default:
-                evTopoLink.linkType = "Unknown";
-                break;
-        }
-        evTopoLink = evHistTopologyLink.put(evTopoLink, actn);
-    }
-
-    public void evHistTopoCluster(long dpid, long clusterIdOld,
-                                  long clusterIdNew, EvAction action, String reason) {
-        if (evTopoCluster == null) {
-            evTopoCluster = new EventHistoryTopologyCluster();
-        }
-        evTopoCluster.dpid = dpid;
-        evTopoCluster.clusterIdOld = clusterIdOld;
-        evTopoCluster.clusterIdNew = clusterIdNew;
-        evTopoCluster.reason = reason;
-        evTopoCluster = evHistTopologyCluster.put(evTopoCluster, action);
     }
 
     @Override

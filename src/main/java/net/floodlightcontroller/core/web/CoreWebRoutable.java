@@ -45,13 +45,6 @@ public class CoreWebRoutable implements RestletRoutable {
         router.attach("/switch/{switchId}/{statType}/json", SwitchStatisticsResource.class);
         router.attach("/controller/switches/json", ControllerSwitchesResource.class);
         router.attach("/memory/json", ControllerMemoryResource.class);
-        // Get the last {count} events from the event histories
-        router.attach("/event-history/topology-switch/{count}/json",
-                EventHistoryTopologySwitchResource.class);
-        router.attach("/event-history/topology-link/{count}/json",
-                EventHistoryTopologyLinkResource.class);
-        router.attach("/event-history/topology-cluster/{count}/json",
-                EventHistoryTopologyClusterResource.class);
         router.attach("/health/json", HealthCheckResource.class);
         router.attach("/system/uptime/json", SystemUptimeResource.class);
         return router;
