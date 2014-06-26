@@ -62,4 +62,15 @@ public class DeviceImpl extends TopologyObject implements Device {
     boolean removeAttachmentPoint(Port port) {
         return this.attachmentPoints.remove(port);
     }
+
+
+    /**
+     * Returns the type of topology object.
+     *
+     * @return the type of the topology object
+     */
+    @Override
+    public String getType() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

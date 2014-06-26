@@ -140,4 +140,14 @@ public class SwitchImpl extends TopologyObject implements Switch {
     public String toString() {
         return dpid.toString();
     }
+
+    /**
+     * Returns the type of topology object.
+     *
+     * @return the type of the topology object
+     */
+    @Override
+    public String getType() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

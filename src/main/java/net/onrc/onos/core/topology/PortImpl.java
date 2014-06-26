@@ -114,4 +114,15 @@ public class PortImpl extends TopologyObject implements Port {
                 getSwitch().getDpid(),
                 getNumber());
     }
+
+
+    /**
+     * Returns the type of topology object.
+     *
+     * @return the type of the topology object
+     */
+    @Override
+    public String getType() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }
