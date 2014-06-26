@@ -88,14 +88,15 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     //
     // Local state for keeping track of the application event notifications
     //
-    List<SwitchEvent> apiAddedSwitchEvents = new LinkedList<SwitchEvent>();
-    List<SwitchEvent> apiRemovedSwitchEvents = new LinkedList<SwitchEvent>();
-    List<PortEvent> apiAddedPortEvents = new LinkedList<PortEvent>();
-    List<PortEvent> apiRemovedPortEvents = new LinkedList<PortEvent>();
-    List<LinkEvent> apiAddedLinkEvents = new LinkedList<LinkEvent>();
-    List<LinkEvent> apiRemovedLinkEvents = new LinkedList<LinkEvent>();
-    List<DeviceEvent> apiAddedDeviceEvents = new LinkedList<DeviceEvent>();
-    List<DeviceEvent> apiRemovedDeviceEvents = new LinkedList<DeviceEvent>();
+
+    private List<SwitchEvent> apiAddedSwitchEvents = new LinkedList<>();
+    private List<SwitchEvent> apiRemovedSwitchEvents = new LinkedList<>();
+    private List<PortEvent> apiAddedPortEvents = new LinkedList<>();
+    private List<PortEvent> apiRemovedPortEvents = new LinkedList<>();
+    private List<LinkEvent> apiAddedLinkEvents = new LinkedList<>();
+    private List<LinkEvent> apiRemovedLinkEvents = new LinkedList<>();
+    private List<DeviceEvent> apiAddedDeviceEvents = new LinkedList<>();
+    private List<DeviceEvent> apiRemovedDeviceEvents = new LinkedList<>();
 
     /**
      * Constructor.
