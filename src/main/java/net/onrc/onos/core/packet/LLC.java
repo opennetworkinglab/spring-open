@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
  * This class represents an Link Local Control
  * header that is used in Ethernet 802.3.
  *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author alexreimers
  */
 public class LLC extends BasePacket {

@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */

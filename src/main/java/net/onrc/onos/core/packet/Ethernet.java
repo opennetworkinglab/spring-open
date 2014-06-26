@@ -26,6 +26,7 @@ import net.floodlightcontroller.util.MACAddress;
 
 import org.openflow.util.HexString;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
@@ -203,6 +204,7 @@ public class Ethernet extends BasePacket {
         return this;
     }
 
+    @Override
     public byte[] serialize() {
         byte[] payloadData = null;
         if (payload != null) {

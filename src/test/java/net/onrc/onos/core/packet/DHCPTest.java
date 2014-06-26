@@ -27,6 +27,7 @@ import java.util.ListIterator;
 import junit.framework.TestCase;
 
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */

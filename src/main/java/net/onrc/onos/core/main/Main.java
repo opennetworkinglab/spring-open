@@ -12,7 +12,7 @@ import org.kohsuke.args4j.CmdLineParser;
 
 /**
  * Host for the ONOS main method.
- *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author alexreimers
  */
 public final class Main {

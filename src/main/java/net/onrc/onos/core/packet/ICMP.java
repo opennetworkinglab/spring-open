@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 
 /**
  * Implements ICMP packet format.
- *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author shudong.zhou@bigswitch.com
  */
 public class ICMP extends BasePacket {
@@ -80,6 +80,7 @@ public class ICMP extends BasePacket {
      * -checksum : 0
      * -length : 0
      */
+    @Override
     public byte[] serialize() {
         int length = 4;
         byte[] payloadData = null;

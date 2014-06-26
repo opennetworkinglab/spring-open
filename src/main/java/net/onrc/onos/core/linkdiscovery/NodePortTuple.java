@@ -11,7 +11,7 @@ import org.openflow.util.HexString;
  * A NodePortTuple is similar to a SwitchPortTuple
  * but it only stores IDs instead of references
  * to the actual objects.
- *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author srini
  */
 public class NodePortTuple {
@@ -54,6 +54,7 @@ public class NodePortTuple {
         this.portId = portId;
     }
 
+    @Override
     public String toString() {
         return "[id=" + HexString.toHexString(nodeId) + ", port=" + portId + "]";
     }

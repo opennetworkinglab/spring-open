@@ -35,7 +35,7 @@ import net.floodlightcontroller.util.MACAddress;
  * Entities are the most basic element of devices; devices consist of one or
  * more entities.  Entities are immutable once created, except for the last
  * seen timestamp.
- *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author readams
  */
 public class OnosDevice implements Serializable {

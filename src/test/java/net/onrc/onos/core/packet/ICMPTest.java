@@ -26,6 +26,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author shudong.zhou@bigswitch.com
  */

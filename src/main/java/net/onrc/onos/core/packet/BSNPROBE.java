@@ -25,6 +25,7 @@ import java.util.Arrays;
 import org.apache.commons.lang.ArrayUtils;
 import org.openflow.util.HexString;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author Shudong Zhou (shudong.zhou@bigswitch.com)
  */
@@ -188,6 +189,7 @@ public class BSNPROBE extends BasePacket {
         );
     }
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer("\n");
         sb.append("BSN Probe packet");

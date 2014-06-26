@@ -28,6 +28,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */

@@ -127,6 +127,14 @@
             <property name="severity" value="warning"/>
         </module>
         <module name="JavadocStyle"/>
+	<!-- @author tag should not be used -->
+        <module name="WriteTag">
+            <property name="tag" value="@author"/>
+            <property name="tagFormat" value="\S"/>
+            <property name="severity" value="ignore"/>
+            <property name="tagSeverity" value="error"/>
+        </module>
+
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See http://checkstyle.sf.net/config_naming.html -->

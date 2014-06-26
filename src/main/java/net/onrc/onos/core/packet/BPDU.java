@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 /**
  * This class is a Rapid Spanning Tree Protocol
  * Bridge Protocol Data Unit.
- *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author alexreimers
  */
 public class BPDU extends BasePacket {

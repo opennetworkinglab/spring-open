@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author Shudong Zhou (shudong.zhou@bigswitch.com)
  */
@@ -163,6 +164,7 @@ public class BSN extends BasePacket {
                 version == other.version);
     }
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer("\n");
         sb.append("BSN packet");

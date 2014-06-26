@@ -15,7 +15,7 @@ import org.openflow.util.HexString;
 /**
  * This class is both the datastructure and the serializer
  * for a link with the corresponding type of link.
- *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author alexreimers
  */
 @JsonSerialize(using = LinkWithType.class)

@@ -17,6 +17,7 @@
 
 package net.onrc.onos.core.packet;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu).
  */

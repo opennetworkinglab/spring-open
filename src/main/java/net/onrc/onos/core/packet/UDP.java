@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
@@ -108,6 +109,7 @@ public class UDP extends BasePacket {
      * -checksum : 0
      * -length : 0
      */
+    @Override
     public byte[] serialize() {
         byte[] payloadData = null;
         if (payload != null) {

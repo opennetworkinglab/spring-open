@@ -21,6 +21,7 @@ import java.util.Arrays;
 /**
  * The class representing LLDP Organizationally Specific TLV.
  *
+ * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author Sho Shimizu (sho.shimizu@gmail.com)
  */
 public class LLDPOrganizationalTLV extends LLDPTLV {

@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
 
+// CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**
  * @author shudong.zhou@bigswitch.com
  */
@@ -171,6 +172,7 @@ public class TCP extends BasePacket {
      * -checksum : 0
      * -length : 0
      */
+    @Override
     public byte[] serialize() {
         int length;
         if (dataOffset == 0) {
