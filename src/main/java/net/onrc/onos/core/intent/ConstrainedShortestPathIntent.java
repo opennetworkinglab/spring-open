@@ -2,7 +2,7 @@ package net.onrc.onos.core.intent;
 
 /**
  * The ConstrainedShortestPathIntent is a "high-level" intent that allows
- * applications to reserve bandwith along the shortest available path between
+ * applications to reserve bandwidth along the shortest available path between
  * specified endpoints.
  */
 public class ConstrainedShortestPathIntent extends ShortestPathIntent {
