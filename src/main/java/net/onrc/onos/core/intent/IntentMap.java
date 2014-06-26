@@ -102,6 +102,10 @@ public class IntentMap {
      */
     public void executeOperations(IntentOperationList operations) {
         for (IntentOperation operation : operations) {
+            if (operation == null) {
+                log.error("executeOperation: null intent operation");
+                continue;
+            }
             switch (operation.operator) {
             case ADD:
                 handleAddOperation(operation);
@@ -113,7 +117,7 @@ public class IntentMap {
                 handleErrorOperation(operation);
                 break;
             default:
-                log.error("Unknown intent operation {}", operation.operator);
+                log.error("Unknown intent operation: {}", operation.operator);
                 break;
             }
         }
@@ -266,13 +270,21 @@ public class IntentMap {
      * @param operation the Intent to be removed
      */
     protected void handleRemoveOperation(IntentOperation operation) {
-        Intent intent = getIntent(operation.intent.getId());
-        if (intent == null) {
-            // TODO error handling
+        if (operation == null) {
+            log.error("handleRemoveOperation: null operation");
             return;
-        } else {
-            setState(intent.getId(), IntentState.DEL_REQ);
         }
+        if (operation.intent == null) {
+            log.error("handleRemoveOperation: null intent");
+            return;
+        }
+        String intentId = operation.intent.getId();
+        Intent intent = getIntent(intentId);
+        if (intent == null) {
+            log.error("handleRemoveOperation: Intent ID {} doesn't exist", intentId);
+            return;
+        }
+        setState(intent.getId(), IntentState.DEL_REQ);
     }
 
     /**
