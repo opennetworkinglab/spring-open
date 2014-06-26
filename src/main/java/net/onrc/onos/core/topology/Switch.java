@@ -12,7 +12,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * Interface of Switch object in the topology.
  */
 @JsonSerialize(using = SwitchSerializer.class)
-public interface Switch {
+public interface Switch extends StringAttributes {
 
     /**
      * Gets the data path ID (dpid) of this switch.

@@ -10,7 +10,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * Interface of Link object in the topology.
  */
 @JsonSerialize(using = LinkSerializer.class)
-public interface Link {
+public interface Link extends StringAttributes {
     /**
      * Gets the source switch for the link.
      *

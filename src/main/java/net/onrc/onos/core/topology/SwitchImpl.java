@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Switch Object stored in In-memory Topology.
  * <p/>
@@ -125,5 +127,32 @@ public class SwitchImpl extends TopologyObject implements Switch {
             }
         }
         return links;
+    }
+
+    @Override
+    public String getStringAttribute(String attr) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+       justification = "getStringAttribute might return null once implemented")
+    public String getStringAttribute(String attr, String def) {
+        final String v = getStringAttribute(attr);
+        if (v == null) {
+            return def;
+        } else {
+            return v;
+        }
+    }
+
+    @Override
+    public Map<String, String> getAllStringAttributes() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public String toString() {
+        return dpid.toString();
     }
 }

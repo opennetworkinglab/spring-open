@@ -1,5 +1,8 @@
 package net.onrc.onos.core.topology;
 
+import java.util.Map;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
@@ -74,6 +77,28 @@ public class LinkImpl extends TopologyObject implements Link {
 
     public void setCapacity(Double capacity) {
         this.capacity = capacity;
+    }
+
+    @Override
+    public String getStringAttribute(String attr) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+       justification = "getStringAttribute might return null once implemented")
+    public String getStringAttribute(String attr, String def) {
+        final String v = getStringAttribute(attr);
+        if (v == null) {
+            return def;
+        } else {
+            return v;
+        }
+    }
+
+    @Override
+    public Map<String, String> getAllStringAttributes() {
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
