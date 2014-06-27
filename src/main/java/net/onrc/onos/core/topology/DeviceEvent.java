@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.topology.PortEvent.SwitchPort;
+import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * Self-contained Device event(s) Object

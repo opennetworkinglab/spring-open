@@ -1,19 +1,22 @@
 package net.onrc.onos.core.util;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import net.onrc.onos.core.util.serializers.SwitchPortSerializer;
+
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  * The class representing a Switch-Port.
  * This class is immutable.
  */
+@JsonSerialize(using = SwitchPortSerializer.class)
 public final class SwitchPort {
     private final Dpid dpid;        // The DPID of the switch
     private final PortNumber port;        // The port of the switch
 
     /**
-     * Default constructor.
+     * Default constructor for Serializer to use.
      */
-    public SwitchPort() {
+    protected SwitchPort() {
         this.dpid = null;
         this.port = null;
     }
@@ -41,12 +44,31 @@ public final class SwitchPort {
     }
 
     /**
+     * Constructor for the specified primitive values of a DPID and port.
+     *
+     * @param dpid the DPID to use
+     * @param port the port number to use
+     */
+    public SwitchPort(Long dpid, Long port) {
+        this.dpid = new Dpid(dpid);
+        this.port = new PortNumber(port.shortValue());
+    }
+
+    /**
      * Get the DPID value of the Switch-Port.
      *
      * @return the DPID value of the Switch-Port.
      */
-    @JsonProperty("dpid")
     public Dpid dpid() {
+        return dpid;
+    }
+
+    /**
+     * Get the DPID value of the Switch-Port.
+     *
+     * @return the DPID value of the Switch-Port.
+     */
+    public Dpid getDpid() {
         return dpid;
     }
 
@@ -55,8 +77,16 @@ public final class SwitchPort {
      *
      * @return the port value of the Switch-Port.
      */
-    @JsonProperty("port")
     public PortNumber port() {
+        return port;
+    }
+
+    /**
+     * Get the port value of the Switch-Port.
+     *
+     * @return the port value of the Switch-Port.
+     */
+    public PortNumber getNumber() {
         return port;
     }
 

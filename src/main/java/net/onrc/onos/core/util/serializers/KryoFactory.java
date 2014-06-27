@@ -51,6 +51,7 @@ import net.onrc.onos.core.util.IPv6;
 import net.onrc.onos.core.util.IPv6Net;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.Switch;
+import net.onrc.onos.core.util.SwitchPort;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -184,14 +185,13 @@ public class KryoFactory {
         kryo.register(MACAddress.class);
         kryo.register(PortNumber.class);
         kryo.register(Switch.class);
-        // kryo.register(SwitchPort.class);
+        kryo.register(SwitchPort.class);
 
         // New data model-related classes
         kryo.register(DeviceEvent.class);
         kryo.register(LinkedList.class);
         kryo.register(LinkEvent.class);
         kryo.register(PortEvent.class);
-        kryo.register(PortEvent.SwitchPort.class);
         kryo.register(SwitchEvent.class);
         kryo.register(TopologyEvent.class);
 

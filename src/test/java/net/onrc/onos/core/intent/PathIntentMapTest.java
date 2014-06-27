@@ -21,6 +21,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class PathIntentMapTest {
+    private static final PortNumber PORT_NUMBER_1 = new PortNumber((short) 1);
+    private static final PortNumber PORT_NUMBER_3 = new PortNumber((short) 3);
+    private static final Dpid DPID_1 = new Dpid(1L);
+    private static final Dpid DPID_2 = new Dpid(2L);
+    private static final Dpid DPID_3 = new Dpid(3L);
+    private static final Dpid DPID_4 = new Dpid(4L);
     Link link12, link23, link24;
     Switch sw1, sw2, sw3, sw4;
     Port port11, port22, port21, port23, port31, port41;
@@ -116,21 +122,21 @@ public class PathIntentMapTest {
         intents.executeOperations(operations);
         assertEquals(2, intents.getAllIntents().size());
 
-        Collection<PathIntent> pathIntents = intents.getIntentsByDpid(1L);
+        Collection<PathIntent> pathIntents = intents.getIntentsByDpid(DPID_1);
         assertEquals(2, pathIntents.size());
         assertTrue(pathIntents.contains(intent1));
         assertTrue(pathIntents.contains(intent2));
 
-        pathIntents = intents.getIntentsByDpid(2L);
+        pathIntents = intents.getIntentsByDpid(DPID_2);
         assertEquals(2, pathIntents.size());
         assertTrue(pathIntents.contains(intent1));
         assertTrue(pathIntents.contains(intent2));
 
-        pathIntents = intents.getIntentsByDpid(3L);
+        pathIntents = intents.getIntentsByDpid(DPID_3);
         assertEquals(1, pathIntents.size());
         assertTrue(pathIntents.contains(intent1));
 
-        pathIntents = intents.getIntentsByDpid(4L);
+        pathIntents = intents.getIntentsByDpid(DPID_4);
         assertEquals(1, pathIntents.size());
         assertTrue(pathIntents.contains(intent2));
     }
@@ -146,16 +152,16 @@ public class PathIntentMapTest {
         intents.executeOperations(operations);
         assertEquals(2, intents.getAllIntents().size());
 
-        Collection<PathIntent> pathIntents = intents.getIntentsByPort(1L, 1L);
+        Collection<PathIntent> pathIntents = intents.getIntentsByPort(DPID_1, PORT_NUMBER_1);
         assertEquals(2, pathIntents.size());
         assertTrue(pathIntents.contains(intent1));
         assertTrue(pathIntents.contains(intent2));
 
-        pathIntents = intents.getIntentsByPort(2L, 1L);
+        pathIntents = intents.getIntentsByPort(DPID_2, PORT_NUMBER_1);
         assertEquals(1, pathIntents.size());
         assertTrue(pathIntents.contains(intent1));
 
-        pathIntents = intents.getIntentsByPort(2L, 3L);
+        pathIntents = intents.getIntentsByPort(DPID_2, PORT_NUMBER_3);
         assertEquals(1, pathIntents.size());
         assertTrue(pathIntents.contains(intent2));
     }

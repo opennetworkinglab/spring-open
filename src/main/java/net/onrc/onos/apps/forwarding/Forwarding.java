@@ -37,7 +37,6 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
-import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.FlowPath;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
@@ -420,7 +419,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                     for (Iterator<LinkEvent> i = path.iterator(); i.hasNext();) {
                         LinkEvent le = i.next();
 
-                        if (new Dpid(le.getSrc().dpid).equals(sw.getDpid())) {
+                        if (le.getSrc().getDpid().equals(sw.getDpid())) {
                             log.trace("The packet-in sw dpid {} is on the path.", sw.getDpid());
                             isflowEntryForThisSwitch = true;
                             outPort = le.getSrc().getNumber().value();

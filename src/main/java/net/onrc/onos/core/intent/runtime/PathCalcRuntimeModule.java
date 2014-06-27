@@ -703,14 +703,14 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             p.log("begin_getIntentsByPort");
             for (PortEvent portEvent : removedPortEvents) {
                 affectedPaths.addAll(pathIntents.getIntentsByPort(
-                        portEvent.getDpid().value(),
-                        (long) portEvent.getNumber().value()));
+                        portEvent.getDpid(),
+                        portEvent.getNumber()));
             }
             p.log("end_getIntentsByPort");
 
             p.log("begin_getIntentsByDpid");
             for (SwitchEvent switchEvent : removedSwitchEvents) {
-                affectedPaths.addAll(pathIntents.getIntentsByDpid(switchEvent.getDpid().value()));
+                affectedPaths.addAll(pathIntents.getIntentsByDpid(switchEvent.getDpid()));
             }
             p.log("end_getIntentsByDpid");
         }

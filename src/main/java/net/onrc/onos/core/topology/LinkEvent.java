@@ -2,10 +2,10 @@ package net.onrc.onos.core.topology;
 
 import java.nio.ByteBuffer;
 
-import net.onrc.onos.core.topology.PortEvent.SwitchPort;
 import net.onrc.onos.core.topology.web.serializers.LinkEventSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -65,8 +65,8 @@ public class LinkEvent {
 
     public static ByteBuffer getLinkID(Dpid srcDpid, PortNumber srcPortNo,
                                        Dpid dstDpid, PortNumber dstPortNo) {
-            return getLinkID(srcDpid.value(), (long) srcPortNo.value(),
-                             dstDpid.value(), (long) dstPortNo.value());
+        return getLinkID(srcDpid.value(), (long) srcPortNo.value(),
+                         dstDpid.value(), (long) dstPortNo.value());
     }
 
     public static ByteBuffer getLinkID(Long srcDpid, Long srcPortNo,
@@ -77,8 +77,7 @@ public class LinkEvent {
     }
 
     public byte[] getID() {
-        return getLinkID(src.getDpid(), src.getNumber(),
-                dst.getDpid(), dst.getNumber()).array();
+        return getIDasByteBuffer().array();
     }
 
     public ByteBuffer getIDasByteBuffer() {

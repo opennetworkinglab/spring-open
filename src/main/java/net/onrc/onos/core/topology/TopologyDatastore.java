@@ -13,7 +13,7 @@ import net.onrc.onos.core.datastore.topology.KVPort.STATUS;
 import net.onrc.onos.core.datastore.topology.KVSwitch;
 import net.onrc.onos.core.datastore.utils.KVObject;
 import net.onrc.onos.core.datastore.utils.KVObject.WriteOp;
-import net.onrc.onos.core.topology.PortEvent.SwitchPort;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

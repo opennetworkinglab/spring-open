@@ -1,6 +1,7 @@
-package net.onrc.onos.core.topology.web.serializers;
+package net.onrc.onos.core.util.serializers;
 
-import net.onrc.onos.core.topology.PortEvent.SwitchPort;
+import net.onrc.onos.core.util.SwitchPort;
+
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;

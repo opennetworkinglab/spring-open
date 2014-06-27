@@ -23,8 +23,8 @@ import net.onrc.onos.core.main.IOFSwitchPortListener;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
 import net.onrc.onos.core.registry.RegistryException;
-import net.onrc.onos.core.topology.PortEvent.SwitchPort;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.util.HexString;

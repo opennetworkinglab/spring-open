@@ -7,7 +7,9 @@ import java.util.HashSet;
 
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.PortEvent.SwitchPort;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * In addition to maintaining the Intent ID to Intent mapping of its
@@ -16,7 +18,7 @@ import net.onrc.onos.core.topology.PortEvent.SwitchPort;
  * when a network event involves a particular switch port.
  */
 public class PathIntentMap extends IntentMap {
-    private final HashMap<Long, HashMap<Long, HashSet<PathIntent>>> intents;
+    private final HashMap<Dpid, HashMap<PortNumber, HashSet<PathIntent>>> intents;
 
     /**
      * Constructor.
@@ -32,9 +34,9 @@ public class PathIntentMap extends IntentMap {
      * @return a set of all intents that contain swPort
      */
     private HashSet<PathIntent> get(SwitchPort swPort) {
-        Long dpid = swPort.getDpid().value();
-        Long port = (long) swPort.getNumber().value();
-        HashMap<Long, HashSet<PathIntent>> portToIntents = intents.get(dpid);
+        Dpid dpid = swPort.getDpid();
+        PortNumber port = swPort.getNumber();
+        HashMap<PortNumber, HashSet<PathIntent>> portToIntents = intents.get(dpid);
         if (portToIntents == null) {
             portToIntents = new HashMap<>();
             intents.put(dpid, portToIntents);
@@ -100,21 +102,21 @@ public class PathIntentMap extends IntentMap {
      */
     public Collection<PathIntent> getIntentsByLink(LinkEvent linkEvent) {
         return getIntentsByPort(
-                linkEvent.getSrc().getDpid().value(),
-                (long) linkEvent.getSrc().getNumber().value());
+                linkEvent.getSrc().getDpid(),
+                linkEvent.getSrc().getNumber());
     }
 
     /**
      * Retrieve all intents that use a particular port.
      *
      * @param dpid the switch's DPID
-     * @param port the switch's port
+     * @param portNumber the switch's port
      * @return a collection of PathIntents that use the port
      */
-    public Collection<PathIntent> getIntentsByPort(Long dpid, Long port) {
-        HashMap<Long, HashSet<PathIntent>> portToIntents = intents.get(dpid);
+    public Collection<PathIntent> getIntentsByPort(Dpid dpid, PortNumber portNumber) {
+        HashMap<PortNumber, HashSet<PathIntent>> portToIntents = intents.get(dpid);
         if (portToIntents != null) {
-            HashSet<PathIntent> targetIntents = portToIntents.get(port);
+            HashSet<PathIntent> targetIntents = portToIntents.get(portNumber);
             if (targetIntents != null) {
                 return Collections.unmodifiableCollection(targetIntents);
             }
@@ -128,9 +130,9 @@ public class PathIntentMap extends IntentMap {
      * @param dpid the switch's DPID
      * @return a collection of PathIntents that use the switch
      */
-    public Collection<PathIntent> getIntentsByDpid(Long dpid) {
+    public Collection<PathIntent> getIntentsByDpid(Dpid dpid) {
         HashSet<PathIntent> result = new HashSet<>();
-        HashMap<Long, HashSet<PathIntent>> portToIntents = intents.get(dpid);
+        HashMap<PortNumber, HashSet<PathIntent>> portToIntents = intents.get(dpid);
         if (portToIntents != null) {
             for (HashSet<PathIntent> targetIntents : portToIntents.values()) {
                 result.addAll(targetIntents);
