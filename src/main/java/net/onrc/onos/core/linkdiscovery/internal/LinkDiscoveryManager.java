@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -67,7 +68,9 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.packet.LLDP;
 import net.onrc.onos.core.packet.LLDPTLV;
+import net.onrc.onos.core.packet.OnosLldp;
 import net.onrc.onos.core.registry.IControllerRegistryService;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
@@ -81,13 +84,14 @@ import org.openflow.protocol.OFPortStatus.OFPortReason;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.action.OFActionOutput;
+import org.openflow.protocol.action.OFActionType;
 import org.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This class sends out LLDP messages containing the sending switch's datapath
- * id as well as the outgoing port number.  Received LLrescDP messages that
+ * id as well as the outgoing port number.  Received LLDP messages that
  * match a known switch cause a new LinkTuple to be created according to the
  * invariant rules listed below.  This new LinkTuple is also passed to routing
  * if it exists to trigger updates.
@@ -252,7 +256,7 @@ public class LinkDiscoveryManager
     /**
      * Quarantine task.
      */
-    protected SingletonTask bddpTask;
+    //protected SingletonTask bddpTask;
     protected static final int BDDP_TASK_INTERVAL = 100; // 100 ms.
     protected static final int BDDP_TASK_SIZE = 5;       // # of ports per iteration
 
@@ -352,6 +356,7 @@ public class LinkDiscoveryManager
     /**
      * Quarantine Ports.
      */
+    /*
     protected class QuarantineWorker implements Runnable {
         @Override
         public void run() {
@@ -365,6 +370,7 @@ public class LinkDiscoveryManager
             }
         }
     }
+    */
 
     /**
      * Add a switch port to the quarantine queue. Schedule the
@@ -604,89 +610,8 @@ public class LinkDiscoveryManager
                     sw, port);
         }
 
-        // using "nearest customer bridge" MAC address for broadest possible propagation
-        // through provider and TPMR bridges (see IEEE 802.1AB-2009 and 802.1Q-2011),
-        // in particular the Linux bridge which behaves mostly like a provider bridge
-        byte[] chassisId = new byte[]{4, 0, 0, 0, 0, 0, 0}; // filled in later
-        byte[] portId = new byte[]{2, 0, 0}; // filled in later
-        byte[] ttlValue = new byte[]{0, 0x78};
-        // OpenFlow OUI - 00-26-E1
-        byte[] dpidTLVValue = new byte[]{0x0, 0x26, (byte) 0xe1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        OFPacketOut po = createLLDPPacketOut(sw, ofpPort, isReverse);
 
-        byte[] dpidArray = new byte[8];
-        ByteBuffer dpidBB = ByteBuffer.wrap(dpidArray);
-        ByteBuffer portBB = ByteBuffer.wrap(portId, 1, 2);
-
-        Long dpid = sw;
-        dpidBB.putLong(dpid);
-        // set the ethernet source mac to last 6 bytes of dpid
-        byte[] hardwareAddress = new byte[6];
-        System.arraycopy(dpidArray, 2, hardwareAddress, 0, 6);
-        ofpPort.setHardwareAddress(hardwareAddress);
-        // set the chassis id's value to last 6 bytes of dpid
-        System.arraycopy(dpidArray, 2, chassisId, 1, 6);
-        // set the optional tlv to the full dpid
-        System.arraycopy(dpidArray, 0, dpidTLVValue, 4, 8);
-        LLDPTLV dpidTLV = new LLDPTLV().setType((byte) 127)
-                .setLength((short) dpidTLVValue.length).setValue(dpidTLVValue);
-
-        // set the portId to the outgoing port
-        portBB.putShort(port);
-        if (log.isTraceEnabled()) {
-            log.trace("Sending LLDP out of interface: {}/{}",
-                    HexString.toHexString(sw), port);
-        }
-
-        LLDP lldp = new LLDP();
-        lldp.setChassisId(new LLDPTLV().setType((byte) 1).setLength((short) chassisId.length).setValue(chassisId));
-        lldp.setPortId(new LLDPTLV().setType((byte) 2).setLength((short) portId.length).setValue(portId));
-        lldp.setTtl(new LLDPTLV().setType((byte) 3).setLength((short) ttlValue.length).setValue(ttlValue));
-        lldp.getOptionalTLVList().add(dpidTLV);
-
-        // Add the controller identifier to the TLV value.
-        lldp.getOptionalTLVList().add(controllerTLV);
-        if (isReverse) {
-            lldp.getOptionalTLVList().add(REVERSE_TLV);
-        } else {
-            lldp.getOptionalTLVList().add(FORWARD_TLV);
-        }
-
-        Ethernet ethernet;
-        if (isStandard) {
-            ethernet = new Ethernet()
-                    .setSourceMACAddress(ofpPort.getHardwareAddress())
-                    .setDestinationMACAddress(LLDP_STANDARD_DST_MAC_STRING)
-                    .setEtherType(Ethernet.TYPE_LLDP);
-            ethernet.setPayload(lldp);
-        } else {
-            BSN bsn = new BSN(BSN.BSN_TYPE_BDDP);
-            bsn.setPayload(lldp);
-
-            ethernet = new Ethernet()
-                    .setSourceMACAddress(ofpPort.getHardwareAddress())
-                    .setDestinationMACAddress(LLDP_BSN_DST_MAC_STRING)
-                    .setEtherType(Ethernet.TYPE_BSN);
-            ethernet.setPayload(bsn);
-        }
-
-
-        // serialize and wrap in a packet out
-        byte[] data = ethernet.serialize();
-        OFPacketOut po = (OFPacketOut) floodlightProvider.getOFMessageFactory().getMessage(OFType.PACKET_OUT);
-        po.setBufferId(OFPacketOut.BUFFER_ID_NONE);
-        po.setInPort(OFPort.OFPP_NONE);
-
-        // set actions
-        List<OFAction> actions = new ArrayList<OFAction>();
-        actions.add(new OFActionOutput(port, (short) 0));
-        po.setActions(actions);
-        po.setActionsLength((short) OFActionOutput.MINIMUM_LENGTH);
-
-        // set data
-        po.setLengthU(OFPacketOut.MINIMUM_LENGTH + po.getActionsLength() + data.length);
-        po.setPacketData(data);
-
-        // send
         try {
             iofSwitch.write(po, null);
             iofSwitch.flush();
@@ -694,6 +619,51 @@ public class LinkDiscoveryManager
             log.error("Failure sending LLDP out port " + port + " on switch " + iofSwitch.getStringId(), e);
         }
 
+    }
+
+    /**
+     * Creates packet_out LLDP for specified output port.
+     *
+     * @param dpid the dpid of the outgoing switch
+     * @param port the outgoing port
+     * @param isReverse whether this is a reverse LLDP or not
+     * @return Packet_out message with LLDP data
+     */
+    private OFPacketOut createLLDPPacketOut(long dpid,
+            final OFPhysicalPort port, boolean isReverse) {
+        // Set up packets
+        // TODO optimize by not creating new packets each time
+        OnosLldp lldpPacket = new OnosLldp();
+
+        Ethernet ethPacket = new Ethernet();
+        ethPacket.setEtherType(Ethernet.TYPE_LLDP);
+        ethPacket.setDestinationMACAddress(LLDP_STANDARD_DST_MAC_STRING);
+        ethPacket.setPayload(lldpPacket);
+        ethPacket.setPad(true);
+
+        final OFPacketOut packetOut = (OFPacketOut) floodlightProvider.getOFMessageFactory()
+                .getMessage(OFType.PACKET_OUT);
+        packetOut.setBufferId(OFPacketOut.BUFFER_ID_NONE);
+
+        final List<OFAction> actionsList = new LinkedList<OFAction>();
+        final OFActionOutput out = (OFActionOutput) floodlightProvider.getOFMessageFactory()
+                .getAction(OFActionType.OUTPUT);
+        out.setPort(port.getPortNumber());
+        actionsList.add(out);
+        packetOut.setActions(actionsList);
+        final short alen = (short) OFActionOutput.MINIMUM_LENGTH;
+
+        lldpPacket.setSwitch(dpid);
+        lldpPacket.setPort(port.getPortNumber());
+        lldpPacket.setReverse(isReverse);
+        ethPacket.setSourceMACAddress(port.getHardwareAddress());
+
+        final byte[] lldp = ethPacket.serialize();
+        packetOut.setActionsLength(alen);
+        packetOut.setPacketData(lldp);
+        packetOut
+                .setLength((short) (OFPacketOut.MINIMUM_LENGTH + alen + lldp.length));
+        return packetOut;
     }
 
     /**
@@ -724,8 +694,8 @@ public class LinkDiscoveryManager
 
                     // If the switch port is not alreayd in the maintenance
                     // queue, add it.
-                    NodePortTuple npt = new NodePortTuple(sw, ofp.getPortNumber());
-                    addToMaintenanceQueue(npt);
+                    //NodePortTuple npt = new NodePortTuple(sw, ofp.getPortNumber());
+                    //addToMaintenanceQueue(npt);
                 }
             }
         }
@@ -812,18 +782,8 @@ public class LinkDiscoveryManager
             return Command.CONTINUE;
         }
 
-        long myId = ByteBuffer.wrap(controllerTLV.getValue()).getLong();
-        long otherId = 0;
-        boolean myLLDP = false;
-        Boolean isReverse = null;
-
-        ByteBuffer portBB = ByteBuffer.wrap(lldp.getPortId().getValue());
-        portBB.position(1);
-
-        Short remotePort = portBB.getShort();
-        IOFSwitch remoteSwitch = null;
-
         // Verify this LLDP packet matches what we're looking for
+        /*
         for (LLDPTLV lldptlv : lldp.getOptionalTLVList()) {
             if (lldptlv.getType() == 127 && lldptlv.getLength() == 12 &&
                     lldptlv.getValue()[0] == 0x0 && lldptlv.getValue()[1] == 0x26 &&
@@ -850,66 +810,37 @@ public class LinkDiscoveryManager
                 }
             }
         }
+        */
 
-        if (!myLLDP) {
-            // This is not the LLDP sent by this controller.
-            // If the LLDP message has multicast bit set, then we need to broadcast
-            // the packet as a regular packet.
-            if (isStandard) {
-                if (log.isTraceEnabled()) {
-                    log.trace("Getting standard LLDP from a different controller and quelching it.");
-                }
-                return Command.STOP;
-            }
-            // XXX ONOS: Don't disregard any BDDP messages from other
-            // controllers because they're used for inter-instance link detection
-
-            /*else if (sw <= remoteSwitch.getId()) {
-                if (log.isTraceEnabled()) {
-                    log.trace("Getting BBDP from a different controller. myId {}: remoteId {}", myId, otherId);
-                    log.trace("and my controller id is smaller than the other, so quelching it. myPort {}: rPort {}",
-                    pi.getInPort(), remotePort);
-                }
-                //XXX ONOS: Fix the BDDP broadcast issue
-                //return Command.CONTINUE;
-                return Command.STOP;
-            }*/
-            /*
-            else if (myId < otherId)  {
-                if (log.isTraceEnabled()) {
-                    log.trace("Getting BDDP packets from a different controller" +
-                            "and letting it go through normal processing chain.");
-                }
-                //XXX ONOS: Fix the BDDP broadcast issue
-                //return Command.CONTINUE;
-                return Command.STOP;
-            }
-            */
-        }
-
-
-        if (remoteSwitch == null) {
-            // Ignore LLDPs not generated by Floodlight, or from a switch that has recently
-            // disconnected, or from a switch connected to another Floodlight instance
-            if (log.isTraceEnabled()) {
-                log.trace("Received LLDP from remote switch not connected to the controller");
-            }
+        byte[] packetData = pi.getPacketData();
+        if (!OnosLldp.isOnosLldp(packetData)) {
+            log.trace("Dropping LLDP that wasn't sent by ONOS");
             return Command.STOP;
         }
 
-        if (!remoteSwitch.portEnabled(remotePort)) {
-            if (log.isTraceEnabled()) {
-                log.trace("Ignoring link with disabled source port: switch {} port {}", remoteSwitch, remotePort);
+        SwitchPort switchPort = OnosLldp.extractSwitchPort(packetData);
+        long remoteDpid = switchPort.dpid().value();
+        short remotePort = switchPort.port().value();
+        IOFSwitch remoteSwitch = floodlightProvider.getSwitches().get(switchPort.dpid().value());
+
+
+        OFPhysicalPort physicalPort = null;
+        if (remoteSwitch != null) {
+            physicalPort = remoteSwitch.getPort(remotePort);
+            if (!remoteSwitch.portEnabled(remotePort)) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Ignoring link with disabled source port: switch {} port {}", remoteSwitch, remotePort);
+                }
+                return Command.STOP;
             }
-            return Command.STOP;
-        }
-        if (suppressLinkDiscovery.contains(new NodePortTuple(remoteSwitch.getId(),
-                remotePort))) {
-            if (log.isTraceEnabled()) {
-                log.trace("Ignoring link with suppressed src port: switch {} port {}",
-                        remoteSwitch, remotePort);
+            if (suppressLinkDiscovery.contains(new NodePortTuple(remoteSwitch.getId(),
+                    remotePort))) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Ignoring link with suppressed src port: switch {} port {}",
+                            remoteSwitch, remotePort);
+                }
+                return Command.STOP;
             }
-            return Command.STOP;
         }
         if (!iofSwitch.portEnabled(pi.getInPort())) {
             if (log.isTraceEnabled()) {
@@ -918,13 +849,12 @@ public class LinkDiscoveryManager
             return Command.STOP;
         }
 
-        OFPhysicalPort physicalPort = remoteSwitch.getPort(remotePort);
         int srcPortState = (physicalPort != null) ? physicalPort.getState() : 0;
         physicalPort = iofSwitch.getPort(pi.getInPort());
         int dstPortState = (physicalPort != null) ? physicalPort.getState() : 0;
 
         // Store the time of update to this link, and push it out to routingEngine
-        Link lt = new Link(remoteSwitch.getId(), remotePort, iofSwitch.getId(), pi.getInPort());
+        Link lt = new Link(remoteDpid, remotePort, iofSwitch.getId(), pi.getInPort());
 
 
         Long lastLldpTime = null;
@@ -949,6 +879,8 @@ public class LinkDiscoveryManager
         // first seen within a small interval, send probe on the
         // reverse link.
 
+        boolean isReverse = OnosLldp.isReverse(lldp);
+
         newLinkInfo = links.get(lt);
         if (newLinkInfo != null && isStandard && !isReverse) {
             Link reverseLink = new Link(lt.getDst(), lt.getDstPort(),
@@ -961,37 +893,6 @@ public class LinkDiscoveryManager
                 }
             }
         }
-
-        // XXX ONOS: Don't do this:
-        //   If the received packet is a BDDP packet, then create a reverse BDDP
-        //   link as well.
-        // We want to preserve our semantic of the instance that controls the
-        // destination switch is the one who adds the link to the database.
-        /*
-        if (!isStandard) {
-            Link reverseLink = new Link(lt.getDst(), lt.getDstPort(),
-                    lt.getSrc(), lt.getSrcPort());
-
-            // srcPortState and dstPort state are reversed.
-            LinkInfo reverseInfo =
-                    new LinkInfo(firstSeenTime, lastLldpTime, lastBddpTime,
-                            dstPortState, srcPortState);
-
-            addOrUpdateLink(reverseLink, reverseInfo);
-        }
-        */
-
-        // Remove the node ports from the quarantine and maintenance queues.
-        NodePortTuple nptSrc = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
-        NodePortTuple nptDst = new NodePortTuple(lt.getDst(), lt.getDstPort());
-        removeFromQuarantineQueue(nptSrc);
-        removeFromQuarantineQueue(nptDst);
-
-        // XXX ONOS: Don't remove the port from the maintenance queue here
-        // because it sometimes prevents BDDPs from being sent and causes
-        // links to flap
-        // removeFromMaintenanceQueue(nptSrc);
-        // removeFromMaintenanceQueue(nptDst);
 
         // Consume this message
         return Command.STOP;
@@ -1772,8 +1673,8 @@ public class LinkDiscoveryManager
 
         // Setup the BDDP task.  It is invoked whenever switch port tuples
         // are added to the quarantine list.
-        bddpTask = new SingletonTask(ses, new QuarantineWorker());
-        bddpTask.reschedule(BDDP_TASK_INTERVAL, TimeUnit.MILLISECONDS);
+        //bddpTask = new SingletonTask(ses, new QuarantineWorker());
+        //bddpTask.reschedule(BDDP_TASK_INTERVAL, TimeUnit.MILLISECONDS);
 
 
         // Register for the OpenFlow messages we want to receive

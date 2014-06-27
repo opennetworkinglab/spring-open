@@ -395,6 +395,8 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testSendDiscoveryMessage() throws IOException {
+        byte[] macAddress = new byte[] {0x0, 0x0, 0x0, 0x0, 0x0, 0x1};
+
         LinkDiscoveryManager topology = getTopology();
 
         // Mock up our expected behavior
@@ -404,6 +406,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         short portNum = 1;
         OFPhysicalPort ofpPort = new OFPhysicalPort();
         ofpPort.setPortNumber(portNum);
+        ofpPort.setHardwareAddress(macAddress);
 
         /* sendDiscoverMessage() should perform the following actions on
          * IOFSwitch object
