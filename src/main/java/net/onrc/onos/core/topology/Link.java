@@ -50,15 +50,6 @@ public interface Link extends StringAttributes {
     public long getLastSeenTime();
 
     /**
-     * Gets the link cost.
-     * <p/>
-     * TODO: What is the unit?
-     *
-     * @return the link cost.
-     */
-    public int getCost();
-
-    /**
      * Gets the link capacity.
      * <p/>
      * TODO: What is the unit?
