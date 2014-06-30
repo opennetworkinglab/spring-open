@@ -18,3 +18,4 @@ net.onrc.onos.core.topology.TopologyModule
 net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule
 net.onrc.onos.core.intent.runtime.PlanInstallModule
 net.onrc.onos.core.packetservice.PacketModule
+net.onrc.onos.core.metrics.OnosMetricsModule

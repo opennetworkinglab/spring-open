@@ -46,6 +46,7 @@
     <github.global.server>github</github.global.server>
      -->
     <hazelcast.version>3.2.3</hazelcast.version>
+    <metrics.version>3.0.1</metrics.version>
   </properties>
   <build>
     <plugins>
@@ -633,6 +634,16 @@
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>findbugs</artifactId>
       <version>${findbugs.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>${metrics.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-json</artifactId>
+      <version>${metrics.version}</version>
     </dependency>
     <!-- Floodlight's dependencies -->
     <dependency>
