@@ -13,6 +13,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.annotation.concurrent.GuardedBy;
+
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
@@ -72,11 +74,31 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     // Local state for keeping track of locally discovered events so we can
     // cleanup properly when a Switch or Port is removed.
     //
-    // We keep all Port, Link and Device events per Switch DPID:
+    // We keep all Port, (incoming) Link and Device events per Switch DPID:
     //  - If a switch goes down, we remove all corresponding Port, Link and
     //    Device events.
     //  - If a port on a switch goes down, we remove all corresponding Link
-    //    and Device events.
+    //    and Device events discovered by this instance.
+    //
+    // How to handle side-effect of remote events.
+    //  - Remote Port Down event -> Link Down
+    //      Not handled. (XXX Shouldn't it be removed from discovered.. Map)
+    //  - Remote Device Added -> lose ownership of Device)
+    //      Not handled. (XXX Shouldn't it be removed from discovered.. Map)
+    //
+    // XXX Domain knowledge based invariant maintenance should be moved to
+    //     driver module, since the invariant may be different on optical, etc.
+    //
+    // What happens on leadership change?
+    //  - Probably should: remove from discovered.. Maps, but not send DELETE events
+    //     XXX Switch/Port can be rediscovered by new leader, but Link, Device?
+    //  - Current: There is no way to recognize leadership change?
+    //      ZookeeperRegistry.requestControl(long, ControlChangeCallback)
+    //      is the only way to register listener, and it allows only 1 listener,
+    //      which is already used by Controller class.
+    //
+    // FIXME Replace with concurrent variant.
+    //   #removeSwitchDiscoveryEvent(SwitchEvent) runs in different thread.
     //
     private Map<Long, Map<ByteBuffer, PortEvent>> discoveredAddedPortEvents =
             new HashMap<>();
@@ -88,6 +110,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     //
     // Local state for keeping track of the application event notifications
     //
+    //  - Queue of events, which will be dispatched to local listeners
+    //    on next notification.
 
     private List<SwitchEvent> apiAddedSwitchEvents = new LinkedList<>();
     private List<SwitchEvent> apiRemovedSwitchEvents = new LinkedList<>();
@@ -463,6 +487,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      * @param hasAddedSwitchEvents true if there were Added Switch Events.
      * @param hasAddedPortEvents   true if there were Added Port Events.
      */
+    @GuardedBy("topology.writeLock")
     private void applyReorderedEvents(boolean hasAddedSwitchEvents,
                                       boolean hasAddedPortEvents) {
         if (!(hasAddedSwitchEvents || hasAddedPortEvents)) {
@@ -567,9 +592,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Switch removed event.
-     *
-     * @param switchEvent the switch event.
+     * {@inheritDoc}
+     * <p/>
+     * Called by {@link TopologyPublisher.SwitchCleanup} thread.
      */
     @Override
     public void removeSwitchDiscoveryEvent(SwitchEvent switchEvent) {
@@ -807,6 +832,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param switchEvent the Switch Event with the switch to add.
      */
+    @GuardedBy("topology.writeLock")
     private void addSwitch(SwitchEvent switchEvent) {
         Switch sw = topology.getSwitch(switchEvent.getDpid());
         if (sw == null) {
@@ -825,6 +851,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param switchEvent the Switch Event with the switch to remove.
      */
+    @GuardedBy("topology.writeLock")
     private void removeSwitch(SwitchEvent switchEvent) {
         Switch sw = topology.getSwitch(switchEvent.getDpid());
         if (sw == null) {
@@ -856,6 +883,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param portEvent the Port Event with the port to add.
      */
+    @GuardedBy("topology.writeLock")
     private void addPort(PortEvent portEvent) {
         Switch sw = topology.getSwitch(portEvent.getDpid());
         if (sw == null) {
@@ -883,6 +911,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param portEvent the Port Event with the port to remove.
      */
+    @GuardedBy("topology.writeLock")
     private void removePort(PortEvent portEvent) {
         Switch sw = topology.getSwitch(portEvent.getDpid());
         if (sw == null) {
@@ -947,6 +976,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param linkEvent the Link Event with the link to add.
      */
+    @GuardedBy("topology.writeLock")
     private void addLink(LinkEvent linkEvent) {
         Port srcPort = topology.getPort(linkEvent.getSrc().dpid,
                 linkEvent.getSrc().number);
@@ -1003,6 +1033,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param linkEvent the Link Event with the link to remove.
      */
+    @GuardedBy("topology.writeLock")
     private void removeLink(LinkEvent linkEvent) {
         Port srcPort = topology.getPort(linkEvent.getSrc().dpid,
                 linkEvent.getSrc().number);
@@ -1050,6 +1081,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param deviceEvent the Device Event with the device to add.
      */
+    @GuardedBy("topology.writeLock")
     private void addDevice(DeviceEvent deviceEvent) {
         log.debug("Adding a device to the topology with mac {}", deviceEvent.getMac());
         Device device = topology.getDeviceByMac(deviceEvent.getMac());
@@ -1105,6 +1137,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      *
      * @param deviceEvent the Device Event with the device to remove.
      */
+    @GuardedBy("topology.writeLock")
     private void removeDevice(DeviceEvent deviceEvent) {
         log.debug("Removing a device to the topology: mac {}", deviceEvent.getMac());
         Device device = topology.getDeviceByMac(deviceEvent.getMac());
