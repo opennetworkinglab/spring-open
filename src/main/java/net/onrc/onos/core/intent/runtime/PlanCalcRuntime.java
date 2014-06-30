@@ -119,7 +119,7 @@ public class PlanCalcRuntime {
             List<FlowEntry> entries = new ArrayList<>();
             for (LinkEvent linkEvent : intent.getPath()) {
                 long sw = linkEvent.getSrc().getDpid().value();
-                dstPort = linkEvent.getSrc().getNumber().value();
+                dstPort = linkEvent.getSrc().getPortNumber().value();
                 FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac,
                                              srcIP, dstIP, i.operator);
                 if (sw != firstSrcSw) {
@@ -134,7 +134,7 @@ public class PlanCalcRuntime {
                     fe.setFlowEntryId(cookieId);
                 }
                 entries.add(fe);
-                srcPort = linkEvent.getDst().getNumber().value();
+                srcPort = linkEvent.getDst().getPortNumber().value();
             }
             if (lastDstSw >= 0 && lastDstPort >= 0) {
                 long sw = lastDstSw;

@@ -35,7 +35,7 @@ public class PathIntentMap extends IntentMap {
      */
     private HashSet<PathIntent> get(SwitchPort swPort) {
         Dpid dpid = swPort.getDpid();
-        PortNumber port = swPort.getNumber();
+        PortNumber port = swPort.getPortNumber();
         HashMap<PortNumber, HashSet<PathIntent>> portToIntents = intents.get(dpid);
         if (portToIntents == null) {
             portToIntents = new HashMap<>();
@@ -103,7 +103,7 @@ public class PathIntentMap extends IntentMap {
     public Collection<PathIntent> getIntentsByLink(LinkEvent linkEvent) {
         return getIntentsByPort(
                 linkEvent.getSrc().getDpid(),
-                linkEvent.getSrc().getNumber());
+                linkEvent.getSrc().getPortNumber());
     }
 
     /**

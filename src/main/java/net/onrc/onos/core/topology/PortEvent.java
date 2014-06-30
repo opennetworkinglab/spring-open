@@ -43,8 +43,8 @@ public class PortEvent {
         return id.getDpid();
     }
 
-    public PortNumber getNumber() {
-        return id.getNumber();
+    public PortNumber getPortNumber() {
+        return id.getPortNumber();
     }
 
     @Override
@@ -68,7 +68,7 @@ public class PortEvent {
 
     @Override
     public String toString() {
-        return "[PortEvent 0x" + getDpid() + "@" + getNumber() + "]";
+        return "[PortEvent 0x" + getDpid() + "@" + getPortNumber() + "]";
     }
 
     public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
@@ -95,7 +95,7 @@ public class PortEvent {
     }
 
     public ByteBuffer getIDasByteBuffer() {
-        return getPortID(getDpid(), getNumber());
+        return getPortID(getDpid(), getPortNumber());
     }
 
 }

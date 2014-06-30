@@ -80,19 +80,19 @@ public class PathIntentTest {
         Path path2 = pathIntent2.getPath();
 
         assertEquals(DPID_1, path2.get(0).getSrc().getDpid());
-        assertEquals(PORT_NUMBER_1, path2.get(0).getSrc().getNumber());
+        assertEquals(PORT_NUMBER_1, path2.get(0).getSrc().getPortNumber());
         assertEquals(DPID_2, path2.get(0).getDst().getDpid());
-        assertEquals(PORT_NUMBER_2, path2.get(0).getDst().getNumber());
+        assertEquals(PORT_NUMBER_2, path2.get(0).getDst().getPortNumber());
 
         assertEquals(DPID_2, path2.get(1).getSrc().getDpid());
-        assertEquals(PORT_NUMBER_1, path2.get(1).getSrc().getNumber());
+        assertEquals(PORT_NUMBER_1, path2.get(1).getSrc().getPortNumber());
         assertEquals(DPID_3, path2.get(1).getDst().getDpid());
-        assertEquals(PORT_NUMBER_2, path2.get(1).getDst().getNumber());
+        assertEquals(PORT_NUMBER_2, path2.get(1).getDst().getPortNumber());
 
         assertEquals(DPID_3, path2.get(2).getSrc().getDpid());
-        assertEquals(PORT_NUMBER_1, path2.get(2).getSrc().getNumber());
+        assertEquals(PORT_NUMBER_1, path2.get(2).getSrc().getPortNumber());
         assertEquals(DPID_4, path2.get(2).getDst().getDpid());
-        assertEquals(PORT_NUMBER_2, path2.get(2).getDst().getNumber());
+        assertEquals(PORT_NUMBER_2, path2.get(2).getDst().getPortNumber());
 
         assertEquals(123.45, pathIntent2.getBandwidth(), 0.0);
 

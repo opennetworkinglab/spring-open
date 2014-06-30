@@ -422,7 +422,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                         if (le.getSrc().getDpid().equals(sw.getDpid())) {
                             log.trace("The packet-in sw dpid {} is on the path.", sw.getDpid());
                             isflowEntryForThisSwitch = true;
-                            outPort = le.getSrc().getNumber().value();
+                            outPort = le.getSrc().getPortNumber().value();
                             break;
                         }
                     }
@@ -527,7 +527,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             outPort = (short) spfIntent.getDstPortNumber();
             log.debug("Path is empty. Maybe devices on the same switch. outPort {}", outPort);
         } else {
-            outPort = graphPath.get(0).getSrc().getNumber().value();
+            outPort = graphPath.get(0).getSrc().getPortNumber().value();
             log.debug("path{}, outPort {}", graphPath, outPort);
         }
 

@@ -66,9 +66,9 @@ public class ShortestPathResource extends ServerResource {
             for (LinkEvent linkEvent : path) {
                 Link link = topology.getLink(
                         linkEvent.getSrc().getDpid(),
-                        linkEvent.getSrc().getNumber(),
+                        linkEvent.getSrc().getPortNumber(),
                         linkEvent.getDst().getDpid(),
-                        linkEvent.getDst().getNumber());
+                        linkEvent.getDst().getPortNumber());
                 if (link == null) {
                     return null;
                 }

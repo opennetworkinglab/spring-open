@@ -896,9 +896,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
         SwitchImpl switchImpl = getSwitchImpl(sw);
 
-        Port port = sw.getPort(portEvent.getNumber());
+        Port port = sw.getPort(portEvent.getPortNumber());
         if (port == null) {
-            port = new PortImpl(topology, sw, portEvent.getNumber());
+            port = new PortImpl(topology, sw, portEvent.getPortNumber());
             switchImpl.addPort(port);
         } else {
             // TODO: Update the port attributes
@@ -921,7 +921,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             return;
         }
 
-        Port port = sw.getPort(portEvent.getNumber());
+        Port port = sw.getPort(portEvent.getPortNumber());
         if (port == null) {
             log.warn("Port {} already removed, ignoring", portEvent);
             return;
@@ -980,9 +980,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @GuardedBy("topology.writeLock")
     private void addLink(LinkEvent linkEvent) {
         Port srcPort = topology.getPort(linkEvent.getSrc().getDpid(),
-                linkEvent.getSrc().getNumber());
+                linkEvent.getSrc().getPortNumber());
         Port dstPort = topology.getPort(linkEvent.getDst().getDpid(),
-                linkEvent.getDst().getNumber());
+                linkEvent.getDst().getPortNumber());
         if ((srcPort == null) || (dstPort == null)) {
             log.debug("{} reordered because {} port is null", linkEvent,
                     (srcPort == null) ? "src" : "dst");
@@ -1037,7 +1037,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @GuardedBy("topology.writeLock")
     private void removeLink(LinkEvent linkEvent) {
         Port srcPort = topology.getPort(linkEvent.getSrc().getDpid(),
-                linkEvent.getSrc().getNumber());
+                linkEvent.getSrc().getPortNumber());
         if (srcPort == null) {
             log.warn("Src Port for Link {} already removed, ignoring",
                     linkEvent);
@@ -1045,7 +1045,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         Port dstPort = topology.getPort(linkEvent.getDst().getDpid(),
-                linkEvent.getDst().getNumber());
+                linkEvent.getDst().getPortNumber());
         if (dstPort == null) {
             log.warn("Dst Port for Link {} already removed, ignoring",
                     linkEvent);
@@ -1098,7 +1098,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         boolean attachmentFound = false;
         for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
             // Attached Ports must exist
-            Port port = topology.getPort(swp.getDpid(), swp.getNumber());
+            Port port = topology.getPort(swp.getDpid(), swp.getPortNumber());
             if (port == null) {
                 // Reordered event: delay the event in local cache
                 ByteBuffer id = deviceEvent.getIDasByteBuffer();
@@ -1151,7 +1151,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         // Process each attachment point
         for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
             // Attached Ports must exist
-            Port port = topology.getPort(swp.getDpid(), swp.getNumber());
+            Port port = topology.getPort(swp.getDpid(), swp.getPortNumber());
             if (port == null) {
                 log.warn("Port for the attachment point {} did not exist. skipping attachment point mutation", swp);
                 continue;

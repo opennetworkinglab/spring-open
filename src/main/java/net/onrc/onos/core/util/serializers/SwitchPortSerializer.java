@@ -37,7 +37,7 @@ public class SwitchPortSerializer extends SerializerBase<SwitchPort> {
         jsonGenerator.writeStringField("dpid",
                                        switchPort.getDpid().toString());
         jsonGenerator.writeStringField("portNumber",
-                                       switchPort.getNumber().toString());
+                                       switchPort.getPortNumber().toString());
 
         jsonGenerator.writeEndObject();
     }

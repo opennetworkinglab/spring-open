@@ -82,11 +82,11 @@ public final class SwitchPort {
     }
 
     /**
-     * Get the port value of the Switch-Port.
+     * Get the port number of the Switch-Port.
      *
-     * @return the port value of the Switch-Port.
+     * @return the port number of the Switch-Port.
      */
-    public PortNumber getNumber() {
+    public PortNumber getPortNumber() {
         return port;
     }
 

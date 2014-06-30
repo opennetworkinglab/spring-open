@@ -81,8 +81,8 @@ public class LinkEvent {
     }
 
     public ByteBuffer getIDasByteBuffer() {
-        return getLinkID(src.getDpid(), src.getNumber(),
-                dst.getDpid(), dst.getNumber());
+        return getLinkID(src.getDpid(), src.getPortNumber(),
+                dst.getDpid(), dst.getPortNumber());
     }
 
     @Override

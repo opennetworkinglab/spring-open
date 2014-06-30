@@ -664,8 +664,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         boolean rerouteAll = false;
         for (LinkEvent le : addedLinkEvents) {
             LinkEvent rev = new LinkEvent(le.getDst().getDpid(),
-                    le.getDst().getNumber(), le.getSrc().getDpid(),
-                    le.getSrc().getNumber());
+                    le.getDst().getPortNumber(), le.getSrc().getDpid(),
+                    le.getSrc().getPortNumber());
             if (unmatchedLinkEvents.contains(rev)) {
                 rerouteAll = true;
                 unmatchedLinkEvents.remove(rev);
@@ -704,7 +704,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             for (PortEvent portEvent : removedPortEvents) {
                 affectedPaths.addAll(pathIntents.getIntentsByPort(
                         portEvent.getDpid(),
-                        portEvent.getNumber()));
+                        portEvent.getPortNumber()));
             }
             p.log("end_getIntentsByPort");
 

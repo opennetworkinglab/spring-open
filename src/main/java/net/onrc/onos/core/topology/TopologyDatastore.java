@@ -47,7 +47,7 @@ public class TopologyDatastore {
         groupOp.add(rcSwitch.forceCreateOp(client));
 
         for (PortEvent portEvent : portEvents) {
-            KVPort rcPort = new KVPort(sw.getDpid(), portEvent.getNumber());
+            KVPort rcPort = new KVPort(sw.getDpid(), portEvent.getPortNumber());
             rcPort.setStatus(KVPort.STATUS.ACTIVE);
 
             groupOp.add(rcPort.forceCreateOp(client));
@@ -87,7 +87,7 @@ public class TopologyDatastore {
         groupOp.add(rcSwitch.forceCreateOp(client));
 
         for (PortEvent portEvent : portEvents) {
-            KVPort rcPort = new KVPort(sw.getDpid(), portEvent.getNumber());
+            KVPort rcPort = new KVPort(sw.getDpid(), portEvent.getPortNumber());
             rcPort.setStatus(KVPort.STATUS.INACTIVE);
 
             groupOp.add(rcPort.forceCreateOp(client));
@@ -107,7 +107,7 @@ public class TopologyDatastore {
     public boolean addPort(PortEvent port) {
         log.debug("Adding port {}", port);
 
-        KVPort rcPort = new KVPort(port.getDpid(), port.getNumber());
+        KVPort rcPort = new KVPort(port.getDpid(), port.getPortNumber());
         rcPort.setStatus(KVPort.STATUS.ACTIVE);
         rcPort.forceCreate();
         // TODO add description into KVPort
@@ -125,7 +125,7 @@ public class TopologyDatastore {
     public boolean deactivatePort(PortEvent port) {
         log.debug("Deactivating port {}", port);
 
-        KVPort rcPort = new KVPort(port.getDpid(), port.getNumber());
+        KVPort rcPort = new KVPort(port.getDpid(), port.getPortNumber());
         rcPort.setStatus(STATUS.INACTIVE);
 
         rcPort.forceCreate();
@@ -143,9 +143,9 @@ public class TopologyDatastore {
         log.debug("Adding link {}", link);
 
         KVLink rcLink = new KVLink(link.getSrc().getDpid(),
-                link.getSrc().getNumber(),
+                link.getSrc().getPortNumber(),
                 link.getDst().getDpid(),
-                link.getDst().getNumber());
+                link.getDst().getPortNumber());
 
         // XXX This method is called only by discovery,
         // which means what we are trying to write currently is the truth
@@ -161,8 +161,8 @@ public class TopologyDatastore {
     public boolean removeLink(LinkEvent linkEvent) {
         log.debug("Removing link {}", linkEvent);
 
-        KVLink rcLink = new KVLink(linkEvent.getSrc().getDpid(), linkEvent.getSrc().getNumber(),
-                linkEvent.getDst().getDpid(), linkEvent.getDst().getNumber());
+        KVLink rcLink = new KVLink(linkEvent.getSrc().getDpid(), linkEvent.getSrc().getPortNumber(),
+                linkEvent.getDst().getDpid(), linkEvent.getDst().getPortNumber());
         rcLink.forceDelete();
 
         return true;
@@ -180,7 +180,7 @@ public class TopologyDatastore {
         KVDevice rcDevice = new KVDevice(device.getMac().toBytes());
 
         for (SwitchPort sp : device.getAttachmentPoints()) {
-            byte[] portId = KVPort.getPortID(sp.getDpid(), sp.getNumber());
+            byte[] portId = KVPort.getPortID(sp.getDpid(), sp.getPortNumber());
             rcDevice.addPortId(portId);
         }
 
