@@ -18,9 +18,6 @@
 package net.onrc.onos.core.linkdiscovery.internal;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -45,7 +41,6 @@ import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.annotations.LogMessageCategory;
 import net.floodlightcontroller.core.annotations.LogMessageDoc;
 import net.floodlightcontroller.core.annotations.LogMessageDocs;
-import net.floodlightcontroller.core.internal.OFSwitchImpl;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -62,12 +57,8 @@ import net.onrc.onos.core.linkdiscovery.Link;
 import net.onrc.onos.core.linkdiscovery.LinkInfo;
 import net.onrc.onos.core.linkdiscovery.NodePortTuple;
 import net.onrc.onos.core.linkdiscovery.web.LinkDiscoveryWebRoutable;
-import net.onrc.onos.core.main.IOnosRemoteSwitch;
-import net.onrc.onos.core.packet.BSN;
 import net.onrc.onos.core.packet.Ethernet;
-import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.packet.LLDP;
-import net.onrc.onos.core.packet.LLDPTLV;
 import net.onrc.onos.core.packet.OnosLldp;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.SwitchPort;
@@ -124,34 +115,11 @@ public class LinkDiscoveryManager
     protected IControllerRegistryService registryService;
 
 
-    // LLDP and BDDP fields
+    // LLDP fields
     private static final byte[] LLDP_STANDARD_DST_MAC_STRING =
             HexString.fromHexString("01:80:c2:00:00:0e");
     private static final long LINK_LOCAL_MASK = 0xfffffffffff0L;
     private static final long LINK_LOCAL_VALUE = 0x0180c2000000L;
-
-    // BigSwitch OUI is 5C:16:C7, so 5D:16:C7 is the multicast version
-    // private static final String LLDP_BSN_DST_MAC_STRING = "5d:16:c7:00:00:01";
-    private static final String LLDP_BSN_DST_MAC_STRING = "ff:ff:ff:ff:ff:ff";
-
-
-    // Direction TLVs are used to indicate if the LLDPs were sent
-    // periodically or in response to a recieved LLDP
-    private static final byte TLV_DIRECTION_TYPE = 0x73;
-    private static final short TLV_DIRECTION_LENGTH = 1;  // 1 byte
-    private static final byte[] TLV_DIRECTION_VALUE_FORWARD = {0x01};
-    private static final byte[] TLV_DIRECTION_VALUE_REVERSE = {0x02};
-    private static final LLDPTLV FORWARD_TLV
-            = new LLDPTLV().
-            setType(TLV_DIRECTION_TYPE).
-            setLength(TLV_DIRECTION_LENGTH).
-            setValue(TLV_DIRECTION_VALUE_FORWARD);
-
-    private static final LLDPTLV REVERSE_TLV
-            = new LLDPTLV().
-            setType(TLV_DIRECTION_TYPE).
-            setLength(TLV_DIRECTION_LENGTH).
-            setValue(TLV_DIRECTION_VALUE_REVERSE);
 
     // Link discovery task details.
     protected SingletonTask discoveryTask;
@@ -164,21 +132,8 @@ public class LinkDiscoveryManager
     // value to a small number, say 1 or 2 sec.
     protected static final int LLDP_TO_KNOWN_INTERVAL = 20; // LLDP frequency for known links
 
-    protected LLDPTLV controllerTLV;
     protected ReentrantReadWriteLock lock;
     int lldpTimeCount = 0;
-
-    /**
-     * Flag to indicate if automatic port fast is enabled or not.
-     * Default is set to false -- Initialized in the init method as well.
-     */
-    boolean autoPortFastFeature = false;
-
-    /**
-     * Map of remote switches that are not connected to this controller. This
-     * is used to learn remote switches in a distributed controller ONOS.
-     */
-    protected Map<Long, IOnosRemoteSwitch> remoteSwitches;
 
     /**
      * Map from link to the most recent time it was verified functioning.
@@ -194,14 +149,6 @@ public class LinkDiscoveryManager
      * Map from a id:port to the set of links containing it as an endpoint.
      */
     protected Map<NodePortTuple, Set<Link>> portLinks;
-
-    /**
-     * Set of link tuples over which multicast LLDPs are received
-     * and unicast LLDPs are not received.
-     */
-    protected Map<NodePortTuple, Set<Link>> portBroadcastDomainLinks;
-
-    protected volatile boolean shuttingDown = false;
 
     /**
      * Topology aware components are called in the order they were added to the
@@ -251,14 +198,8 @@ public class LinkDiscoveryManager
      * them.  Data traffic from these ports are not allowed until the ports
      * are released from quarantine.
      */
-    protected LinkedBlockingQueue<NodePortTuple> quarantineQueue;
-    protected LinkedBlockingQueue<NodePortTuple> maintenanceQueue;
-    /**
-     * Quarantine task.
-     */
-    //protected SingletonTask bddpTask;
-    protected static final int BDDP_TASK_INTERVAL = 100; // 100 ms.
-    protected static final int BDDP_TASK_SIZE = 5;       // # of ports per iteration
+    //protected LinkedBlockingQueue<NodePortTuple> quarantineQueue;
+    //protected LinkedBlockingQueue<NodePortTuple> maintenanceQueue;
 
     /**
      * Map of broadcast domain ports and the last time a BDDP was either
@@ -315,20 +256,10 @@ public class LinkDiscoveryManager
         discover(npt);
     }
 
-    public boolean isShuttingDown() {
-        return shuttingDown;
-    }
-
-    public boolean isFastPort(long sw, short port) {
-        return false;
-    }
-
     @Override
     public ILinkDiscovery.LinkType getLinkType(Link lt, LinkInfo info) {
         if (info.getUnicastValidTime() != null) {
             return ILinkDiscovery.LinkType.DIRECT_LINK;
-        } else if (info.getMulticastValidTime() != null) {
-            return ILinkDiscovery.LinkType.MULTIHOP_LINK;
         }
         return ILinkDiscovery.LinkType.INVALID_LINK;
     }
@@ -352,155 +283,6 @@ public class LinkDiscoveryManager
         }
     }
 
-
-    /**
-     * Quarantine Ports.
-     */
-    /*
-    protected class QuarantineWorker implements Runnable {
-        @Override
-        public void run() {
-            try {
-                processBDDPLists();
-            } catch (Exception e) {
-                log.error("Error in quarantine worker thread", e);
-            } finally {
-                bddpTask.reschedule(BDDP_TASK_INTERVAL,
-                        TimeUnit.MILLISECONDS);
-            }
-        }
-    }
-    */
-
-    /**
-     * Add a switch port to the quarantine queue. Schedule the
-     * quarantine task if the quarantine queue was empty before adding
-     * this switch port.
-     *
-     * @param npt
-     */
-    protected void addToQuarantineQueue(NodePortTuple npt) {
-        if (!quarantineQueue.contains(npt)) {
-            quarantineQueue.add(npt);
-        }
-    }
-
-    /**
-     * Remove a switch port from the quarantine queue.
-     */
-    protected void removeFromQuarantineQueue(NodePortTuple npt) {
-        // Remove all occurrences of the node port tuple from the list.
-        boolean removedSomething;
-
-        do {
-            removedSomething = quarantineQueue.remove(npt);
-        } while (removedSomething);
-    }
-
-    /**
-     * Add a switch port to maintenance queue.
-     *
-     * @param npt
-     */
-    protected void addToMaintenanceQueue(NodePortTuple npt) {
-        // TODO We are not checking if the switch port tuple is already
-        // in the maintenance list or not.  This will be an issue for
-        // really large number of switch ports in the network.
-        if (!maintenanceQueue.contains(npt)) {
-            maintenanceQueue.add(npt);
-        }
-    }
-
-    /**
-     * Remove a switch port from maintenance queue.
-     *
-     * @param npt
-     */
-    protected void removeFromMaintenanceQueue(NodePortTuple npt) {
-        // Remove all occurrences of the node port tuple from the queue.
-        boolean removedSomething;
-        do {
-            removedSomething = maintenanceQueue.remove(npt);
-        } while (removedSomething);
-    }
-
-    /**
-     * This method processes the quarantine list in bursts.  The task is
-     * at most once per BDDP_TASK_INTERVAL.
-     * One each call, BDDP_TASK_SIZE number of switch ports are processed.
-     * Once the BDDP packets are sent out through the switch ports, the ports
-     * are removed from the quarantine list.
-     */
-
-    protected void processBDDPLists() {
-        int count = 0;
-        Set<NodePortTuple> nptList = new HashSet<NodePortTuple>();
-
-        while (count < BDDP_TASK_SIZE && quarantineQueue.peek() != null) {
-            NodePortTuple npt;
-            npt = quarantineQueue.remove();
-            sendDiscoveryMessage(npt.getNodeId(), npt.getPortId(), false, false);
-            nptList.add(npt);
-            count++;
-        }
-
-        count = 0;
-        while (count < BDDP_TASK_SIZE && maintenanceQueue.peek() != null) {
-            NodePortTuple npt;
-            npt = maintenanceQueue.remove();
-            sendDiscoveryMessage(npt.getNodeId(), npt.getPortId(), false, false);
-            count++;
-        }
-
-        for (NodePortTuple npt : nptList) {
-            generateSwitchPortStatusUpdate(npt.getNodeId(), npt.getPortId());
-        }
-    }
-
-    @Override
-    public Set<Short> getQuarantinedPorts(long sw) {
-        Set<Short> qPorts = new HashSet<Short>();
-
-        Iterator<NodePortTuple> iter = quarantineQueue.iterator();
-        while (iter.hasNext()) {
-            NodePortTuple npt = iter.next();
-            if (npt.getNodeId() == sw) {
-                qPorts.add(npt.getPortId());
-            }
-        }
-        return qPorts;
-    }
-
-    private void generateSwitchPortStatusUpdate(long sw, short port) {
-        UpdateOperation operation;
-
-        IOFSwitch iofSwitch = floodlightProvider.getSwitches().get(sw);
-        if (iofSwitch == null) {
-            return;
-        }
-
-        OFPhysicalPort ofp = iofSwitch.getPort(port);
-        if (ofp == null) {
-            return;
-        }
-
-        int srcPortState = ofp.getState();
-        boolean portUp = ((srcPortState &
-                OFPortState.OFPPS_STP_MASK.getValue()) !=
-                OFPortState.OFPPS_STP_BLOCK.getValue());
-
-        if (portUp) {
-            operation = UpdateOperation.PORT_UP;
-        } else {
-            operation = UpdateOperation.PORT_DOWN;
-        }
-
-        LinkUpdate update = new LinkUpdate(new LDUpdate(sw, port, operation));
-
-
-        controller.publishUpdate(update);
-    }
-
     /**
      * Send LLDP on known ports.
      */
@@ -520,37 +302,7 @@ public class LinkDiscoveryManager
     }
 
     protected void discover(long sw, short port) {
-        sendDiscoveryMessage(sw, port, true, false);
-    }
-
-    /**
-     * Learn remote switches when running as a distributed controller ONOS.
-     */
-    protected IOFSwitch addRemoteSwitch(long sw, short port) {
-        IOnosRemoteSwitch remotesw = null;
-
-        // add a switch if we have not seen it before
-        remotesw = remoteSwitches.get(sw);
-
-        if (remotesw == null) {
-            remotesw = new OFSwitchImpl();
-            remotesw.setupRemoteSwitch(sw);
-            remoteSwitches.put(remotesw.getId(), remotesw);
-            log.debug("addRemoteSwitch(): added fake remote sw {}", remotesw);
-        }
-
-        // add the port if we have not seen it before
-        if (remotesw.getPort(port) == null) {
-            OFPhysicalPort remoteport = new OFPhysicalPort();
-            remoteport.setPortNumber(port);
-            remoteport.setName("fake_" + port);
-            remoteport.setConfig(0);
-            remoteport.setState(0);
-            remotesw.setPort(remoteport);
-            log.debug("addRemoteSwitch(): added fake remote port {} to sw {}", remoteport, remotesw.getId());
-        }
-
-        return remotesw;
+        sendDiscoveryMessage(sw, port, false);
     }
 
     /**
@@ -572,7 +324,6 @@ public class LinkDiscoveryManager
                     "to the switch.",
             recommendation = LogMessageDoc.CHECK_SWITCH)
     protected void sendDiscoveryMessage(long sw, short port,
-                                        boolean isStandard,
                                         boolean isReverse) {
 
         IOFSwitch iofSwitch = floodlightProvider.getSwitches().get(sw);
@@ -597,11 +348,6 @@ public class LinkDiscoveryManager
             /* Dont send LLDPs out of this port as suppressLLDPs set
              *
              */
-            return;
-        }
-
-        // For fast ports, do not send forward LLDPs or BDDPs.
-        if (!isReverse && autoPortFastFeature && isFastPort(sw, port)) {
             return;
         }
 
@@ -685,60 +431,12 @@ public class LinkDiscoveryManager
                     if (isLinkDiscoverySuppressed(sw, ofp.getPortNumber())) {
                         continue;
                     }
-                    if (autoPortFastFeature && isFastPort(sw, ofp.getPortNumber())) {
-                        continue;
-                    }
 
                     // sends forward LLDP only non-fastports.
-                    sendDiscoveryMessage(sw, ofp.getPortNumber(), true, false);
-
-                    // If the switch port is not alreayd in the maintenance
-                    // queue, add it.
-                    //NodePortTuple npt = new NodePortTuple(sw, ofp.getPortNumber());
-                    //addToMaintenanceQueue(npt);
+                    sendDiscoveryMessage(sw, ofp.getPortNumber(), false);
                 }
             }
         }
-    }
-
-    protected void setControllerTLV() {
-        //Setting the controllerTLVValue based on current nano time,
-        //controller's IP address, and the network interface object hash
-        //the corresponding IP address.
-
-        final int prime = 7867;
-        InetAddress localIPAddress = null;
-        NetworkInterface localInterface = null;
-
-        byte[] controllerTLVValue = new byte[]{0, 0, 0, 0, 0, 0, 0, 0};  // 8 byte value.
-        ByteBuffer bb = ByteBuffer.allocate(10);
-
-        try {
-            localIPAddress = java.net.InetAddress.getLocalHost();
-            localInterface = NetworkInterface.getByInetAddress(localIPAddress);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        long result = System.nanoTime();
-        if (localIPAddress != null) {
-            result = result * prime + IPv4.toIPv4Address(localIPAddress.getHostAddress());
-        }
-        if (localInterface != null) {
-            result = result * prime + localInterface.hashCode();
-        }
-        // set the first 4 bits to 0.
-        result = result & (0x0fffffffffffffffL);
-
-        bb.putLong(result);
-
-        bb.rewind();
-        bb.get(controllerTLVValue, 0, 8);
-
-        this.controllerTLV = new LLDPTLV()
-                                .setType((byte) 0x0c)
-                                .setLength((short) controllerTLVValue.length)
-                                .setValue(controllerTLVValue);
     }
 
     @Override
@@ -766,7 +464,7 @@ public class LinkDiscoveryManager
         return Command.CONTINUE;
     }
 
-    private Command handleLldp(LLDP lldp, long sw, OFPacketIn pi, boolean isStandard, FloodlightContext cntx) {
+    private Command handleLldp(LLDP lldp, long sw, OFPacketIn pi) {
         // If LLDP is suppressed on this port, ignore received packet as well
         IOFSwitch iofSwitch = floodlightProvider.getSwitches().get(sw);
         if (iofSwitch == null) {
@@ -783,35 +481,6 @@ public class LinkDiscoveryManager
         }
 
         // Verify this LLDP packet matches what we're looking for
-        /*
-        for (LLDPTLV lldptlv : lldp.getOptionalTLVList()) {
-            if (lldptlv.getType() == 127 && lldptlv.getLength() == 12 &&
-                    lldptlv.getValue()[0] == 0x0 && lldptlv.getValue()[1] == 0x26 &&
-                    lldptlv.getValue()[2] == (byte) 0xe1 && lldptlv.getValue()[3] == 0x0) {
-                ByteBuffer dpidBB = ByteBuffer.wrap(lldptlv.getValue());
-                remoteSwitch = floodlightProvider.getSwitches().get(dpidBB.getLong(4));
-                if (remoteSwitch == null) {
-                    // Added by ONOS
-                    // floodlight LLDP coming from a remote switch connected to a different controller
-                    // add it to our cache of unconnected remote switches
-                    remoteSwitch = addRemoteSwitch(dpidBB.getLong(4), remotePort);
-                }
-            } else if (lldptlv.getType() == 12 && lldptlv.getLength() == 8) {
-                otherId = ByteBuffer.wrap(lldptlv.getValue()).getLong();
-                if (myId == otherId) {
-                    myLLDP = true;
-                }
-            } else if (lldptlv.getType() == TLV_DIRECTION_TYPE &&
-                    lldptlv.getLength() == TLV_DIRECTION_LENGTH) {
-                if (lldptlv.getValue()[0] == TLV_DIRECTION_VALUE_FORWARD[0]) {
-                    isReverse = false;
-                } else if (lldptlv.getValue()[0] == TLV_DIRECTION_VALUE_REVERSE[0]) {
-                    isReverse = true;
-                }
-            }
-        }
-        */
-
         byte[] packetData = pi.getPacketData();
         if (!OnosLldp.isOnosLldp(packetData)) {
             log.trace("Dropping LLDP that wasn't sent by ONOS");
@@ -856,20 +525,12 @@ public class LinkDiscoveryManager
         // Store the time of update to this link, and push it out to routingEngine
         Link lt = new Link(remoteDpid, remotePort, iofSwitch.getId(), pi.getInPort());
 
-
-        Long lastLldpTime = null;
-        Long lastBddpTime = null;
-
         Long firstSeenTime = System.currentTimeMillis();
 
-        if (isStandard) {
-            lastLldpTime = System.currentTimeMillis();
-        } else {
-            lastBddpTime = System.currentTimeMillis();
-        }
+        Long lastLldpTime = System.currentTimeMillis();
 
         LinkInfo newLinkInfo =
-                new LinkInfo(firstSeenTime, lastLldpTime, lastBddpTime,
+                new LinkInfo(firstSeenTime, lastLldpTime,
                         srcPortState, dstPortState);
 
         addOrUpdateLink(lt, newLinkInfo);
@@ -882,14 +543,14 @@ public class LinkDiscoveryManager
         boolean isReverse = OnosLldp.isReverse(lldp);
 
         newLinkInfo = links.get(lt);
-        if (newLinkInfo != null && isStandard && !isReverse) {
+        if (newLinkInfo != null && !isReverse) {
             Link reverseLink = new Link(lt.getDst(), lt.getDstPort(),
                     lt.getSrc(), lt.getSrcPort());
             LinkInfo reverseInfo = links.get(reverseLink);
             if (reverseInfo == null) {
                 // the reverse link does not exist.
                 if (newLinkInfo.getFirstSeenTime() > System.currentTimeMillis() - LINK_TIMEOUT) {
-                    this.sendDiscoveryMessage(lt.getDst(), lt.getDstPort(), isStandard, true);
+                    this.sendDiscoveryMessage(lt.getDst(), lt.getDstPort(), true);
                 }
             }
         }
@@ -904,22 +565,8 @@ public class LinkDiscoveryManager
                 IFloodlightProviderService.bcStore.get(cntx,
                         IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 
-        if (eth.getEtherType() == Ethernet.TYPE_BSN) {
-            BSN bsn = (BSN) eth.getPayload();
-            if (bsn == null) {
-                return Command.STOP;
-            }
-            if (bsn.getPayload() == null) {
-                return Command.STOP;
-            }
-            // It could be a packet other than BSN LLDP, therefore
-            // continue with the regular processing.
-            if (!(bsn.getPayload() instanceof LLDP)) {
-                return Command.CONTINUE;
-            }
-            return handleLldp((LLDP) bsn.getPayload(), sw, pi, false, cntx);
-        } else if (eth.getEtherType() == Ethernet.TYPE_LLDP) {
-            return handleLldp((LLDP) eth.getPayload(), sw, pi, true, cntx);
+        if (eth.getEtherType() == Ethernet.TYPE_LLDP) {
+            return handleLldp((LLDP) eth.getPayload(), sw, pi);
         } else if (eth.getEtherType() < 1500) {
             long destMac = eth.getDestinationMAC().toLong();
             if ((destMac & LINK_LOCAL_MASK) == LINK_LOCAL_VALUE) {
@@ -929,12 +576,6 @@ public class LinkDiscoveryManager
                 }
                 return Command.STOP;
             }
-        }
-
-        // If packet-in is from a quarantine port, stop processing.
-        NodePortTuple npt = new NodePortTuple(sw, pi.getInPort());
-        if (quarantineQueue.contains(npt)) {
-            return Command.STOP;
         }
 
         return Command.CONTINUE;
@@ -984,9 +625,7 @@ public class LinkDiscoveryManager
             }
 
             if (log.isTraceEnabled()) {
-                log.trace("addOrUpdateLink: {} {}",
-                        lt,
-                        (newInfo.getMulticastValidTime() != null) ? "multicast" : "unicast");
+                log.trace("addOrUpdateLink: {}", lt);
             }
 
             UpdateOperation updateOperation = null;
@@ -1019,11 +658,6 @@ public class LinkDiscoveryManager
                 }
                 portLinks.get(dstNpt).add(lt);
 
-                // Add to portNOFLinks if the unicast valid time is null
-                if (newInfo.getUnicastValidTime() == null) {
-                    addLinkToBroadcastDomain(lt);
-                }
-
                 // ONOS: Distinguish added event separately from updated event
                 updateOperation = UpdateOperation.LINK_ADDED;
                 linkChanged = true;
@@ -1037,12 +671,6 @@ public class LinkDiscoveryManager
                     if (oldInfo.getUnicastValidTime() != null) {
                         newInfo.setUnicastValidTime(oldInfo.getUnicastValidTime());
                     }
-                } else if (newInfo.getMulticastValidTime() == null) {
-                    // This is due to a unicast LLDP, so copy the old multicast
-                    // value.
-                    if (oldInfo.getMulticastValidTime() != null) {
-                        newInfo.setMulticastValidTime(oldInfo.getMulticastValidTime());
-                    }
                 }
 
                 Long oldTime = oldInfo.getUnicastValidTime();
@@ -1052,12 +680,12 @@ public class LinkDiscoveryManager
                 if (oldTime != null & newTime == null) {
                     // openflow -> non-openflow transition
                     // we need to add the link tuple to the portNOFLinks
-                    addLinkToBroadcastDomain(lt);
+                    //addLinkToBroadcastDomain(lt);
                     linkChanged = true;
                 } else if (oldTime == null & newTime != null) {
                     // non-openflow -> openflow transition
                     // we need to remove the link from the portNOFLinks
-                    removeLinkFromBroadcastDomain(lt);
+                    //removeLinkFromBroadcastDomain(lt);
                     linkChanged = true;
                 }
 
@@ -1290,20 +918,8 @@ public class LinkDiscoveryManager
         if (isLinkDiscoverySuppressed(sw, p)) {
             // Do nothing as link discovery is suppressed.
             return;
-        } else if (autoPortFastFeature && isFastPort(sw, p)) {
-            // Do nothing as the port is a fast port.
-            return;
         } else {
-            NodePortTuple npt = new NodePortTuple(sw, p);
             discover(sw, p);
-            // if it is not a fast port, add it to quarantine.
-            if (!isFastPort(sw, p)) {
-                addToQuarantineQueue(npt);
-            } else {
-                // Add to maintenance queue to ensure that BDDP packets
-                // are sent out.
-                addToMaintenanceQueue(npt);
-            }
         }
     }
 
@@ -1410,14 +1026,14 @@ public class LinkDiscoveryManager
                         (info.getUnicastValidTime() + (1000L * LINK_TIMEOUT) < curTime)) {
                     info.setUnicastValidTime(null);
 
-                    if (info.getMulticastValidTime() != null) {
-                        addLinkToBroadcastDomain(lt);
-                    }
+                    //if (info.getMulticastValidTime() != null) {
+                        //addLinkToBroadcastDomain(lt);
+                    //}
                     // Note that even if mTime becomes null later on,
                     // the link would be deleted, which would trigger updateClusters().
                     linkChanged = true;
                 }
-                if ((info.getMulticastValidTime() != null) &&
+                /*if ((info.getMulticastValidTime() != null) &&
                         (info.getMulticastValidTime() + (1000L * LINK_TIMEOUT) < curTime)) {
                     info.setMulticastValidTime(null);
                     // if uTime is not null, then link will remain as openflow
@@ -1425,11 +1041,11 @@ public class LinkDiscoveryManager
                     // don't care about linkChanged flag here.
                     removeLinkFromBroadcastDomain(lt);
                     linkChanged = true;
-                }
+                }*/
                 // Add to the erase list only if the unicast
                 // time is null.
-                if (info.getUnicastValidTime() == null &&
-                        info.getMulticastValidTime() == null) {
+                if (info.getUnicastValidTime() == null) { //&&
+                        //info.getMulticastValidTime() == null) {
                     eraseList.add(entry.getKey());
                 } else if (linkChanged) {
                     UpdateOperation operation;
@@ -1468,10 +1084,6 @@ public class LinkDiscoveryManager
         return true;
     }
 
-    public Map<NodePortTuple, Set<Link>> getPortBroadcastDomainLinks() {
-        return portBroadcastDomainLinks;
-    }
-
     @Override
     public Map<Link, LinkInfo> getLinks() {
         lock.readLock().lock();
@@ -1482,44 +1094,6 @@ public class LinkDiscoveryManager
             lock.readLock().unlock();
         }
         return result;
-    }
-
-    protected void addLinkToBroadcastDomain(Link lt) {
-
-        NodePortTuple srcNpt, dstNpt;
-        srcNpt = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
-        dstNpt = new NodePortTuple(lt.getDst(), lt.getDstPort());
-
-        if (!portBroadcastDomainLinks.containsKey(srcNpt)) {
-            portBroadcastDomainLinks.put(srcNpt, new HashSet<Link>());
-        }
-        portBroadcastDomainLinks.get(srcNpt).add(lt);
-
-        if (!portBroadcastDomainLinks.containsKey(dstNpt)) {
-            portBroadcastDomainLinks.put(dstNpt, new HashSet<Link>());
-        }
-        portBroadcastDomainLinks.get(dstNpt).add(lt);
-    }
-
-    protected void removeLinkFromBroadcastDomain(Link lt) {
-
-        NodePortTuple srcNpt, dstNpt;
-        srcNpt = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
-        dstNpt = new NodePortTuple(lt.getDst(), lt.getDstPort());
-
-        if (portBroadcastDomainLinks.containsKey(srcNpt)) {
-            portBroadcastDomainLinks.get(srcNpt).remove(lt);
-            if (portBroadcastDomainLinks.get(srcNpt).isEmpty()) {
-                portBroadcastDomainLinks.remove(srcNpt);
-            }
-        }
-
-        if (portBroadcastDomainLinks.containsKey(dstNpt)) {
-            portBroadcastDomainLinks.get(dstNpt).remove(lt);
-            if (portBroadcastDomainLinks.get(dstNpt).isEmpty()) {
-                portBroadcastDomainLinks.remove(dstNpt);
-            }
-        }
     }
 
     @Override
@@ -1564,7 +1138,6 @@ public class LinkDiscoveryManager
         Collection<Class<? extends IFloodlightService>> l =
                 new ArrayList<Class<? extends IFloodlightService>>();
         l.add(ILinkDiscoveryService.class);
-        //l.add(ITopologyService.class);
         return l;
     }
 
@@ -1601,9 +1174,6 @@ public class LinkDiscoveryManager
         // Added by ONOS
         registryService = context.getServiceImpl(IControllerRegistryService.class);
 
-        // Set the autoportfast feature to false.
-        this.autoPortFastFeature = false;
-
         // We create this here because there is no ordering guarantee
         this.linkDiscoveryAware = new ArrayList<ILinkDiscoveryListener>();
         this.lock = new ReentrantReadWriteLock();
@@ -1611,12 +1181,7 @@ public class LinkDiscoveryManager
         this.portLinks = new HashMap<NodePortTuple, Set<Link>>();
         this.suppressLinkDiscovery =
                 Collections.synchronizedSet(new HashSet<NodePortTuple>());
-        this.portBroadcastDomainLinks = new HashMap<NodePortTuple, Set<Link>>();
         this.switchLinks = new HashMap<Long, Set<Link>>();
-        this.quarantineQueue = new LinkedBlockingQueue<NodePortTuple>();
-        this.maintenanceQueue = new LinkedBlockingQueue<NodePortTuple>();
-        // Added by ONOS
-        this.remoteSwitches = new HashMap<Long, IOnosRemoteSwitch>();
     }
 
     @Override
@@ -1657,13 +1222,9 @@ public class LinkDiscoveryManager
                 } catch (Exception e) {
                     log.error("Exception in LLDP send timer.", e);
                 } finally {
-                    if (!shuttingDown) {
-                        // Always reschedule link discovery if we're not
-                        // shutting down (no chance of SLAVE role now)
-                        log.trace("Rescheduling discovery task");
-                        discoveryTask.reschedule(DISCOVERY_TASK_INTERVAL,
-                                TimeUnit.SECONDS);
-                    }
+                    log.trace("Rescheduling discovery task");
+                    discoveryTask.reschedule(DISCOVERY_TASK_INTERVAL,
+                            TimeUnit.SECONDS);
                 }
             }
         });
@@ -1671,30 +1232,11 @@ public class LinkDiscoveryManager
         // Always reschedule link discovery as we are never in SLAVE role now
         discoveryTask.reschedule(DISCOVERY_TASK_INTERVAL, TimeUnit.SECONDS);
 
-        // Setup the BDDP task.  It is invoked whenever switch port tuples
-        // are added to the quarantine list.
-        //bddpTask = new SingletonTask(ses, new QuarantineWorker());
-        //bddpTask.reschedule(BDDP_TASK_INTERVAL, TimeUnit.MILLISECONDS);
-
-
         // Register for the OpenFlow messages we want to receive
         floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
         floodlightProvider.addOFMessageListener(OFType.PORT_STATUS, this);
         // Register for switch updates
         floodlightProvider.addOFSwitchListener(this);
-        if (restApi != null) {
-            restApi.addRestletRoutable(new LinkDiscoveryWebRoutable());
-        }
-        setControllerTLV();
-    }
-
-    @Override
-    public boolean isAutoPortFastFeature() {
-        return autoPortFastFeature;
-    }
-
-    @Override
-    public void setAutoPortFastFeature(boolean autoPortFastFeature) {
-        this.autoPortFastFeature = autoPortFastFeature;
+        restApi.addRestletRoutable(new LinkDiscoveryWebRoutable());
     }
 }

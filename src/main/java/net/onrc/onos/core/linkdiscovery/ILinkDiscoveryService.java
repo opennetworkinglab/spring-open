@@ -65,21 +65,4 @@ public interface ILinkDiscoveryService extends IFloodlightService {
      * Removes a switch port from suppress lldp set.
      */
     public void removeFromSuppressLLDPs(long sw, short port);
-
-    /**
-     * Get the set of quarantined ports on a switch.
-     */
-    public Set<Short> getQuarantinedPorts(long sw);
-
-    /**
-     * Get the status of auto port fast feature.
-     */
-    public boolean isAutoPortFastFeature();
-
-    /**
-     * Set the state for auto port fast feature.
-     *
-     * @param autoPortFastFeature
-     */
-    public void setAutoPortFastFeature(boolean autoPortFastFeature);
 }

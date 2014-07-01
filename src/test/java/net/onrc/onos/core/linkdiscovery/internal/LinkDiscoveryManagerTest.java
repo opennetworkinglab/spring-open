@@ -121,8 +121,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
 
         Link lt = new Link(1L, 2, 2L, 1);
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
-                System.currentTimeMillis(), null,
-                0, 0);
+                System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
 
 
@@ -145,8 +144,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
 
         Link lt = new Link(1L, 2, 2L, 1);
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
-                System.currentTimeMillis(), null,
-                0, 0);
+                System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
         topology.deleteLinks(Collections.singletonList(lt), "Test");
 
@@ -167,8 +165,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         NodePortTuple dstNpt = new NodePortTuple(2L, 3);
 
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
-                System.currentTimeMillis(), null,
-                0, 0);
+                System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
 
         // check invariants hold
@@ -190,8 +187,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         NodePortTuple dstNpt = new NodePortTuple(2L, 3);
 
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
-                System.currentTimeMillis(), null,
-                0, 0);
+                System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
         topology.deleteLinks(Collections.singletonList(lt), "Test to self");
 
@@ -211,8 +207,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         NodePortTuple srcNpt = new NodePortTuple(1L, 2);
         NodePortTuple dstNpt = new NodePortTuple(2L, 1);
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
-                System.currentTimeMillis(), null,
-                0, 0);
+                System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
 
         IOFSwitch sw1 = getMockFloodlightProvider().getSwitches().get(1L);
@@ -236,8 +231,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         replay(sw1);
         Link lt = new Link(1L, 2, 1L, 3);
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
-                System.currentTimeMillis(), null,
-                0, 0);
+                System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
 
         // Mock up our expected behavior
@@ -262,8 +256,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         LinkInfo info;
 
         info = new LinkInfo(System.currentTimeMillis() - 40000,
-                System.currentTimeMillis() - 40000, null,
-                0, 0);
+                System.currentTimeMillis() - 40000, 0, 0);
         topology.addOrUpdateLink(lt, info);
 
         // check invariants hold
@@ -274,116 +267,29 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         assertNotNull(topology.portLinks.get(dstNpt));
         assertTrue(topology.portLinks.get(dstNpt).contains(lt));
         assertTrue(topology.links.containsKey(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
 
         topology.timeoutLinks();
 
 
         info = new LinkInfo(System.currentTimeMillis(), /* firstseen */
-                null, /* unicast */
-                System.currentTimeMillis(), 0, 0);
+                null, /* unicast */0, 0);
         topology.addOrUpdateLink(lt, info);
         assertTrue(topology.links.get(lt).getUnicastValidTime() == null);
-        assertTrue(topology.links.get(lt).getMulticastValidTime() != null);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
 
 
-        // Add a link info based on info that woudld be obtained from unicast LLDP
+        // Add a link info based on info that would be obtained from unicast LLDP
         // Setting the unicast LLDP reception time to be 40 seconds old, so we can use
         // this to test timeout after this test.  Although the info is initialized
         // with LT_OPENFLOW_LINK, the link property should be changed to LT_NON_OPENFLOW
         // by the addOrUpdateLink method.
         info = new LinkInfo(System.currentTimeMillis() - 40000,
-                System.currentTimeMillis() - 40000, null, 0, 0);
+                System.currentTimeMillis() - 40000, 0, 0);
         topology.addOrUpdateLink(lt, info);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
 
         // Expect to timeout the unicast Valid Time, but not the multicast Valid time
         // So the link type should go back to non-openflow link.
         topology.timeoutLinks();
-        assertTrue(topology.links.get(lt).getUnicastValidTime() == null);
-        assertTrue(topology.links.get(lt).getMulticastValidTime() != null);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
-
-        // Set the multicastValidTime to be old and see if that also times out.
-        info = new LinkInfo(System.currentTimeMillis() - 40000,
-                null, System.currentTimeMillis() - 40000, 0, 0);
-        topology.addOrUpdateLink(lt, info);
-        topology.timeoutLinks();
         assertTrue(topology.links.get(lt) == null);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
-
-
-        // Test again only with multicast LLDP
-        info = new LinkInfo(System.currentTimeMillis() - 40000,
-                null, System.currentTimeMillis() - 40000, 0, 0);
-        topology.addOrUpdateLink(lt, info);
-        assertTrue(topology.links.get(lt).getUnicastValidTime() == null);
-        assertTrue(topology.links.get(lt).getMulticastValidTime() != null);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
-
-        // Call timeout and check if link is no longer present.
-        topology.timeoutLinks();
-        assertTrue(topology.links.get(lt) == null);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt) == null ||
-                !topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
-
-        // Start clean and see if loops are also added.
-        lt = new Link(1L, 1, 1L, 2);
-        srcNpt = new NodePortTuple(1L, 1);
-        dstNpt = new NodePortTuple(1L, 2);
-        info = new LinkInfo(System.currentTimeMillis() - 40000,
-                null, System.currentTimeMillis() - 40000, 0, 0);
-        topology.addOrUpdateLink(lt, info);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
-
-
-        // Start clean and see if loops are also added.
-        lt = new Link(1L, 1, 1L, 3);
-        srcNpt = new NodePortTuple(1L, 1);
-        dstNpt = new NodePortTuple(1L, 3);
-        info = new LinkInfo(System.currentTimeMillis() - 40000,
-                null, System.currentTimeMillis() - 40000, 0, 0);
-        topology.addOrUpdateLink(lt, info);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
-
-
-        // Start clean and see if loops are also added.
-        lt = new Link(1L, 4, 1L, 5);
-        srcNpt = new NodePortTuple(1L, 4);
-        dstNpt = new NodePortTuple(1L, 5);
-        info = new LinkInfo(System.currentTimeMillis() - 40000,
-                null, System.currentTimeMillis() - 40000, 0, 0);
-        topology.addOrUpdateLink(lt, info);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
-
-
-        // Start clean and see if loops are also added.
-        lt = new Link(1L, 3, 1L, 5);
-        srcNpt = new NodePortTuple(1L, 3);
-        dstNpt = new NodePortTuple(1L, 5);
-        info = new LinkInfo(System.currentTimeMillis() - 40000,
-                null, System.currentTimeMillis() - 40000, 0, 0);
-        topology.addOrUpdateLink(lt, info);
-        assertTrue(topology.portBroadcastDomainLinks.get(srcNpt).contains(lt));
-        assertTrue(topology.portBroadcastDomainLinks.get(dstNpt).contains(lt));
     }
 
     /**
@@ -421,7 +327,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         EasyMock.expectLastCall().once();
         replay(swTest);
 
-        topology.sendDiscoveryMessage(3L, portNum, true, false);
+        topology.sendDiscoveryMessage(3L, portNum, false);
 
         verify(swTest);
     }

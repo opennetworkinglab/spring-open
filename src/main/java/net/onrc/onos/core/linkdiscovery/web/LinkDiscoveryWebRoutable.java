@@ -13,7 +13,6 @@ public class LinkDiscoveryWebRoutable implements RestletRoutable {
     public Router getRestlet(Context context) {
         Router router = new Router(context);
         router.attach("/links/json", LinksResource.class);
-        router.attach("/autoportfast/{state}/json", AutoPortFast.class); // enable/true or disable/false
         return router;
     }
 

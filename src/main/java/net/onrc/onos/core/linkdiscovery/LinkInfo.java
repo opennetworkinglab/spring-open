@@ -23,7 +23,6 @@ public class LinkInfo {
 
     public LinkInfo(Long firstSeenTime,
                     Long lastLldpReceivedTime,
-                    Long lastBddpReceivedTime,
                     int srcPortState,
                     int dstPortState) {
         super();
@@ -31,14 +30,12 @@ public class LinkInfo {
         this.dstPortState = dstPortState;
         this.firstSeenTime = firstSeenTime;
         this.lastLldpReceivedTime = lastLldpReceivedTime;
-        this.lastBddpReceivedTime = lastBddpReceivedTime;
     }
 
     protected Integer srcPortState;
     protected Integer dstPortState;
     protected Long firstSeenTime;
     protected Long lastLldpReceivedTime; /* Standard LLLDP received time */
-    protected Long lastBddpReceivedTime; /* Modified LLDP received time  */
 
     /**
      * The port states stored here are topology's last knowledge of
@@ -73,14 +70,6 @@ public class LinkInfo {
         this.lastLldpReceivedTime = unicastValidTime;
     }
 
-    public Long getMulticastValidTime() {
-        return lastBddpReceivedTime;
-    }
-
-    public void setMulticastValidTime(Long multicastValidTime) {
-        this.lastBddpReceivedTime = multicastValidTime;
-    }
-
     public Integer getSrcPortState() {
         return srcPortState;
     }
@@ -100,8 +89,6 @@ public class LinkInfo {
     public LinkType getLinkType() {
         if (lastLldpReceivedTime != null) {
             return LinkType.DIRECT_LINK;
-        } else if (lastBddpReceivedTime != null) {
-            return LinkType.MULTIHOP_LINK;
         }
         return LinkType.INVALID_LINK;
     }
@@ -115,7 +102,6 @@ public class LinkInfo {
         int result = 1;
         result = prime * result + ((firstSeenTime == null) ? 0 : firstSeenTime.hashCode());
         result = prime * result + ((lastLldpReceivedTime == null) ? 0 : lastLldpReceivedTime.hashCode());
-        result = prime * result + ((lastBddpReceivedTime == null) ? 0 : lastBddpReceivedTime.hashCode());
         result = prime * result + ((srcPortState == null) ? 0 : srcPortState.hashCode());
         result = prime * result + ((dstPortState == null) ? 0 : dstPortState.hashCode());
         return result;
@@ -153,14 +139,6 @@ public class LinkInfo {
             return false;
         }
 
-        if (lastBddpReceivedTime == null) {
-            if (other.lastBddpReceivedTime != null) {
-                return false;
-            }
-        } else if (!lastBddpReceivedTime.equals(other.lastBddpReceivedTime)) {
-            return false;
-        }
-
         if (srcPortState == null) {
             if (other.srcPortState != null) {
                 return false;
@@ -187,7 +165,6 @@ public class LinkInfo {
     @Override
     public String toString() {
         return "LinkInfo [unicastValidTime=" + ((lastLldpReceivedTime == null) ? "null" : lastLldpReceivedTime)
-                + ", multicastValidTime=" + ((lastBddpReceivedTime == null) ? "null" : lastBddpReceivedTime)
                 + ", srcPortState=" + ((srcPortState == null) ? "null" : srcPortState)
                 + ", dstPortState=" + ((dstPortState == null) ? "null" : srcPortState)
                 + "]";
