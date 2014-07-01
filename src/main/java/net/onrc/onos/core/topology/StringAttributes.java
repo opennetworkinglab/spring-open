@@ -2,6 +2,8 @@ package net.onrc.onos.core.topology;
 
 import java.util.Map;
 
+// TODO We may want to separate configuration attributes and
+//      running state attributes.
 /**
  * Interface for Elements with StringAttributes.
  */

@@ -25,7 +25,8 @@ public interface Device {
     /**
      * Get the device attachment points.
      * <p/>
-     * Add requirement for Iteration order? Latest observed port first.
+     * TODO: There is only 1 attachment point right now.
+     * TODO: Add requirement for Iteration order? Latest observed port first.
      *
      * @return the device attachment points.
      */
@@ -34,9 +35,8 @@ public interface Device {
     /**
      * Get the device last seen time.
      * <p/>
-     * TODO: what is the time definition?
      *
-     * @return the device last seen time.
+     * @return the device last seen time. (UTC in ms)
      */
     public long getLastSeenTime();
 }

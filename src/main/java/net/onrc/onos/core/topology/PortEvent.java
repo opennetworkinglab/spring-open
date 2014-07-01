@@ -7,20 +7,29 @@ import net.onrc.onos.core.util.SwitchPort;
 
 import org.apache.commons.lang.Validate;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
  * Self-contained Port event Object.
  * <p/>
- * TODO: We probably want common base class/interface for Self-Contained Event Object.
+ * TODO: Rename to match what it is. (Switch/Port/Link/Device)Snapshot?
+ * FIXME: Current implementation directly use this object as
+ *        Replication message, but should be sending update operation info.
  */
 @JsonSerialize(using = PortEventSerializer.class)
-public class PortEvent {
+public class PortEvent extends TopologyElement<PortEvent> {
 
-    protected final SwitchPort id;
+    private final SwitchPort id;
     // TODO Add Hardware Address
-    // TODO Add Description
+
+    // TODO: Where should the attribute names be defined?
+    /**
+     * Attribute name for description.
+     */
+    public static final String DESCRIPTION = "description";
+
 
     /**
      * Default constructor for Serializer to use.
@@ -30,22 +39,64 @@ public class PortEvent {
         id = null;
     }
 
+    /**
+     * Creates the port object.
+     *
+     * @param switchPort SwitchPort to identify this port
+     */
     public PortEvent(SwitchPort switchPort) {
+        Validate.notNull(switchPort);
         this.id = switchPort;
     }
 
+    /**
+     * Creates the port object.
+     *
+     * @param dpid SwitchPort to identify this port
+     * @param number PortNumber to identify this port
+     */
     public PortEvent(Dpid dpid, PortNumber number) {
         this.id = new SwitchPort(dpid, number);
     }
 
+    /**
+     * Create an unfrozen copy of given Object.
+     *
+     * @param original to make copy of.
+     */
+    public PortEvent(PortEvent original) {
+        super(original);
+        this.id = original.id;
+    }
+
+    // TODO remove me when ready
     public PortEvent(Long dpid, Long number) {
         this.id = new SwitchPort(dpid, number);
     }
 
+    /**
+     * Gets the SwitchPort identifying this port.
+     *
+     * @return SwitchPort
+     */
+    public SwitchPort getSwitchPort() {
+        return id;
+    }
+
+    /**
+     * Gets the Dpid of the switch this port belongs to.
+     *
+     * @return DPID
+     */
     public Dpid getDpid() {
         return id.getDpid();
     }
 
+    /**
+     * Gets the port number.
+     *
+     * @return port number
+     */
     public PortNumber getPortNumber() {
         return id.getPortNumber();
     }
@@ -56,17 +107,26 @@ public class PortEvent {
             return true;
         }
 
-        if (!(o instanceof PortEvent)) {
+        if (o == null) {
             return false;
         }
 
-        PortEvent that = (PortEvent) o;
-        return Objects.equals(this.id, that.id);
+        if (getClass() != o.getClass()) {
+            return false;
+        }
+        PortEvent other = (PortEvent) o;
+
+        // compare attributes
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        return Objects.equals(this.id, other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return 31 * super.hashCode() + Objects.hashCode(id);
     }
 
     @Override
@@ -89,7 +149,8 @@ public class PortEvent {
         if (number == null) {
             throw new IllegalArgumentException("number cannot be null");
         }
-        return (ByteBuffer) ByteBuffer.allocate(PortEvent.PORTID_BYTES).putChar('S').putLong(dpid)
+        return (ByteBuffer) ByteBuffer.allocate(PortEvent.PORTID_BYTES)
+                .putChar('S').putLong(dpid)
                 .putChar('P').putLong(number).flip();
     }
 

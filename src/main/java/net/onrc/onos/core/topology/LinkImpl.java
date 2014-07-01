@@ -2,8 +2,7 @@ package net.onrc.onos.core.topology;
 
 import java.util.Map;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import net.onrc.onos.core.util.SwitchPort;
+import org.apache.commons.lang.Validate;
 
 /**
  * Link Object stored in In-memory Topology.
@@ -12,50 +11,100 @@ import net.onrc.onos.core.util.SwitchPort;
  * but this Object itself will not issue any read/write to the DataStore.
  */
 public class LinkImpl extends TopologyObject implements Link {
-    private SwitchPort srcPort;
-    private SwitchPort dstPort;
 
+    //////////////////////////////////////////////////////
+    /// Topology element attributes
+    ///  - any changes made here needs to be replicated.
+    //////////////////////////////////////////////////////
+    private LinkEvent linkObj;
+
+    // TODO remove?
     protected static final Double DEFAULT_CAPACITY = Double.POSITIVE_INFINITY;
     protected Double capacity = DEFAULT_CAPACITY;
 
+    ///////////////////
+    /// In-memory index
+    ///////////////////
+
+    // none
+
     /**
-     * Constructor for when a link is read from the database and the Ports
-     * already exist in the in-memory topology.
+     * Creates a Link object based on {@link LinkEvent}.
      *
-     * @param topology
-     * @param srcPort
-     * @param dstPort
+     * @param topology Topology instance this object belongs to
+     * @param scPort self contained {@link LinkEvent}
+     */
+    public LinkImpl(Topology topology, LinkEvent scPort) {
+        super(topology);
+        Validate.notNull(scPort);
+
+        // TODO should we assume linkObj is already frozen before this call
+        //      or expect attribute update will happen after .
+        if (scPort.isFrozen()) {
+            this.linkObj = scPort;
+        } else {
+            this.linkObj = new LinkEvent(scPort);
+            this.linkObj.freeze();
+        }
+    }
+
+    /**
+     * Creates a Link object with empty attributes.
+     *
+     * @param topology Topology instance this object belongs to
+     * @param srcPort source port
+     * @param dstPort destination port
      */
     public LinkImpl(Topology topology, Port srcPort, Port dstPort) {
-        super(topology);
-        this.srcPort = srcPort.asSwitchPort();
-        this.dstPort = dstPort.asSwitchPort();
+        this(topology,
+             new LinkEvent(srcPort.asSwitchPort(),
+                           dstPort.asSwitchPort()).freeze());
     }
 
     @Override
     public Switch getSrcSwitch() {
-        return topology.getSwitch(srcPort.dpid());
+        topology.acquireReadLock();
+        try {
+            return topology.getSwitch(linkObj.getSrc().getDpid());
+        } finally {
+            topology.releaseReadLock();
+        }
     }
 
     @Override
     public Port getSrcPort() {
-        return topology.getPort(srcPort.dpid(), srcPort.port());
+        topology.acquireReadLock();
+        try {
+            return topology.getPort(linkObj.getSrc());
+        } finally {
+            topology.releaseReadLock();
+        }
     }
 
     @Override
     public Switch getDstSwitch() {
-        return topology.getSwitch(dstPort.dpid());
+        topology.acquireReadLock();
+        try {
+            return topology.getSwitch(linkObj.getDst().getDpid());
+        } finally {
+            topology.releaseReadLock();
+        }
     }
 
     @Override
     public Port getDstPort() {
-        return topology.getPort(dstPort.dpid(), dstPort.port());
+        topology.acquireReadLock();
+        try {
+            return topology.getPort(linkObj.getDst());
+        } finally {
+            topology.releaseReadLock();
+        }
     }
 
     @Override
     public long getLastSeenTime() {
         // TODO Auto-generated method stub
-        return 0;
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
@@ -63,18 +112,31 @@ public class LinkImpl extends TopologyObject implements Link {
         return capacity;
     }
 
-    public void setCapacity(Double capacity) {
+    void setCapacity(Double capacity) {
         this.capacity = capacity;
     }
 
+    void replaceStringAttributes(LinkEvent updated) {
+        Validate.isTrue(this.linkObj.getSrc().equals(updated.getSrc()),
+                "Wrong LinkEvent given.");
+        Validate.isTrue(this.linkObj.getDst().equals(updated.getDst()),
+                "Wrong LinkEvent given.");
+
+        // XXX simply replacing whole self-contained object for now
+        if (updated.isFrozen()) {
+            this.linkObj = updated;
+        } else {
+            this.linkObj = new LinkEvent(updated).freeze();
+        }
+    }
+
+
     @Override
     public String getStringAttribute(String attr) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return linkObj.getStringAttribute(attr);
     }
 
     @Override
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-       justification = "getStringAttribute might return null once implemented")
     public String getStringAttribute(String attr, String def) {
         final String v = getStringAttribute(attr);
         if (v == null) {
@@ -86,7 +148,7 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Map<String, String> getAllStringAttributes() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return linkObj.getAllStringAttributes();
     }
 
     @Override

@@ -10,7 +10,8 @@ import java.util.Set;
 
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import org.apache.commons.lang.Validate;
 
 /**
  * Switch Object stored in In-memory Topology.
@@ -20,30 +21,76 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  */
 public class SwitchImpl extends TopologyObject implements Switch {
 
-    private Dpid dpid;
+    //////////////////////////////////////////////////////
+    /// Topology element attributes
+    ///  - any changes made here needs to be replicated.
+    //////////////////////////////////////////////////////
+    private SwitchEvent switchObj;
 
+    ///////////////////
+    /// In-memory index
+    ///////////////////
+
+    // none
+
+    // TODO remove when test codes are cleaned up.
     public SwitchImpl(Topology topology, Long dpid) {
         this(topology, new Dpid(dpid));
     }
 
+    /**
+     * Creates a Switch object with empty attributes.
+     *
+     * @param topology Topology instance this object belongs to
+     * @param dpid DPID
+     */
     public SwitchImpl(Topology topology, Dpid dpid) {
+        this(topology, new SwitchEvent(dpid).freeze());
+    }
+
+    /**
+     * Creates a Switch object based on {@link SwitchEvent}.
+     *
+     * @param topology Topology instance this object belongs to
+     * @param scSw self contained {@link SwitchEvent}
+     */
+    public SwitchImpl(Topology topology, SwitchEvent scSw) {
         super(topology);
-        this.dpid = dpid;
+        Validate.notNull(scSw);
+
+        // TODO should we assume switchObj is already frozen before this call
+        //      or expect attribute update will happen after .
+        if (scSw.isFrozen()) {
+            this.switchObj = scSw;
+        } else {
+            this.switchObj = new SwitchEvent(scSw);
+            this.switchObj.freeze();
+        }
     }
 
     @Override
     public Dpid getDpid() {
-        return dpid;
+        return switchObj.getDpid();
     }
 
     @Override
     public Collection<Port> getPorts() {
-        return topology.getPorts(getDpid());
+        topology.acquireReadLock();
+        try {
+            return topology.getPorts(getDpid());
+        } finally {
+            topology.releaseReadLock();
+        }
     }
 
     @Override
     public Port getPort(PortNumber number) {
-        return topology.getPort(getDpid(), number);
+        topology.acquireReadLock();
+        try {
+            return topology.getPort(getDpid(), number);
+        } finally {
+            topology.releaseReadLock();
+        }
     }
 
     @Override
@@ -84,10 +131,24 @@ public class SwitchImpl extends TopologyObject implements Switch {
         return devices;
     }
 
-    public Port addPort(Long portNumber) {
-        PortImpl port = new PortImpl(topology, this, portNumber);
+    // FIXME this should be removed from here and moved to MockTopology
+    Port addPort(Long portNumber) {
+        PortImpl port = new PortImpl(topology, getDpid(),
+                                new PortNumber(portNumber.shortValue()));
         ((TopologyImpl) topology).putPort(port);
         return port;
+    }
+
+    void replaceStringAttributes(SwitchEvent updated) {
+        Validate.isTrue(this.getDpid().equals(updated.getDpid()),
+                "Wrong SwitchEvent given.");
+
+        // XXX simply replacing whole self-contained object for now
+        if (updated.isFrozen()) {
+            this.switchObj = updated;
+        } else {
+            this.switchObj = new SwitchEvent(updated).freeze();
+        }
     }
 
     @Override
@@ -116,12 +177,10 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public String getStringAttribute(String attr) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return this.switchObj.getStringAttribute(attr);
     }
 
     @Override
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-       justification = "getStringAttribute might return null once implemented")
     public String getStringAttribute(String attr, String def) {
         final String v = getStringAttribute(attr);
         if (v == null) {
@@ -133,12 +192,12 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public Map<String, String> getAllStringAttributes() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return this.switchObj.getAllStringAttributes();
     }
 
     @Override
     public String toString() {
-        return dpid.toString();
+        return getDpid().toString();
     }
 
     /**

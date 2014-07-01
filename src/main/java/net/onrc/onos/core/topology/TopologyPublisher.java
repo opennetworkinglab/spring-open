@@ -24,6 +24,7 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
 import net.onrc.onos.core.registry.RegistryException;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.openflow.protocol.OFPhysicalPort;
@@ -133,9 +134,13 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     @Override
     public void linkDiscoveryUpdate(LDUpdate update) {
 
-        LinkEvent linkEvent = new LinkEvent(update.getSrc(),
-                (long) update.getSrcPort(), update.getDst(),
-                (long) update.getDstPort());
+        LinkEvent linkEvent = new LinkEvent(
+                        new SwitchPort(update.getSrc(), update.getSrcPort()),
+                        new SwitchPort(update.getDst(), update.getDstPort()));
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        linkEvent.freeze();
 
         switch (update.getOperation()) {
             case LINK_ADDED:
@@ -168,8 +173,15 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public void switchPortAdded(Long switchId, OFPhysicalPort port) {
+        final Dpid dpid = new Dpid(switchId);
+        PortEvent portEvent = new PortEvent(dpid, new PortNumber(port.getPortNumber()));
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        portEvent.createStringAttribute("name", port.getName());
 
-        PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
+        portEvent.freeze();
+
         if (registryService.hasControl(switchId)) {
             topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
             linkDiscovery.removeFromSuppressLLDPs(switchId, port.getPortNumber());
@@ -193,8 +205,15 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public void addedSwitch(IOFSwitch sw) {
+        final Dpid dpid = new Dpid(sw.getId());
+        SwitchEvent switchEvent = new SwitchEvent(dpid);
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        switchEvent.createStringAttribute("ConnectedSince",
+                sw.getConnectedSince().toString());
 
-        SwitchEvent switchEvent = new SwitchEvent(sw.getId());
+        switchEvent.freeze();
 
         // TODO Not very robust
         if (!registryService.hasControl(sw.getId())) {
@@ -205,7 +224,14 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
         List<PortEvent> portEvents = new ArrayList<PortEvent>();
         for (OFPhysicalPort port : sw.getPorts()) {
-            portEvents.add(new PortEvent(sw.getId(), (long) port.getPortNumber()));
+            PortEvent portEvent = new PortEvent(dpid, new PortNumber(port.getPortNumber()));
+            // FIXME should be merging, with existing attrs, etc..
+            // TODO define attr name as constant somewhere.
+            // TODO populate appropriate attributes.
+            portEvent.createStringAttribute("name", port.getName());
+
+            portEvent.freeze();
+            portEvents.add(portEvent);
         }
         topologyDiscoveryInterface
                 .putSwitchDiscoveryEvent(switchEvent, portEvents);
@@ -314,6 +340,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         event.setAttachmentPoints(spLists);
         event.setLastSeenTime(device.getLastSeenTimestamp().getTime());
         // Does not use vlan info now.
+        event.freeze();
 
         topologyDiscoveryInterface.putDeviceDiscoveryEvent(event);
     }
@@ -322,6 +349,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     public void onosDeviceRemoved(OnosDevice device) {
         log.debug("Called onosDeviceRemoved");
         DeviceEvent event = new DeviceEvent(device.getMacAddress());
+        // XXX shouldn't we be setting attachment points?
+        event.freeze();
         topologyDiscoveryInterface.removeDeviceDiscoveryEvent(event);
     }
 }

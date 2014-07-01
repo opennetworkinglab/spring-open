@@ -1,5 +1,7 @@
 package net.onrc.onos.core.topology;
 
+import org.apache.commons.lang.Validate;
+
 
 
 /**
@@ -18,6 +20,7 @@ public abstract class TopologyObject {
      * @param topology Topology instance this object belongs to
      */
     protected TopologyObject(Topology topology) {
+        Validate.notNull(topology);
         this.topology = topology;
     }
 

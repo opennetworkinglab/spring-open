@@ -704,7 +704,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                     discoveredAddedLinkEvents.get(portEvent.getDpid());
             if (oldLinkEvents != null) {
                 for (LinkEvent linkEvent : new ArrayList<>(oldLinkEvents.values())) {
-                    if (linkEvent.getDst().equals(portEvent.id)) {
+                    if (linkEvent.getDst().equals(portEvent.getSwitchPort())) {
                         removeLinkDiscoveryEvent(linkEvent);
                         // XXX If we change our model to allow multiple Link on
                         // a Port, this loop must be fixed to allow continuing.
@@ -721,7 +721,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             if (oldDeviceEvents != null) {
                 for (DeviceEvent deviceEvent : new ArrayList<>(oldDeviceEvents.values())) {
                     for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
-                        if (swp.equals(portEvent.id)) {
+                        if (swp.equals(portEvent.getSwitchPort())) {
                             removedDeviceEvents.add(deviceEvent);
                         }
                     }
@@ -836,28 +836,31 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Add a switch to the topology.
+     * Add a switch to the topology replica.
      *
-     * @param switchEvent the Switch Event with the switch to add.
+     * @param switchEvent the SwitchEvent with the switch to add.
      */
     @GuardedBy("topology.writeLock")
     private void addSwitch(SwitchEvent switchEvent) {
         Switch sw = topology.getSwitch(switchEvent.getDpid());
         if (sw == null) {
-            sw = new SwitchImpl(topology, switchEvent.getDpid());
+            sw = new SwitchImpl(topology, switchEvent);
             topology.putSwitch(sw);
         } else {
             // TODO: Update the switch attributes
-            // TODO: Nothing to do for now
             log.debug("Update switch attributes");
+            SwitchImpl impl = (SwitchImpl) sw;
+            impl.replaceStringAttributes(switchEvent);
         }
         apiAddedSwitchEvents.add(switchEvent);
     }
 
     /**
-     * Remove a switch from the topology.
+     * Remove a switch from the topology replica.
+     * <p/>
+     * It will call {@link #removePort(PortEvent)} for each ports on this switch.
      *
-     * @param switchEvent the Switch Event with the switch to remove.
+     * @param switchEvent the SwitchEvent with the switch to remove.
      */
     @GuardedBy("topology.writeLock")
     private void removeSwitch(SwitchEvent switchEvent) {
@@ -887,9 +890,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Add a port to the topology.
+     * Add a port to the topology replica.
      *
-     * @param portEvent the Port Event with the port to add.
+     * @param portEvent the PortEvent with the port to add.
      */
     @GuardedBy("topology.writeLock")
     private void addPort(PortEvent portEvent) {
@@ -902,21 +905,27 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             return;
         }
 
+
         Port port = sw.getPort(portEvent.getPortNumber());
         if (port == null) {
-            port = new PortImpl(topology, sw, portEvent.getPortNumber());
+            port = new PortImpl(topology, portEvent);
             topology.putPort(port);
         } else {
             // TODO: Update the port attributes
             log.debug("Update port attributes");
+            PortImpl impl = (PortImpl) port;
+            impl.replaceStringAttributes(portEvent);
         }
         apiAddedPortEvents.add(portEvent);
     }
 
     /**
-     * Remove a port from the topology.
+     * Remove a port from the topology replica.
+     * <p/>
+     * It will call {@link #removeDevice(DeviceEvent)} for each hosts on this port
+     * and call {@link #removeLink(LinkEvent)} for each links on this port.
      *
-     * @param portEvent the Port Event with the port to remove.
+     * @param portEvent the PortEvent with the port to remove.
      */
     @GuardedBy("topology.writeLock")
     private void removePort(PortEvent portEvent) {
@@ -972,16 +981,17 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         // Remove the Port from the Switch
-        SwitchImpl switchImpl = getSwitchImpl(sw);
         topology.removePort(port);
 
         apiRemovedPortEvents.add(portEvent);
     }
 
     /**
-     * Add a link to the topology.
+     * Add a link to the topology replica.
+     * <p/>
+     * It will call {@link #removeDevice(DeviceEvent)} for each hosts on both ports.
      *
-     * @param linkEvent the Link Event with the link to add.
+     * @param linkEvent the LinkEvent with the link to add.
      */
     @GuardedBy("topology.writeLock")
     private void addLink(LinkEvent linkEvent) {
@@ -993,6 +1003,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             log.debug("{} reordered because {} port is null", linkEvent,
                     (srcPort == null) ? "src" : "dst");
 
+            // XXX domain knowledge: port must be present before link.
             // Reordered event: delay the event in local cache
             ByteBuffer id = linkEvent.getIDasByteBuffer();
             reorderedAddedLinkEvents.put(id, linkEvent);
@@ -1000,10 +1011,14 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         // Get the Link instance from the Destination Port Incoming Link
+        // XXX domain knowledge: Link is discovered by LLDP,
+        //      thus incoming link is likely to be more up-to-date
+        // FIXME potentially local replica may not be up-to-date yet due to HZ delay.
+        //        may need to manage local truth and use them instead.
         Link link = dstPort.getIncomingLink();
         assert (link == srcPort.getOutgoingLink());
         if (link == null) {
-            link = new LinkImpl(topology, srcPort, dstPort);
+            link = new LinkImpl(topology, linkEvent);
             topology.putLink(link);
 
             // Remove all Devices attached to the Ports
@@ -1015,11 +1030,13 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 for (Device device : port.getDevices()) {
                     log.error("Device {} on Port {} should have been removed prior to adding Link {}",
                             device, port, linkEvent);
+                    // FIXME must get Device info from topology, when we add attrs.
                     DeviceEvent deviceEvent =
                             new DeviceEvent(device.getMacAddress());
                     SwitchPort switchPort =
                             new SwitchPort(port.getSwitch().getDpid(),
                                     port.getNumber());
+                    // adding attachment port which needs to be removed
                     deviceEvent.addAttachmentPoint(switchPort);
                     devicesToRemove.add(deviceEvent);
                 }
@@ -1030,15 +1047,17 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         } else {
             // TODO: Update the link attributes
             log.debug("Update link attributes");
+            LinkImpl impl = (LinkImpl) link;
+            impl.replaceStringAttributes(linkEvent);
         }
 
         apiAddedLinkEvents.add(linkEvent);
     }
 
     /**
-     * Remove a link from the topology.
+     * Remove a link from the topology replica.
      *
-     * @param linkEvent the Link Event with the link to remove.
+     * @param linkEvent the LinkEvent with the link to remove.
      */
     @GuardedBy("topology.writeLock")
     private void removeLink(LinkEvent linkEvent) {
@@ -1080,13 +1099,13 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Add a device to the topology.
+     * Add a device to the topology replica.
      * <p/>
      * TODO: Device-related work is incomplete.
      * TODO: Eventually, we might need to consider reordering
      * or addLink() and addDevice() events on the same port.
      *
-     * @param deviceEvent the Device Event with the device to add.
+     * @param deviceEvent the DeviceEvent with the device to add.
      */
     @GuardedBy("topology.writeLock")
     private void addDevice(DeviceEvent deviceEvent) {
@@ -1098,11 +1117,14 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             device = new DeviceImpl(topology, deviceEvent.getMac());
         }
 
-        DeviceImpl deviceImpl = getDeviceImpl(device);
+        DeviceImpl deviceImpl = (DeviceImpl) device;
 
         // Process each attachment point
         boolean attachmentFound = false;
         for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
+            // XXX domain knowledge: Port must exist before Device
+            //      but this knowledge cannot be pushed down to driver.
+
             // Attached Ports must exist
             Port port = topology.getPort(swp.getDpid(), swp.getPortNumber());
             if (port == null) {
@@ -1121,12 +1143,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             }
 
             // Add Device <-> Port attachment
-            PortImpl portImpl = getPortImpl(port);
             deviceImpl.addAttachmentPoint(port);
             attachmentFound = true;
         }
-
-        deviceImpl.setLastSeenTime(deviceEvent.getLastSeenTime());
 
         // Update the device in the topology
         if (attachmentFound) {
@@ -1137,7 +1156,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Remove a device from the topology.
+     * Remove a device from the topology replica.
      * <p/>
      * TODO: Device-related work is incomplete.
      *
@@ -1154,58 +1173,6 @@ public class TopologyManager implements TopologyDiscoveryInterface {
 
         topology.removeDevice(device);
         apiRemovedDeviceEvents.add(deviceEvent);
-    }
-
-    /**
-     * Get the SwitchImpl-casted switch implementation.
-     *
-     * @param sw the Switch to cast.
-     * @return the SwitchImpl-casted switch implementation.
-     */
-    private SwitchImpl getSwitchImpl(Switch sw) {
-        if (sw instanceof SwitchImpl) {
-            return (SwitchImpl) sw;
-        }
-        throw new ClassCastException("SwitchImpl expected, but found: " + sw);
-    }
-
-    /**
-     * Get the PortImpl-casted port implementation.
-     *
-     * @param port the Port to cast.
-     * @return the PortImpl-casted port implementation.
-     */
-    private PortImpl getPortImpl(Port port) {
-        if (port instanceof PortImpl) {
-            return (PortImpl) port;
-        }
-        throw new ClassCastException("PortImpl expected, but found: " + port);
-    }
-
-    /**
-     * Get the LinkImpl-casted link implementation.
-     *
-     * @param link the Link to cast.
-     * @return the LinkImpl-casted link implementation.
-     */
-    private LinkImpl getLinkImpl(Link link) {
-        if (link instanceof LinkImpl) {
-            return (LinkImpl) link;
-        }
-        throw new ClassCastException("LinkImpl expected, but found: " + link);
-    }
-
-    /**
-     * Get the DeviceImpl-casted device implementation.
-     *
-     * @param device the Device to cast.
-     * @return the DeviceImpl-casted device implementation.
-     */
-    private DeviceImpl getDeviceImpl(Device device) {
-        if (device instanceof DeviceImpl) {
-            return (DeviceImpl) device;
-        }
-        throw new ClassCastException("DeviceImpl expected, but found: " + device);
     }
 
     /**

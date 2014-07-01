@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.proxyarp.ArpCacheNotification;
@@ -29,6 +30,7 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.TopologyEvent;
+import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.util.CallerId;
 import net.onrc.onos.core.util.DataPath;
 import net.onrc.onos.core.util.Dpid;
@@ -199,6 +201,8 @@ public class KryoFactory {
         kryo.register(PortEvent.class);
         kryo.register(SwitchEvent.class);
         kryo.register(TopologyEvent.class);
+        kryo.register(TopologyElement.class);
+        kryo.register(ConcurrentHashMap.class);
 
         // Intent-related classes
         kryo.register(Path.class);
