@@ -18,7 +18,6 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.apps.proxyarp.IProxyArpService;
-import net.onrc.onos.core.devicemanager.IOnosDeviceService;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.Intent.IntentState;
 import net.onrc.onos.core.intent.IntentMap;
@@ -191,7 +190,6 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         List<Class<? extends IFloodlightService>> dependencies =
                 new ArrayList<Class<? extends IFloodlightService>>();
         dependencies.add(IControllerRegistryService.class);
-        dependencies.add(IOnosDeviceService.class);
         dependencies.add(ITopologyService.class);
         dependencies.add(IPathCalcRuntimeService.class);
         // We don't use the IProxyArpService directly, but reactive forwarding

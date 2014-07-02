@@ -20,8 +20,8 @@ import net.onrc.onos.apps.proxyarp.web.ArpWebRoutable;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
-import net.onrc.onos.core.devicemanager.IOnosDeviceService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
+import net.onrc.onos.core.hostmanager.IHostService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
@@ -62,7 +62,7 @@ public class ProxyArpManagerTest {
     IDatagridService datagridService;
     IFlowPusherService flowPusherService;
     ITopologyService topologyService;
-    IOnosDeviceService onosDeviceService;
+    IHostService hostService;
     IPacketService packetService;
     Map<String, String> configMap;
 
@@ -212,7 +212,7 @@ public class ProxyArpManagerTest {
         datagridService = EasyMock.createMock(IDatagridService.class);
         flowPusherService = EasyMock.createMock(IFlowPusherService.class);
         topologyService = EasyMock.createMock(ITopologyService.class);
-        onosDeviceService = EasyMock.createMock(IOnosDeviceService.class);
+        hostService = EasyMock.createMock(IHostService.class);
         packetService = EasyMock.createMock(IPacketService.class);
         eg = EasyMock.createMock(IEventChannel.class);
         el = EasyMock.createMock(IEventChannelListener.class);
@@ -241,7 +241,7 @@ public class ProxyArpManagerTest {
         EasyMock.expect(context.getServiceImpl(IDatagridService.class)).andReturn(datagridService);
         EasyMock.expect(context.getServiceImpl(IFlowPusherService.class)).andReturn(flowPusherService);
         EasyMock.expect(context.getServiceImpl(ITopologyService.class)).andReturn(topologyService);
-        EasyMock.expect(context.getServiceImpl(IOnosDeviceService.class)).andReturn(onosDeviceService);
+        EasyMock.expect(context.getServiceImpl(IHostService.class)).andReturn(hostService);
         EasyMock.expect(context.getServiceImpl(IPacketService.class)).andReturn(packetService);
     }
 
@@ -283,7 +283,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology, eg,
+                topologyService, hostService, packetService, topology, eg,
                 el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -302,7 +302,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -320,7 +320,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -335,7 +335,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -354,7 +354,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -371,7 +371,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -387,7 +387,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -409,7 +409,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -428,7 +428,7 @@ public class ProxyArpManagerTest {
 
         EasyMock.replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, onosDeviceService, packetService, topology,
+                topologyService, hostService, packetService, topology,
                 eg, el, dev1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);

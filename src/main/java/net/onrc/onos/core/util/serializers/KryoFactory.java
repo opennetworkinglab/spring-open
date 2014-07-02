@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.proxyarp.ArpCacheNotification;
 import net.onrc.onos.apps.proxyarp.ArpReplyNotification;
-import net.onrc.onos.core.devicemanager.OnosDevice;
+import net.onrc.onos.core.hostmanager.Host;
 import net.onrc.onos.core.intent.ConstrainedShortestPathIntent;
 import net.onrc.onos.core.intent.ErrorIntent;
 import net.onrc.onos.core.intent.Intent;
@@ -223,7 +223,7 @@ public class KryoFactory {
 
         // Device-related classes
         kryo.register(HashSet.class);
-        kryo.register(OnosDevice.class);
+        kryo.register(Host.class);
         kryo.register(Date.class);
 
         // ProxyArp-related classes

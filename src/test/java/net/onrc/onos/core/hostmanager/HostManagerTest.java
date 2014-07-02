@@ -1,4 +1,4 @@
-package net.onrc.onos.core.devicemanager;
+package net.onrc.onos.core.hostmanager;
 
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createMock;
@@ -43,23 +43,23 @@ import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFType;
 
 /**
- *         Unit tests for the Device Manager module (OnosDeviceManger).
- *         These test cases check the result of add/delete device and
- *         verify the result of processPacketIn through inject faked packets
- *         floodLightProvider, datagridService, networkGraphService,
- *         controllerRegistryService, eventChannel are mocked out.
+ * Unit tests for the Host Manager module (HostManger).
+ * These test cases check the result of add/delete host and
+ * verify the result of processPacketIn by injecting fake packets.
+ * floodlightProvider, datagridService, topologyService,
+ * controllerRegistryService, eventChannel are mocked out.
  */
-public class OnosDeviceManagerTest extends FloodlightTestCase {
+public class HostManagerTest extends FloodlightTestCase {
     private IPacket pkt0, pkt1, pkt2, pkt3, pkt4;
     private IOFSwitch sw1;
     private long sw1Dpid;
     private long sw1DevPort, sw1DevPort2;
-    private OnosDeviceManager odm;
+    private HostManager hostManager;
     private OFPacketIn pktIn, pktIn2;
     private FloodlightModuleContext modContext;
     private ITopologyService networkGraphService;
-    private IEventChannel<Long, OnosDevice> eventChannel;
-    private IFloodlightProviderService floodLightProvider;
+    private IEventChannel<Long, Host> eventChannel;
+    private IFloodlightProviderService floodlightProvider;
     private Date lastSeenTimestamp;
 
     @Override
@@ -74,7 +74,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
         topology.createSampleTopology2();
         modContext = new FloodlightModuleContext();
 
-        floodLightProvider = createMock(IFloodlightProviderService.class);
+        floodlightProvider = createMock(IFloodlightProviderService.class);
         datagridService = createMock(IDatagridService.class);
         networkGraphService = createMock(ITopologyService.class);
         controllerRegistryService = createMock(IControllerRegistryService.class);
@@ -83,14 +83,14 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
         networkGraphService.registerTopologyListener(anyObject(ITopologyListener.class));
         expectLastCall();
 
-        expect(datagridService.createChannel("onos.device", Long.class, OnosDevice.class))
+        expect(datagridService.createChannel("onos.host", Long.class, Host.class))
         .andReturn(eventChannel).once();
         expect(topology.getOutgoingLink(new Dpid(1L), new PortNumber((short) 100))).andReturn(null).anyTimes();
         expect(datagridService.addListener(
-                eq("onos.device"),
+                eq("onos.host"),
                 anyObject(IEventChannelListener.class),
                 eq(Long.class),
-                eq(OnosDevice.class)))
+                eq(Host.class)))
                 .andReturn(eventChannel).once();
 
         replay(datagridService);
@@ -99,7 +99,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
 
         modContext.addService(IDatagridService.class, datagridService);
         modContext.addService(ITopologyService.class, networkGraphService);
-        modContext.addService(IFloodlightProviderService.class, floodLightProvider);
+        modContext.addService(IFloodlightProviderService.class, floodlightProvider);
         modContext.getServiceImpl(IFloodlightProviderService.class);
         sw1Dpid = 1L;
         sw1 = createMockSwitch(sw1Dpid);
@@ -108,7 +108,7 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
         sw1DevPort = 100;
         sw1DevPort2 = 12L;
 
-        odm = new OnosDeviceManager();
+        hostManager = new HostManager();
         /*
          * Broadcast source address
          */
@@ -223,26 +223,26 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
     }
 
     /**
-     * Test set operation on lastSeenTimstamp field in OnosDevice.
+     * Test set operation on lastSeenTimstamp field in Host.
      */
     @Test
     public void testSetLastSeenTimestamp() {
         Ethernet eth = (Ethernet) pkt1;
-        OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
+        Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodLightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(OnosDeviceManager.class));
-        srcDevice.setLastSeenTimestamp(lastSeenTimestamp);
-        assertEquals(lastSeenTimestamp, srcDevice.getLastSeenTimestamp());
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
+        srcHost.setLastSeenTimestamp(lastSeenTimestamp);
+        assertEquals(lastSeenTimestamp, srcHost.getLastSeenTimestamp());
     }
     /**
-     * test the functionality to get the source device from Packet header
+     * test the functionality to get the source host from Packet header
      * information.
      */
     @Test
-    public void testGetSourceDeviceFromPacket() {
+    public void testGetSourceHostFromPacket() {
         byte[] address = new byte[] {0x00, 0x44, 0x33, 0x22, 0x11, 0x01};
         MACAddress srcMac = new MACAddress(address);
-        OnosDevice dev1 = new OnosDevice(srcMac,
+        Host host1 = new Host(srcMac,
                 null,
                 sw1Dpid,
                 sw1DevPort,
@@ -252,36 +252,36 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
          * test DHCP packet case
          */
         Ethernet eth = (Ethernet) pkt3;
-        OnosDevice dev2 = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
-        assertEquals(dev1, dev2);
+        Host host2 = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
+        assertEquals(host1, host2);
 
         /*
          * test ARP packet case
          */
         eth = (Ethernet) pkt4;
-        dev2 = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
-        assertEquals(dev1, dev2);
+        host2 = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
+        assertEquals(host1, host2);
     }
 
     /**
-     * This test will invoke addOnosDevice to add a new device through Packet pkt1.
+     * This test will invoke addHost to add a new host through Packet pkt1.
      * @throws FloodlightModuleException
      */
     @Test
-    public void testProcessPacketInAddNewDevice() throws FloodlightModuleException {
-        floodLightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(OnosDeviceManager.class));
+    public void testProcessPacketInAddNewHost() throws FloodlightModuleException {
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
+                EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
-        floodLightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
+        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
         EasyMock.expectLastCall();
-        replay(floodLightProvider);
+        replay(floodlightProvider);
 
-        odm.init(modContext);
-        odm.startUp(modContext);
-        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet) pkt1);
+        hostManager.init(modContext);
+        hostManager.startUp(modContext);
+        Command cmd = hostManager.processPacketIn(sw1, pktIn, (Ethernet) pkt1);
         assertEquals(Command.CONTINUE, cmd);
 
-        EasyMock.verify(floodLightProvider);
+        EasyMock.verify(floodlightProvider);
     }
 
     /**
@@ -290,17 +290,17 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testProcessPacketInHasLink() throws FloodlightModuleException {
-        floodLightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(OnosDeviceManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
+                EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
-        replay(floodLightProvider);
+        replay(floodlightProvider);
 
-        odm.init(modContext);
-        odm.startUp(modContext);
-        Command cmd = odm.processPacketIn(sw1, pktIn2, (Ethernet) pkt1);
+        hostManager.init(modContext);
+        hostManager.startUp(modContext);
+        Command cmd = hostManager.processPacketIn(sw1, pktIn2, (Ethernet) pkt1);
         assertEquals(Command.CONTINUE, cmd);
 
-        EasyMock.verify(floodLightProvider);
+        EasyMock.verify(floodlightProvider);
     }
 
     /**
@@ -308,74 +308,74 @@ public class OnosDeviceManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testProcessPacketInStop() {
-        Command cmd = odm.processPacketIn(sw1, pktIn, (Ethernet) pkt0);
+        Command cmd = hostManager.processPacketIn(sw1, pktIn, (Ethernet) pkt0);
         assertEquals(Command.STOP, cmd);
     }
 
     /**
-     * Test add a device from the information from packet.
+     * Test add a host from the information from packet.
      * @throws FloodlightModuleException
      */
     @Test
-    public void testAddOnosDevice() throws FloodlightModuleException {
+    public void testAddHost() throws FloodlightModuleException {
         Ethernet eth = (Ethernet) pkt1;
         Long longmac = eth.getSourceMAC().toLong();
-        OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
+        Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodLightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(OnosDeviceManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
-        floodLightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
+        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
         EasyMock.expectLastCall();
-        replay(floodLightProvider);
+        replay(floodlightProvider);
 
-        odm.init(modContext);
-        odm.startUp(modContext);
-        odm.addOnosDevice(longmac, srcDevice);
+        hostManager.init(modContext);
+        hostManager.startUp(modContext);
+        hostManager.addHost(longmac, srcHost);
 
-        EasyMock.verify(floodLightProvider);
+        EasyMock.verify(floodlightProvider);
     }
 
     /**
-     * Test delete a device.
+     * Test delete a host.
      * @throws FloodlightModuleException
      */
     @Test
-    public void testDeleteOnosDevice() throws FloodlightModuleException {
+    public void testDeleteHost() throws FloodlightModuleException {
         Ethernet eth = (Ethernet) pkt1;
-        OnosDevice srcDevice = odm.getSourceDeviceFromPacket(eth, sw1Dpid, sw1DevPort);
+        Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodLightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(OnosDeviceManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
-        floodLightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
+        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
         EasyMock.expectLastCall();
-        replay(floodLightProvider);
+        replay(floodlightProvider);
 
-        odm.init(modContext);
-        odm.startUp(modContext);
-        odm.deleteOnosDevice(srcDevice);
+        hostManager.init(modContext);
+        hostManager.startUp(modContext);
+        hostManager.deleteHost(srcHost);
 
-        EasyMock.verify(floodLightProvider);
+        EasyMock.verify(floodlightProvider);
     }
 
     /**
-     * Test delete a device by using its source mac address.
+     * Test delete a host by using its source mac address.
      * @throws FloodlightModuleException
      */
     @Test
-    public void testDeleteOnosDeviceByMac() throws FloodlightModuleException {
+    public void testDeleteHostByMac() throws FloodlightModuleException {
         Ethernet eth = (Ethernet) pkt1;
         MACAddress mac = eth.getSourceMAC();
 
-        floodLightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(OnosDeviceManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
-        floodLightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
+        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
         EasyMock.expectLastCall();
-        replay(floodLightProvider);
+        replay(floodlightProvider);
 
-        odm.init(modContext);
-        odm.startUp(modContext);
-        odm.deleteOnosDeviceByMac(mac);
+        hostManager.init(modContext);
+        hostManager.startUp(modContext);
+        hostManager.deleteHostByMac(mac);
 
-        EasyMock.verify(floodLightProvider);
+        EasyMock.verify(floodlightProvider);
     }
 }

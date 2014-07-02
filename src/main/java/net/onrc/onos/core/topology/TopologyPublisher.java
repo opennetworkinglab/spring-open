@@ -14,9 +14,9 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.onrc.onos.core.devicemanager.IOnosDeviceListener;
-import net.onrc.onos.core.devicemanager.IOnosDeviceService;
-import net.onrc.onos.core.devicemanager.OnosDevice;
+import net.onrc.onos.core.hostmanager.Host;
+import net.onrc.onos.core.hostmanager.IHostListener;
+import net.onrc.onos.core.hostmanager.IHostService;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryListener;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.linkdiscovery.Link;
@@ -42,7 +42,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         IOFSwitchPortListener,
         ILinkDiscoveryListener,
         IFloodlightModule,
-        IOnosDeviceListener {
+        IHostListener {
     private static final Logger log =
             LoggerFactory.getLogger(TopologyPublisher.class);
 
@@ -51,7 +51,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     private IControllerRegistryService registryService;
     private ITopologyService topologyService;
 
-    private IOnosDeviceService onosDeviceService;
+    private IHostService hostService;
 
     private Topology topology;
     private TopologyDiscoveryInterface topologyDiscoveryInterface;
@@ -308,7 +308,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         l.add(IThreadPoolService.class);
         l.add(IControllerRegistryService.class);
         l.add(ITopologyService.class);
-        l.add(IOnosDeviceService.class);
+        l.add(IHostService.class);
         return l;
     }
 
@@ -318,7 +318,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         linkDiscovery = context.getServiceImpl(ILinkDiscoveryService.class);
         registryService = context.getServiceImpl(IControllerRegistryService.class);
-        onosDeviceService = context.getServiceImpl(IOnosDeviceService.class);
+        hostService = context.getServiceImpl(IHostService.class);
 
         topologyService = context.getServiceImpl(ITopologyService.class);
     }
@@ -327,7 +327,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     public void startUp(FloodlightModuleContext context) {
         floodlightProvider.addOFSwitchListener(this);
         linkDiscovery.addListener(this);
-        onosDeviceService.addOnosDeviceListener(this);
+        hostService.addHostListener(this);
 
         topology = topologyService.getTopology();
         topologyDiscoveryInterface =
@@ -354,15 +354,15 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     }
 
     @Override
-    public void onosDeviceAdded(OnosDevice device) {
-        log.debug("Called onosDeviceAdded mac {}", device.getMacAddress());
+    public void hostAdded(Host host) {
+        log.debug("Called onosDeviceAdded mac {}", host.getMacAddress());
 
-        SwitchPort sp = new SwitchPort(device.getSwitchDPID(), device.getSwitchPort());
+        SwitchPort sp = new SwitchPort(host.getSwitchDPID(), host.getSwitchPort());
         List<SwitchPort> spLists = new ArrayList<SwitchPort>();
         spLists.add(sp);
-        DeviceEvent event = new DeviceEvent(device.getMacAddress());
+        DeviceEvent event = new DeviceEvent(host.getMacAddress());
         event.setAttachmentPoints(spLists);
-        event.setLastSeenTime(device.getLastSeenTimestamp().getTime());
+        event.setLastSeenTime(host.getLastSeenTimestamp().getTime());
         // Does not use vlan info now.
         event.freeze();
 
@@ -370,10 +370,10 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     }
 
     @Override
-    public void onosDeviceRemoved(OnosDevice device) {
+    public void hostRemoved(Host host) {
         log.debug("Called onosDeviceRemoved");
-        DeviceEvent event = new DeviceEvent(device.getMacAddress());
-        // XXX shouldn't we be setting attachment points?
+        DeviceEvent event = new DeviceEvent(host.getMacAddress());
+        //XXX shouldn't we be setting attachment points?
         event.freeze();
         topologyDiscoveryInterface.removeDeviceDiscoveryEvent(event);
     }

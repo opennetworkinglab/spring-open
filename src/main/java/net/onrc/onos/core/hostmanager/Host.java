@@ -15,7 +15,7 @@
  *    under the License.
  **/
 
-package net.onrc.onos.core.devicemanager;
+package net.onrc.onos.core.hostmanager;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -38,7 +38,7 @@ import net.floodlightcontroller.util.MACAddress;
  * <!-- CHECKSTYLE IGNORE WriteTag FOR NEXT 1 LINES -->
  * @author readams
  */
-public class OnosDevice implements Serializable {
+public class Host implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -74,19 +74,19 @@ public class OnosDevice implements Serializable {
     // ************
     // Constructors
     // ************
-    protected OnosDevice() {
+    protected Host() {
     }
 
     /**
-     * Create a new device and its information.
+     * Create a new host and its information.
      *
-     * @param macAddress mac address of this device
-     * @param vlan vlan ID of this device
-     * @param switchDPID switch DPID where the device is attached
-     * @param switchPort port number where the device is attached
-     * @param lastSeenTimestamp last packet-in time of this device
+     * @param macAddress mac address of this host
+     * @param vlan vlan ID of this host
+     * @param switchDPID switch DPID where the host is attached
+     * @param switchPort port number where the host is attached
+     * @param lastSeenTimestamp last packet-in time of this host
      */
-    public OnosDevice(MACAddress macAddress, Short vlan, Long switchDPID,
+    public Host(MACAddress macAddress, Short vlan, Long switchDPID,
             Long switchPort, Date lastSeenTimestamp) {
         this.macAddress = macAddress;
         this.vlan = vlan;
@@ -152,7 +152,7 @@ public class OnosDevice implements Serializable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        OnosDevice other = (OnosDevice) obj;
+        Host other = (Host) obj;
         if (hashCode() != other.hashCode()) {
             return false;
         }
@@ -174,7 +174,7 @@ public class OnosDevice implements Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("OnosDevice [macAddress=");
+        builder.append("Host [macAddress=");
         builder.append(macAddress.toString());
         builder.append(", vlan=");
         builder.append(vlan);

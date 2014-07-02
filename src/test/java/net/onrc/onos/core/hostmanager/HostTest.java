@@ -1,4 +1,4 @@
-package net.onrc.onos.core.devicemanager;
+package net.onrc.onos.core.hostmanager;
 
 import static org.junit.Assert.assertTrue;
 
@@ -10,10 +10,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/*
- * This is the test for OnosDevice.class.
+/**
+ * This is the test for the Host class.
  */
-public class OnosDeviceTest {
+public class HostTest {
 
     MACAddress mac1;
     MACAddress mac2;
@@ -40,26 +40,26 @@ public class OnosDeviceTest {
     public void tearDown() throws Exception {
     }
 
-    /*
+    /**
      * Test for making sure hashCode function works properly.
      */
     @Test
     public void testHashCode() {
-        OnosDevice dev1 = new OnosDevice(mac1, null, dpid1, portNum1, date1);
-        OnosDevice dev2 = new OnosDevice(mac2, null, dpid2, portNum2, date2);
+        Host host1 = new Host(mac1, null, dpid1, portNum1, date1);
+        Host host2 = new Host(mac2, null, dpid2, portNum2, date2);
 
-        assertTrue(dev1.hashCode() == dev2.hashCode());
+        assertTrue(host1.hashCode() == host2.hashCode());
     }
 
-    /*
+    /**
      * Test for making sure equals function works properly.
      */
     @Test
     public void testEqualsObject() {
-        OnosDevice dev1 = new OnosDevice(mac1, null, dpid1, portNum1, date1);
-        OnosDevice dev2 = new OnosDevice(mac2, null, dpid2, portNum2, date2);
+        Host host1 = new Host(mac1, null, dpid1, portNum1, date1);
+        Host host2 = new Host(mac2, null, dpid2, portNum2, date2);
 
-        assertTrue(dev1.equals(dev2));
+        assertTrue(host1.equals(host2));
     }
 
 }
