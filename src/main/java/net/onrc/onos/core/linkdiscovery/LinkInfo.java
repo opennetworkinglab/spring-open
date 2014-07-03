@@ -1,6 +1,7 @@
 /**
- *    Copyright 2011, Big Switch Networks, Inc.*    Originally created by David Erickson, Stanford University
- **    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    Copyright 2011, Big Switch Networks, Inc.
+ *    Originally created by David Erickson, Stanford University
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
  *    not use this file except in compliance with the License. You may obtain
  *    a copy of the License at
  *
@@ -11,31 +12,18 @@
  *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  *    License for the specific language governing permissions and limitations
  *    under the License.
- **/
+ */
 
 package net.onrc.onos.core.linkdiscovery;
 
 import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.LinkType;
 
-import org.openflow.protocol.OFPhysicalPort.OFPortState;
+import com.google.common.primitives.Longs;
 
-public class LinkInfo {
-
-    public LinkInfo(Long firstSeenTime,
-                    Long lastLldpReceivedTime,
-                    int srcPortState,
-                    int dstPortState) {
-        super();
-        this.srcPortState = srcPortState;
-        this.dstPortState = dstPortState;
-        this.firstSeenTime = firstSeenTime;
-        this.lastLldpReceivedTime = lastLldpReceivedTime;
-    }
-
-    protected Integer srcPortState;
-    protected Integer dstPortState;
-    protected Long firstSeenTime;
-    protected Long lastLldpReceivedTime; /* Standard LLLDP received time */
+/**
+ * Records information about a link.
+ */
+public final class LinkInfo {
 
     /**
      * The port states stored here are topology's last knowledge of
@@ -46,51 +34,78 @@ public class LinkInfo {
      * new port state, so topology needs to keep its own copy so that
      * it can determine if the port state has changed and therefore
      * requires the new state to be written to storage.
+     *
+     * Note the port state values are defined in the OF 1.0 spec.
+     * These will change in some way once we move to OF 1.3.
      */
+    private final int srcPortState;
+    private final int dstPortState;
 
+    private final long firstSeenTime;
+    private final long lastLldpReceivedTime;
 
-    public boolean linkStpBlocked() {
-        return ((srcPortState & OFPortState.OFPPS_STP_MASK.getValue()) == OFPortState.OFPPS_STP_BLOCK.getValue()) ||
-                ((dstPortState & OFPortState.OFPPS_STP_MASK.getValue()) == OFPortState.OFPPS_STP_BLOCK.getValue());
+    /**
+     * Constructs a LinkInfo object.
+     *
+     * @param firstSeenTime the timestamp when the link was first seen
+     * @param lastLldpReceivedTime the timestamp when the link was last seen
+     * @param srcPortState the port state of the source port
+     * @param dstPortState the port state of the destination port
+     */
+    public LinkInfo(long firstSeenTime,
+            long lastLldpReceivedTime,
+            int srcPortState,
+            int dstPortState) {
+        this.srcPortState = srcPortState;
+        this.dstPortState = dstPortState;
+        this.firstSeenTime = firstSeenTime;
+        this.lastLldpReceivedTime = lastLldpReceivedTime;
     }
 
-    public Long getFirstSeenTime() {
+    /**
+     * Gets the timestamp when the link was first seen.
+     *
+     * @return the first seen timestamp
+     */
+    public long getFirstSeenTime() {
         return firstSeenTime;
     }
 
-    public void setFirstSeenTime(Long firstSeenTime) {
-        this.firstSeenTime = firstSeenTime;
-    }
-
-    public Long getUnicastValidTime() {
+    /**
+     * Gets the timestamp when the link was last seen.
+     *
+     * @return the last seen timestamp
+     */
+    public long getLastProbeReceivedTime() {
         return lastLldpReceivedTime;
     }
 
-    public void setUnicastValidTime(Long unicastValidTime) {
-        this.lastLldpReceivedTime = unicastValidTime;
-    }
-
-    public Integer getSrcPortState() {
+    /**
+     * Gets the state of the source port.
+     *
+     * @return the source port state, as defined in the OF1.0 spec
+     */
+    public int getSrcPortState() {
         return srcPortState;
     }
 
-    public void setSrcPortState(Integer srcPortState) {
-        this.srcPortState = srcPortState;
-    }
-
-    public Integer getDstPortState() {
+    /**
+     * Gets the state of the destination port.
+     *
+     * @return the destination port state, as defined in the OF1.0 spec
+     */
+    public int getDstPortState() {
         return dstPortState;
     }
 
-    public void setDstPortState(int dstPortState) {
-        this.dstPortState = dstPortState;
-    }
-
+    /**
+     * Gets the link type.
+     *
+     * @return the link type
+     * @see LinkType
+     */
     public LinkType getLinkType() {
-        if (lastLldpReceivedTime != null) {
-            return LinkType.DIRECT_LINK;
-        }
-        return LinkType.INVALID_LINK;
+        return LinkType.DIRECT_LINK;
     }
 
     /* (non-Javadoc)
@@ -100,10 +115,10 @@ public class LinkInfo {
     public int hashCode() {
         final int prime = 5557;
         int result = 1;
-        result = prime * result + ((firstSeenTime == null) ? 0 : firstSeenTime.hashCode());
-        result = prime * result + ((lastLldpReceivedTime == null) ? 0 : lastLldpReceivedTime.hashCode());
-        result = prime * result + ((srcPortState == null) ? 0 : srcPortState.hashCode());
-        result = prime * result + ((dstPortState == null) ? 0 : dstPortState.hashCode());
+        result = prime * result + Longs.hashCode(firstSeenTime);
+        result = prime * result + Longs.hashCode(lastLldpReceivedTime);
+        result = prime * result + srcPortState;
+        result = prime * result + dstPortState;
         return result;
     }
 
@@ -115,47 +130,17 @@ public class LinkInfo {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof LinkInfo)) {
             return false;
         }
+
         LinkInfo other = (LinkInfo) obj;
 
-        if (firstSeenTime == null) {
-            if (other.firstSeenTime != null) {
-                return false;
-            }
-        } else if (!firstSeenTime.equals(other.firstSeenTime)) {
-            return false;
-        }
-
-        if (lastLldpReceivedTime == null) {
-            if (other.lastLldpReceivedTime != null) {
-                return false;
-            }
-        } else if (!lastLldpReceivedTime.equals(other.lastLldpReceivedTime)) {
-            return false;
-        }
-
-        if (srcPortState == null) {
-            if (other.srcPortState != null) {
-                return false;
-            }
-        } else if (!srcPortState.equals(other.srcPortState)) {
-            return false;
-        }
-
-        if (dstPortState == null) {
-            if (other.dstPortState != null) {
-                return false;
-            }
-        } else if (!dstPortState.equals(other.dstPortState)) {
-            return false;
-        }
-
-        return true;
+        return firstSeenTime == other.firstSeenTime &&
+               lastLldpReceivedTime == other.lastLldpReceivedTime &&
+               srcPortState == other.srcPortState &&
+               dstPortState == other.dstPortState;
     }
 
 
@@ -164,9 +149,9 @@ public class LinkInfo {
      */
     @Override
     public String toString() {
-        return "LinkInfo [unicastValidTime=" + ((lastLldpReceivedTime == null) ? "null" : lastLldpReceivedTime)
-                + ", srcPortState=" + ((srcPortState == null) ? "null" : srcPortState)
-                + ", dstPortState=" + ((dstPortState == null) ? "null" : srcPortState)
+        return "LinkInfo [unicastValidTime=" + lastLldpReceivedTime
+                + ", srcPortState=" + srcPortState
+                + ", dstPortState=" + dstPortState
                 + "]";
     }
 }

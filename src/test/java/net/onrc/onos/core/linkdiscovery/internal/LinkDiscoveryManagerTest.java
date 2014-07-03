@@ -42,12 +42,15 @@ import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.linkdiscovery.Link;
 import net.onrc.onos.core.linkdiscovery.LinkInfo;
 import net.onrc.onos.core.linkdiscovery.NodePortTuple;
+import net.onrc.onos.core.registry.IControllerRegistryService;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPhysicalPort;
+import org.openflow.protocol.OFPortStatus;
+import org.openflow.protocol.OFPortStatus.OFPortReason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +98,11 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         ldm.linkDiscoveryAware = new ArrayList<ILinkDiscoveryListener>();
         MockThreadPoolService tp = new MockThreadPoolService();
         RestApiServer restApi = new RestApiServer();
+        IControllerRegistryService registry =
+                EasyMock.createMock(IControllerRegistryService.class);
+        expect(registry.hasControl(EasyMock.anyLong())).andReturn(true).anyTimes();
+        replay(registry);
+        cntx.addService(IControllerRegistryService.class, registry);
         cntx.addService(IRestApiService.class, restApi);
         cntx.addService(IThreadPoolService.class, tp);
         cntx.addService(ILinkDiscoveryService.class, ldm);
@@ -120,7 +128,8 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         LinkDiscoveryManager topology = getTopology();
 
         Link lt = new Link(1L, 2, 2L, 1);
-        LinkInfo info = new LinkInfo(System.currentTimeMillis(),
+        long firstSeenTime = System.currentTimeMillis();
+        LinkInfo info = new LinkInfo(firstSeenTime,
                 System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
 
@@ -136,6 +145,29 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         assertNotNull(topology.portLinks.get(dstNpt));
         assertTrue(topology.portLinks.get(dstNpt).contains(lt));
         assertTrue(topology.links.containsKey(lt));
+
+        LinkInfo infoToVerify = topology.links.get(lt);
+        assertEquals(firstSeenTime, infoToVerify.getFirstSeenTime());
+        assertEquals(0, infoToVerify.getSrcPortState());
+        assertEquals(0, infoToVerify.getDstPortState());
+
+        // Arbitrary new port states to verify that the port state is updated
+        final int newSrcPortState = 1;
+        final int newDstPortState = 2;
+
+        // Update the last received probe timestamp and the port states
+        LinkInfo infoWithStateChange = new LinkInfo(System.currentTimeMillis(),
+                System.currentTimeMillis(), newSrcPortState, newDstPortState);
+
+        topology.addOrUpdateLink(lt, infoWithStateChange);
+
+        assertNotNull(topology.links.get(lt));
+        infoToVerify = topology.links.get(lt);
+        // First seen time should be the original time, not the second update time
+        assertEquals(firstSeenTime, infoToVerify.getFirstSeenTime());
+        // Both port states should have been updated
+        assertEquals(newSrcPortState, infoToVerify.getSrcPortState());
+        assertEquals(newDstPortState, infoToVerify.getDstPortState());
     }
 
     @Test
@@ -270,24 +302,14 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
 
         topology.timeoutLinks();
 
-
-        info = new LinkInfo(System.currentTimeMillis(), /* firstseen */
-                null, /* unicast */0, 0);
-        topology.addOrUpdateLink(lt, info);
-        assertTrue(topology.links.get(lt).getUnicastValidTime() == null);
-
-
         // Add a link info based on info that would be obtained from unicast LLDP
         // Setting the unicast LLDP reception time to be 40 seconds old, so we can use
-        // this to test timeout after this test.  Although the info is initialized
-        // with LT_OPENFLOW_LINK, the link property should be changed to LT_NON_OPENFLOW
-        // by the addOrUpdateLink method.
+        // this to test timeout after this test.
         info = new LinkInfo(System.currentTimeMillis() - 40000,
                 System.currentTimeMillis() - 40000, 0, 0);
         topology.addOrUpdateLink(lt, info);
 
-        // Expect to timeout the unicast Valid Time, but not the multicast Valid time
-        // So the link type should go back to non-openflow link.
+        // Expect to timeout the unicast Valid Time, so the link should disappear
         topology.timeoutLinks();
         assertTrue(topology.links.get(lt) == null);
     }
@@ -330,5 +352,88 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         topology.sendDiscoveryMessage(3L, portNum, false);
 
         verify(swTest);
+    }
+
+    @Test
+    public void testHandlePortStatusForNewPort() throws IOException {
+        byte[] macAddress = new byte[] {0x0, 0x0, 0x0, 0x0, 0x0, 0x1};
+
+        LinkDiscoveryManager linkDiscovery = getTopology();
+
+        long dpid = 3L;
+        IOFSwitch sw = createMockSwitch(dpid);
+        getMockFloodlightProvider().getSwitches().put(dpid, sw);
+
+        short portNum = 1;
+        OFPhysicalPort ofpPort = new OFPhysicalPort();
+        ofpPort.setPortNumber(portNum);
+        ofpPort.setHardwareAddress(macAddress);
+
+        OFPortStatus portStatus = new OFPortStatus();
+        portStatus.setDesc(ofpPort);
+        portStatus.setReason((byte) OFPortReason.OFPPR_ADD.ordinal());
+
+        expect(sw.getPort(portNum)).andReturn(ofpPort).anyTimes();
+        sw.write(EasyMock.anyObject(OFMessage.class),
+                EasyMock.anyObject(FloodlightContext.class));
+        sw.flush();
+
+        replay(sw);
+
+        linkDiscovery.handlePortStatus(sw, portStatus);
+
+        verify(sw);
+    }
+
+    @Test
+    public void testHandlePortStatusForExistingPort() {
+        byte[] macAddress = new byte[] {0x0, 0x0, 0x0, 0x0, 0x0, 0x1};
+
+        LinkDiscoveryManager linkDiscovery = getTopology();
+
+        // Add a link that we can update later during the test
+        Link lt = new Link(1L, 1, 2L, 1);
+        LinkInfo info = new LinkInfo(System.currentTimeMillis(),
+                System.currentTimeMillis(), 0, 0);
+        linkDiscovery.addOrUpdateLink(lt, info);
+
+        short portNum = 1;
+        // src port
+        int srcPortState = 2;
+        OFPhysicalPort srcPort = new OFPhysicalPort();
+        srcPort.setPortNumber(portNum);
+        srcPort.setHardwareAddress(macAddress);
+        srcPort.setState(srcPortState);
+
+        // dst port
+        int dstPortState = 4;
+        OFPhysicalPort dstPort = new OFPhysicalPort();
+        dstPort.setPortNumber(portNum);
+        dstPort.setHardwareAddress(macAddress);
+        dstPort.setState(dstPortState);
+
+        OFPortStatus srcPortStatus = new OFPortStatus();
+        srcPortStatus.setDesc(srcPort);
+        srcPortStatus.setReason((byte) OFPortReason.OFPPR_MODIFY.ordinal());
+
+        OFPortStatus dstPortStatus = new OFPortStatus();
+        dstPortStatus.setDesc(dstPort);
+        dstPortStatus.setReason((byte) OFPortReason.OFPPR_MODIFY.ordinal());
+
+        linkDiscovery.handlePortStatus(
+                getMockFloodlightProvider().getSwitches().get(1L), srcPortStatus);
+
+
+        LinkInfo newInfo = linkDiscovery.links.get(lt);
+        assertEquals(srcPortState, newInfo.getSrcPortState());
+        assertEquals(0, newInfo.getDstPortState());
+
+
+        linkDiscovery.handlePortStatus(
+                getMockFloodlightProvider().getSwitches().get(2L), dstPortStatus);
+
+        newInfo = linkDiscovery.links.get(lt);
+        assertEquals(srcPortState, newInfo.getSrcPortState());
+        assertEquals(dstPortState, newInfo.getDstPortState());
     }
 }

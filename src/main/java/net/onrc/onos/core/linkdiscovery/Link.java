@@ -70,6 +70,14 @@ public class Link {
         return dstPort;
     }
 
+    public boolean isSrcPort(NodePortTuple npt) {
+        return npt.getNodeId() == src && npt.getPortId() == srcPort;
+    }
+
+    public boolean isDstPort(NodePortTuple npt) {
+        return npt.getNodeId() == dst && npt.getPortId() == dstPort;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -258,10 +258,7 @@ public class LinkDiscoveryManager
 
     @Override
     public ILinkDiscovery.LinkType getLinkType(Link lt, LinkInfo info) {
-        if (info.getUnicastValidTime() != null) {
-            return ILinkDiscovery.LinkType.DIRECT_LINK;
-        }
-        return ILinkDiscovery.LinkType.INVALID_LINK;
+        return ILinkDiscovery.LinkType.DIRECT_LINK;
     }
 
 
@@ -455,7 +452,7 @@ public class LinkDiscoveryManager
                 break;
             case PORT_STATUS:
                 if (msg instanceof OFPortStatus) {
-                    return this.handlePortStatus(sw.getId(), (OFPortStatus) msg);
+                    return this.handlePortStatus(sw, (OFPortStatus) msg);
                 }
                 break;
             default:
@@ -525,24 +522,18 @@ public class LinkDiscoveryManager
         // Store the time of update to this link, and push it out to routingEngine
         Link lt = new Link(remoteDpid, remotePort, iofSwitch.getId(), pi.getInPort());
 
-        Long firstSeenTime = System.currentTimeMillis();
+        LinkInfo linkInfo = new LinkInfo(System.currentTimeMillis(),
+                System.currentTimeMillis(), srcPortState, dstPortState);
 
-        Long lastLldpTime = System.currentTimeMillis();
-
-        LinkInfo newLinkInfo =
-                new LinkInfo(firstSeenTime, lastLldpTime,
-                        srcPortState, dstPortState);
-
-        addOrUpdateLink(lt, newLinkInfo);
+        addOrUpdateLink(lt, linkInfo);
 
         // Check if reverse link exists.
         // If it doesn't exist and if the forward link was seen
         // first seen within a small interval, send probe on the
         // reverse link.
-
         boolean isReverse = OnosLldp.isReverse(lldp);
 
-        newLinkInfo = links.get(lt);
+        LinkInfo newLinkInfo = links.get(lt);
         if (newLinkInfo != null && !isReverse) {
             Link reverseLink = new Link(lt.getDst(), lt.getDstPort(),
                     lt.getSrc(), lt.getSrcPort());
@@ -581,48 +572,23 @@ public class LinkDiscoveryManager
         return Command.CONTINUE;
     }
 
-    protected UpdateOperation getUpdateOperation(int srcPortState,
-                                                 int dstPortState) {
-        boolean added =
-                (((srcPortState &
-                        OFPortState.OFPPS_STP_MASK.getValue()) !=
-                        OFPortState.OFPPS_STP_BLOCK.getValue()) &&
-                        ((dstPortState &
-                                OFPortState.OFPPS_STP_MASK.getValue()) !=
-                                OFPortState.OFPPS_STP_BLOCK.getValue()));
-
-        if (added) {
-            return UpdateOperation.LINK_UPDATED;
-        }
-        return UpdateOperation.LINK_REMOVED;
-    }
-
-
-    protected UpdateOperation getUpdateOperation(int srcPortState) {
-        boolean portUp = ((srcPortState &
-                OFPortState.OFPPS_STP_MASK.getValue()) !=
-                OFPortState.OFPPS_STP_BLOCK.getValue());
-
-        if (portUp) {
-            return UpdateOperation.PORT_UP;
-        } else {
-            return UpdateOperation.PORT_DOWN;
-        }
-    }
-
-    protected boolean addOrUpdateLink(Link lt, LinkInfo newInfo) {
+    protected boolean addOrUpdateLink(Link lt, LinkInfo detectedLinkInfo) {
 
         NodePortTuple srcNpt, dstNpt;
         boolean linkChanged = false;
 
         lock.writeLock().lock();
         try {
-            // put the new info.  if an old info exists, it will be returned.
-            LinkInfo oldInfo = links.put(lt, newInfo);
-            if (oldInfo != null &&
-                    oldInfo.getFirstSeenTime() < newInfo.getFirstSeenTime()) {
-                newInfo.setFirstSeenTime(oldInfo.getFirstSeenTime());
-            }
+            LinkInfo existingInfo = links.get(lt);
+
+            LinkInfo newLinkInfo = new LinkInfo(
+                    ((existingInfo == null) ? detectedLinkInfo.getFirstSeenTime()
+                            : existingInfo.getFirstSeenTime()),
+                    detectedLinkInfo.getLastProbeReceivedTime(),
+                    detectedLinkInfo.getSrcPortState(),
+                    detectedLinkInfo.getDstPortState());
+            links.put(lt, newLinkInfo);
+
 
             if (log.isTraceEnabled()) {
                 log.trace("addOrUpdateLink: {}", lt);
@@ -634,7 +600,7 @@ public class LinkDiscoveryManager
             srcNpt = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
             dstNpt = new NodePortTuple(lt.getDst(), lt.getDstPort());
 
-            if (oldInfo == null) {
+            if (existingInfo == null) {
                 // index it by switch source
                 if (!switchLinks.containsKey(lt.getSrc())) {
                     switchLinks.put(lt.getSrc(), new HashSet<Link>());
@@ -662,55 +628,13 @@ public class LinkDiscoveryManager
                 updateOperation = UpdateOperation.LINK_ADDED;
                 linkChanged = true;
 
-            } else {
-                // Since the link info is already there, we need to
-                // update the right fields.
-                if (newInfo.getUnicastValidTime() == null) {
-                    // This is due to a multicast LLDP, so copy the old unicast
-                    // value.
-                    if (oldInfo.getUnicastValidTime() != null) {
-                        newInfo.setUnicastValidTime(oldInfo.getUnicastValidTime());
-                    }
-                }
-
-                Long oldTime = oldInfo.getUnicastValidTime();
-                Long newTime = newInfo.getUnicastValidTime();
-                // the link has changed its state between openflow and non-openflow
-                // if the unicastValidTimes are null or not null
-                if (oldTime != null & newTime == null) {
-                    // openflow -> non-openflow transition
-                    // we need to add the link tuple to the portNOFLinks
-                    //addLinkToBroadcastDomain(lt);
-                    linkChanged = true;
-                } else if (oldTime == null & newTime != null) {
-                    // non-openflow -> openflow transition
-                    // we need to remove the link from the portNOFLinks
-                    //removeLinkFromBroadcastDomain(lt);
-                    linkChanged = true;
-                }
-
-                // Only update the port states if they've changed
-                if (newInfo.getSrcPortState().intValue() !=
-                        oldInfo.getSrcPortState().intValue() ||
-                        newInfo.getDstPortState().intValue() !=
-                                oldInfo.getDstPortState().intValue()) {
-                    linkChanged = true;
-                }
-
-                if (linkChanged) {
-                    updateOperation = getUpdateOperation(newInfo.getSrcPortState(),
-                            newInfo.getDstPortState());
-                    if (log.isTraceEnabled()) {
-                        log.trace("Updated link {}", lt);
-                    }
-                }
             }
 
             if (linkChanged) {
                 // find out if the link was added or removed here.
                 LinkUpdate update = new LinkUpdate(new LDUpdate(lt.getSrc(), lt.getSrcPort(),
                         lt.getDst(), lt.getDstPort(),
-                        getLinkType(lt, newInfo),
+                        getLinkType(lt, newLinkInfo),
                         updateOperation));
                 controller.publishUpdate(update);
             }
@@ -732,13 +656,11 @@ public class LinkDiscoveryManager
      * @param linksToDelete The List of @LinkTuple to delete.
      */
     protected void deleteLinks(List<Link> linksToDelete, String reason) {
-        NodePortTuple srcNpt, dstNpt;
-
         lock.writeLock().lock();
         try {
             for (Link lt : linksToDelete) {
-                srcNpt = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
-                dstNpt = new NodePortTuple(lt.getDst(), lt.getDstPort());
+                NodePortTuple srcNpt = new NodePortTuple(lt.getSrc(), lt.getSrcPort());
+                NodePortTuple dstNpt = new NodePortTuple(lt.getDst(), lt.getDstPort());
 
                 switchLinks.get(lt.getSrc()).remove(lt);
                 switchLinks.get(lt.getDst()).remove(lt);
@@ -791,22 +713,17 @@ public class LinkDiscoveryManager
      * @param ps The OFPortStatus message
      * @return The Command to continue or stop after we process this message
      */
-    protected Command handlePortStatus(long sw, OFPortStatus ps) {
-
-        IOFSwitch iofSwitch = floodlightProvider.getSwitches().get(sw);
-        if (iofSwitch == null) {
-            return Command.CONTINUE;
-        }
+    protected Command handlePortStatus(IOFSwitch sw, OFPortStatus ps) {
 
         // ONOS: If we do not control this switch, then we should not process its port status messages
-        if (!registryService.hasControl(iofSwitch.getId())) {
+        if (!registryService.hasControl(sw.getId())) {
             return Command.CONTINUE;
         }
 
         if (log.isTraceEnabled()) {
             log.trace("handlePortStatus: Switch {} port #{} reason {}; " +
                     "config is {} state is {}",
-                    new Object[]{iofSwitch.getStringId(),
+                    new Object[]{sw.getStringId(),
                             ps.getDesc().getPortNumber(),
                             ps.getReason(),
                             ps.getDesc().getConfig(),
@@ -814,7 +731,7 @@ public class LinkDiscoveryManager
         }
 
         short port = ps.getDesc().getPortNumber();
-        NodePortTuple npt = new NodePortTuple(sw, port);
+        NodePortTuple npt = new NodePortTuple(sw.getId(), port);
         boolean linkDeleted = false;
         boolean linkInfoChanged = false;
 
@@ -825,9 +742,8 @@ public class LinkDiscoveryManager
             if ((byte) OFPortReason.OFPPR_DELETE.ordinal() == ps.getReason() ||
                     ((byte) OFPortReason.OFPPR_MODIFY.ordinal() ==
                             ps.getReason() && !portEnabled(ps.getDesc()))) {
+
                 deleteLinksOnPort(npt, "Port Status Changed");
-                LinkUpdate update = new LinkUpdate(new LDUpdate(sw, port, UpdateOperation.PORT_DOWN));
-                controller.publishUpdate(update);
                 linkDeleted = true;
             } else if (ps.getReason() ==
                     (byte) OFPortReason.OFPPR_MODIFY.ordinal()) {
@@ -838,52 +754,42 @@ public class LinkDiscoveryManager
                     for (Link lt : this.portLinks.get(npt)) {
                         LinkInfo linkInfo = links.get(lt);
                         assert (linkInfo != null);
-                        Integer updatedSrcPortState = null;
-                        Integer updatedDstPortState = null;
-                        if (lt.getSrc() == npt.getNodeId() &&
-                                lt.getSrcPort() == npt.getPortId() &&
-                                (linkInfo.getSrcPortState() !=
-                                        ps.getDesc().getState())) {
-                            updatedSrcPortState = ps.getDesc().getState();
-                            linkInfo.setSrcPortState(updatedSrcPortState);
-                        }
-                        if (lt.getDst() == npt.getNodeId() &&
-                                lt.getDstPort() == npt.getPortId() &&
-                                (linkInfo.getDstPortState() !=
-                                        ps.getDesc().getState())) {
-                            updatedDstPortState = ps.getDesc().getState();
-                            linkInfo.setDstPortState(updatedDstPortState);
-                        }
-                        if ((updatedSrcPortState != null) ||
-                                (updatedDstPortState != null)) {
-                            // The link is already known to link discovery
-                            // manager and the status has changed, therefore
-                            // send an LinkUpdate.
-                            UpdateOperation operation =
-                                    getUpdateOperation(linkInfo.getSrcPortState(),
-                                            linkInfo.getDstPortState());
-                            LinkUpdate update = new LinkUpdate(new LDUpdate(lt.getSrc(), lt.getSrcPort(),
-                                    lt.getDst(), lt.getDstPort(),
-                                    getLinkType(lt, linkInfo),
-                                    operation));
-                            controller.publishUpdate(update);
+                        LinkInfo newLinkInfo = null;
 
+                        if (lt.isSrcPort(npt) &&
+                                linkInfo.getSrcPortState() != ps.getDesc().getState()) {
+                            // If this port status is for the src port and the port
+                            // state has changed, create a new link info with the new state
+
+                            newLinkInfo = new LinkInfo(linkInfo.getFirstSeenTime(),
+                                    linkInfo.getLastProbeReceivedTime(),
+                                    ps.getDesc().getState(),
+                                    linkInfo.getDstPortState());
+                        } else if (lt.isDstPort(npt) &&
+                                linkInfo.getDstPortState() != ps.getDesc().getState()) {
+                            // If this port status is for the dst port and the port
+                            // state has changed, create a new link info with the new state
+
+                            newLinkInfo = new LinkInfo(linkInfo.getFirstSeenTime(),
+                                    linkInfo.getLastProbeReceivedTime(),
+                                    linkInfo.getSrcPortState(),
+                                    ps.getDesc().getState());
+                        }
+
+                        if (newLinkInfo != null) {
                             linkInfoChanged = true;
+                            links.put(lt, newLinkInfo);
                         }
                     }
                 }
-
-                UpdateOperation operation =
-                        getUpdateOperation(ps.getDesc().getState());
-                LinkUpdate update = new LinkUpdate(new LDUpdate(sw, port, operation));
-                controller.publishUpdate(update);
             }
+
 
             if (!linkDeleted && !linkInfoChanged) {
                 if (log.isTraceEnabled()) {
                     log.trace("handlePortStatus: Switch {} port #{} reason {};" +
                             " no links to update/remove",
-                            new Object[]{HexString.toHexString(sw),
+                            new Object[]{HexString.toHexString(sw.getId()),
                                     ps.getDesc().getPortNumber(),
                                     ps.getReason()});
                 }
@@ -1008,7 +914,6 @@ public class LinkDiscoveryManager
     protected void timeoutLinks() {
         List<Link> eraseList = new ArrayList<Link>();
         Long curTime = System.currentTimeMillis();
-        boolean linkChanged = false;
 
         // reentrant required here because deleteLink also write locks
         lock.writeLock().lock();
@@ -1017,52 +922,15 @@ public class LinkDiscoveryManager
                     this.links.entrySet().iterator();
             while (it.hasNext()) {
                 Entry<Link, LinkInfo> entry = it.next();
-                Link lt = entry.getKey();
                 LinkInfo info = entry.getValue();
 
-                // Timeout the unicast and multicast LLDP valid times
-                // independently.
-                if ((info.getUnicastValidTime() != null) &&
-                        (info.getUnicastValidTime() + (1000L * LINK_TIMEOUT) < curTime)) {
-                    info.setUnicastValidTime(null);
-
-                    //if (info.getMulticastValidTime() != null) {
-                        //addLinkToBroadcastDomain(lt);
-                    //}
-                    // Note that even if mTime becomes null later on,
-                    // the link would be deleted, which would trigger updateClusters().
-                    linkChanged = true;
-                }
-                /*if ((info.getMulticastValidTime() != null) &&
-                        (info.getMulticastValidTime() + (1000L * LINK_TIMEOUT) < curTime)) {
-                    info.setMulticastValidTime(null);
-                    // if uTime is not null, then link will remain as openflow
-                    // link. If uTime is null, it will be deleted.  So, we
-                    // don't care about linkChanged flag here.
-                    removeLinkFromBroadcastDomain(lt);
-                    linkChanged = true;
-                }*/
-                // Add to the erase list only if the unicast
-                // time is null.
-                if (info.getUnicastValidTime() == null) { //&&
-                        //info.getMulticastValidTime() == null) {
+                if ((info.getLastProbeReceivedTime() + (1000L * LINK_TIMEOUT)
+                        < curTime)) {
                     eraseList.add(entry.getKey());
-                } else if (linkChanged) {
-                    UpdateOperation operation;
-                    operation = getUpdateOperation(info.getSrcPortState(),
-                            info.getDstPortState());
-                    LinkUpdate update = new LinkUpdate(new LDUpdate(lt.getSrc(), lt.getSrcPort(),
-                            lt.getDst(), lt.getDstPort(),
-                            getLinkType(lt, info),
-                            operation));
-                    controller.publishUpdate(update);
                 }
             }
 
-            // if any link was deleted or any link was changed.
-            if ((eraseList.size() > 0) || linkChanged) {
-                deleteLinks(eraseList, "LLDP timeout");
-            }
+            deleteLinks(eraseList, "LLDP timeout");
         } finally {
             lock.writeLock().unlock();
         }
@@ -1078,9 +946,6 @@ public class LinkDiscoveryManager
         if ((OFPortState.OFPPS_LINK_DOWN.getValue() & port.getState()) > 0) {
             return false;
         }
-        // Port STP state doesn't work with multiple VLANs, so ignore it for now
-        // if ((port.getState() & OFPortState.OFPPS_STP_MASK.getValue()) == OFPortState.OFPPS_STP_BLOCK.getValue())
-        //    return false;
         return true;
     }
 
