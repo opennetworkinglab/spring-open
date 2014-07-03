@@ -131,14 +131,6 @@ public class SwitchImpl extends TopologyObject implements Switch {
         return devices;
     }
 
-    // FIXME this should be removed from here and moved to MockTopology
-    Port addPort(Long portNumber) {
-        PortImpl port = new PortImpl(topology, getDpid(),
-                                new PortNumber(portNumber.shortValue()));
-        ((TopologyImpl) topology).putPort(port);
-        return port;
-    }
-
     void replaceStringAttributes(SwitchEvent updated) {
         Validate.isTrue(this.getDpid().equals(updated.getDpid()),
                 "Wrong SwitchEvent given.");

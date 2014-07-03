@@ -60,17 +60,13 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
         this.dst = original.dst;
     }
 
-    public LinkEvent(Long srcDpid, Long srcPortNo, Long dstDpid,
-                     Long dstPortNo) {
-        src = new SwitchPort(srcDpid, srcPortNo);
-        dst = new SwitchPort(dstDpid, dstPortNo);
-    }
-
+    // TODO probably want to remove this
     public LinkEvent(Link link) {
         src = new SwitchPort(link.getSrcSwitch().getDpid(),
                 link.getSrcPort().getNumber());
         dst = new SwitchPort(link.getDstSwitch().getDpid(),
                 link.getDstPort().getNumber());
+        // FIXME losing attributes here
     }
 
     /**

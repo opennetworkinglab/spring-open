@@ -123,7 +123,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
                 log.debug("Got control to set switch {} INACTIVE",
                         HexString.toHexString(dpid));
 
-                SwitchEvent switchEvent = new SwitchEvent(dpid);
+                SwitchEvent switchEvent = new SwitchEvent(new Dpid(dpid));
                 topologyDiscoveryInterface.
                         removeSwitchDiscoveryEvent(switchEvent);
                 registryService.releaseControl(dpid);
@@ -193,13 +193,14 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public void switchPortRemoved(Long switchId, OFPhysicalPort port) {
+        final Dpid dpid = new Dpid(switchId);
 
-        PortEvent portEvent = new PortEvent(switchId, (long) port.getPortNumber());
+        PortEvent portEvent = new PortEvent(dpid, new PortNumber(port.getPortNumber()));
         if (registryService.hasControl(switchId)) {
             topologyDiscoveryInterface.removePortDiscoveryEvent(portEvent);
         } else {
             log.debug("Not the master for switch {}. Suppressed port del event {}.",
-                    new Dpid(switchId), portEvent);
+                    dpid, portEvent);
         }
     }
 
@@ -218,7 +219,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO Not very robust
         if (!registryService.hasControl(sw.getId())) {
             log.debug("Not the master for switch {}. Suppressed switch add event {}.",
-                    new Dpid(sw.getId()), switchEvent);
+                    dpid, switchEvent);
             return;
         }
 

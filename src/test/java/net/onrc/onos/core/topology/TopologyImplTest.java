@@ -40,14 +40,19 @@ public class TopologyImplTest {
         // Create a number of switches and install two ports for each switch
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
             SwitchImpl testSwitch = new SwitchImpl(testTopology, switchID);
-            testSwitch.addPort(SWITCH_PORT_1);
-            testSwitch.addPort(SWITCH_PORT_2);
             testTopology.putSwitch(testSwitch);
+            testTopology.putPort(new PortImpl(testTopology,
+                    new Dpid(switchID), PORT_NUMBER_1));
+            testTopology.putPort(new PortImpl(testTopology,
+                    new Dpid(switchID), PORT_NUMBER_2));
+            Port hostPort = new PortImpl(testTopology,
+                    new Dpid(switchID), new PortNumber(SWITCH_HOST_PORT.shortValue()));
+            testTopology.putPort(hostPort);
 
             // Create a host for each switch
             MACAddress devMac = MACAddress.valueOf(switchID);
             DeviceImpl testHost = new DeviceImpl(testTopology, devMac);
-            testHost.addAttachmentPoint(testSwitch.addPort(SWITCH_HOST_PORT));
+            testHost.addAttachmentPoint(hostPort);
             testTopology.putDevice(testHost);
         }
 

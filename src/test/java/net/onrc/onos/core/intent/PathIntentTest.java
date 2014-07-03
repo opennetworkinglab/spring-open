@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.SwitchPort;
 import net.onrc.onos.core.util.serializers.KryoFactory;
 
 import org.junit.After;
@@ -57,9 +58,9 @@ public class PathIntentTest {
                 new ConstrainedShortestPathIntent("1", 2L, 3L, 4L, 5L, 6L, 7L, 1000.0);
 
         Path path = new Path();
-        path.add(new LinkEvent(1L, 1L, 2L, 2L));
-        path.add(new LinkEvent(2L, 1L, 3L, 2L));
-        path.add(new LinkEvent(3L, 1L, 4L, 2L));
+        path.add(new LinkEvent(new SwitchPort(1L, 1L), new SwitchPort(2L, 2L)));
+        path.add(new LinkEvent(new SwitchPort(2L, 1L), new SwitchPort(3L, 2L)));
+        path.add(new LinkEvent(new SwitchPort(3L, 1L), new SwitchPort(4L, 2L)));
 
         PathIntent pathIntent1 = new PathIntent("11", path, 123.45, cspIntent1);
 

@@ -24,6 +24,7 @@ import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.TopologyEvents;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
@@ -462,8 +463,8 @@ public class PathCalcRuntimeModuleTest {
         final MockTopology topology = mocks.getTopology();
         topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
         topology.removeLink(2L, 21L, 1L, 12L);
-        LinkEvent linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
-        LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
+        LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
@@ -696,8 +697,8 @@ public class PathCalcRuntimeModuleTest {
         final MockTopology topology = mocks.getTopology();
         topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
         topology.removeLink(2L, 21L, 1L, 12L);
-        final LinkEvent linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
-        final LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
+        final LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        final LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 

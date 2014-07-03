@@ -69,11 +69,6 @@ public class PortEvent extends TopologyElement<PortEvent> {
         this.id = original.id;
     }
 
-    // TODO remove me when ready
-    public PortEvent(Long dpid, Long number) {
-        this.id = new SwitchPort(dpid, number);
-    }
-
     /**
      * Gets the SwitchPort identifying this port.
      *

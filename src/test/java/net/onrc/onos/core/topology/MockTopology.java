@@ -25,6 +25,13 @@ public class MockTopology extends TopologyImpl {
         return sw;
     }
 
+    public Port addPort(Switch sw, Long portNumber) {
+        PortImpl port = new PortImpl(this, sw.getDpid(),
+                                new PortNumber(portNumber.shortValue()));
+        ((TopologyImpl) this).putPort(port);
+        return port;
+    }
+
     public Link[] addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
         Link[] links = new Link[2];
         final Dpid srcDpidObj = new Dpid(srcDpid);
@@ -55,24 +62,24 @@ public class MockTopology extends TopologyImpl {
      */
     public void createSampleTopology1() {
         sw1 = (SwitchImpl) addSwitch(1L);
-        sw1.addPort(LOCAL_PORT);
+        addPort(sw1, LOCAL_PORT);
         sw2 = (SwitchImpl) addSwitch(2L);
-        sw2.addPort(LOCAL_PORT);
+        addPort(sw2, LOCAL_PORT);
         sw3 = (SwitchImpl) addSwitch(3L);
-        sw3.addPort(LOCAL_PORT);
+        addPort(sw3, LOCAL_PORT);
         sw4 = (SwitchImpl) addSwitch(4L);
-        sw4.addPort(LOCAL_PORT);
+        addPort(sw4, LOCAL_PORT);
 
-        sw1.addPort(12L); // sw1 -> sw2
-        sw1.addPort(14L); // sw1 -> sw4
-        sw2.addPort(21L); // sw2 -> sw1
-        sw2.addPort(23L); // sw2 -> sw3
-        sw2.addPort(24L); // sw2 -> sw4
-        sw3.addPort(32L); // sw3 -> sw2
-        sw3.addPort(34L); // sw3 -> sw4
-        sw4.addPort(41L); // sw4 -> sw1
-        sw4.addPort(42L); // sw4 -> sw2
-        sw4.addPort(43L); // sw4 -> sw3
+        addPort(sw1, 12L); // sw1 -> sw2
+        addPort(sw1, 14L); // sw1 -> sw4
+        addPort(sw2, 21L); // sw2 -> sw1
+        addPort(sw2, 23L); // sw2 -> sw3
+        addPort(sw2, 24L); // sw2 -> sw4
+        addPort(sw3, 32L); // sw3 -> sw2
+        addPort(sw3, 34L); // sw3 -> sw4
+        addPort(sw4, 41L); // sw4 -> sw1
+        addPort(sw4, 42L); // sw4 -> sw2
+        addPort(sw4, 43L); // sw4 -> sw3
 
         addBidirectionalLinks(1L, 12L, 2L, 21L);
         addBidirectionalLinks(2L, 23L, 3L, 32L);
@@ -99,26 +106,26 @@ public class MockTopology extends TopologyImpl {
      */
     public void createSampleTopology2() {
         sw1 = (SwitchImpl) addSwitch(1L);
-        sw1.addPort(LOCAL_PORT);
+        addPort(sw1, LOCAL_PORT);
         sw2 = (SwitchImpl) addSwitch(2L);
-        sw2.addPort(LOCAL_PORT);
+        addPort(sw2, LOCAL_PORT);
         sw3 = (SwitchImpl) addSwitch(3L);
-        sw3.addPort(LOCAL_PORT);
+        addPort(sw3, LOCAL_PORT);
         sw4 = (SwitchImpl) addSwitch(4L);
-        sw4.addPort(LOCAL_PORT);
+        addPort(sw4, LOCAL_PORT);
 
-        Port port12 = sw1.addPort(12L); // sw1 -> sw2
-        Port port14 = sw1.addPort(14L); // sw1 -> sw4
-        Port port15 = sw1.addPort(15L); // sw1 -> h1
-        Port port21 = sw2.addPort(21L); // sw2 -> sw1
-        Port port23 = sw2.addPort(23L); // sw2 -> sw3
-        Port port24 = sw2.addPort(24L); // sw2 -> sw4
-        Port port32 = sw3.addPort(32L); // sw3 -> sw2
-        Port port34 = sw3.addPort(34L); // sw3 -> sw4
-        Port port35 = sw3.addPort(35L); // sw3 -> h3
-        Port port41 = sw4.addPort(41L); // sw4 -> sw1
-        Port port42 = sw4.addPort(42L); // sw4 -> sw2
-        Port port43 = sw4.addPort(43L); // sw4 -> sw3
+        Port port12 = addPort(sw1, 12L); // sw1 -> sw2
+        Port port14 = addPort(sw1, 14L); // sw1 -> sw4
+        Port port15 = addPort(sw1, 15L); // sw1 -> h1
+        Port port21 = addPort(sw2, 21L); // sw2 -> sw1
+        Port port23 = addPort(sw2, 23L); // sw2 -> sw3
+        Port port24 = addPort(sw2, 24L); // sw2 -> sw4
+        Port port32 = addPort(sw3, 32L); // sw3 -> sw2
+        Port port34 = addPort(sw3, 34L); // sw3 -> sw4
+        Port port35 = addPort(sw3, 35L); // sw3 -> h3
+        Port port41 = addPort(sw4, 41L); // sw4 -> sw1
+        Port port42 = addPort(sw4, 42L); // sw4 -> sw2
+        Port port43 = addPort(sw4, 43L); // sw4 -> sw3
 
         MACAddress mac1 = MACAddress.valueOf("00:44:33:22:11:00");
         DeviceImpl dev1 = new DeviceImpl(this, mac1);

@@ -26,6 +26,7 @@ import net.onrc.onos.core.datastore.topology.KVSwitch;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.EventEntry;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.onrc.onos.core.util.serializers.KryoFactory;
 
@@ -1194,7 +1195,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 continue;
             }
 
-            SwitchEvent switchEvent = new SwitchEvent(sw.getDpid());
+            SwitchEvent switchEvent = new SwitchEvent(new Dpid(sw.getDpid()));
             TopologyEvent topologyEvent = new TopologyEvent(switchEvent);
             EventEntry<TopologyEvent> eventEntry =
                     new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
@@ -1208,7 +1209,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 continue;
             }
 
-            PortEvent portEvent = new PortEvent(p.getDpid(), p.getNumber());
+            PortEvent portEvent = new PortEvent(
+                    new Dpid(p.getDpid()),
+                    new PortNumber(p.getNumber().shortValue()));
             TopologyEvent topologyEvent = new TopologyEvent(portEvent);
             EventEntry<TopologyEvent> eventEntry =
                     new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
@@ -1226,10 +1229,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
          }
 
         for (KVLink l : KVLink.getAllLinks()) {
-            LinkEvent linkEvent = new LinkEvent(l.getSrc().dpid,
-                    l.getSrc().number,
-                    l.getDst().dpid,
-                    l.getDst().number);
+            LinkEvent linkEvent = new LinkEvent(
+                    new SwitchPort(l.getSrc().dpid, l.getSrc().number),
+                    new SwitchPort(l.getDst().dpid, l.getDst().number));
             TopologyEvent topologyEvent = new TopologyEvent(linkEvent);
             EventEntry<TopologyEvent> eventEntry =
                     new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,

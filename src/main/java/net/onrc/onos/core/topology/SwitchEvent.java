@@ -48,11 +48,6 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
         this.dpid = original.dpid;
     }
 
-    // TODO remove me when ready
-    public SwitchEvent(Long dpid) {
-        this.dpid = new Dpid(dpid);
-    }
-
     /**
      * Gets the DPID identifying this switch.
      *

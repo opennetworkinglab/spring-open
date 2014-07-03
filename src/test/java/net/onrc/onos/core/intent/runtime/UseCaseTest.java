@@ -38,6 +38,7 @@ import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.TopologyEvents;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.junit.After;
 import org.junit.Before;
@@ -269,8 +270,8 @@ public class UseCaseTest {
         // link down
         ((MockTopology) topology).removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
         ((MockTopology) topology).removeLink(2L, 21L, 1L, 12L);
-        LinkEvent linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
-        LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
+        LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
         removedLinkEvents.clear();
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
@@ -302,8 +303,8 @@ public class UseCaseTest {
 
         // link up
         ((MockTopology) topology).addBidirectionalLinks(1L, 12L, 2L, 21L);
-        linkEvent1 = new LinkEvent(1L, 12L, 2L, 21L);
-        linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
+        linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
         removedLinkEvents.clear();
         addedLinkEvents.clear();
         addedLinkEvents.add(linkEvent1);
