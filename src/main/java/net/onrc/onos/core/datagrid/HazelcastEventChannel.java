@@ -1,5 +1,6 @@
 package net.onrc.onos.core.datagrid;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -343,7 +344,9 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             //
             // Decode the value
             //
-            byte[] valueBytes = event.getValue();
+            byte[] original = event.getValue();
+            // Copying byte[], to see if it resolves ONOS-1343.
+            byte[] valueBytes = Arrays.copyOf(original, original.length);
             Kryo kryo = kryoFactory.newKryo();
             try {
                 V value = deserializeValue(kryo, valueBytes);
@@ -380,7 +383,9 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             //
             // Decode the value
             //
-            byte[] valueBytes = event.getValue();
+            byte[] original = event.getValue();
+            // Copying byte[], to see if it resolves ONOS-1343.
+            byte[] valueBytes = Arrays.copyOf(original, original.length);
             Kryo kryo = kryoFactory.newKryo();
             try {
                 V value = deserializeValue(kryo, valueBytes);
@@ -414,7 +419,9 @@ public class HazelcastEventChannel<K, V> implements IEventChannel<K, V> {
             //
             // Decode the value
             //
-            byte[] valueBytes = event.getValue();
+            byte[] original = event.getValue();
+            // Copying byte[], to see if it resolves ONOS-1343.
+            byte[] valueBytes = Arrays.copyOf(original, original.length);
             Kryo kryo = kryoFactory.newKryo();
             try {
                 V value = deserializeValue(kryo, valueBytes);
