@@ -190,6 +190,10 @@ class OnosCli(Cmd):
             #
             Command("show link all", "Show all links", self.show_link_all),
             #
+            Command("show metrics", "Show ONOS metrics"),
+            #
+            Command("show metrics all", "Show all ONOS metrics", self.show_metrics_all),
+            #
             Command("show path", "Show a path"),
             #
             Command("show path shortest",
@@ -357,6 +361,14 @@ class OnosCli(Cmd):
                 if v.has_key('dst-port'):
                     dst_port = str(v['dst-port'])
                 self.print_result("%s %s -> %s %s" % (src_dpid, src_port, dst_dpid, dst_port))
+
+    def show_metrics_all(self, args):
+        "CLI command callback: show metrics all"
+
+        url = "http://%s:%s/wm/onos/metrics" % (self.onos_ip, self.onos_port)
+        result = get_json(url)
+        #
+        self.print_json_result(result)
 
     def show_path_shortest(self, args):
         "CLI command callback: show path shortest"
