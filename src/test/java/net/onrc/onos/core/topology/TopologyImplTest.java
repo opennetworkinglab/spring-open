@@ -239,7 +239,7 @@ public class TopologyImplTest {
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
             Iterator<Device> itr = testTopology.getSwitch(new Dpid(switchID)).getDevices().iterator();
             while (itr.hasNext()) {
-                testTopology.removeDevice((Device) itr);
+                testTopology.removeDevice(itr.next());
             }
             testTopology.removeSwitch(switchID);
 
