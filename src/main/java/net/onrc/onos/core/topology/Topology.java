@@ -1,5 +1,7 @@
 package net.onrc.onos.core.topology;
 
+import java.util.Collection;
+
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.web.serializers.TopologySerializer;
 import net.onrc.onos.core.util.Dpid;
@@ -47,6 +49,14 @@ public interface Topology {
      * @return the switch port if found, otherwise null.
      */
     public Port getPort(SwitchPort port);
+
+    /**
+     * Gets all ports on a switch specified.
+     *
+     * @param dpid Switch dpid
+     * @return ports.
+     */
+    public Collection<Port> getPorts(Dpid dpid);
 
     /**
      * Gets the outgoing link from a switch port.
@@ -113,6 +123,21 @@ public interface Topology {
     public Device getDeviceByMac(MACAddress address);
 
     /**
+     * Gets all devices in the network.
+     *
+     * @return all devices in the network
+     */
+    public Iterable<Device> getDevices();
+
+    /**
+     * Gets all devices on specified port.
+     *
+     * @param port port which the device is attached
+     * @return all devices attached to the port.
+     */
+    public Collection<Device> getDevices(SwitchPort port);
+
+    /**
      * Acquire a read lock on the entire topology. The topology will not
      * change while readers have the lock. Must be released using
      * {@link #releaseReadLock()}. This method will block until a read lock is
@@ -124,6 +149,4 @@ public interface Topology {
      * Release the read lock on the topology.
      */
     public void releaseReadLock();
-
-    public Iterable<Device> getDevices();
 }

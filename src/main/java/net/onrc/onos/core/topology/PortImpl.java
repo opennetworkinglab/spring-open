@@ -1,10 +1,6 @@
 package net.onrc.onos.core.topology;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
@@ -25,15 +21,10 @@ public class PortImpl extends TopologyObject implements Port {
 
     private final SwitchPort switchPort;
 
-    // These needs to be ConcurrentCollecton if allowing the topology to be
-    // accessed concurrently
-    protected Set<Device> devices;
-
     public PortImpl(Topology topology, Switch parentSwitch, PortNumber number) {
         super(topology);
         this.sw = parentSwitch;
         this.number = number;
-        this.devices = new HashSet<>();
 
         switchPort = new SwitchPort(parentSwitch.getDpid(),
                                     number);
@@ -92,27 +83,7 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public Iterable<Device> getDevices() {
-        return Collections.unmodifiableSet(this.devices);
-    }
-
-    /**
-     * @param d
-     * @return true if successfully added
-     */
-    public boolean addDevice(Device d) {
-        return this.devices.add(d);
-    }
-
-    /**
-     * @param d
-     * @return true if device existed and was removed
-     */
-    public boolean removeDevice(Device d) {
-        return this.devices.remove(d);
-    }
-
-    public void removeAllDevice() {
-        this.devices.clear();
+        return topology.getDevices(this.asSwitchPort());
     }
 
     @Override

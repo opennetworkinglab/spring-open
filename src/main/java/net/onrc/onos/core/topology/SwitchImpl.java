@@ -1,18 +1,15 @@
 package net.onrc.onos.core.topology;
 
-import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.PortNumber;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
@@ -24,9 +21,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class SwitchImpl extends TopologyObject implements Switch {
 
     private Dpid dpid;
-    // These needs to be ConcurrentCollecton if allowing the topology to be
-    // accessed concurrently
-    private final Map<PortNumber, Port> ports;
 
     public SwitchImpl(Topology topology, Long dpid) {
         this(topology, new Dpid(dpid));
@@ -35,7 +29,6 @@ public class SwitchImpl extends TopologyObject implements Switch {
     public SwitchImpl(Topology topology, Dpid dpid) {
         super(topology);
         this.dpid = dpid;
-        ports = new HashMap<>();
     }
 
     @Override
@@ -45,12 +38,12 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public Collection<Port> getPorts() {
-        return Collections.unmodifiableCollection(ports.values());
+        return topology.getPorts(getDpid());
     }
 
     @Override
     public Port getPort(PortNumber number) {
-        return ports.get(number);
+        return topology.getPort(getDpid(), number);
     }
 
     @Override
@@ -82,7 +75,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
         // calculating this every time?
         List<Device> devices = new ArrayList<Device>();
 
-        for (Port port : ports.values()) {
+        for (Port port : getPorts()) {
             for (Device device : port.getDevices()) {
                 devices.add(device);
             }
@@ -91,25 +84,16 @@ public class SwitchImpl extends TopologyObject implements Switch {
         return devices;
     }
 
-    public void addPort(Port port) {
-        this.ports.put(port.getNumber(), port);
-    }
-
-    public Port removePort(Port port) {
-        Port p = this.ports.remove(port.getNumber());
-        return p;
-    }
-
     public Port addPort(Long portNumber) {
         PortImpl port = new PortImpl(topology, this, portNumber);
-        ports.put(port.getNumber(), port);
+        ((TopologyImpl) topology).putPort(port);
         return port;
     }
 
     @Override
     public Iterable<Link> getOutgoingLinks() {
         LinkedList<Link> links = new LinkedList<Link>();
-        for (Port port : ports.values()) {
+        for (Port port : getPorts()) {
             Link link = port.getOutgoingLink();
             if (link != null) {
                 links.add(link);
@@ -121,7 +105,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
     @Override
     public Iterable<Link> getIncomingLinks() {
         LinkedList<Link> links = new LinkedList<Link>();
-        for (Port port : ports.values()) {
+        for (Port port : getPorts()) {
             Link link = port.getIncomingLink();
             if (link != null) {
                 links.add(link);

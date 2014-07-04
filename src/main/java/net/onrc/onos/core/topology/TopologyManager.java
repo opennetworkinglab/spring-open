@@ -894,12 +894,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             reorderedAddedPortEvents.put(id, portEvent);
             return;
         }
-        SwitchImpl switchImpl = getSwitchImpl(sw);
 
         Port port = sw.getPort(portEvent.getPortNumber());
         if (port == null) {
             port = new PortImpl(topology, sw, portEvent.getPortNumber());
-            switchImpl.addPort(port);
+            topology.putPort(port);
         } else {
             // TODO: Update the port attributes
             log.debug("Update port attributes");
@@ -967,7 +966,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
 
         // Remove the Port from the Switch
         SwitchImpl switchImpl = getSwitchImpl(sw);
-        switchImpl.removePort(port);
+        topology.removePort(port);
 
         apiRemovedPortEvents.add(portEvent);
     }
@@ -1116,7 +1115,6 @@ public class TopologyManager implements TopologyDiscoveryInterface {
 
             // Add Device <-> Port attachment
             PortImpl portImpl = getPortImpl(port);
-            portImpl.addDevice(device);
             deviceImpl.addAttachmentPoint(port);
             attachmentFound = true;
         }
@@ -1140,30 +1138,13 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      */
     @GuardedBy("topology.writeLock")
     private void removeDevice(DeviceEvent deviceEvent) {
-        log.debug("Removing a device to the topology: mac {}", deviceEvent.getMac());
+        log.debug("Removing a device from the topology: mac {}", deviceEvent.getMac());
         Device device = topology.getDeviceByMac(deviceEvent.getMac());
         if (device == null) {
             log.warn("Device {} already removed, ignoring", deviceEvent);
             return;
         }
-        DeviceImpl deviceImpl = getDeviceImpl(device);
 
-        // Process each attachment point
-        for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
-            // Attached Ports must exist
-            Port port = topology.getPort(swp.getDpid(), swp.getPortNumber());
-            if (port == null) {
-                log.warn("Port for the attachment point {} did not exist. skipping attachment point mutation", swp);
-                continue;
-            }
-
-            // Remove Device <-> Port attachment
-            PortImpl portImpl = getPortImpl(port);
-            portImpl.removeDevice(device);
-            deviceImpl.removeAttachmentPoint(port);
-        }
-
-        log.debug("Removing the device info into the Topology: mac {}", deviceEvent.getMac());
         topology.removeDevice(device);
         apiRemovedDeviceEvents.add(deviceEvent);
     }
