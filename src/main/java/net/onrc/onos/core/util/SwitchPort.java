@@ -2,6 +2,7 @@ package net.onrc.onos.core.util;
 
 import net.onrc.onos.core.util.serializers.SwitchPortSerializer;
 
+import org.apache.commons.lang.Validate;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
@@ -28,6 +29,8 @@ public final class SwitchPort {
      * @param port the port to use.
      */
     public SwitchPort(Dpid dpid, PortNumber port) {
+        Validate.notNull(dpid);
+        Validate.notNull(port);
         this.dpid = dpid;
         this.port = port;
     }
