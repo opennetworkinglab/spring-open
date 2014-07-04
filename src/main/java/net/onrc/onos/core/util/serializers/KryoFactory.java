@@ -81,22 +81,22 @@ public class KryoFactory {
         // Preallocate
         kryoList.ensureCapacity(initialCapacity);
         for (int i = 0; i < initialCapacity; i++) {
-            Kryo kryo = newKryoImpl();
+            Kryo kryo = newKryoObject();
             kryoList.add(kryo);
         }
     }
 
     /**
-     * Create and initialize a new Kryo object.
+     * Gets a new Kryo object.
      *
-     * @return the created Kryo object.
+     * @return the Kryo object.
      */
     public Kryo newKryo() {
         return newDeleteKryo(null);
     }
 
     /**
-     * Delete an existing Kryo object.
+     * Deletes an existing Kryo object.
      *
      * @param deleteKryo the object to delete.
      */
@@ -105,7 +105,7 @@ public class KryoFactory {
     }
 
     /**
-     * Create or delete a Kryo object.
+     * Creates or deletes a Kryo object.
      *
      * @param deleteKryo if null, then allocate and return a new object,
      *                   otherwise delete the provided object.
@@ -121,7 +121,7 @@ public class KryoFactory {
             if (kryoList.isEmpty()) {
                 // Preallocate
                 for (int i = 0; i < 100; i++) {
-                    kryo = newKryoImpl();
+                    kryo = newKryoObject();
                     kryoList.add(kryo);
                 }
             }
@@ -132,11 +132,16 @@ public class KryoFactory {
     }
 
     /**
-     * Create and initialize a new Kryo object.
+     * Creates and initializes a new Kryo object.
+     *<p>
+     * NOTE: This operation can be slow and should be used only if the
+     * application needs a single Kryo instance (e.g., during startup).
+     * For faster allocation, the application should use #newKryo()
+     * and #deleteKryo() factory methods.
      *
      * @return the created Kryo object.
      */
-    private Kryo newKryoImpl() {
+    public static Kryo newKryoObject() {
         Kryo kryo = new Kryo();
         kryo.setRegistrationRequired(true);
         //
