@@ -33,11 +33,15 @@ public class LinkEventSerializer extends SerializerBase<LinkEvent> {
                           final SerializerProvider serializerProvider)
             throws IOException {
 
-        jsonGenerator.writeStartObject();
+        //
+        // TODO: For now, the JSON format of the serialized output should
+        // be same as the JSON format of the corresponding class Link.
+        // In the future, we will use a single serializer.
+        //
 
+        jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField("src", linkEvent.getSrc());
         jsonGenerator.writeObjectField("dst", linkEvent.getDst());
-
         jsonGenerator.writeEndObject();
     }
 }

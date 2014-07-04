@@ -36,10 +36,14 @@ public class SwitchPortSerializer extends SerializerBase<SwitchPort> {
 
         jsonGenerator.writeStringField("dpid",
                                        switchPort.getDpid().toString());
-        jsonGenerator.writeStringField("portNumber",
-                                       switchPort.getPortNumber().toString());
+        //
+        // FIXME: The solution below to preresent the "short" port number
+        // as an unsigned value is a hack. The fix should be elsewhere
+        // (e.g., in class PortNumber itself).
+        //
+        jsonGenerator.writeNumberField("portNumber",
+                                       (0xffff & switchPort.getPortNumber().value()));
 
         jsonGenerator.writeEndObject();
     }
-
 }

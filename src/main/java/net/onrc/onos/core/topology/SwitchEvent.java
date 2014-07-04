@@ -1,15 +1,19 @@
 package net.onrc.onos.core.topology;
 
+import net.onrc.onos.core.topology.web.serializers.SwitchEventSerializer;
 import net.onrc.onos.core.util.Dpid;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
+
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  * Self-contained Switch Object.
  * <p/>
  * TODO: We probably want common base class/interface for Self-Contained Event Object.
  */
+@JsonSerialize(using = SwitchEventSerializer.class)
 public class SwitchEvent {
     protected final Dpid dpid;
 

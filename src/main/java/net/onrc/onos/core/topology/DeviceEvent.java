@@ -5,7 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.topology.web.serializers.DeviceEventSerializer;
 import net.onrc.onos.core.util.SwitchPort;
+
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
  * Self-contained Device event(s) Object
@@ -19,6 +22,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * <p/>
  * TODO: We probably want common base class/interface for Self-Contained Event Object
  */
+@JsonSerialize(using = DeviceEventSerializer.class)
 public class DeviceEvent {
     private final MACAddress mac;
     protected List<SwitchPort> attachmentPoints;

@@ -157,12 +157,16 @@ public class TestRestIntentLowGet extends TestRestIntent {
         assertThat(ports0, is(notNullValue()));
         final JSONObject dst0 = ports0.getJSONObject("dst");
         assertThat(dst0, is(notNullValue()));
-        final String dstPortNumber0 = dst0.getString("portNumber");
-        assertThat(dstPortNumber0, is(equalTo("41")));
+        final String dstDpid0 = dst0.getString("dpid");
+        assertThat(dstDpid0, is(equalTo("00:00:00:00:00:00:00:04")));
+        int dstPortNumber0 = dst0.getInt("portNumber");
+        assertThat(dstPortNumber0, is(equalTo(41)));
         final JSONObject src0 = ports0.getJSONObject("src");
         assertThat(src0, is(notNullValue()));
-        final String srcPortNumber0 = src0.getString("portNumber");
-        assertThat(srcPortNumber0, is(equalTo("14")));
+        final String srcDpid0 = src0.getString("dpid");
+        assertThat(srcDpid0, is(equalTo("00:00:00:00:00:00:00:01")));
+        int srcPortNumber0 = src0.getInt("portNumber");
+        assertThat(srcPortNumber0, is(equalTo(14)));
 
         //  Check that intent 1 is correct
         final JSONObject intent1 = findIntent(intents, "1:3___0");
@@ -180,12 +184,16 @@ public class TestRestIntentLowGet extends TestRestIntent {
         assertThat(ports1, is(notNullValue()));
         final JSONObject dst1 = ports1.getJSONObject("dst");
         assertThat(dst1, is(notNullValue()));
-        final String dstPortNumber1 = dst1.getString("portNumber");
-        assertThat(dstPortNumber1, is(equalTo("32")));
+        final String dstDpid1 = dst1.getString("dpid");
+        assertThat(dstDpid1, is(equalTo("00:00:00:00:00:00:00:03")));
+        int dstPortNumber1 = dst1.getInt("portNumber");
+        assertThat(dstPortNumber1, is(equalTo(32)));
         final JSONObject src1 = ports1.getJSONObject("src");
         assertThat(src1, is(notNullValue()));
-        final String srcPortNumber1 = src1.getString("portNumber");
-        assertThat(srcPortNumber1, is(equalTo("23")));
+        final String srcDpid1 = src1.getString("dpid");
+        assertThat(srcDpid1, is(equalTo("00:00:00:00:00:00:00:02")));
+        int srcPortNumber1 = src1.getInt("portNumber");
+        assertThat(srcPortNumber1, is(equalTo(23)));
     }
 
     /**

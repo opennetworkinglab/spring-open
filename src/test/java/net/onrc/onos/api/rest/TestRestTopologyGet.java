@@ -101,17 +101,21 @@ public class TestRestTopologyGet extends TestRestTopology {
         // correct
         for (int linkIndex = 0; linkIndex < links.length(); linkIndex++) {
             final JSONObject link = links.getJSONObject(linkIndex);
-            final String src = link.getString("src-switch");
-            final String dst = link.getString("dst-switch");
+            final JSONObject src = link.getJSONObject("src");
             assertThat(src, is(notNullValue()));
+            final JSONObject dst = link.getJSONObject("dst");
             assertThat(dst, is(notNullValue()));
+            final String srcDpid = src.getString("dpid");
+            final String dstDpid = dst.getString("dpid");
+            assertThat(srcDpid, is(notNullValue()));
+            assertThat(dstDpid, is(notNullValue()));
 
-            if (src.equals("00:00:00:00:00:00:00:02")) {
-                toLinks.add(dst);
+            if (srcDpid.equals("00:00:00:00:00:00:00:02")) {
+                toLinks.add(dstDpid);
             }
 
-            if (dst.equals("00:00:00:00:00:00:00:02")) {
-                fromLinks.add(src);
+            if (dstDpid.equals("00:00:00:00:00:00:00:02")) {
+                fromLinks.add(srcDpid);
             }
         }
 

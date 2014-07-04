@@ -18,17 +18,15 @@ public class LinkSerializer extends SerializerBase<Link> {
     public void serialize(Link link, JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
             throws IOException {
+
+        //
+        // TODO: For now, the JSON format of the serialized output should
+        // be same as the JSON format of the corresponding class LinkEvent.
+        // In the future, we will use a single serializer.
+        //
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField("src-switch",
-                link.getSrcSwitch().getDpid().toString());
-        // XXX port number as unsigned?
-        jsonGenerator.writeNumberField("src-port",
-                link.getSrcPort().getNumber().value());
-        jsonGenerator.writeStringField("dst-switch",
-                link.getDstSwitch().getDpid().toString());
-        jsonGenerator.writeNumberField("dst-port",
-                link.getDstPort().getNumber().value());
+        jsonGenerator.writeObjectField("src", link.getSrcPort().asSwitchPort());
+        jsonGenerator.writeObjectField("dst", link.getDstPort().asSwitchPort());
         jsonGenerator.writeEndObject();
     }
-
 }

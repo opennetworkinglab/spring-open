@@ -3,6 +3,9 @@ package net.onrc.onos.core.topology;
 import java.util.Collection;
 import java.util.Collections;
 
+import net.onrc.onos.core.topology.web.serializers.TopologyEventsSerializer;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 /**
  * Class for encapsulating multiple topology events.
  * <p/>
@@ -25,6 +28,7 @@ import java.util.Collections;
  * The above ordering guarantees that adding a port for example
  * will be processed after the corresponding switch itself is added.
  */
+@JsonSerialize(using = TopologyEventsSerializer.class)
 public final class TopologyEvents {
     private final long timestamp;
     private final Collection<SwitchEvent> addedSwitchEvents;

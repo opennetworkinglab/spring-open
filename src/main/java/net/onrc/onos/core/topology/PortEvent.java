@@ -1,10 +1,12 @@
 package net.onrc.onos.core.topology;
 
+import net.onrc.onos.core.topology.web.serializers.PortEventSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.apache.commons.lang.Validate;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -13,6 +15,7 @@ import java.util.Objects;
  * <p/>
  * TODO: We probably want common base class/interface for Self-Contained Event Object.
  */
+@JsonSerialize(using = PortEventSerializer.class)
 public class PortEvent {
 
     protected final SwitchPort id;
