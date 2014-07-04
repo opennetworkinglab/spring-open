@@ -37,6 +37,7 @@ import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.TopologyEvents;
 
 import org.junit.After;
 import org.junit.Before;
@@ -231,6 +232,7 @@ public class UseCaseTest {
         List<LinkEvent> removedLinkEvents = new LinkedList<>();
         List<DeviceEvent> addedDeviceEvents = new LinkedList<>();
         List<DeviceEvent> removedDeviceEvents = new LinkedList<>();
+        TopologyEvents topologyEvents;
 
         // create shortest path intents
         IntentOperationList opList = new IntentOperationList();
@@ -272,15 +274,18 @@ public class UseCaseTest {
         removedLinkEvents.clear();
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
-        runtime1.topologyEvents(
-                addedSwitchEvents,
-                removedSwitchEvents,
-                addedPortEvents,
-                removedPortEvents,
-                addedLinkEvents,
-                removedLinkEvents,
-                addedDeviceEvents,
-                removedDeviceEvents);
+
+        topologyEvents = new TopologyEvents(0,
+                                            addedSwitchEvents,
+                                            removedSwitchEvents,
+                                            addedPortEvents,
+                                            removedPortEvents,
+                                            addedLinkEvents,
+                                            removedLinkEvents,
+                                            addedDeviceEvents,
+                                            removedDeviceEvents);
+
+        runtime1.topologyEvents(topologyEvents);
         System.out.println("*** Link goes down. ***");
 
         // send notification
@@ -303,15 +308,18 @@ public class UseCaseTest {
         addedLinkEvents.clear();
         addedLinkEvents.add(linkEvent1);
         addedLinkEvents.add(linkEvent2);
-        runtime1.topologyEvents(
-                addedSwitchEvents,
-                removedSwitchEvents,
-                addedPortEvents,
-                removedPortEvents,
-                addedLinkEvents,
-                removedLinkEvents,
-                addedDeviceEvents,
-                removedDeviceEvents);
+
+        topologyEvents = new TopologyEvents(0,
+                                            addedSwitchEvents,
+                                            removedSwitchEvents,
+                                            addedPortEvents,
+                                            removedPortEvents,
+                                            addedLinkEvents,
+                                            removedLinkEvents,
+                                            addedDeviceEvents,
+                                            removedDeviceEvents);
+
+        runtime1.topologyEvents(topologyEvents);
         System.out.println("*** Link goes up. ***");
 
         // send notification

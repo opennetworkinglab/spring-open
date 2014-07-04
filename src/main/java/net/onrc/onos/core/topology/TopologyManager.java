@@ -27,9 +27,12 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.EventEntry;
 import net.onrc.onos.core.util.SwitchPort;
+import net.onrc.onos.core.util.serializers.KryoFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.esotericsoftware.kryo.Kryo;
 
 /**
  * The TopologyManager receives topology updates from the southbound discovery
@@ -59,6 +62,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     private final TopologyImpl topology = new TopologyImpl();
     private final IControllerRegistryService registryService;
     private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
+    private Kryo kryo = KryoFactory.newKryoObject();
 
     //
     // Local state for keeping track of reordered events.
@@ -457,16 +461,19 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         // Deliver the events
+        long timestamp = System.nanoTime();
         for (ITopologyListener listener : this.topologyListeners) {
-            // TODO: Should copy before handing them over to listener?
-            listener.topologyEvents(apiAddedSwitchEvents,
-                    apiRemovedSwitchEvents,
-                    apiAddedPortEvents,
-                    apiRemovedPortEvents,
-                    apiAddedLinkEvents,
-                    apiRemovedLinkEvents,
-                    apiAddedDeviceEvents,
-                    apiRemovedDeviceEvents);
+            TopologyEvents events =
+                new TopologyEvents(timestamp,
+                                   kryo.copy(apiAddedSwitchEvents),
+                                   kryo.copy(apiRemovedSwitchEvents),
+                                   kryo.copy(apiAddedPortEvents),
+                                   kryo.copy(apiRemovedPortEvents),
+                                   kryo.copy(apiAddedLinkEvents),
+                                   kryo.copy(apiRemovedLinkEvents),
+                                   kryo.copy(apiAddedDeviceEvents),
+                                   kryo.copy(apiRemovedDeviceEvents));
+            listener.topologyEvents(events);
         }
 
         //

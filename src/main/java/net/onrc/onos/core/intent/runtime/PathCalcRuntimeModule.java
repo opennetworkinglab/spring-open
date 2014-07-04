@@ -38,12 +38,12 @@ import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.topology.DeviceEvent;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
@@ -642,27 +642,16 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     // ================================================================================
     // ITopologyListener implementations
     // ================================================================================
-
-    // CHECKSTYLE:OFF suppress warning about too many parameters
     /**
      * {@inheritDoc}
      */
     @Override
-    public void topologyEvents(Collection<SwitchEvent> addedSwitchEvents,
-                                   Collection<SwitchEvent> removedSwitchEvents,
-                                   Collection<PortEvent> addedPortEvents,
-                                   Collection<PortEvent> removedPortEvents,
-                                   Collection<LinkEvent> addedLinkEvents,
-                                   Collection<LinkEvent> removedLinkEvents,
-                                   Collection<DeviceEvent> addedDeviceEvents,
-                                   Collection<DeviceEvent> removedDeviceEvents) {
-    // CHECKSTYLE:ON
-
+    public void topologyEvents(TopologyEvents topologyEvents) {
         PerfLogger p = new PerfLogger("networkGraphEvents");
         HashSet<Intent> affectedPaths = new HashSet<>();
 
         boolean rerouteAll = false;
-        for (LinkEvent le : addedLinkEvents) {
+        for (LinkEvent le : topologyEvents.getAddedLinkEvents()) {
             LinkEvent rev = new LinkEvent(le.getDst().getDpid(),
                     le.getDst().getPortNumber(), le.getSrc().getDpid(),
                     le.getSrc().getPortNumber());
@@ -675,7 +664,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                 log.debug("Adding unmatched LinkEvent: {}", le);
             }
         }
-        for (LinkEvent le : removedLinkEvents) {
+        for (LinkEvent le : topologyEvents.getRemovedLinkEvents()) {
             if (unmatchedLinkEvents.contains(le)) {
                 unmatchedLinkEvents.remove(le);
                 log.debug("Removing LinkEvent: {}", le);
@@ -685,23 +674,26 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             log.debug("Unmatched link events: {} events", unmatchedLinkEvents.size());
         }
 
-        if (rerouteAll) { //addedLinkEvents.size() > 0) { // ||
-//                              addedPortEvents.size() > 0 ||
-//                              addedSwitchEvents.size() > 0) {
+        if (rerouteAll) {
+            //
+            // (topologyEvents.getAddedLinkEvents().size() > 0) ||
+            // (topologyEvents.getAddedPortEvents().size() > 0) ||
+            // (topologyEvents.getAddedSwitchEvents.size() > 0)
+            //
             p.log("begin_getAllIntents");
             affectedPaths.addAll(getPathIntents().getAllIntents());
             p.log("end_getAllIntents");
-        } else if (removedSwitchEvents.size() > 0 ||
-                removedLinkEvents.size() > 0 ||
-                removedPortEvents.size() > 0) {
+        } else if (topologyEvents.getRemovedSwitchEvents().size() > 0 ||
+                   topologyEvents.getRemovedLinkEvents().size() > 0 ||
+                   topologyEvents.getRemovedPortEvents().size() > 0) {
             p.log("begin_getIntentsByLink");
-            for (LinkEvent linkEvent : removedLinkEvents) {
+            for (LinkEvent linkEvent : topologyEvents.getRemovedLinkEvents()) {
                 affectedPaths.addAll(pathIntents.getIntentsByLink(linkEvent));
             }
             p.log("end_getIntentsByLink");
 
             p.log("begin_getIntentsByPort");
-            for (PortEvent portEvent : removedPortEvents) {
+            for (PortEvent portEvent : topologyEvents.getRemovedPortEvents()) {
                 affectedPaths.addAll(pathIntents.getIntentsByPort(
                         portEvent.getDpid(),
                         portEvent.getPortNumber()));
@@ -709,7 +701,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             p.log("end_getIntentsByPort");
 
             p.log("begin_getIntentsByDpid");
-            for (SwitchEvent switchEvent : removedSwitchEvents) {
+            for (SwitchEvent switchEvent : topologyEvents.getRemovedSwitchEvents()) {
                 affectedPaths.addAll(pathIntents.getIntentsByDpid(switchEvent.getDpid()));
             }
             p.log("end_getIntentsByDpid");

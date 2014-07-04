@@ -23,6 +23,7 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.TopologyEvents;
 
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
@@ -456,6 +457,7 @@ public class PathCalcRuntimeModuleTest {
         final List<DeviceEvent> emptyDeviceEvents = new LinkedList<>();
         final List<LinkEvent> addedLinkEvents = new LinkedList<>();
         final List<LinkEvent> removedLinkEvents = new LinkedList<>();
+        TopologyEvents topologyEvents;
 
         final MockTopology topology = mocks.getTopology();
         topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
@@ -464,10 +466,18 @@ public class PathCalcRuntimeModuleTest {
         LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
-        runtime.topologyEvents(emptySwitchEvents, emptySwitchEvents,
-                    emptyPortEvents, emptyPortEvents,
-                    addedLinkEvents, removedLinkEvents,
-                    emptyDeviceEvents, emptyDeviceEvents);
+
+        topologyEvents = new TopologyEvents(0,
+                                            emptySwitchEvents,
+                                            emptySwitchEvents,
+                                            emptyPortEvents,
+                                            emptyPortEvents,
+                                            addedLinkEvents,
+                                            removedLinkEvents,
+                                            emptyDeviceEvents,
+                                            emptyDeviceEvents);
+
+        runtime.topologyEvents(topologyEvents);
 
         //  Check the high level intents.
         final IntentMap highLevelIntentsAfterReroute = runtime.getHighLevelIntents();
@@ -681,6 +691,7 @@ public class PathCalcRuntimeModuleTest {
         final List<DeviceEvent> emptyDeviceEvents = new LinkedList<>();
         final List<LinkEvent> addedLinkEvents = new LinkedList<>();
         final List<LinkEvent> removedLinkEvents = new LinkedList<>();
+        TopologyEvents topologyEvents;
 
         final MockTopology topology = mocks.getTopology();
         topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
@@ -689,15 +700,18 @@ public class PathCalcRuntimeModuleTest {
         final LinkEvent linkEvent2 = new LinkEvent(2L, 21L, 1L, 12L);
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
-        runtime.topologyEvents(
-                emptySwitchEvents,
-                emptySwitchEvents,
-                emptyPortEvents,
-                emptyPortEvents,
-                addedLinkEvents,
-                removedLinkEvents,
-                emptyDeviceEvents,
-                emptyDeviceEvents);
+
+        topologyEvents = new TopologyEvents(0,
+                                            emptySwitchEvents,
+                                            emptySwitchEvents,
+                                            emptyPortEvents,
+                                            emptyPortEvents,
+                                            addedLinkEvents,
+                                            removedLinkEvents,
+                                            emptyDeviceEvents,
+                                            emptyDeviceEvents);
+
+        runtime.topologyEvents(topologyEvents);
 
         //  Check the high level intents.
         final IntentMap highLevelIntentsAfterReroute = runtime.getHighLevelIntents();
@@ -739,15 +753,18 @@ public class PathCalcRuntimeModuleTest {
         topology.addBidirectionalLinks(1L, 12L, 2L, 21L); // Restoration of the failure
         addedLinkEvents.add(linkEvent1);
         addedLinkEvents.add(linkEvent2);
-        runtime.topologyEvents(
-                emptySwitchEvents,
-                emptySwitchEvents,
-                emptyPortEvents,
-                emptyPortEvents,
-                addedLinkEvents,
-                removedLinkEvents,
-                emptyDeviceEvents,
-                emptyDeviceEvents);
+
+        topologyEvents = new TopologyEvents(0,
+                                            emptySwitchEvents,
+                                            emptySwitchEvents,
+                                            emptyPortEvents,
+                                            emptyPortEvents,
+                                            addedLinkEvents,
+                                            removedLinkEvents,
+                                            emptyDeviceEvents,
+                                            emptyDeviceEvents);
+
+        runtime.topologyEvents(topologyEvents);
 
         //  Check the high level intents.
         final IntentMap highLevelIntentsAfterInterrupt = runtime.getHighLevelIntents();
