@@ -17,7 +17,28 @@
 
 package net.onrc.onos.core.linkdiscovery;
 
-public interface ILinkDiscoveryListener extends ILinkDiscovery {
+/**
+ * Provides callbacks for link discovery events.
+ */
+public interface ILinkDiscoveryListener {
 
-    public void linkDiscoveryUpdate(LDUpdate update);
+    /**
+     * Called when a new link is detected. A link discovery probe has been
+     * received on a port, and the link was not previously known to the link
+     * discovery manager.
+     *
+     * @param link the new link that was detected
+     */
+    public void linkAdded(Link link);
+
+    /**
+     * Called when a link is removed. The link may have been removed because it
+     * timed out (no probes received on the destination port for an interval),
+     * or because the port is no longer available for link discovery, either
+     * because the switch was removed, the port went down, or link discovery
+     * was disabled on the port.
+     *
+     * @param link the link that was removed
+     */
+    public void linkRemoved(Link link);
 }

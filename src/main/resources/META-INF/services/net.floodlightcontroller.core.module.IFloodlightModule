@@ -1,6 +1,6 @@
 net.floodlightcontroller.core.FloodlightProvider
 net.onrc.onos.core.topology.TopologyPublisher
-net.onrc.onos.core.linkdiscovery.internal.LinkDiscoveryManager
+net.onrc.onos.core.linkdiscovery.LinkDiscoveryManager
 net.floodlightcontroller.restserver.RestApiServer
 net.floodlightcontroller.threadpool.ThreadPool
 net.floodlightcontroller.core.test.MockFloodlightProvider

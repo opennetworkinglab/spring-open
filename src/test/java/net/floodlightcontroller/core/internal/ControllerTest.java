@@ -56,7 +56,7 @@ import net.floodlightcontroller.restserver.RestApiServer;
 import net.floodlightcontroller.test.FloodlightTestCase;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
-import net.onrc.onos.core.linkdiscovery.internal.LinkDiscoveryManager;
+import net.onrc.onos.core.linkdiscovery.LinkDiscoveryManager;
 import net.onrc.onos.core.main.IOFSwitchPortListener;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;

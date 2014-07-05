@@ -30,7 +30,7 @@ public class LinksResource extends ServerResource {
                 LinkWithType lwt = new LinkWithType(link,
                         info.getSrcPortState(),
                         info.getDstPortState(),
-                        ld.getLinkType(link, info));
+                        info.getLinkType());
                 returnLinkSet.add(lwt);
             }
         }

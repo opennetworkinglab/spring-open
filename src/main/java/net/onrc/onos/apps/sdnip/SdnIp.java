@@ -14,8 +14,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
@@ -24,7 +22,6 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.proxyarp.IArpRequester;
@@ -36,7 +33,6 @@ import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
-import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.LDUpdate;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.Ethernet;
@@ -149,8 +145,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     // True when we have a full mesh of shortest paths between gateways
     private volatile boolean topologyReady = false;
 
-    private List<LDUpdate> linkUpdates;
-    private SingletonTask topologyChangeDetectorTask;
+    //private SingletonTask topologyChangeDetectorTask;
 
     private SetMultimap<InetAddress, RibUpdate> prefixesWaitingOnArp;
 
@@ -168,12 +163,12 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     // TODO: Fix for the new Topology Network Graph
     // private volatile Topology topology = null;
 
+    /*
     private class TopologyChangeDetector implements Runnable {
         @Override
         public void run() {
             log.debug("Running topology change detection task");
             // TODO: Fix the code below after topoLinkService was removed
-            /*
             synchronized (linkUpdates) {
 
                 ITopoLinkService topoLinkService = new TopoLinkServiceImpl();
@@ -191,7 +186,6 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                     }
                 }
             }
-            */
 
             if (!topologyReady) {
                 if (linkUpdates.isEmpty()) {
@@ -207,6 +201,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             }
         }
     }
+    */
 
     private void readConfiguration(String configFilename) {
         File gatewaysFile = new File(configFilename);
@@ -295,9 +290,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         controllerRegistryService = context.getServiceImpl(IControllerRegistryService.class);
         pathRuntime = context.getServiceImpl(IPathCalcRuntimeService.class);
-        linkUpdates = new ArrayList<>();
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        topologyChangeDetectorTask = new SingletonTask(executor, new TopologyChangeDetector());
+
+        //ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        //topologyChangeDetectorTask = new SingletonTask(executor, new TopologyChangeDetector());
 
         pathsWaitingOnArp = new HashMap<>();
         prefixesWaitingOnArp = Multimaps.synchronizedSetMultimap(
@@ -843,7 +838,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         //Suppress link discovery on external-facing router ports
 
         for (Interface intf : interfaces.values()) {
-            linkDiscoveryService.addToSuppressLLDPs(intf.getDpid(), intf.getPort());
+            linkDiscoveryService.disableDiscoveryOnPort(intf.getDpid(), intf.getPort());
         }
 
         bgpUpdatesExecutor.execute(new Runnable() {
@@ -1253,7 +1248,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         //Suppress link discovery on external-facing router ports
         for (Interface intf : interfaces.values()) {
-            linkDiscoveryService.addToSuppressLLDPs(intf.getDpid(), intf.getPort());
+            linkDiscoveryService.disableDiscoveryOnPort(intf.getDpid(), intf.getPort());
         }
 
         bgpUpdatesExecutor.execute(new Runnable() {

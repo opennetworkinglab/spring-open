@@ -19,6 +19,7 @@ import net.onrc.onos.core.devicemanager.IOnosDeviceService;
 import net.onrc.onos.core.devicemanager.OnosDevice;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryListener;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
+import net.onrc.onos.core.linkdiscovery.Link;
 import net.onrc.onos.core.main.IOFSwitchPortListener;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
@@ -132,43 +133,45 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     }
 
     @Override
-    public void linkDiscoveryUpdate(LDUpdate update) {
-
+    public void linkAdded(Link link) {
         LinkEvent linkEvent = new LinkEvent(
-                        new SwitchPort(update.getSrc(), update.getSrcPort()),
-                        new SwitchPort(update.getDst(), update.getDstPort()));
+                new SwitchPort(link.getSrc(), link.getSrcPort()),
+                new SwitchPort(link.getDst(), link.getDstPort()));
+
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         linkEvent.freeze();
 
-        switch (update.getOperation()) {
-            case LINK_ADDED:
-                if (!registryService.hasControl(update.getDst())) {
-                    // Don't process or send a link event if we're not master for the
-                    // destination switch
-                    log.debug("Not the master for dst switch {}. Suppressed link add event {}.",
-                            update.getDst(), linkEvent);
-                    return;
-                }
-                topologyDiscoveryInterface.putLinkDiscoveryEvent(linkEvent);
-                break;
-            case LINK_UPDATED:
-                // We don't use the LINK_UPDATED event (unsure what it means)
-                break;
-            case LINK_REMOVED:
-                if (!registryService.hasControl(update.getDst())) {
-                    // Don't process or send a link event if we're not master for the
-                    // destination switch
-                    log.debug("Not the master for dst switch {}. Suppressed link remove event {}.",
-                            update.getDst(), linkEvent);
-                    return;
-                }
-                topologyDiscoveryInterface.removeLinkDiscoveryEvent(linkEvent);
-                break;
-            default:
-                break;
+        if (!registryService.hasControl(link.getDst())) {
+            // Don't process or send a link event if we're not master for the
+            // destination switch
+            log.debug("Not the master for dst switch {}. Suppressed link add event {}.",
+                    link.getDst(), linkEvent);
+            return;
         }
+        topologyDiscoveryInterface.putLinkDiscoveryEvent(linkEvent);
+    }
+
+    @Override
+    public void linkRemoved(Link link) {
+        LinkEvent linkEvent = new LinkEvent(
+                new SwitchPort(link.getSrc(), link.getSrcPort()),
+                new SwitchPort(link.getDst(), link.getDstPort()));
+
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        linkEvent.freeze();
+
+        if (!registryService.hasControl(link.getDst())) {
+            // Don't process or send a link event if we're not master for the
+            // destination switch
+            log.debug("Not the master for dst switch {}. Suppressed link remove event {}.",
+                    link.getDst(), linkEvent);
+            return;
+        }
+        topologyDiscoveryInterface.removeLinkDiscoveryEvent(linkEvent);
     }
 
     @Override
@@ -184,7 +187,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
         if (registryService.hasControl(switchId)) {
             topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
-            linkDiscovery.removeFromSuppressLLDPs(switchId, port.getPortNumber());
+            linkDiscovery.enableDiscoveryOnPort(switchId, port.getPortNumber());
         } else {
             log.debug("Not the master for switch {}. Suppressed port add event {}.",
                     new Dpid(switchId), portEvent);
@@ -240,7 +243,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         for (OFPhysicalPort port : sw.getPorts()) {
             // Allow links to be discovered on this port now that it's
             // in the database
-            linkDiscovery.removeFromSuppressLLDPs(sw.getId(), port.getPortNumber());
+            linkDiscovery.enableDiscoveryOnPort(sw.getId(), port.getPortNumber());
         }
     }
 

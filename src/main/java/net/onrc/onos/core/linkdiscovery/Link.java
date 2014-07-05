@@ -24,11 +24,11 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.openflow.util.HexString;
 
-public class Link {
-    private long src;
-    private short srcPort;
-    private long dst;
-    private short dstPort;
+public final class Link {
+    private final long src;
+    private final short srcPort;
+    private final long dst;
+    private final short dstPort;
 
 
     public Link(long srcId, short srcPort, long dstId, short dstPort) {

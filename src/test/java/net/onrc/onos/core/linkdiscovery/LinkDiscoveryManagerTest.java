@@ -15,7 +15,7 @@
  *    under the License.
  **/
 
-package net.onrc.onos.core.linkdiscovery.internal;
+package net.onrc.onos.core.linkdiscovery;
 
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
@@ -23,7 +23,6 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,11 +36,6 @@ import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.restserver.RestApiServer;
 import net.floodlightcontroller.test.FloodlightTestCase;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryListener;
-import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
-import net.onrc.onos.core.linkdiscovery.Link;
-import net.onrc.onos.core.linkdiscovery.LinkInfo;
-import net.onrc.onos.core.linkdiscovery.NodePortTuple;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 
 import org.easymock.EasyMock;
@@ -95,7 +89,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         super.setUp();
         FloodlightModuleContext cntx = new FloodlightModuleContext();
         ldm = new TestLinkDiscoveryManager();
-        ldm.linkDiscoveryAware = new ArrayList<ILinkDiscoveryListener>();
+        //ldm.linkDiscoveryAware = new ArrayList<ILinkDiscoveryListener>();
         MockThreadPoolService tp = new MockThreadPoolService();
         RestApiServer restApi = new RestApiServer();
         IControllerRegistryService registry =
@@ -178,7 +172,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
                 System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
-        topology.deleteLinks(Collections.singletonList(lt), "Test");
+        topology.deleteLinks(Collections.singletonList(lt));
 
         // check invariants hold
         assertNull(topology.switchLinks.get(lt.getSrc()));
@@ -221,7 +215,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         LinkInfo info = new LinkInfo(System.currentTimeMillis(),
                 System.currentTimeMillis(), 0, 0);
         topology.addOrUpdateLink(lt, info);
-        topology.deleteLinks(Collections.singletonList(lt), "Test to self");
+        topology.deleteLinks(Collections.singletonList(lt));
 
         // check invariants hold
         assertNull(topology.switchLinks.get(lt.getSrc()));
@@ -300,7 +294,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         assertTrue(topology.portLinks.get(dstNpt).contains(lt));
         assertTrue(topology.links.containsKey(lt));
 
-        topology.timeoutLinks();
+        topology.timeOutLinks();
 
         // Add a link info based on info that would be obtained from unicast LLDP
         // Setting the unicast LLDP reception time to be 40 seconds old, so we can use
@@ -310,7 +304,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         topology.addOrUpdateLink(lt, info);
 
         // Expect to timeout the unicast Valid Time, so the link should disappear
-        topology.timeoutLinks();
+        topology.timeOutLinks();
         assertTrue(topology.links.get(lt) == null);
     }
 

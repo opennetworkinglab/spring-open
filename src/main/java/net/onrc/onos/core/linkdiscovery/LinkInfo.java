@@ -16,7 +16,7 @@
 
 package net.onrc.onos.core.linkdiscovery;
 
-import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.LinkType;
+import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService.LinkType;
 
 import com.google.common.primitives.Longs;
 

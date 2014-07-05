@@ -2,7 +2,7 @@ package net.onrc.onos.core.linkdiscovery.web;
 
 import java.io.IOException;
 
-import net.onrc.onos.core.linkdiscovery.ILinkDiscovery.LinkType;
+import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService.LinkType;
 import net.onrc.onos.core.linkdiscovery.Link;
 
 import org.codehaus.jackson.JsonGenerator;

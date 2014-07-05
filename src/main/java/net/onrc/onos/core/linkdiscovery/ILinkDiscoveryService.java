@@ -22,27 +22,34 @@ import java.util.Set;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 
-
+/**
+ * Interface to the link discovery module.
+ */
 public interface ILinkDiscoveryService extends IFloodlightService {
+    /**
+     * Represents the type of a link.
+     * <p/>
+     * This is a placeholder at the moment. Floodlight had defined a number of
+     * different link types which are irrelevant to us now we no longer use
+     * BDDP or support OpenFlow clusters.
+     * Currently we have no differentiation of link types, but in the future we
+     * may want to differentiate between intra-instance links and
+     * inter-instance links.
+     */
+    public enum LinkType {
+        DIRECT_LINK {
+            @Override
+            public String toString() {
+                return "internal";
+            }
+        }
+    }
+
     /**
      * Retrieves a map of all known link connections between OpenFlow switches
      * and the associated info (valid time, port states) for the link.
      */
     public Map<Link, LinkInfo> getLinks();
-
-    /**
-     * Returns link type of a given link.
-     *
-     * @param info
-     * @return the link type
-     */
-    public ILinkDiscovery.LinkType getLinkType(Link lt, LinkInfo info);
-
-    /**
-     * Returns an unmodifiable map from switch id to a set of all links with it
-     * as an endpoint.
-     */
-    public Map<Long, Set<Link>> getSwitchLinks();
 
     /**
      * Adds a listener to listen for ILinkDiscoveryService messages.
@@ -52,17 +59,38 @@ public interface ILinkDiscoveryService extends IFloodlightService {
     public void addListener(ILinkDiscoveryListener listener);
 
     /**
-     * Retrieves a set of all switch ports on which lldps are suppressed.
+     * Removes a link discovery listener.
+     *
+     * @param listener the listener to remove
      */
-    public Set<NodePortTuple> getSuppressLLDPsInfo();
+    public void removeListener(ILinkDiscoveryListener listener);
 
     /**
-     * Adds a switch port to suppress lldp set.
+     * Gets the set of switch ports on which link discovery is disabled.
      */
-    public void addToSuppressLLDPs(long sw, short port);
+    public Set<NodePortTuple> getDiscoveryDisabledPorts();
 
     /**
-     * Removes a switch port from suppress lldp set.
+     * Disables link discovery on a switch port. This method suppresses
+     * discovery probes from being sent from the port, and deletes any existing
+     * links that the discovery module has previously detected on the port.
+     *
+     * @param sw the dpid of the switch the port is on
+     * @param port the port number to disable discovery on
      */
-    public void removeFromSuppressLLDPs(long sw, short port);
+    public void disableDiscoveryOnPort(long sw, short port);
+
+    /**
+     * Enables link discovery on a switch port. Discovery probes will now be
+     * sent from the port and any links on the port will be discovered.
+     * <p/>
+     * Note: All ports are enabled for discovery by default, however this
+     * method is provided to re-enable link discovery if it had previously been
+     * disabled on the port by a call to
+     * {@link #disableDiscoveryOnPort(long, short)}.
+     *
+     * @param sw the dpid of the switch the port is on
+     * @param port the port number to enable discovery on
+     */
+    public void enableDiscoveryOnPort(long sw, short port);
 }
