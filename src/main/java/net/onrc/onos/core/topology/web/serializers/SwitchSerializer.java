@@ -1,6 +1,7 @@
 package net.onrc.onos.core.topology.web.serializers;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
@@ -32,6 +33,11 @@ public class SwitchSerializer extends SerializerBase<Switch> {
             jsonGenerator.writeObject(port);
         }
         jsonGenerator.writeEndArray();
+        jsonGenerator.writeObjectFieldStart("stringAttributes");
+        for (Entry<String, String> entry : sw.getAllStringAttributes().entrySet()) {
+            jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
+        }
+        jsonGenerator.writeEndObject(); // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }

@@ -1,6 +1,7 @@
 package net.onrc.onos.core.topology.web.serializers;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import net.onrc.onos.core.topology.Port;
 
@@ -35,6 +36,11 @@ public class PortSerializer extends SerializerBase<Port> {
         jsonGenerator.writeNumberField("portNumber",
                                        (0xffff & port.getNumber().value()));
         jsonGenerator.writeStringField("desc", port.getDescription());
+        jsonGenerator.writeObjectFieldStart("stringAttributes");
+        for (Entry<String, String> entry : port.getAllStringAttributes().entrySet()) {
+            jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
+        }
+        jsonGenerator.writeEndObject(); // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }

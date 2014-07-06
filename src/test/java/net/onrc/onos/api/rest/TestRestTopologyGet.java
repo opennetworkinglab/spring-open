@@ -1,6 +1,7 @@
 package net.onrc.onos.api.rest;
 
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,15 +14,14 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.data.Status;
 import org.restlet.resource.ClientResource;
 
+import com.google.common.collect.ImmutableList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static net.onrc.onos.api.rest.ClientResourceStatusMatcher.hasStatusOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 /**
  * Tests for topology REST get operations.
@@ -59,12 +59,15 @@ public class TestRestTopologyGet extends TestRestTopology {
      * @param switches JSON array of switches
      * @throws JSONException if the JSON is not properly specified
      */
+    @SuppressWarnings("unchecked")
     private void checkSwitches(final JSONArray switches) throws JSONException {
         assertThat(switches.length(), is(equalTo(4)));
 
         // Check that the first switch has the proper data
         final JSONObject switch0 = switches.getJSONObject(0);
-        assertThat(switch0.length(), is(equalTo(3)));
+        final List<String> keys = ImmutableList.<String>copyOf(switch0.keys());
+        assertThat(keys,
+                hasItems("dpid", "state", "ports"));
         assertThat(switch0.getString("dpid"), is(equalTo("00:00:00:00:00:00:00:02")));
         assertThat(switch0.getString("state"), is(equalTo("ACTIVE")));
 

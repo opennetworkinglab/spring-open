@@ -1,6 +1,7 @@
 package net.onrc.onos.core.topology.web.serializers;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import net.onrc.onos.core.topology.Link;
 
@@ -27,6 +28,11 @@ public class LinkSerializer extends SerializerBase<Link> {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField("src", link.getSrcPort().asSwitchPort());
         jsonGenerator.writeObjectField("dst", link.getDstPort().asSwitchPort());
+        jsonGenerator.writeObjectFieldStart("stringAttributes");
+        for (Entry<String, String> entry : link.getAllStringAttributes().entrySet()) {
+            jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
+        }
+        jsonGenerator.writeEndObject(); // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }
