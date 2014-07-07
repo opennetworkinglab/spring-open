@@ -1,5 +1,6 @@
 package net.onrc.onos.core.topology.web;
 
+import static net.onrc.onos.core.topology.web.TopologyResource.eval;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Topology;
 
@@ -26,7 +27,7 @@ public class SwitchesResource extends ServerResource {
         Topology topology = topologyService.getTopology();
         topology.acquireReadLock();
         try {
-            return toRepresentation(topology.getSwitches(), null);
+            return eval(toRepresentation(topology.getSwitches(), null));
         } finally {
             topology.releaseReadLock();
         }

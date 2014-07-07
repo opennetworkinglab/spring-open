@@ -1,5 +1,6 @@
 package net.onrc.onos.core.intent.runtime.web;
 
+import static net.onrc.onos.core.topology.web.TopologyResource.eval;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Dpid;
+
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
@@ -74,7 +76,7 @@ public class ShortestPathResource extends ServerResource {
                 }
                 links.add(link);
             }
-            return toRepresentation(links, null);
+            return eval(toRepresentation(links, null));
         } finally {
             topology.releaseReadLock();
         }

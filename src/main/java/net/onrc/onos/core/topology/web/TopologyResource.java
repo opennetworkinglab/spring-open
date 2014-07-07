@@ -3,6 +3,7 @@ package net.onrc.onos.core.topology.web;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Topology;
 
+import org.restlet.engine.io.BufferingRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
@@ -25,9 +26,23 @@ public class TopologyResource extends ServerResource {
         Topology topology = topologyService.getTopology();
         topology.acquireReadLock();
         try {
-            return toRepresentation(topology, null);
+            return eval(toRepresentation(topology, null));
         } finally {
             topology.releaseReadLock();
         }
+    }
+
+    /**
+     * Workaround code to trigger evaluation of Representation immediately.
+     *
+     * @param repr Representation to evaluate immediately
+     * @return Evaluated Representation
+     */
+    public static Representation eval(final Representation repr) {
+
+        BufferingRepresentation eval = new BufferingRepresentation(repr);
+        // trigger evaluation
+        eval.getSize();
+        return eval;
     }
 }
