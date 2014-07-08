@@ -1,6 +1,7 @@
 package net.onrc.onos.apps.sdnip;
 
 import java.net.InetAddress;
+import java.util.Objects;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -43,5 +44,25 @@ public class BgpPeer {
      */
     public InetAddress getIpAddress() {
         return ipAddress;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(interfaceName, ipAddress);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof BgpPeer)) {
+            return false;
+        }
+
+        BgpPeer that = (BgpPeer) obj;
+        return Objects.equals(this.interfaceName, that.interfaceName)
+                && Objects.equals(this.ipAddress, that.ipAddress);
     }
 }
