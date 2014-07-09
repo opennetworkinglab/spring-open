@@ -24,12 +24,12 @@ function convert_to_topodata(switches, links, registry){
     links.forEach(function(item) {
 	var link={};
 	for (var i = 0; i < sws.length; i++){
-	    if(sws[i].name == item['src-switch'])
+	    if(sws[i].name == item['src']['dpid'])
 		break;
 	}
 	link.source=i;
 	for (var i = 0; i < sws.length; i++){
-	    if(sws[i].name == item['dst-switch'])
+	    if(sws[i].name == item['dst']['dpid'])
 		break;
 	}
 	link.target=i;
