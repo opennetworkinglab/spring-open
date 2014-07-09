@@ -51,7 +51,7 @@ public class DeviceEvent extends TopologyElement<DeviceEvent> {
     }
 
     /**
-     * Create an unfrozen copy of given Object.
+     * Creates an unfrozen copy of given Object.
      *
      * @param original to make copy of.
      */
@@ -125,7 +125,7 @@ public class DeviceEvent extends TopologyElement<DeviceEvent> {
             return true;
         }
 
-        if (!super.equals(obj)) {
+        if (obj == null) {
             return false;
         }
 

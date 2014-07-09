@@ -60,7 +60,7 @@ public class PortEvent extends TopologyElement<PortEvent> {
     }
 
     /**
-     * Create an unfrozen copy of given Object.
+     * Creates an unfrozen copy of given Object.
      *
      * @param original to make copy of.
      */

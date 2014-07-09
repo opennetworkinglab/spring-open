@@ -35,7 +35,7 @@ public class TopologyElement<T extends TopologyElement<T>>
     }
 
     /**
-     * Create an unfrozen copy of given Object.
+     * Creates an unfrozen copy of given Object.
      * <p/>
      * Sub-classes should do a deep-copies if necessary.
      *

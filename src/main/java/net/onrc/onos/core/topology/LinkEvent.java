@@ -50,7 +50,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
     }
 
     /**
-     * Create an unfrozen copy of given Object.
+     * Creates an unfrozen copy of given Object.
      *
      * @param original to make copy of.
      */

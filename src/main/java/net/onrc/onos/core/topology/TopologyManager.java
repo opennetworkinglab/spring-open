@@ -837,7 +837,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Add a switch to the topology replica.
+     * Adds a switch to the topology replica.
      *
      * @param switchEvent the SwitchEvent with the switch to add.
      */
@@ -857,7 +857,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Remove a switch from the topology replica.
+     * Removes a switch from the topology replica.
      * <p/>
      * It will call {@link #removePort(PortEvent)} for each ports on this switch.
      *
@@ -891,7 +891,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Add a port to the topology replica.
+     * Adds a port to the topology replica.
      *
      * @param portEvent the PortEvent with the port to add.
      */
@@ -921,7 +921,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Remove a port from the topology replica.
+     * Removes a port from the topology replica.
      * <p/>
      * It will call {@link #removeDevice(DeviceEvent)} for each hosts on this port
      * and call {@link #removeLink(LinkEvent)} for each links on this port.
@@ -988,7 +988,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Add a link to the topology replica.
+     * Adds a link to the topology replica.
      * <p/>
      * It will call {@link #removeDevice(DeviceEvent)} for each hosts on both ports.
      *
@@ -1056,7 +1056,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Remove a link from the topology replica.
+     * Removes a link from the topology replica.
      *
      * @param linkEvent the LinkEvent with the link to remove.
      */
@@ -1100,7 +1100,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Add a device to the topology replica.
+     * Adds a device to the topology replica.
      * <p/>
      * TODO: Device-related work is incomplete.
      * TODO: Eventually, we might need to consider reordering
@@ -1157,7 +1157,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Remove a device from the topology replica.
+     * Removes a device from the topology replica.
      * <p/>
      * TODO: Device-related work is incomplete.
      *
