@@ -231,10 +231,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             bgpdMacAddress = config.getBgpdMacAddress();
             vlan = config.getVlan();
-        } catch (JsonParseException e) {
-            log.error("Error in JSON file", e);
-            throw new ConfigurationRuntimeException("Error in JSON file", e);
-        } catch (JsonMappingException e) {
+        } catch (JsonParseException | JsonMappingException e) {
             log.error("Error in JSON file", e);
             throw new ConfigurationRuntimeException("Error in JSON file", e);
         } catch (IOException e) {
@@ -1115,9 +1112,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             Path path = pathsWaitingOnArp.remove(ipAddress);
 
             if (path != null) {
-                log.debug("Pushing path to {} at {} on {}", new Object[]{
+                log.debug("Pushing path to {} at {} on {}",
                         path.getDstIpAddress().getHostAddress(), macAddress,
-                        path.getDstInterface().getSwitchPort()});
+                        path.getDstInterface().getSwitchPort());
                 // These paths should always be to BGP peers. Paths to non-peers are
                 // handled once the first prefix is ready to push
                 if (pushedPaths.containsKey(path.getDstIpAddress())) {
