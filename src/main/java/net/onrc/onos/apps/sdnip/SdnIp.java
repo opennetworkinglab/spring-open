@@ -216,11 +216,11 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             Configuration config = mapper.readValue(gatewaysFile, Configuration.class);
 
             switches = config.getSwitches();
-            interfaces = new HashMap<String, Interface>();
+            interfaces = new HashMap<>();
             for (Interface intf : config.getInterfaces()) {
                 interfaces.put(intf.getName(), intf);
             }
-            bgpPeers = new HashMap<InetAddress, BgpPeer>();
+            bgpPeers = new HashMap<>();
             for (BgpPeer peer : config.getPeers()) {
                 bgpPeers.put(peer.getIpAddress(), peer);
             }
@@ -253,7 +253,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
         Collection<Class<? extends IFloodlightService>> l
-                = new ArrayList<Class<? extends IFloodlightService>>();
+                = new ArrayList<>();
         l.add(ISdnIpService.class);
         l.add(IConfigInfoService.class);
         return l;
@@ -262,7 +262,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
         Map<Class<? extends IFloodlightService>, IFloodlightService> m
-                = new HashMap<Class<? extends IFloodlightService>, IFloodlightService>();
+                = new HashMap<>();
         m.put(ISdnIpService.class, this);
         m.put(IConfigInfoService.class, this);
         return m;
@@ -271,7 +271,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         Collection<Class<? extends IFloodlightService>> l
-                = new ArrayList<Class<? extends IFloodlightService>>();
+                = new ArrayList<>();
         l.add(IFloodlightProviderService.class);
         l.add(IRestApiService.class);
         l.add(IControllerRegistryService.class);
@@ -288,7 +288,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         interfaceRoutes = new ConcurrentInvertedRadixTree<>(
                 new DefaultByteArrayNodeFactory());
 
-        ribUpdates = new LinkedBlockingQueue<RibUpdate>();
+        ribUpdates = new LinkedBlockingQueue<>();
 
         // Register floodlight provider and REST handler.
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
@@ -298,18 +298,18 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         controllerRegistryService = context.getServiceImpl(IControllerRegistryService.class);
         pathRuntime = context.getServiceImpl(IPathCalcRuntimeService.class);
-        linkUpdates = new ArrayList<LDUpdate>();
+        linkUpdates = new ArrayList<>();
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         topologyChangeDetectorTask = new SingletonTask(executor, new TopologyChangeDetector());
 
-        pathsWaitingOnArp = new HashMap<InetAddress, Path>();
+        pathsWaitingOnArp = new HashMap<>();
         prefixesWaitingOnArp = Multimaps.synchronizedSetMultimap(
                 HashMultimap.<InetAddress, RibUpdate>create());
 
-        pushedPaths = new HashMap<InetAddress, Path>();
-        prefixToPath = new HashMap<Prefix, Path>();
+        pushedPaths = new HashMap<>();
+        prefixToPath = new HashMap<>();
 //              pushedFlows = HashMultimap.<Prefix, PushedFlowMod>create();
-        pushedFlowIds = HashMultimap.<Prefix, FlowId>create();
+        pushedFlowIds = HashMultimap.create();
 
         flowCache = new FlowCache(floodlightProvider);
 
@@ -561,7 +561,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                            new PortNumber(egressInterface.getPort()));
 
         // We only need one flow mod per switch, so pick one interface on each switch
-        Map<Long, Interface> srcInterfaces = new HashMap<Long, Interface>();
+        Map<Long, Interface> srcInterfaces = new HashMap<>();
         for (Interface intf : interfaces.values()) {
             if (!srcInterfaces.containsKey(intf.getDpid())
                     && !intf.equals(egressInterface)) {
@@ -1167,7 +1167,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         OFActionOutput action = new OFActionOutput();
         action.setPort(OFPort.OFPP_CONTROLLER.getValue());
         action.setMaxLength((short) 0xffff);
-        List<OFAction> actions = new ArrayList<OFAction>(1);
+        List<OFAction> actions = new ArrayList<>(1);
         actions.add(action);
         fm.setActions(actions);
 
@@ -1221,7 +1221,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         OFActionOutput action = new OFActionOutput();
         action.setPort(OFPort.OFPP_CONTROLLER.getValue());
         action.setMaxLength((short) 0xffff);
-        List<OFAction> actions = new ArrayList<OFAction>(1);
+        List<OFAction> actions = new ArrayList<>(1);
         actions.add(action);
 
         fmLLDP.setActions(actions);
@@ -1232,7 +1232,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         fmBDDP.setPriority(ARP_PRIORITY);
         fmBDDP.setLengthU(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH);
 
-        List<OFFlowMod> flowModList = new ArrayList<OFFlowMod>(3);
+        List<OFFlowMod> flowModList = new ArrayList<>(3);
         flowModList.add(fm);
         flowModList.add(fmLLDP);
         flowModList.add(fmBDDP);
