@@ -6,12 +6,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.Condition;
@@ -324,14 +324,12 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                     }
                 }
 
-                // for safety of concurrent access, copy set of key objects
-                Set<IOFSwitch> keys = new HashSet<IOFSwitch>(assignedQueues.size());
-                for (IOFSwitch sw : assignedQueues.keySet()) {
-                    keys.add(sw);
-                }
-
-                for (IOFSwitch sw : keys) {
-                    SwitchQueue queue = assignedQueues.get(sw);
+                for (Iterator<Entry<IOFSwitch, SwitchQueue>> it = assignedQueues.entrySet().iterator();
+                        it.hasNext();
+                        ) {
+                    Entry<IOFSwitch, SwitchQueue> entry = it.next();
+                    IOFSwitch sw = entry.getKey();
+                    SwitchQueue queue = entry.getValue();
 
                     if (queue == null) {
                         continue;
@@ -341,7 +339,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                         processQueue(sw, queue, MAX_MESSAGE_SEND);
                         if (queue.toBeDeleted && !queue.hasMessageToSend()) {
                             // remove queue if flagged to be.
-                            assignedQueues.remove(sw);
+                            it.remove();
                         }
                     }
                 }
@@ -362,7 +360,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
             long currentTime = System.currentTimeMillis();
             long size = 0;
 
-            if (queue.isSendable(currentTime)) {
+            if (sw.isConnected() && queue.isSendable(currentTime)) {
                 int i = 0;
                 while (queue.hasMessageToSend()) {
                     // Number of messages excess the limit
