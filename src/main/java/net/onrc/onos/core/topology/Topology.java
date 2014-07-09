@@ -60,6 +60,9 @@ public interface Topology {
 
     /**
      * Gets the outgoing link from a switch port.
+     * <p/>
+     * FIXME As a temporary workaround, it will look for type "packet" and
+     * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
      * @param number the switch port number.
@@ -70,13 +73,46 @@ public interface Topology {
     /**
      * Gets the outgoing link from a switch port.
      *
+     * @param dpid   the switch DPID.
+     * @param number the switch port number.
+     * @param type   type of the link
+     * @return the outgoing link if found, otherwise null.
+     */
+    public Link getOutgoingLink(Dpid dpid, PortNumber number, String type);
+
+    /**
+     * Gets the outgoing link from a switch port.
+     * <p/>
+     * FIXME As a temporary workaround, it will look for type "packet" and
+     * returns it if found, else return whichever link is found first.
+     *
      * @param port port identifier
-     * @return the switch port if found, otherwise null.
+     * @return the outgoing link if found, otherwise null.
      */
     public Link getOutgoingLink(SwitchPort port);
 
     /**
+     * Gets the outgoing link from a switch port.
+     *
+     * @param port port identifier
+     * @param type type of the link
+     * @return the outgoing link if found, otherwise null.
+     */
+    public Link getOutgoingLink(SwitchPort port, String type);
+
+    /**
+     * Gets all the outgoing link from a switch port.
+     *
+     * @param port port identifier
+     * @return outgoing links
+     */
+    public Collection<Link> getOutgoingLinks(SwitchPort port);
+
+    /**
      * Gets the incoming link to a switch port.
+     * <p/>
+     * FIXME As a temporary workaround, it will look for type "packet" and
+     * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
      * @param number the switch port number.
@@ -86,11 +122,45 @@ public interface Topology {
 
     /**
      * Gets the incoming link to a switch port.
+     * <p/>
+     * FIXME As a temporary workaround, it will look for type "packet" and
+     * returns it if found, else return whichever link is found first.
+     *
+     * @param dpid   the switch DPID.
+     * @param number the switch port number.
+     * @param type type of the link
+     * @return the incoming link if found, otherwise null.
+     */
+    public Link getIncomingLink(Dpid dpid, PortNumber number, String type);
+
+
+    /**
+     * Gets the incoming link to a switch port.
+     * <p/>
+     * FIXME As a temporary workaround, it will look for type "packet" and
+     * returns it if found, else return whichever link is found first.
      *
      * @param port port identifier
-     * @return the switch port if found, otherwise null.
+     * @return the incoming link if found, otherwise null.
      */
     public Link getIncomingLink(SwitchPort port);
+
+    /**
+     * Gets the incoming link to a switch port.
+     *
+     * @param port port identifier
+     * @param type type of the link
+     * @return the incoming link if found, otherwise null.
+     */
+    public Link getIncomingLink(SwitchPort port, String type);
+
+    /**
+     * Gets all the incoming link from a switch port.
+     *
+     * @param port port identifier
+     * @return incoming links
+     */
+    public Collection<Link> getIncomingLinks(SwitchPort port);
 
     /**
      * Gets the outgoing link from a switch and a port to another switch and
@@ -106,9 +176,23 @@ public interface Topology {
                         Dpid dstDpid, PortNumber dstNumber);
 
     /**
+     * Gets the outgoing link from a switch and a port to another switch and
+     * a port.
+     *
+     * @param srcDpid   the source switch DPID.
+     * @param srcNumber the source switch port number.
+     * @param dstDpid   the destination switch DPID.
+     * @param dstNumber the destination switch port number.
+     * @param type      type of the link
+     * @return the outgoing link if found, otherwise null.
+     */
+    public Link getLink(Dpid srcDpid, PortNumber srcNumber,
+                        Dpid dstDpid, PortNumber dstNumber,
+                        String type);
+
+    /**
      * Gets all links in the network.
      * <p/>
-     * TODO: Not clear if this method is needed. Remove if not used.
      *
      * @return all links in the network.
      */

@@ -1,5 +1,6 @@
 package net.onrc.onos.core.topology;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.commons.lang.Validate;
@@ -139,10 +140,50 @@ public class PortImpl extends TopologyObject implements Port {
     }
 
     @Override
+    public Link getOutgoingLink(String type) {
+        topology.acquireReadLock();
+        try {
+            return topology.getOutgoingLink(asSwitchPort(), type);
+        } finally {
+            topology.releaseReadLock();
+        }
+    }
+
+    @Override
+    public Collection<Link> getOutgoingLinks() {
+        topology.acquireReadLock();
+        try {
+            return topology.getOutgoingLinks(asSwitchPort());
+        } finally {
+            topology.releaseReadLock();
+        }
+    }
+
+    @Override
     public Link getIncomingLink() {
         topology.acquireReadLock();
         try {
             return topology.getIncomingLink(asSwitchPort());
+        } finally {
+            topology.releaseReadLock();
+        }
+    }
+
+    @Override
+    public Link getIncomingLink(String type) {
+        topology.acquireReadLock();
+        try {
+            return topology.getIncomingLink(asSwitchPort(), type);
+        } finally {
+            topology.releaseReadLock();
+        }
+    }
+
+    @Override
+    public Collection<Link> getIncomingLinks() {
+        topology.acquireReadLock();
+        try {
+            return topology.getIncomingLinks(asSwitchPort());
         } finally {
             topology.releaseReadLock();
         }
