@@ -1,6 +1,8 @@
 package net.onrc.onos.core.topology.web.serializers;
 
 import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.TopologyElement;
+
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
@@ -40,6 +42,7 @@ public class LinkEventSerializer extends SerializerBase<LinkEvent> {
         //
 
         jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField(TopologyElement.TYPE, linkEvent.getType());
         jsonGenerator.writeObjectField("src", linkEvent.getSrc());
         jsonGenerator.writeObjectField("dst", linkEvent.getDst());
         jsonGenerator.writeEndObject();

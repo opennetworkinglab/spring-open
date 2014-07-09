@@ -141,6 +141,9 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
+        linkEvent.createStringAttribute(TopologyElement.TYPE,
+                                        TopologyElement.TYPE_PACKET);
+
         linkEvent.freeze();
 
         if (!registryService.hasControl(link.getDst())) {
@@ -162,6 +165,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
+        linkEvent.createStringAttribute(TopologyElement.TYPE,
+                                        TopologyElement.TYPE_PACKET);
         linkEvent.freeze();
 
         if (!registryService.hasControl(link.getDst())) {
@@ -181,6 +186,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
+        portEvent.createStringAttribute(TopologyElement.TYPE,
+                                        TopologyElement.TYPE_PACKET);
         portEvent.createStringAttribute("name", port.getName());
 
         portEvent.freeze();
@@ -199,6 +206,15 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         final Dpid dpid = new Dpid(switchId);
 
         PortEvent portEvent = new PortEvent(dpid, new PortNumber(port.getPortNumber()));
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        portEvent.createStringAttribute(TopologyElement.TYPE,
+                                        TopologyElement.TYPE_PACKET);
+        portEvent.createStringAttribute("name", port.getName());
+
+        portEvent.freeze();
+
         if (registryService.hasControl(switchId)) {
             topologyDiscoveryInterface.removePortDiscoveryEvent(portEvent);
         } else {
@@ -214,6 +230,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
+        switchEvent.createStringAttribute(TopologyElement.TYPE,
+                                          TopologyElement.TYPE_PACKET);
         switchEvent.createStringAttribute("ConnectedSince",
                 sw.getConnectedSince().toString());
 
@@ -233,6 +251,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
             // TODO define attr name as constant somewhere.
             // TODO populate appropriate attributes.
             portEvent.createStringAttribute("name", port.getName());
+            portEvent.createStringAttribute(TopologyElement.TYPE,
+                                            TopologyElement.TYPE_PACKET);
 
             portEvent.freeze();
             portEvents.add(portEvent);

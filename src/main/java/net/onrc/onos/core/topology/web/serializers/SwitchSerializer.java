@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.topology.TopologyElement;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -26,6 +27,7 @@ public class SwitchSerializer extends SerializerBase<Switch> {
         //
 
         jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField(TopologyElement.TYPE, sw.getType());
         jsonGenerator.writeStringField("dpid", sw.getDpid().toString());
         jsonGenerator.writeStringField("state", "ACTIVE");
         jsonGenerator.writeArrayFieldStart("ports");

@@ -3,6 +3,7 @@ package net.onrc.onos.core.topology.web.serializers;
 import java.io.IOException;
 
 import net.onrc.onos.core.topology.DeviceEvent;
+import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.JsonGenerator;
@@ -26,6 +27,7 @@ public class DeviceEventSerializer extends SerializerBase<DeviceEvent> {
         //
 
         jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField(TopologyElement.TYPE, deviceEvent.getType());
         jsonGenerator.writeStringField("mac", deviceEvent.getMac().toString());
         jsonGenerator.writeFieldName("attachmentPoints");
         jsonGenerator.writeStartArray();

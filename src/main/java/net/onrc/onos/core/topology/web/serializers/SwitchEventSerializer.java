@@ -3,6 +3,7 @@ package net.onrc.onos.core.topology.web.serializers;
 import java.io.IOException;
 
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.TopologyElement;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -24,6 +25,7 @@ public class SwitchEventSerializer extends SerializerBase<SwitchEvent> {
         //
 
         jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField(TopologyElement.TYPE, switchEvent.getType());
         jsonGenerator.writeStringField("dpid",
                                        switchEvent.getDpid().toString());
         jsonGenerator.writeStringField("state", "ACTIVE");

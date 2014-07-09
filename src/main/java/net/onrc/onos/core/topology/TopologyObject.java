@@ -9,6 +9,7 @@ import org.apache.commons.lang.Validate;
  */
 public abstract class TopologyObject implements ITopologyElement {
 
+    // XXX This will be a snapshot, thus should be replaceable
     /**
      * Topology instance this object belongs to.
      */

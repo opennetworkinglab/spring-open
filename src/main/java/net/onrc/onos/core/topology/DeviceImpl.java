@@ -132,6 +132,7 @@ public class DeviceImpl extends TopologyObject implements Device {
      */
     @Override
     public String getType() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        // FIXME assuming device is always in packet layer for now.
+        return TopologyElement.TYPE_PACKET;
     }
 }

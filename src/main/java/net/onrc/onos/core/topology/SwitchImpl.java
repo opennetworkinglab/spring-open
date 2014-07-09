@@ -199,6 +199,6 @@ public class SwitchImpl extends TopologyObject implements Switch {
      */
     @Override
     public String getType() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return getStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET);
     }
 }

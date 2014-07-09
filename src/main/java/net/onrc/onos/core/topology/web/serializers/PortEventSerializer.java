@@ -3,6 +3,7 @@ package net.onrc.onos.core.topology.web.serializers;
 import java.io.IOException;
 
 import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.topology.TopologyElement;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -25,6 +26,7 @@ public class PortEventSerializer extends SerializerBase<PortEvent> {
         //
 
         jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField(TopologyElement.TYPE, portEvent.getType());
         jsonGenerator.writeStringField("state", "ACTIVE");
         jsonGenerator.writeStringField("dpid", portEvent.getDpid().toString());
         //

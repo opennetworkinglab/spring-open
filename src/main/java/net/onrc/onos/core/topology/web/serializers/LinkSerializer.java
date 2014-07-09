@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map.Entry;
 
 import net.onrc.onos.core.topology.Link;
+import net.onrc.onos.core.topology.TopologyElement;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -26,6 +27,7 @@ public class LinkSerializer extends SerializerBase<Link> {
         // In the future, we will use a single serializer.
         //
         jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField(TopologyElement.TYPE, link.getType());
         jsonGenerator.writeObjectField("src", link.getSrcPort().asSwitchPort());
         jsonGenerator.writeObjectField("dst", link.getDstPort().asSwitchPort());
         jsonGenerator.writeObjectFieldStart("stringAttributes");

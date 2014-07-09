@@ -18,7 +18,22 @@ import org.apache.commons.lang.Validate;
  *      (Required to define a method returning itself's type)
  */
 public class TopologyElement<T extends TopologyElement<T>>
-        implements StringAttributes, UpdateStringAttributes {
+        implements ITopologyElement, StringAttributes, UpdateStringAttributes {
+
+    // TODO: Where should the attribute names be defined?
+    /**
+     * Attribute name for type.
+     */
+    public static final String TYPE = "type";
+    /**
+     * Attribute "type" value representing that the object belongs to Packet layer.
+     */
+    public static final String TYPE_PACKET = "packet";
+    /**
+     * Attribute "type" value representing that the object belongs to Optical layer.
+     */
+    public static final String TYPE_OPTICAL = "optical";
+
 
     private boolean isFrozen = false;
 
@@ -150,5 +165,10 @@ public class TopologyElement<T extends TopologyElement<T>>
         }
 
         this.stringAttributes.remove(attr);
+    }
+
+    @Override
+    public String getType() {
+        return getStringAttribute(TYPE, TYPE_PACKET);
     }
 }

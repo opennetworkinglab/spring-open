@@ -167,6 +167,6 @@ public class LinkImpl extends TopologyObject implements Link {
      */
     @Override
     public String getType() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return getStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET);
     }
 }
