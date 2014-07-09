@@ -113,7 +113,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     private IControllerRegistryService registryService;
 
     // LLDP fields
-    private static final byte[] LLDP_STANDARD_DST_MAC_STRING =
+    static final byte[] LLDP_STANDARD_DST_MAC_STRING =
             HexString.fromHexString("01:80:c2:00:00:0e");
     private static final long LINK_LOCAL_MASK = 0xfffffffffff0L;
     private static final long LINK_LOCAL_VALUE = 0x0180c2000000L;
@@ -418,7 +418,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         return Command.CONTINUE;
     }
 
-    private Command handleLldp(LLDP lldp, long sw, OFPacketIn pi) {
+    protected Command handleLldp(LLDP lldp, long sw, OFPacketIn pi) {
         // If LLDP is suppressed on this port, ignore received packet as well
         IOFSwitch iofSwitch = floodlightProvider.getSwitches().get(sw);
         if (iofSwitch == null) {

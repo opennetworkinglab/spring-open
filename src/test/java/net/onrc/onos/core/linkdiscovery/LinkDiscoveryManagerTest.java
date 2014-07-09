@@ -29,6 +29,7 @@ import java.util.Map;
 
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IListener.Command;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.test.MockThreadPoolService;
@@ -36,12 +37,15 @@ import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.restserver.RestApiServer;
 import net.floodlightcontroller.test.FloodlightTestCase;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
+import net.onrc.onos.core.packet.Ethernet;
+import net.onrc.onos.core.packet.OnosLldp;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.openflow.protocol.OFMessage;
+import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFPortStatus;
 import org.openflow.protocol.OFPortStatus.OFPortReason;
@@ -80,6 +84,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
     public IOFSwitch createMockSwitch(Long id) {
         IOFSwitch mockSwitch = createNiceMock(IOFSwitch.class);
         expect(mockSwitch.getId()).andReturn(id).anyTimes();
+        expect(mockSwitch.portEnabled(EasyMock.anyShort())).andReturn(true).anyTimes();
         return mockSwitch;
     }
 
@@ -429,5 +434,72 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         newInfo = linkDiscovery.links.get(lt);
         assertEquals(srcPortState, newInfo.getSrcPortState());
         assertEquals(dstPortState, newInfo.getDstPortState());
+    }
+
+    @Test
+    public void testHandlePortStatusForDeletePort() {
+        byte[] macAddress = new byte[] {0x0, 0x0, 0x0, 0x0, 0x0, 0x1};
+
+        LinkDiscoveryManager linkDiscovery = getTopology();
+
+        // Add a link that we can delete later during the test
+        Link lt = new Link(1L, 1, 2L, 2);
+        LinkInfo info = new LinkInfo(System.currentTimeMillis(),
+                System.currentTimeMillis(), 0, 0);
+        linkDiscovery.addOrUpdateLink(lt, info);
+
+        short portNum = 1;
+        int srcPortState = 1;
+        OFPhysicalPort srcPort = new OFPhysicalPort();
+        srcPort.setPortNumber(portNum);
+        srcPort.setHardwareAddress(macAddress);
+        srcPort.setState(srcPortState);
+
+        OFPortStatus srcPortStatus = new OFPortStatus();
+        srcPortStatus.setDesc(srcPort);
+        srcPortStatus.setReason((byte) OFPortReason.OFPPR_DELETE.ordinal());
+
+        assertNotNull(linkDiscovery.getLinks().get(lt));
+
+        // Send a delete port status for the source port, which should result
+        // in the link being deleted
+        linkDiscovery.handlePortStatus(
+                getMockFloodlightProvider().getSwitches().get(1L), srcPortStatus);
+
+        assertNull(linkDiscovery.getLinks().get(lt));
+    }
+
+    @Test
+    public void testReceive() {
+        byte[] macAddress = new byte[] {0x0, 0x0, 0x0, 0x0, 0x0, 0x1};
+
+        OnosLldp lldpPacket = new OnosLldp();
+        lldpPacket.setPort((short) 1);
+        lldpPacket.setSwitch(1L);
+        lldpPacket.setReverse(false);
+
+        Ethernet ethPacket = new Ethernet();
+        ethPacket.setEtherType(Ethernet.TYPE_LLDP);
+        ethPacket.setSourceMACAddress(macAddress);
+        ethPacket.setDestinationMACAddress(
+                LinkDiscoveryManager.LLDP_STANDARD_DST_MAC_STRING);
+        ethPacket.setPayload(lldpPacket);
+        ethPacket.setPad(true);
+
+        OFPacketIn pi = new OFPacketIn();
+        pi.setInPort((short) 2);
+        pi.setPacketData(ethPacket.serialize());
+
+        LinkDiscoveryManager linkDiscovery = getTopology();
+
+        Link expectedLink = new Link(1L, 1, 2L, 2);
+
+        assertNull(linkDiscovery.links.get(expectedLink));
+
+        // Sending in the LLDP packet should cause the link to be created
+        Command command = linkDiscovery.handleLldp(lldpPacket, 2L, pi);
+
+        assertEquals(Command.STOP, command);
+        assertNotNull(linkDiscovery.links.get(expectedLink));
     }
 }
