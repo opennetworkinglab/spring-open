@@ -127,6 +127,7 @@ public class FlowProgrammer implements IFloodlightModule,
         if (ENABLE_FLOW_SYNC) {
             synchronizer.interrupt(sw);
         }
+        pusher.deleteQueue(sw, true);
     }
 
     @Override
