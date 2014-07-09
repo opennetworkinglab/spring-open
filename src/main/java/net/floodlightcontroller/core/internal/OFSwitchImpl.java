@@ -44,7 +44,6 @@ import net.floodlightcontroller.core.annotations.LogMessageDocs;
 import net.floodlightcontroller.core.web.serializers.DPIDSerializer;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.util.TimedCache;
-import net.onrc.onos.core.main.IOnosRemoteSwitch;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -77,7 +76,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This is the internal representation of an openflow switch.
  */
-public class OFSwitchImpl implements IOFSwitch, IOnosRemoteSwitch {
+public class OFSwitchImpl implements IOFSwitch {
     // TODO: should we really do logging in the class or should we throw
     // exception that can then be handled by callers?
     protected final static Logger log = LoggerFactory.getLogger(OFSwitchImpl.class);
@@ -94,7 +93,7 @@ public class OFSwitchImpl implements IOFSwitch, IOnosRemoteSwitch {
     protected String stringId;
     protected Channel channel;
     protected AtomicInteger transactionIdSource;
-    // Lock to protect modification of the port maps. We only need to 
+    // Lock to protect modification of the port maps. We only need to
     // synchronize on modifications. For read operations we are fine since
     // we rely on ConcurrentMaps which works for our use case.
     private Object portLock;
@@ -102,7 +101,7 @@ public class OFSwitchImpl implements IOFSwitch, IOnosRemoteSwitch {
     protected ConcurrentHashMap<Short, OFPhysicalPort> portsByNumber;
     // Map port names to the appropriate OFPhyiscalPort
     // XXX: The OF spec doesn't specify if port names need to be unique but
-    //      according it's always the case in practice. 
+    //      according it's always the case in practice.
     protected ConcurrentHashMap<String, OFPhysicalPort> portsByName;
     protected Map<Integer, OFStatisticsFuture> statsFutureMap;
     protected Map<Integer, IOFMessageListener> iofMsgListenersMap;
@@ -723,8 +722,8 @@ public class OFSwitchImpl implements IOFSwitch, IOnosRemoteSwitch {
         synchronized (pendingRoleRequests) {
             PendingRoleRequestEntry head = pendingRoleRequests.poll();
             if (head == null) {
-                // Maybe don't disconnect if the role reply we received is 
-                // for the same role we are already in. 
+                // Maybe don't disconnect if the role reply we received is
+                // for the same role we are already in.
                 log.error("Switch {}: received unexpected role reply for Role {}" +
                         " Disconnecting switch", this, role);
                 this.channel.close();
@@ -875,12 +874,5 @@ public class OFSwitchImpl implements IOFSwitch, IOnosRemoteSwitch {
     @Override
     public byte getTables() {
         return tables;
-    }
-
-
-    @Override
-    public void setupRemoteSwitch(Long dpid) {
-        this.datapathId = dpid;
-        this.stringId = HexString.toHexString(this.datapathId);
     }
 }
