@@ -3,6 +3,7 @@ package net.onrc.onos.core.util;
 import net.floodlightcontroller.util.MACAddress;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.openflow.protocol.OFPort;
 
 /**
  * The class representing a single Flow Entry action.
@@ -1212,7 +1213,7 @@ public class FlowEntryAction {
      * @param maxLen the maximum length (in bytes) to send to controller.
      */
     public void setActionOutputToController(short maxLen) {
-        PortNumber port = new PortNumber(PortNumber.PortValues.PORT_CONTROLLER);
+        PortNumber port = new PortNumber(OFPort.OFPP_CONTROLLER.getValue());
         actionOutput = new ActionOutput(port, maxLen);
         actionType = ActionValues.ACTION_OUTPUT;
     }

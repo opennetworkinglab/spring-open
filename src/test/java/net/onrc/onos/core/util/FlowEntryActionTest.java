@@ -1,7 +1,6 @@
 package net.onrc.onos.core.util;
 
 import static org.junit.Assert.assertEquals;
-
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.FlowEntryAction.ActionEnqueue;
 import net.onrc.onos.core.util.FlowEntryAction.ActionOutput;
@@ -14,6 +13,7 @@ import net.onrc.onos.core.util.FlowEntryAction.ActionSetVlanPriority;
 import net.onrc.onos.core.util.FlowEntryAction.ActionStripVlan;
 
 import org.junit.Test;
+import org.openflow.protocol.OFPort;
 
 public class FlowEntryActionTest {
 
@@ -56,7 +56,7 @@ public class FlowEntryActionTest {
         act.setActionOutputToController((short) 0);
 
         FlowEntryAction actCopy = new FlowEntryAction();
-        actCopy.setActionOutput(new PortNumber(PortNumber.PortValues.PORT_CONTROLLER));
+        actCopy.setActionOutput(new PortNumber(OFPort.OFPP_CONTROLLER.getValue()));
 
         FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 
