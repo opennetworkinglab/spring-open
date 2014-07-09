@@ -64,8 +64,8 @@ public class KVLink extends KVObject {
         /**
          * Constructor.
          *
-         * @param dpid datapath ID of this switch port
-         * @param number port number of this port on switch({@code dpid})
+         * @param srcDpid datapath ID of this switch port
+         * @param srcPortNo port number of this port on switch({@code dpid})
          */
         public SwitchPort(final Dpid srcDpid, final PortNumber srcPortNo) {
             this.dpid = srcDpid.value();
