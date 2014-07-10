@@ -14,7 +14,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * Interface of Port object in the topology.
  */
 @JsonSerialize(using = PortSerializer.class)
-public interface Port extends StringAttributes {
+public interface Port extends ITopologyElement, StringAttributes {
 
     /**
      * Gets the data path ID (dpid) of the switch, which this port is on.

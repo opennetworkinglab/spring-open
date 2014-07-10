@@ -7,7 +7,7 @@ import org.apache.commons.lang.Validate;
 /**
  * Base class for Topology Objects.
  */
-public abstract class TopologyObject {
+public abstract class TopologyObject implements ITopologyElement {
 
     /**
      * Topology instance this object belongs to.
@@ -30,6 +30,7 @@ public abstract class TopologyObject {
      *
      * @return the type of the topology object
      */
+    @Override
     public abstract String getType();
 
 

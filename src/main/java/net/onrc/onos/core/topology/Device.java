@@ -14,7 +14,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * immutable object, or a copy of the original "SB" In-memory Topology.
  */
 @JsonSerialize(using = DeviceSerializer.class)
-public interface Device {
+public interface Device extends ITopologyElement {
     /**
      * Get the device MAC address.
      *
