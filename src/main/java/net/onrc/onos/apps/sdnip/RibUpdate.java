@@ -13,7 +13,7 @@ public class RibUpdate {
 
     /**
      * Updates can either add new routes or revoke old routes. The
-     * {@link Operation} enum descibes which action is being taken.
+     * {@link Operation} enum describes which action is being taken.
      */
     public enum Operation {
         /**
