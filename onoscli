@@ -190,9 +190,14 @@ class OnosCli(Cmd):
             #
             Command("show link all", "Show all links", self.show_link_all),
             #
-            Command("show metrics", "Show ONOS metrics"),
-            #
-            Command("show metrics all", "Show all ONOS metrics", self.show_metrics_all),
+            Command("show metrics",
+                    """Show all metrics
+  show metrics --metric-id METRIC_ID        Show a metric""",
+                    self.show_metrics,
+                    [
+                    ("--metric-id", dict(required=False, type=str)),
+                    ]
+                    ),
             #
             Command("show path", "Show a path"),
             #
@@ -272,7 +277,7 @@ class OnosCli(Cmd):
             if args.intent_id is None:
                 print "*** Unknown syntax:"
                 self.help_delete()
-                return;
+                return
             # Delete an intent
             url = "http://%s:%s/wm/onos/intent/high/%s" % (self.onos_ip, self.onos_port, args.intent_id)
 
@@ -362,12 +367,17 @@ class OnosCli(Cmd):
                     dst_port = str(v['dst-port'])
                 self.print_result("%s %s -> %s %s" % (src_dpid, src_port, dst_dpid, dst_port))
 
-    def show_metrics_all(self, args):
-        "CLI command callback: show metrics all"
+    def show_metrics(self, args):
+        "CLI command callback: show metrics"
 
-        url = "http://%s:%s/wm/onos/metrics" % (self.onos_ip, self.onos_port)
+        if args.metric_id is None:
+            # Show all metrics
+            url = "http://%s:%s/wm/onos/metrics" % (self.onos_ip, self.onos_port)
+        else:
+            # Show a single metric
+            url = "http://%s:%s/wm/onos/metrics?ids=%s" % (self.onos_ip, self.onos_port, args.metric_id)
+
         result = get_json(url)
-        #
         self.print_json_result(result)
 
     def show_path_shortest(self, args):
@@ -494,19 +504,18 @@ class OnosCli(Cmd):
     #
     def collect_subtree_commands(self, root_command):
         """Collect a subtree of commands.
-           Traverses (breadth-first) a subtree of commands and returns
+           Traverses (depth-first) a subtree of commands and returns
            all nodes except the root node."""
 
         commands = []
         subtree_commands = []
-        commands.append(root_command)
-        # Use breadth-first to traverse the subtree
-        while commands:
-            pc = commands.pop(0)
-            for c in pc.children:
-                commands.append(c)
-                subtree_commands.append(c)
-        return subtree_commands
+        # Use depth-first to traverse the subtree
+        for c in root_command.children:
+            commands.append(c)
+            subtree_commands = self.collect_subtree_commands(c)
+            if len(subtree_commands):
+                commands.extend(subtree_commands)
+        return commands
 
     def log_debug(self, msg):
         """Log debug information.
