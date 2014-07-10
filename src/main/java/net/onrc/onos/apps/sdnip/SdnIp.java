@@ -429,7 +429,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         }
     }
 
-    public void processRibAdd(RibUpdate update) {
+    private void processRibAdd(RibUpdate update) {
         synchronized (this) {
             Prefix prefix = update.getPrefix();
 
@@ -615,7 +615,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         }
     }
 
-    public void processRibDelete(RibUpdate update) {
+    private void processRibDelete(RibUpdate update) {
         synchronized (this) {
             Prefix prefix = update.getPrefix();
 
