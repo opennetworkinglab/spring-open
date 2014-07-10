@@ -1148,6 +1148,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             attachmentFound = true;
         }
 
+        deviceImpl.setLastSeenTime(deviceEvent.getLastSeenTime());
+
         // Update the device in the topology
         if (attachmentFound) {
             log.debug("Storing the device info into the Topology: mac {}", deviceEvent.getMac());
