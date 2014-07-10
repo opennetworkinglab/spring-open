@@ -246,6 +246,6 @@ public class PortImpl extends TopologyObject implements Port {
      */
     @Override
     public String getType() {
-        return getStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET);
+        return getStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
     }
 }

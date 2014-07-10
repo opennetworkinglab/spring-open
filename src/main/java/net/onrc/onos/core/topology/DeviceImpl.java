@@ -133,6 +133,6 @@ public class DeviceImpl extends TopologyObject implements Device {
     @Override
     public String getType() {
         // FIXME assuming device is always in packet layer for now.
-        return TopologyElement.TYPE_PACKET;
+        return TopologyElement.TYPE_PACKET_LAYER;
     }
 }

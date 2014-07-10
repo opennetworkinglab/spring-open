@@ -142,7 +142,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         linkEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET);
+                                        TopologyElement.TYPE_PACKET_LAYER);
 
         linkEvent.freeze();
 
@@ -166,7 +166,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         linkEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET);
+                                        TopologyElement.TYPE_PACKET_LAYER);
         linkEvent.freeze();
 
         if (!registryService.hasControl(link.getDst())) {
@@ -187,7 +187,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         portEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET);
+                                        TopologyElement.TYPE_PACKET_LAYER);
         portEvent.createStringAttribute("name", port.getName());
 
         portEvent.freeze();
@@ -210,7 +210,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         portEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET);
+                                        TopologyElement.TYPE_PACKET_LAYER);
         portEvent.createStringAttribute("name", port.getName());
 
         portEvent.freeze();
@@ -231,7 +231,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         switchEvent.createStringAttribute(TopologyElement.TYPE,
-                                          TopologyElement.TYPE_PACKET);
+                                          TopologyElement.TYPE_PACKET_LAYER);
         switchEvent.createStringAttribute("ConnectedSince",
                 sw.getConnectedSince().toString());
 
@@ -252,7 +252,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
             // TODO populate appropriate attributes.
             portEvent.createStringAttribute("name", port.getName());
             portEvent.createStringAttribute(TopologyElement.TYPE,
-                                            TopologyElement.TYPE_PACKET);
+                                            TopologyElement.TYPE_PACKET_LAYER);
 
             portEvent.freeze();
             portEvents.add(portEvent);

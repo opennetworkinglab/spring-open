@@ -174,6 +174,6 @@ public class LinkImpl extends TopologyObject implements Link {
      */
     @Override
     public String getType() {
-        return getStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET);
+        return getStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
     }
 }

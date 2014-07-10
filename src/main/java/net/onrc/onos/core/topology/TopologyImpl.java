@@ -157,7 +157,7 @@ public class TopologyImpl implements Topology {
             return null;
         }
 
-        Link link = links.get(TopologyElement.TYPE_PACKET);
+        Link link = links.get(TopologyElement.TYPE_PACKET_LAYER);
         if (link != null) {
             // return packet link
             return link;

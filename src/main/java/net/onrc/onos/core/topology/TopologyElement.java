@@ -28,11 +28,11 @@ public class TopologyElement<T extends TopologyElement<T>>
     /**
      * Attribute "type" value representing that the object belongs to Packet layer.
      */
-    public static final String TYPE_PACKET = "packet";
+    public static final String TYPE_PACKET_LAYER = "packet";
     /**
      * Attribute "type" value representing that the object belongs to Optical layer.
      */
-    public static final String TYPE_OPTICAL = "optical";
+    public static final String TYPE_OPTICAL_LAYER = "optical";
 
 
     private boolean isFrozen = false;
@@ -169,6 +169,6 @@ public class TopologyElement<T extends TopologyElement<T>>
 
     @Override
     public String getType() {
-        return getStringAttribute(TYPE, TYPE_PACKET);
+        return getStringAttribute(TYPE, TYPE_PACKET_LAYER);
     }
 }
