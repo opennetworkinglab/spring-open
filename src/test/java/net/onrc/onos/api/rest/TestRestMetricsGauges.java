@@ -1,7 +1,6 @@
 package net.onrc.onos.api.rest;
 
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import net.onrc.onos.core.metrics.OnosMetrics;
 import org.json.JSONArray;
@@ -50,40 +49,63 @@ public class TestRestMetricsGauges extends TestRestMetrics {
 
     // Test data for Gauges
     private static final String GAUGE1_NAME = "gauge1";
+    private static final String GAUGE1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                                   GAUGE1_NAME);
     private static final int GAUGE1_VALUE = 0;
 
     private static final String GAUGE2_NAME = "gauge2";
+    private static final String GAUGE2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                                   GAUGE2_NAME);
     private static final int GAUGE2_VALUE = -1;
 
     private static final String GAUGE3_NAME = "gauge3";
+    private static final String GAUGE3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                                   GAUGE3_NAME);
     private static final int GAUGE3_VALUE = 123456789;
 
-    private final Gauge<Integer> gauge1 = OnosMetrics.getMetricsRegistry().
-            register(MetricRegistry.name(GAUGE1_NAME),
+    private final Gauge<Integer> gauge1 =
                     new Gauge<Integer>() {
                         @Override
                         public Integer getValue() {
                             return GAUGE1_VALUE;
                         }
-                    });
+                    };
 
-    private final Gauge<Integer> gauge2 = OnosMetrics.getMetricsRegistry().
-            register(MetricRegistry.name(GAUGE2_NAME),
+    private final Gauge<Integer> gauge2 =
                     new Gauge<Integer>() {
                         @Override
                         public Integer getValue() {
                             return GAUGE2_VALUE;
                         }
-                    });
+                    };
 
-    private final Gauge<Integer> gauge3 = OnosMetrics.getMetricsRegistry().
-            register(MetricRegistry.name(GAUGE3_NAME),
+    private final Gauge<Integer> gauge3 =
                     new Gauge<Integer>() {
                         @Override
                         public Integer getValue() {
                             return GAUGE3_VALUE;
                         }
-                    });
+                    };
+
+    private void registerGauges() {
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                   GAUGE1_NAME,
+                                   gauge1);
+
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                   GAUGE2_NAME,
+                                   gauge2);
+
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                   GAUGE3_NAME,
+                                   gauge3);
+    }
 
     /**
      * Check that the JSON for a Gauge obect has the correct data values.
@@ -117,6 +139,7 @@ public class TestRestMetricsGauges extends TestRestMetrics {
      */
     @Test
     public void testGauges() throws Exception {
+        registerGauges();
 
         //  Read the metrics from the REST API for the test data
         final ClientResource client = new ClientResource(getBaseRestMetricsUrl());
@@ -134,15 +157,15 @@ public class TestRestMetricsGauges extends TestRestMetrics {
 
         //  Check the values for gauge 1
         final JSONObject gauge1Container = gauges.getJSONObject(0);
-        checkGauge(gauge1Container, GAUGE1_NAME, gauge1);
+        checkGauge(gauge1Container, GAUGE1_FULL_NAME, gauge1);
 
         //  Check the values for gauge 2
         final JSONObject gauge2Container = gauges.getJSONObject(1);
-        checkGauge(gauge2Container, GAUGE2_NAME, gauge2);
+        checkGauge(gauge2Container, GAUGE2_FULL_NAME, gauge2);
 
         //  Check the values for gauge 3
         final JSONObject gauge3Container = gauges.getJSONObject(2);
-        checkGauge(gauge3Container, GAUGE3_NAME, gauge3);
+        checkGauge(gauge3Container, GAUGE3_FULL_NAME, gauge3);
     }
 
 }

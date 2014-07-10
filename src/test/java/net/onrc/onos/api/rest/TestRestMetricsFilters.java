@@ -15,7 +15,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.resource.ClientResource;
 
-import static com.codahale.metrics.MetricRegistry.name;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -54,25 +53,70 @@ public class TestRestMetricsFilters extends TestRestMetrics {
     }
 
     //  Test data objects
-    private static final String TIMER1_NAME = name("timer1");
-    private static final String TIMER2_NAME = name("timer2");
-    private static final String TIMER3_NAME = name("timer3");
+    private static final String TIMER1_NAME = "timer1";
+    private static final String TIMER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "timer1");
+    private static final String TIMER2_NAME = "timer2";
+    private static final String TIMER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "timer2");
+    private static final String TIMER3_NAME = "timer3";
+    private static final String TIMER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "timer3");
 
-    private static final String GAUGE1_NAME = name("gauge1");
-    private static final String GAUGE2_NAME = name("gauge2");
-    private static final String GAUGE3_NAME = name("gauge3");
+    private static final String GAUGE1_NAME = "gauge1";
+    private static final String GAUGE1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "gauge1");
+    private static final String GAUGE2_NAME = "gauge2";
+    private static final String GAUGE2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "gauge2");
+    private static final String GAUGE3_NAME = "gauge3";
+    private static final String GAUGE3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "gauge3");
 
-    private static final String COUNTER1_NAME = name("counter1");
-    private static final String COUNTER2_NAME = name("counter2");
-    private static final String COUNTER3_NAME = name("counter3");
+    private static final String COUNTER1_NAME = "counter1";
+    private static final String COUNTER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "counter1");
+    private static final String COUNTER2_NAME = "counter2";
+    private static final String COUNTER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "counter2");
+    private static final String COUNTER3_NAME = "counter3";
+    private static final String COUNTER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "counter3");
 
-    private static final String METER1_NAME = name("meter1");
-    private static final String METER2_NAME = name("meter2");
-    private static final String METER3_NAME = name("meter3");
+    private static final String METER1_NAME = "meter1";
+    private static final String METER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "meter1");
+    private static final String METER2_NAME = "meter2";
+    private static final String METER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "meter2");
+    private static final String METER3_NAME = "meter3";
+    private static final String METER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "meter3");
 
-    private static final String HISTOGRAM1_NAME = name("histogram1");
-    private static final String HISTOGRAM2_NAME = name("histogram2");
-    private static final String HISTOGRAM3_NAME = name("histogram3");
+    private static final String HISTOGRAM1_NAME = "histogram1";
+    private static final String HISTOGRAM1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "histogram1");
+    private static final String HISTOGRAM2_NAME = "histogram2";
+    private static final String HISTOGRAM2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "histogram2");
+    private static final String HISTOGRAM3_NAME = "histogram3";
+    private static final String HISTOGRAM3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+            OnosMetrics.MetricsFeatures.GLOBAL,
+            "histogram3");
 
     final Gauge<Integer> testGauge = new Gauge<Integer>() {
         @Override
@@ -85,25 +129,58 @@ public class TestRestMetricsFilters extends TestRestMetrics {
      * Creates Metrics objects for test.
      */
     private void createMetrics() {
-        OnosMetrics.getMetricsRegistry().timer(TIMER1_NAME);
-        OnosMetrics.getMetricsRegistry().timer(TIMER2_NAME);
-        OnosMetrics.getMetricsRegistry().timer(TIMER3_NAME);
+        OnosMetrics.createTimer(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                TIMER1_NAME);
+        OnosMetrics.createTimer(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                TIMER2_NAME);
+        OnosMetrics.createTimer(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                TIMER3_NAME);
 
-        OnosMetrics.getMetricsRegistry().counter(COUNTER1_NAME);
-        OnosMetrics.getMetricsRegistry().counter(COUNTER2_NAME);
-        OnosMetrics.getMetricsRegistry().counter(COUNTER3_NAME);
+        OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                COUNTER1_NAME);
+        OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                COUNTER2_NAME);
+        OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                COUNTER3_NAME);
 
-        OnosMetrics.getMetricsRegistry().meter(METER1_NAME);
-        OnosMetrics.getMetricsRegistry().meter(METER2_NAME);
-        OnosMetrics.getMetricsRegistry().meter(METER3_NAME);
+        OnosMetrics.createMeter(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                METER1_NAME);
+        OnosMetrics.createMeter(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                METER2_NAME);
+        OnosMetrics.createMeter(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                METER3_NAME);
 
-        OnosMetrics.getMetricsRegistry().histogram(HISTOGRAM1_NAME);
-        OnosMetrics.getMetricsRegistry().histogram(HISTOGRAM2_NAME);
-        OnosMetrics.getMetricsRegistry().histogram(HISTOGRAM3_NAME);
+        OnosMetrics.createHistogram(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                HISTOGRAM1_NAME);
+        OnosMetrics.createHistogram(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                HISTOGRAM2_NAME);
+        OnosMetrics.createHistogram(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                HISTOGRAM3_NAME);
 
-        OnosMetrics.getMetricsRegistry().register(GAUGE1_NAME, testGauge);
-        OnosMetrics.getMetricsRegistry().register(GAUGE2_NAME, testGauge);
-        OnosMetrics.getMetricsRegistry().register(GAUGE3_NAME, testGauge);
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                GAUGE1_NAME,
+                testGauge);
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                GAUGE2_NAME,
+                testGauge);
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                GAUGE3_NAME,
+                testGauge);
     }
 
     /**
@@ -144,7 +221,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
 
         //  Read the metrics from the REST API for the test data
         final ClientResource client = new ClientResource(getBaseRestMetricsUrl());
-        client.addQueryParameter("ids", "timer1,timer2");
+        client.addQueryParameter("ids", TIMER1_FULL_NAME + "," + TIMER2_FULL_NAME);
 
         final JSONObject metrics = getJSONObject(client);
         assertThat(metrics.length(), is(equalTo(5)));
@@ -155,10 +232,10 @@ public class TestRestMetricsFilters extends TestRestMetrics {
         assertThat(timers.length(), is(2));
 
         final JSONObject jsonTimer1 = timers.getJSONObject(0);
-        assertThat(jsonTimer1.getString("name"), is(equalTo("timer1")));
+        assertThat(jsonTimer1.getString("name"), is(equalTo(TIMER1_FULL_NAME)));
 
         final JSONObject jsonTimer2 = timers.getJSONObject(1);
-        assertThat(jsonTimer2.getString("name"), is(equalTo("timer2")));
+        assertThat(jsonTimer2.getString("name"), is(equalTo(TIMER2_FULL_NAME)));
 
         //  There should be no histograms, gauges, meters or counters
         checkEmptyLists(metrics, "histograms", "gauges", "meters", "counters");
@@ -174,7 +251,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
 
         //  Read the metrics from the REST API for the test data
         final ClientResource client = new ClientResource(getBaseRestMetricsUrl());
-        client.addQueryParameter("ids", "timer1");
+        client.addQueryParameter("ids", TIMER1_FULL_NAME);
 
         final JSONObject metrics = getJSONObject(client);
         assertThat(metrics.length(), is(equalTo(5)));
@@ -185,7 +262,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
         assertThat(timers.length(), is(1));
 
         final JSONObject jsonTimer1 = timers.getJSONObject(0);
-        assertThat(jsonTimer1.getString("name"), is(equalTo("timer1")));
+        assertThat(jsonTimer1.getString("name"), is(equalTo(TIMER1_FULL_NAME)));
 
 
         //  There should be no histograms, gauges, meters or counters
@@ -203,7 +280,10 @@ public class TestRestMetricsFilters extends TestRestMetrics {
 
         //  Read the metrics from the REST API for the test data
         final ClientResource client = new ClientResource(getBaseRestMetricsUrl());
-        client.addQueryParameter("ids", "timer1,gauge2,histogram3");
+        client.addQueryParameter("ids",
+                TIMER1_FULL_NAME + "," +
+                GAUGE2_FULL_NAME + "," +
+                HISTOGRAM3_FULL_NAME);
 
         final JSONObject metrics = getJSONObject(client);
         assertThat(metrics.length(), is(equalTo(5)));
@@ -214,7 +294,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
         assertThat(timers.length(), is(1));
 
         final JSONObject jsonTimer1 = timers.getJSONObject(0);
-        assertThat(jsonTimer1.getString("name"), is(equalTo("timer1")));
+        assertThat(jsonTimer1.getString("name"), is(equalTo(TIMER1_FULL_NAME)));
 
         //  There should be 1 gauge that matches the filter
         final JSONArray gauges = metrics.getJSONArray("gauges");
@@ -222,7 +302,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
         assertThat(gauges.length(), is(1));
 
         final JSONObject jsonGauge1 = gauges.getJSONObject(0);
-        assertThat(jsonGauge1.getString("name"), is(equalTo("gauge2")));
+        assertThat(jsonGauge1.getString("name"), is(equalTo(GAUGE2_FULL_NAME)));
 
         //  There should be 1 histogram that matches the filter
         final JSONArray histograms = metrics.getJSONArray("histograms");
@@ -230,7 +310,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
         assertThat(histograms.length(), is(1));
 
         final JSONObject jsonHistogram1 = histograms.getJSONObject(0);
-        assertThat(jsonHistogram1.getString("name"), is(equalTo("histogram3")));
+        assertThat(jsonHistogram1.getString("name"), is(equalTo(HISTOGRAM3_FULL_NAME)));
 
         //  There should be no meters or counters
         checkEmptyLists(metrics, "meters", "counters");

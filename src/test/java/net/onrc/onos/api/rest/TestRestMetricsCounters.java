@@ -49,20 +49,35 @@ public class TestRestMetricsCounters extends TestRestMetrics {
 
     //  Test Counter data objects
     private static final String COUNTER1_NAME = "COUNTER1";
+    private static final String COUNTER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                                                     OnosMetrics.MetricsFeatures.GLOBAL,
+                                                     COUNTER1_NAME);
     private static final int COUNTER1_COUNT = 0;
 
     private static final String COUNTER2_NAME = "COUNTER2";
+    private static final String COUNTER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                                                     OnosMetrics.MetricsFeatures.GLOBAL,
+                                                     COUNTER2_NAME);
     private static final int COUNTER2_COUNT = -1;
 
     private static final String COUNTER3_NAME = "COUNTER3";
+    private static final String COUNTER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                                                     OnosMetrics.MetricsFeatures.GLOBAL,
+                                                     COUNTER3_NAME);
     private static final int COUNTER3_COUNT = 5;
 
     private final Counter counter1 =
-            OnosMetrics.getMetricsRegistry().counter(COUNTER1_NAME);
+            OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
+                                      OnosMetrics.MetricsFeatures.GLOBAL,
+                                      COUNTER1_NAME);
     private final Counter counter2 =
-            OnosMetrics.getMetricsRegistry().counter(COUNTER2_NAME);
+            OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
+                                      OnosMetrics.MetricsFeatures.GLOBAL,
+                                      COUNTER2_NAME);
     private final Counter counter3 =
-            OnosMetrics.getMetricsRegistry().counter(COUNTER3_NAME);
+            OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
+                                      OnosMetrics.MetricsFeatures.GLOBAL,
+                                      COUNTER3_NAME);
 
     /**
      * Create some test data for the tests.
@@ -121,15 +136,15 @@ public class TestRestMetricsCounters extends TestRestMetrics {
 
         //  Check the values for counter 1
         final JSONObject counter1Container = counters.getJSONObject(0);
-        checkCounter(counter1Container, COUNTER1_NAME, COUNTER1_COUNT);
+        checkCounter(counter1Container, COUNTER1_FULL_NAME, COUNTER1_COUNT);
 
         //  Check the values for counter 1
         final JSONObject counter2Container = counters.getJSONObject(1);
-        checkCounter(counter2Container, COUNTER2_NAME, COUNTER2_COUNT);
+        checkCounter(counter2Container, COUNTER2_FULL_NAME, COUNTER2_COUNT);
 
         //  Check the values for counter 1
         final JSONObject counter3Container = counters.getJSONObject(2);
-        checkCounter(counter3Container, COUNTER3_NAME, COUNTER3_COUNT);
+        checkCounter(counter3Container, COUNTER3_FULL_NAME, COUNTER3_COUNT);
 
     }
 

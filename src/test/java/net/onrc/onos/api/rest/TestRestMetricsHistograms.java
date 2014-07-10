@@ -56,23 +56,46 @@ public class TestRestMetricsHistograms extends TestRestMetrics {
     // Test data for Histograms
 
     private static final String HISTOGRAM1_NAME = "HISTOGRAM1";
+    private static final String HISTOGRAM1_FULL_NAME =
+            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    HISTOGRAM1_NAME);
     private static final int[] HISTOGRAM1_VALUES =
             {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     private static final String HISTOGRAM2_NAME = "HISTOGRAM2";
+    private static final String HISTOGRAM2_FULL_NAME =
+            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    HISTOGRAM2_NAME);
     private static final int[] HISTOGRAM2_VALUES =
             {100, 100, 100, 100, 100, 100, 100};
 
     private static final String HISTOGRAM3_NAME = "HISTOGRAM3";
+    private static final String HISTOGRAM3_FULL_NAME =
+            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    HISTOGRAM3_NAME);
     private static final int[] HISTOGRAM3_VALUES =
             {555};
 
     private final Histogram histogram1 =
-            OnosMetrics.getMetricsRegistry().histogram(HISTOGRAM1_NAME);
+            OnosMetrics.createHistogram(
+                    OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    HISTOGRAM1_NAME);
+
     private final Histogram histogram2 =
-            OnosMetrics.getMetricsRegistry().histogram(HISTOGRAM2_NAME);
+            OnosMetrics.createHistogram(
+                    OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    HISTOGRAM2_NAME);
+
     private final Histogram histogram3 =
-            OnosMetrics.getMetricsRegistry().histogram(HISTOGRAM3_NAME);
+            OnosMetrics.createHistogram(
+                    OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    HISTOGRAM3_NAME);
 
     /**
      * Add each int in an array to a Histogram.
@@ -188,15 +211,15 @@ public class TestRestMetricsHistograms extends TestRestMetrics {
 
         //  Check the values for histogram 1
         final JSONObject histogram1Container = histograms.getJSONObject(0);
-        checkHistogram(histogram1Container, HISTOGRAM1_NAME, HISTOGRAM1_VALUES);
+        checkHistogram(histogram1Container, HISTOGRAM1_FULL_NAME, HISTOGRAM1_VALUES);
 
         //  Check the values for histogram 2
         final JSONObject histogram2Container = histograms.getJSONObject(1);
-        checkHistogram(histogram2Container, HISTOGRAM2_NAME, HISTOGRAM2_VALUES);
+        checkHistogram(histogram2Container, HISTOGRAM2_FULL_NAME, HISTOGRAM2_VALUES);
 
         //  Check the values for histogram 3
         final JSONObject histogram3Container = histograms.getJSONObject(2);
-        checkHistogram(histogram3Container, HISTOGRAM3_NAME, HISTOGRAM3_VALUES);
+        checkHistogram(histogram3Container, HISTOGRAM3_FULL_NAME, HISTOGRAM3_VALUES);
 
     }
 

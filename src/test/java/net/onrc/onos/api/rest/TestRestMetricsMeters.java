@@ -1,8 +1,6 @@
 package net.onrc.onos.api.rest;
 
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricSet;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import net.onrc.onos.core.metrics.OnosMetrics;
 import org.json.JSONArray;
@@ -15,9 +13,6 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.resource.ClientResource;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
@@ -58,12 +53,27 @@ public class TestRestMetricsMeters extends TestRestMetrics {
     //  Test data for Meters
 
     private static final String METER1_NAME = "METER1";
+    private static final String METER1_FULL_NAME =
+            OnosMetrics.generateName(
+                    OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    METER1_NAME);
     private static final int METER1_ITERATIONS = 1;
 
     private static final String METER2_NAME = "METER2";
+    private static final String METER2_FULL_NAME =
+            OnosMetrics.generateName(
+                    OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    METER2_NAME);
     private static final int METER2_ITERATIONS = 10;
 
     private static final String METER3_NAME = "METER3";
+    private static final String METER3_FULL_NAME =
+            OnosMetrics.generateName(
+                    OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    METER3_NAME);
     private static final int METER3_ITERATIONS = 100;
 
     private final Meter meter1 = new Meter(mockClock);
@@ -91,17 +101,20 @@ public class TestRestMetricsMeters extends TestRestMetrics {
         fillMeter(meter2, METER2_ITERATIONS);
         fillMeter(meter3, METER3_ITERATIONS);
 
-        final MetricSet meterSet = new MetricSet() {
-            @Override
-            public Map<String, Metric> getMetrics() {
-                final Map<String, Metric> meters = new HashMap<>();
-                meters.put(METER1_NAME, meter1);
-                meters.put(METER2_NAME, meter2);
-                meters.put(METER3_NAME, meter3);
-                return meters;
-            }
-        };
-        OnosMetrics.getMetricsRegistry().registerAll(meterSet);
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                   METER1_NAME,
+                                   meter1);
+
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                   METER2_NAME,
+                                   meter2);
+
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                OnosMetrics.MetricsFeatures.GLOBAL,
+                METER3_NAME,
+                meter3);
     }
 
     /**
@@ -175,15 +188,15 @@ public class TestRestMetricsMeters extends TestRestMetrics {
 
         //  Check the values for meter 1
         final JSONObject meter1Container = meters.getJSONObject(0);
-        checkMeter(meter1, meter1Container, METER1_NAME, METER1_ITERATIONS);
+        checkMeter(meter1, meter1Container, METER1_FULL_NAME, METER1_ITERATIONS);
 
         //  Check the values for meter 2
         final JSONObject meter2Container = meters.getJSONObject(1);
-        checkMeter(meter2, meter2Container, METER2_NAME, METER2_ITERATIONS);
+        checkMeter(meter2, meter2Container, METER2_FULL_NAME, METER2_ITERATIONS);
 
         //  Check the values for meter 3
         final JSONObject meter3Container = meters.getJSONObject(2);
-        checkMeter(meter3, meter3Container, METER3_NAME, METER3_ITERATIONS);
+        checkMeter(meter3, meter3Container, METER3_FULL_NAME, METER3_ITERATIONS);
 
     }
 

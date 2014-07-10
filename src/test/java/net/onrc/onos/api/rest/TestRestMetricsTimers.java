@@ -1,7 +1,5 @@
 package net.onrc.onos.api.rest;
 
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.Reservoir;
 import com.codahale.metrics.SlidingWindowReservoir;
 import com.codahale.metrics.Timer;
@@ -18,10 +16,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.resource.ClientResource;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.codahale.metrics.MetricRegistry.name;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.equalTo;
@@ -52,13 +46,19 @@ public class TestRestMetricsTimers extends TestRestMetrics {
     //  Test data objects for Timers
 
     //  timer1 will be called 3 times
-    private static final String TIMER1_NAME = name(TestRestMetricsTimers.class,
-                                                   "timer1");
+    private static final String TIMER1_NAME = "timer1";
+    private static final String TIMER1_FULL_NAME =
+            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                                     OnosMetrics.MetricsFeatures.GLOBAL,
+                                     TIMER1_NAME);
     private static final int TIMER1_COUNT = 3;
 
-    //  timer1 will be called 10 times
-    private static final String TIMER2_NAME = name(TestRestMetricsTimers.class,
-                                                   "timer2");
+    //  timer2 will be called 10 times
+    private static final String TIMER2_NAME = "timer2";
+    private static final String TIMER2_FULL_NAME =
+            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
+                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    TIMER2_NAME);
     private static final int TIMER2_COUNT = 10;
 
     private static final int RESERVOIR_SIZE = 100;
@@ -89,16 +89,16 @@ public class TestRestMetricsTimers extends TestRestMetrics {
 
         // add the two timers to the registry so the REST APIs will pick them
         // up
-        final MetricSet timerSet = new MetricSet() {
-            @Override
-            public Map<String, Metric> getMetrics() {
-                final Map<String, Metric> timers = new HashMap<>();
-                timers.put(TIMER1_NAME, timer1);
-                timers.put(TIMER2_NAME, timer2);
-                return timers;
-            }
-        };
-        OnosMetrics.getMetricsRegistry().registerAll(timerSet);
+
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                   TIMER1_NAME,
+                                   timer1);
+
+        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
+                                   OnosMetrics.MetricsFeatures.GLOBAL,
+                                   TIMER2_NAME,
+                                   timer2);
     }
 
     /**
@@ -174,7 +174,7 @@ public class TestRestMetricsTimers extends TestRestMetrics {
 
         final String timer1Name = timer1Values.getString("name");
         assertThat(timer1Name, is(notNullValue()));
-        assertThat(timer1Name, is(equalTo(TIMER1_NAME)));
+        assertThat(timer1Name, is(equalTo(TIMER1_FULL_NAME)));
 
         final JSONObject timer1TimerObject = timer1Values.getJSONObject("timer");
         assertThat(timer1TimerObject, is(notNullValue()));
@@ -194,7 +194,7 @@ public class TestRestMetricsTimers extends TestRestMetrics {
 
         final String timer2Name = timer2Values.getString("name");
         assertThat(timer2Name, is(notNullValue()));
-        assertThat(timer2Name, is(equalTo(TIMER2_NAME)));
+        assertThat(timer2Name, is(equalTo(TIMER2_FULL_NAME)));
 
         final JSONObject timer2TimerObject = timer2Values.getJSONObject("timer");
         assertThat(timer2TimerObject, is(notNullValue()));
