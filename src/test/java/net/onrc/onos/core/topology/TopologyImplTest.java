@@ -312,4 +312,33 @@ public class TopologyImplTest {
         Iterator<Switch> itr = testTopology.getSwitches().iterator();
         assertFalse(itr.hasNext());
     }
+
+    /**
+     * Tests the packet optical topology.
+     * Verify packet port having multiple links. Packet Port at packet layer
+     * has a link to another
+     * packet port and is also physically connected to a T-Port in optical
+     * later.
+     */
+    @Test
+    public void testPacketOpticalTopology() {
+        MockPacketOpticalTopology mockPacketOpticalTopology = new
+                MockPacketOpticalTopology();
+        mockPacketOpticalTopology.createSamplePacketOpticalTopology1();
+        for (Switch sw : mockPacketOpticalTopology.getSwitches()) {
+            if (sw.getType().equals(TopologyElement.TYPE_PACKET_LAYER)) {
+                Collection<Port> ports = sw.getPorts();
+                for (Port port : ports) {
+                    if (port.getType().equals(TopologyElement
+                                                      .TYPE_PACKET_LAYER)) {
+                        if (!port.getOutgoingLinks().isEmpty()) {
+                            assertEquals(2, port.getOutgoingLinks().size());
+                        } else if (!port.getIncomingLinks().isEmpty()) {
+                            assertEquals(2, port.getIncomingLinks().size());
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
