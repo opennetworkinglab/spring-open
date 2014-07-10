@@ -1,7 +1,7 @@
 package net.onrc.onos.core.topology;
 
 import net.onrc.onos.core.topology.web.serializers.LinkSerializer;
-
+import net.onrc.onos.core.util.LinkTuple;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 // TODO Everything returned by these interfaces must be either Unmodifiable view,
@@ -11,6 +11,14 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = LinkSerializer.class)
 public interface Link extends ITopologyElement, StringAttributes {
+
+    /**
+     * Gets a {@link LinkTuple} that identifies this link.
+     *
+     * @return a LinkTuple representing the Port
+     */
+    public LinkTuple getLinkTuple();
+
     /**
      * Gets the source switch for the link.
      *

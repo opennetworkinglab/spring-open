@@ -14,6 +14,7 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
 
 import org.junit.After;
@@ -71,20 +72,32 @@ public class PathIntentMapTest {
         link23 = createMock(Link.class);
         link24 = createMock(Link.class);
         expect(link12.getCapacity()).andReturn(1000.0).anyTimes();
-        expect(link23.getCapacity()).andReturn(1000.0).anyTimes();
-        expect(link24.getCapacity()).andReturn(1000.0).anyTimes();
         expect(link12.getSrcSwitch()).andReturn(sw1).anyTimes();
-        expect(link23.getSrcSwitch()).andReturn(sw2).anyTimes();
-        expect(link24.getSrcSwitch()).andReturn(sw2).anyTimes();
         expect(link12.getSrcPort()).andReturn(port11).anyTimes();
-        expect(link23.getSrcPort()).andReturn(port21).anyTimes();
-        expect(link24.getSrcPort()).andReturn(port23).anyTimes();
         expect(link12.getDstSwitch()).andReturn(sw2).anyTimes();
-        expect(link23.getDstSwitch()).andReturn(sw3).anyTimes();
-        expect(link24.getDstSwitch()).andReturn(sw4).anyTimes();
         expect(link12.getDstPort()).andReturn(port22).anyTimes();
+        expect(link12.getLinkTuple()).andReturn(
+                new LinkTuple(DPID_1, port11.getNumber(),
+                              DPID_2, port22.getNumber())).anyTimes();
+
+        expect(link23.getCapacity()).andReturn(1000.0).anyTimes();
+        expect(link23.getSrcSwitch()).andReturn(sw2).anyTimes();
+        expect(link23.getSrcPort()).andReturn(port21).anyTimes();
+        expect(link23.getDstSwitch()).andReturn(sw3).anyTimes();
         expect(link23.getDstPort()).andReturn(port31).anyTimes();
+        expect(link23.getLinkTuple()).andReturn(
+                new LinkTuple(DPID_2, port21.getNumber(),
+                              DPID_3, port31.getNumber())).anyTimes();
+
+        expect(link24.getCapacity()).andReturn(1000.0).anyTimes();
+        expect(link24.getSrcSwitch()).andReturn(sw2).anyTimes();
+        expect(link24.getSrcPort()).andReturn(port23).anyTimes();
+        expect(link24.getDstSwitch()).andReturn(sw4).anyTimes();
         expect(link24.getDstPort()).andReturn(port41).anyTimes();
+        expect(link24.getLinkTuple()).andReturn(
+                new LinkTuple(DPID_2, port23.getNumber(),
+                              DPID_4, port41.getNumber())).anyTimes();
+
         replay(link12);
         replay(link23);
         replay(link24);

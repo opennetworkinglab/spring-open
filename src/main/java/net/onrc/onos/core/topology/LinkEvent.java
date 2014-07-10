@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import net.onrc.onos.core.topology.web.serializers.LinkEventSerializer;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -22,8 +23,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonSerialize(using = LinkEventSerializer.class)
 public class LinkEvent extends TopologyElement<LinkEvent> {
 
-    private final SwitchPort src;
-    private final SwitchPort dst;
+    private final LinkTuple id;
     // TODO add LastSeenTime, Capacity if appropriate
 
     /**
@@ -31,8 +31,18 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      */
     @Deprecated
     protected LinkEvent() {
-        src = null;
-        dst = null;
+        id = null;
+    }
+
+    /**
+     * Creates the Link object.
+     *
+     * @param id link tuple to identify this link
+     */
+    public LinkEvent(LinkTuple id) {
+        Validate.notNull(id);
+
+        this.id = id;
     }
 
     /**
@@ -42,11 +52,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      * @param dst destination SwitchPort
      */
     public LinkEvent(SwitchPort src, SwitchPort dst) {
-        Validate.notNull(src);
-        Validate.notNull(dst);
-
-        this.src = src;
-        this.dst = dst;
+        this(new LinkTuple(src, dst));
     }
 
     /**
@@ -56,16 +62,14 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      */
     public LinkEvent(LinkEvent original) {
         super(original);
-        this.src = original.src;
-        this.dst = original.dst;
+        Validate.isTrue(Objects.equals(this.id, original.id));
+
+        this.id = original.id;
     }
 
     // TODO probably want to remove this
     public LinkEvent(Link link) {
-        src = new SwitchPort(link.getSrcSwitch().getDpid(),
-                link.getSrcPort().getNumber());
-        dst = new SwitchPort(link.getDstSwitch().getDpid(),
-                link.getDstPort().getNumber());
+        this(link.getLinkTuple());
         // FIXME losing attributes here
     }
 
@@ -79,8 +83,16 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      */
     public LinkEvent(Dpid srcDpid, PortNumber srcPortNo,
                      Dpid dstDpid, PortNumber dstPortNo) {
-        src = new SwitchPort(srcDpid, srcPortNo);
-        dst = new SwitchPort(dstDpid, dstPortNo);
+        this(new LinkTuple(srcDpid, srcPortNo, dstDpid, dstPortNo));
+    }
+
+    /**
+     * Gets a {@link LinkTuple} that identifies this link.
+     *
+     * @return a LinkTuple representing the Port
+     */
+    public LinkTuple getLinkTuple() {
+        return id;
     }
 
     /**
@@ -89,7 +101,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      * @return source SwitchPort.
      */
     public SwitchPort getSrc() {
-        return src;
+        return getLinkTuple().getSrc();
     }
 
     /**
@@ -98,12 +110,12 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      * @return destination SwitchPort.
      */
     public SwitchPort getDst() {
-        return dst;
+        return getLinkTuple().getDst();
     }
 
     @Override
     public String toString() {
-        return "[LinkEvent " + src + "->" + dst + "]";
+        return "[LinkEvent " + getSrc() + "->" + getDst() + "]";
     }
 
     public static final int LINKID_BYTES = 2 + PortEvent.PORTID_BYTES * 2;
@@ -127,16 +139,15 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
     }
 
     public ByteBuffer getIDasByteBuffer() {
-        return getLinkID(src.getDpid(), src.getPortNumber(),
-                dst.getDpid(), dst.getPortNumber());
+        return getLinkID(getSrc().getDpid(), getSrc().getPortNumber(),
+                getDst().getDpid(), getDst().getPortNumber());
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((dst == null) ? 0 : dst.hashCode());
-        result = prime * result + ((src == null) ? 0 : src.hashCode());
+        result = prime * result + Objects.hashCode(id);
         return result;
     }
 
@@ -160,7 +171,6 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
             return false;
         }
 
-        return Objects.equals(this.src, other.src) &&
-                Objects.equals(this.dst, other.dst);
+        return Objects.equals(this.id, other.id);
     }
 }

@@ -2,6 +2,8 @@ package net.onrc.onos.core.topology;
 
 import java.util.Map;
 
+import net.onrc.onos.core.util.LinkTuple;
+
 import org.apache.commons.lang.Validate;
 
 /**
@@ -59,6 +61,11 @@ public class LinkImpl extends TopologyObject implements Link {
         this(topology,
              new LinkEvent(srcPort.asSwitchPort(),
                            dstPort.asSwitchPort()).freeze());
+    }
+
+    @Override
+    public LinkTuple getLinkTuple() {
+        return linkObj.getLinkTuple();
     }
 
     @Override
