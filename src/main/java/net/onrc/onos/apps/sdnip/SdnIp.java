@@ -87,6 +87,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         IOFSwitchListener, IConfigInfoService {
 
     private static final Logger log = LoggerFactory.getLogger(SdnIp.class);
+    private final CallerId callerId = new CallerId("SDNIP");
 
     private IFloodlightProviderService floodlightProvider;
     private ILinkDiscoveryService linkDiscoveryService;
@@ -104,7 +105,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     private String currentConfigFilename = DEFAULT_CONFIG_FILENAME;
 
     /* ShortestPath Intent Variables */
-    private final String callerId = "SdnIp";
+    private final String caller = "SdnIp";
     private IControllerRegistryService controllerRegistryService;
     private IPathCalcRuntimeService pathRuntime;
     /* Shortest Intent Path Variables */
@@ -535,7 +536,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 prefix, nextHopMacAddress);
 
         FlowPath flowPath = new FlowPath();
-        flowPath.setInstallerId(new CallerId("SDNIP"));
+        flowPath.setInstallerId(callerId);
 
         // Set flowPath FlowPathType and FlowPathUserState
         flowPath.setFlowPathType(FlowPathType.FP_TYPE_SHORTEST_PATH);
@@ -771,7 +772,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         FlowPath flowPath = new FlowPath();
 
-        flowPath.setInstallerId(new CallerId("SDNIP"));
+        flowPath.setInstallerId(callerId);
 
         // Set flowPath FlowPathType and FlowPathUserState
         flowPath.setFlowPathType(FlowPathType.FP_TYPE_SHORTEST_PATH);
@@ -867,8 +868,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             //Inet4Address.
             int srcIP = InetAddresses.coerceToInteger(peerInterface.getIpAddress());
             int dstIP = InetAddresses.coerceToInteger(bgpPeer.getIpAddress());
-            String fwdIntentId = callerId + ":" + controllerRegistryService.getNextUniqueId();
-            String bwdIntentId = callerId + ":" + controllerRegistryService.getNextUniqueId();
+            String fwdIntentId = caller + ":" + controllerRegistryService.getNextUniqueId();
+            String bwdIntentId = caller + ":" + controllerRegistryService.getNextUniqueId();
             SwitchPort srcPort =
                 new SwitchPort(bgpdAttachmentPoint.dpid(),
                                bgpdAttachmentPoint.port());
@@ -897,7 +898,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         for (BgpPeer bgpPeer : bgpPeers.values()) {
 
             FlowPath flowPath = new FlowPath();
-            flowPath.setInstallerId(new CallerId("SDNIP"));
+            flowPath.setInstallerId(callerId);
 
             // Set flowPath FlowPathType and FlowPathUserState
             flowPath.setFlowPathType(FlowPathType.FP_TYPE_SHORTEST_PATH);
