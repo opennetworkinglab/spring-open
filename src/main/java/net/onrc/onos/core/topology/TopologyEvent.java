@@ -1,5 +1,8 @@
 package net.onrc.onos.core.topology;
 
+import java.util.Objects;
+
+
 /**
  * Self-contained Topology event Object
  * <p/>
@@ -53,6 +56,36 @@ public class TopologyEvent {
      */
     TopologyEvent(HostEvent hostEvent) {
         this.hostEvent = hostEvent;
+    }
+
+    /**
+     * Check if all events contained are equal.
+     * @param object.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        TopologyEvent other = (TopologyEvent) obj;
+        return Objects.equals(switchEvent, other.switchEvent) &&
+                Objects.equals(portEvent, other.portEvent) &&
+                Objects.equals(linkEvent, other.linkEvent) &&
+                Objects.equals(hostEvent, other.hostEvent);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(switchEvent, portEvent, linkEvent, hostEvent);
     }
 
     /**
