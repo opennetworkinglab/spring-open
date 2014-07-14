@@ -1,11 +1,15 @@
 package net.onrc.onos.core.metrics;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+
+import java.util.Map;
 
 /**
  * This class acts a singleton to hold the Metrics registry for ONOS.
@@ -171,22 +175,77 @@ public final class OnosMetrics {
      * @param metricName local name of the metric
      * @param metric Metric to register
      */
-    public static void registerMetric(MetricsComponents component,
-                                      MetricsFeatures feature,
-                                      String metricName,
-                                      Metric metric) {
+    public static void registerMetric(final MetricsComponents component,
+                                      final MetricsFeatures feature,
+                                      final String metricName,
+                                      final Metric metric) {
         final String name = generateName(component, feature, metricName);
         METRICS_REGISTRY.register(name, metric);
     }
 
     /**
-     * Get the singleton Metrics registry.  A single instance of
-     * the registry is statically allocated and then used by all callers.
+     * Fetches the existing Timers.
      *
-     * @return Metrics registry
+     * @param filter filter to use to select Timers
+     * @return a map of the Timers that match the filter, with the key as the
+     *         name String to the Timer.
      */
-    public static MetricRegistry getMetricsRegistry() {
-        return METRICS_REGISTRY;
+    public static Map<String, Timer> getTimers(final MetricFilter filter) {
+        return METRICS_REGISTRY.getTimers(filter);
+    }
+
+    /**
+     * Fetches the existing Gauges.
+     *
+     * @param filter filter to use to select Gauges
+     * @return a map of the Gauges that match the filter, with the key as the
+     *         name String to the Gauge.
+     */
+    @SuppressWarnings("rawtypes")
+    public static Map<String, Gauge> getGauges(final MetricFilter filter) {
+        return METRICS_REGISTRY.getGauges(filter);
+    }
+
+    /**
+     * Fetches the existing Counters.
+     *
+     * @param filter filter to use to select Counters
+     * @return a map of the Counters that match the filter, with the key as the
+     *         name String to the Counter.
+     */
+    public static Map<String, Counter> getCounters(final MetricFilter filter) {
+        return METRICS_REGISTRY.getCounters(filter);
+    }
+
+    /**
+     * Fetches the existing Meters.
+     *
+     * @param filter filter to use to select Meters
+     * @return a map of the Meters that match the filter, with the key as the
+     *         name String to the Meter.
+     */
+    public static Map<String, Meter> getMeters(final MetricFilter filter) {
+        return METRICS_REGISTRY.getMeters(filter);
+    }
+
+    /**
+     * Fetches the existing Histograms.
+     *
+     * @param filter filter to use to select Histograms
+     * @return a map of the Histograms that match the filter, with the key as the
+     *         name String to the Histogram.
+     */
+    public static Map<String, Histogram> getHistograms(final MetricFilter filter) {
+        return METRICS_REGISTRY.getHistograms(filter);
+    }
+
+    /**
+     * Removes all Metrics that match a given filter.
+     *
+     * @param filter filter to use to select the Metrics to remove.
+     */
+    public static void removeMatching(final MetricFilter filter) {
+        METRICS_REGISTRY.removeMatching(filter);
     }
 }
 

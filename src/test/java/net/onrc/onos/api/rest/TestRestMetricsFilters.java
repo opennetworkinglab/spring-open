@@ -118,7 +118,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
             OnosMetrics.MetricsFeatures.GLOBAL,
             "histogram3");
 
-    final Gauge<Integer> testGauge = new Gauge<Integer>() {
+    private final Gauge<Integer> testGauge = new Gauge<Integer>() {
         @Override
         public Integer getValue() {
             return 1;
@@ -187,7 +187,7 @@ public class TestRestMetricsFilters extends TestRestMetrics {
      * Removes the Metrics to clean up for the next test run.
      */
     private void destroyMetrics() {
-        OnosMetrics.getMetricsRegistry().removeMatching(MetricFilter.ALL);
+        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     /**

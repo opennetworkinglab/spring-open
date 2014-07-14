@@ -6,7 +6,6 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
@@ -66,8 +65,7 @@ public class MetricsResource extends ServerResource {
      */
     @Get("json")
     @SuppressWarnings("rawtypes")
-    public Representation retrieve() throws Exception {
-        final MetricRegistry registry = OnosMetrics.getMetricsRegistry();
+    public Representation retrieve() {
         final MetricsObjectResource result = new MetricsObjectResource();
 
         final List<MetricsObjectResource.TimerObjectResource> timers =
@@ -86,35 +84,35 @@ public class MetricsResource extends ServerResource {
         final MetricFilter filter = new MetricNameFilter(metricIdsString);
 
         for (final Map.Entry<String, Timer> timer :
-             registry.getTimers(filter).entrySet()) {
+             OnosMetrics.getTimers(filter).entrySet()) {
             timers.add(new MetricsObjectResource.TimerObjectResource(
                     timer.getKey(), timer.getValue()));
         }
         result.setTimers(timers);
 
         for (final Map.Entry<String, Gauge> gauge :
-             registry.getGauges(filter).entrySet()) {
+             OnosMetrics.getGauges(filter).entrySet()) {
             gauges.add(new MetricsObjectResource.GaugeObjectResource(
                     gauge.getKey(), gauge.getValue()));
         }
         result.setGauges(gauges);
 
         for (final Map.Entry<String, Counter> counter :
-             registry.getCounters(filter).entrySet()) {
+             OnosMetrics.getCounters(filter).entrySet()) {
             counters.add(new MetricsObjectResource.CounterObjectResource(
                     counter.getKey(), counter.getValue()));
         }
         result.setCounters(counters);
 
         for (final Map.Entry<String, Meter> meter :
-             registry.getMeters(filter).entrySet()) {
+             OnosMetrics.getMeters(filter).entrySet()) {
             meters.add(new MetricsObjectResource.MeterObjectResource(
                     meter.getKey(), meter.getValue()));
         }
         result.setMeters(meters);
 
         for (final Map.Entry<String, Histogram> histogram :
-             registry.getHistograms(filter).entrySet()) {
+             OnosMetrics.getHistograms(filter).entrySet()) {
             histograms.add(new MetricsObjectResource.HistogramObjectResource(
                     histogram.getKey(), histogram.getValue()));
         }
