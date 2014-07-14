@@ -223,16 +223,13 @@ public class FlowSynchronizer implements IFlowSyncService {
                 Future<List<OFStatistics>> dfuture = sw.getStatistics(req);
                 entries = dfuture.get();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("Error getting statistics", e);
                 return null;
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("Error getting statistics", e);
                 return null;
             } catch (ExecutionException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("Error getting statistics", e);
                 return null;
             }
 

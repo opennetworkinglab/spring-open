@@ -382,8 +382,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                         }
                         size += msg.getLength();
                     } catch (IOException e) {
-                        e.printStackTrace();
-                        log.error("Exception in sending message ({}) : {}", msg, e);
+                        log.error("Exception in sending message (" + msg + "):", e);
                     }
                 }
 
@@ -1003,12 +1002,10 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         try {
             return future.get();
         } catch (InterruptedException e) {
-            e.printStackTrace();
-            log.error("InterruptedException: {}", e);
+            log.error("InterruptedException:", e);
             return null;
         } catch (ExecutionException e) {
-            e.printStackTrace();
-            log.error("ExecutionException: {}", e);
+            log.error("ExecutionException:", e);
             return null;
         }
     }

@@ -576,8 +576,7 @@ public class OFSwitchImpl implements IOFSwitch {
             try {
                 this.write(msglist);
             } catch (IOException e) {
-                // TODO: log exception
-                e.printStackTrace();
+                log.error("Failed flushing messages", e);
             }
             msglist.clear();
         }
