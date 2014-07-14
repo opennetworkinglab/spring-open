@@ -12,7 +12,7 @@ Usage:
     $ cat commands.txt | ./onoscli
 
     # Running a single command from the system command-line
-    $ ./onoscli -c show switch all
+    $ ./onoscli -c show switch
 
     # Run the following command for additional help
     $ ./onoscli -h
@@ -162,9 +162,7 @@ class OnosCli(Cmd):
             #
             Command("show", "Show command"),
             #
-            Command("show host", "Show hosts"),
-            #
-            Command("show host all", "Show all hosts", self.show_host_all),
+            Command("show host", "Show all hosts", self.show_host),
             #
             Command("show intent", "Show intents"),
             #
@@ -186,9 +184,7 @@ class OnosCli(Cmd):
                     ]
                     ),
             #
-            Command("show link", "Show links"),
-            #
-            Command("show link all", "Show all links", self.show_link_all),
+            Command("show link", "Show all links", self.show_link),
             #
             Command("show metrics",
                     """Show all metrics
@@ -214,13 +210,9 @@ class OnosCli(Cmd):
                     ("--dst-dpid", dict(required=True))
                     ]),
             #
-            Command("show switch", "Show switches"),
+            Command("show switch", "Show all switches", self.show_switch),
             #
-            Command("show switch all", "Show all switches", self.show_switch_all),
-            #
-            Command("show topology", "Show network topology"),
-            #
-            Command("show topology all", "Show whole network topology", self.show_topology_all)
+            Command("show topology", "Show network topology", self.show_topology)
         ]
 
         # Sort the commands by the level in the CLI command hierarchy
@@ -309,8 +301,8 @@ class OnosCli(Cmd):
         # if len(result) != 0:
         #     self.print_json_result(result)
 
-    def show_host_all(self, args):
-        "CLI command callback: show host all"
+    def show_host(self, args):
+        "CLI command callback: show host"
 
         url = "http://%s:%s/wm/onos/topology/hosts" % (self.onos_ip, self.onos_port)
         result = get_json(url)
@@ -342,8 +334,8 @@ class OnosCli(Cmd):
         result = get_json(url)
         self.print_json_result(result)
 
-    def show_link_all(self, args):
-        "CLI command callback: show link all"
+    def show_link(self, args):
+        "CLI command callback: show link"
 
         url = "http://%s:%s/wm/onos/topology/links" % (self.onos_ip, self.onos_port)
         result = get_json(url)
@@ -356,15 +348,11 @@ class OnosCli(Cmd):
             # reimplemented in the future.
             links = result
             print "# src_dpid src_port -> dst_dpid dst_port"
-            for v in sorted(links, key=lambda x: x['src-switch']):
-                if v.has_key('dst-switch'):
-                    dst_dpid = str(v['dst-switch'])
-                if v.has_key('src-switch'):
-                    src_dpid = str(v['src-switch'])
-                if v.has_key('src-port'):
-                    src_port = str(v['src-port'])
-                if v.has_key('dst-port'):
-                    dst_port = str(v['dst-port'])
+            for v in sorted(links, key=lambda x: x['src']['dpid']):
+                src_dpid = str(v['src']['dpid'])
+                src_port = str(v['src']['portNumber'])
+                dst_dpid = str(v['dst']['dpid'])
+                dst_port = str(v['dst']['portNumber'])
                 self.print_result("%s %s -> %s %s" % (src_dpid, src_port, dst_dpid, dst_port))
 
     def show_metrics(self, args):
@@ -388,16 +376,16 @@ class OnosCli(Cmd):
         #
         self.print_json_result(result)
 
-    def show_switch_all(self, args):
-        "CLI command callback: show switch all"
+    def show_switch(self, args):
+        "CLI command callback: show switch"
 
         url = "http://%s:%s/wm/onos/topology/switches" % (self.onos_ip, self.onos_port)
         result = get_json(url)
         #
         self.print_json_result(result)
 
-    def show_topology_all(self, args):
-        "CLI command callback: show topology all"
+    def show_topology(self, args):
+        "CLI command callback: show topology"
 
         url = "http://%s:%s/wm/onos/topology" % (self.onos_ip, self.onos_port)
         result = get_json(url)
@@ -499,7 +487,7 @@ class OnosCli(Cmd):
             #   parser.print_help()
 
     #
-    # Traverse (breadth-first) a subtree and return all nodes except the
+    # Traverse (depth-first) a subtree and return all nodes except the
     # root node.
     #
     def collect_subtree_commands(self, root_command):
