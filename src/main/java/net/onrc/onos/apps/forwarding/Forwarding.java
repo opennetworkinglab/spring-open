@@ -30,7 +30,7 @@ import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.topology.Device;
+import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Port;
@@ -51,7 +51,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         IForwardingService, IPacketListener, ChangedListener {
     private static final Logger log = LoggerFactory.getLogger(Forwarding.class);
 
-    private static final int SLEEP_TIME_FOR_DB_DEVICE_INSTALLED = 100; // milliseconds
+    private static final int SLEEP_TIME_FOR_DB_HOST_INSTALLED = 100; // milliseconds
     private static final int NUMBER_OF_THREAD_FOR_EXECUTOR = 1;
     private static final int SRC_SWITCH_TIMEOUT_ADJUST_SECOND = 2;
     private static final int DEFAULT_IDLE_TIMEOUT = 5;
@@ -270,22 +270,22 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         String destinationMac =
                 HexString.toHexString(eth.getDestinationMACAddress());
 
-        // FIXME getDeviceByMac() is a blocking call, so it may be better way
+        // FIXME #getHostByMac() is a blocking call, so it may be better way
         // to handle it to avoid the condition.
-        Device deviceObject = topology.getDeviceByMac(
+        Host hostObject = topology.getHostByMac(
                 MACAddress.valueOf(destinationMac));
 
-        if (deviceObject == null) {
-            log.debug("No device entry found for {}",
+        if (hostObject == null) {
+            log.debug("No host entry found for {}",
                     destinationMac);
 
-            //Device is not in the DB, so wait it until the device is added.
+            //Host is not in the DB, so wait it until the host is added.
             EXECUTOR_SERVICE.schedule(new WaitDeviceArp(sw, inPort, eth),
-                    SLEEP_TIME_FOR_DB_DEVICE_INSTALLED, TimeUnit.MILLISECONDS);
+                    SLEEP_TIME_FOR_DB_HOST_INSTALLED, TimeUnit.MILLISECONDS);
             return;
         }
 
-        continueHandlePacketIn(sw, inPort, eth, deviceObject);
+        continueHandlePacketIn(sw, inPort, eth, hostObject);
     }
 
     private class WaitDeviceArp implements Runnable {
@@ -302,34 +302,34 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         @Override
         public void run() {
-            Device deviceObject = topology.getDeviceByMac(MACAddress.valueOf(eth.getDestinationMACAddress()));
-            if (deviceObject == null) {
-                log.debug("wait {}ms and device was not found. " +
+            Host hostObject = topology.getHostByMac(MACAddress.valueOf(eth.getDestinationMACAddress()));
+            if (hostObject == null) {
+                log.debug("wait {}ms and host was not found. " +
                         "Send broadcast packet and the thread finish.",
-                        SLEEP_TIME_FOR_DB_DEVICE_INSTALLED);
+                        SLEEP_TIME_FOR_DB_HOST_INSTALLED);
                 handleBroadcast(sw, inPort, eth);
                 return;
             }
-            log.debug("wait {}ms and device {} was found, continue",
-                    SLEEP_TIME_FOR_DB_DEVICE_INSTALLED, deviceObject.getMacAddress());
-            continueHandlePacketIn(sw, inPort, eth, deviceObject);
+            log.debug("wait {}ms and host {} was found, continue",
+                    SLEEP_TIME_FOR_DB_HOST_INSTALLED, hostObject.getMacAddress());
+            continueHandlePacketIn(sw, inPort, eth, hostObject);
         }
     }
 
-    private void continueHandlePacketIn(Switch sw, Port inPort, Ethernet eth, Device deviceObject) {
+    private void continueHandlePacketIn(Switch sw, Port inPort, Ethernet eth, Host hostObject) {
 
         log.trace("Start continuehandlePacketIn");
 
-        //Iterator<IPortObject> ports = deviceObject.getAttachedPorts().iterator();
-        Iterator<net.onrc.onos.core.topology.Port> ports = deviceObject.getAttachmentPoints().iterator();
+        //Iterator<IPortObject> ports = hostObject.getAttachedPorts().iterator();
+        Iterator<net.onrc.onos.core.topology.Port> ports = hostObject.getAttachmentPoints().iterator();
         if (!ports.hasNext()) {
-            log.debug("No attachment point found for device {} - broadcasting packet",
-                    deviceObject.getMacAddress());
+            log.debug("No attachment point found for host {} - broadcasting packet",
+                    hostObject.getMacAddress());
             handleBroadcast(sw, inPort, eth);
             return;
         }
 
-        //This code assumes the device has only one port. It should be problem.
+        //This code assumes the host has only one port. It should be problem.
         Port destinationPort = ports.next();
         short destinationPortNum = destinationPort.getNumber().value();
         Switch destinationSw = destinationPort.getSwitch();
@@ -523,7 +523,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
         short outPort;
         if (graphPath.isEmpty()) {
             outPort = (short) spfIntent.getDstPortNumber();
-            log.debug("Path is empty. Maybe devices on the same switch. outPort {}", outPort);
+            log.debug("Path is empty. Maybe hosts on the same switch. outPort {}", outPort);
         } else {
             outPort = graphPath.get(0).getSrc().getPortNumber().value();
             log.debug("path{}, outPort {}", graphPath, outPort);

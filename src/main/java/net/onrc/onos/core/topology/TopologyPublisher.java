@@ -360,21 +360,21 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         SwitchPort sp = new SwitchPort(host.getSwitchDPID(), host.getSwitchPort());
         List<SwitchPort> spLists = new ArrayList<SwitchPort>();
         spLists.add(sp);
-        DeviceEvent event = new DeviceEvent(host.getMacAddress());
+        HostEvent event = new HostEvent(host.getMacAddress());
         event.setAttachmentPoints(spLists);
         event.setLastSeenTime(host.getLastSeenTimestamp().getTime());
         // Does not use vlan info now.
         event.freeze();
 
-        topologyDiscoveryInterface.putDeviceDiscoveryEvent(event);
+        topologyDiscoveryInterface.putHostDiscoveryEvent(event);
     }
 
     @Override
     public void hostRemoved(Host host) {
         log.debug("Called onosDeviceRemoved");
-        DeviceEvent event = new DeviceEvent(host.getMacAddress());
+        HostEvent event = new HostEvent(host.getMacAddress());
         //XXX shouldn't we be setting attachment points?
         event.freeze();
-        topologyDiscoveryInterface.removeDeviceDiscoveryEvent(event);
+        topologyDiscoveryInterface.removeHostDiscoveryEvent(event);
     }
 }

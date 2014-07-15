@@ -51,9 +51,9 @@ public class TopologyImplTest {
 
             // Create a host for each switch
             MACAddress devMac = MACAddress.valueOf(switchID);
-            DeviceImpl testHost = new DeviceImpl(testTopology, devMac);
+            HostImpl testHost = new HostImpl(testTopology, devMac);
             testHost.addAttachmentPoint(hostPort);
-            testTopology.putDevice(testHost);
+            testTopology.putHost(testHost);
         }
 
         // Create one bidirectional link b/w two switches to construct a ring topology
@@ -188,7 +188,7 @@ public class TopologyImplTest {
             MACAddress devMac = MACAddress.valueOf(switchID);
 
             // Verify the device is in the graphDB
-            assertNotNull(testTopology.getDeviceByMac(devMac));
+            assertNotNull(testTopology.getHostByMac(devMac));
         }
     }
 
@@ -198,11 +198,11 @@ public class TopologyImplTest {
     @Test
     public void testRemoveDevice() {
         int devCount = 0;
-        Iterator<Device> itr = testTopology.getDevices().iterator();
+        Iterator<Host> itr = testTopology.getHosts().iterator();
         while (itr.hasNext()) {
-            Device currDev = itr.next();
-            testTopology.removeDevice(currDev);
-            testTopology.getDeviceByMac(currDev.getMacAddress());
+            Host currDev = itr.next();
+            testTopology.removeHost(currDev);
+            testTopology.getHostByMac(currDev.getMacAddress());
             devCount++;
         }
 
@@ -242,9 +242,9 @@ public class TopologyImplTest {
     @Test
     public void testRemoveSwitch() {
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
-            Iterator<Device> itr = testTopology.getSwitch(new Dpid(switchID)).getDevices().iterator();
+            Iterator<Host> itr = testTopology.getSwitch(new Dpid(switchID)).getHosts().iterator();
             while (itr.hasNext()) {
-                testTopology.removeDevice(itr.next());
+                testTopology.removeHost(itr.next());
             }
             testTopology.removeSwitch(switchID);
 

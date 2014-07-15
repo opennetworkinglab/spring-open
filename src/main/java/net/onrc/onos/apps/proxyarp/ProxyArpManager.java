@@ -28,7 +28,7 @@ import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
-import net.onrc.onos.core.topology.Device;
+import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
@@ -433,11 +433,11 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                 new HostArpRequester(arp, dpid, inPort), false));
 
         topology.acquireReadLock();
-        Device targetDevice = topology.getDeviceByMac(
+        Host targetHost = topology.getHostByMac(
                 MACAddress.valueOf(arp.getTargetHardwareAddress()));
         topology.releaseReadLock();
 
-        if (targetDevice == null) {
+        if (targetHost == null) {
             if (log.isTraceEnabled()) {
                 log.trace("No device info found for {} - broadcasting",
                         target.getHostAddress());
@@ -452,7 +452,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             MACAddress macAddress = MACAddress.valueOf(arp.getTargetHardwareAddress());
 
             if (log.isTraceEnabled()) {
-                log.trace("The target Device Record in DB is: {} => {} " +
+                log.trace("The target Host Record in DB is: {} => {} " +
                         "from ARP request host at {}/{}", new Object[]{
                                 inetAddressToString(arp.getTargetProtocolAddress()),
                                 macAddress, HexString.toHexString(dpid), inPort});
@@ -460,11 +460,11 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
             // sendArpReply(arp, sw.getId(), pi.getInPort(), macAddress);
 
-            Iterable<Port> outPorts = targetDevice.getAttachmentPoints();
+            Iterable<Port> outPorts = targetHost.getAttachmentPoints();
 
             if (!outPorts.iterator().hasNext()) {
                 if (log.isTraceEnabled()) {
-                    log.trace("Device {} exists but is not connected to any ports" +
+                    log.trace("Host {} exists but is not connected to any ports" +
                             " - broadcasting", macAddress);
                 }
 

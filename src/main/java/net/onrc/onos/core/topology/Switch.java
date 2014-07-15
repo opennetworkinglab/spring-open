@@ -77,7 +77,7 @@ public interface Switch extends ITopologyElement, StringAttributes {
     /**
      * Gets all the devices attached to this switch.
      *
-     * @return {@link Device}s attached to this switch
+     * @return {@link Host}s attached to this switch
      */
-    public Collection<Device> getDevices();
+    public Collection<Host> getHosts();
 }

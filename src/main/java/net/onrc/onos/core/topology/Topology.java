@@ -204,14 +204,14 @@ public interface Topology {
      * @param address the MAC address to use.
      * @return the network device for the MAC address if found, otherwise null.
      */
-    public Device getDeviceByMac(MACAddress address);
+    public Host getHostByMac(MACAddress address);
 
     /**
      * Gets all devices in the network.
      *
      * @return all devices in the network
      */
-    public Iterable<Device> getDevices();
+    public Iterable<Host> getHosts();
 
     /**
      * Gets all devices on specified port.
@@ -219,7 +219,7 @@ public interface Topology {
      * @param port port which the device is attached
      * @return all devices attached to the port.
      */
-    public Collection<Device> getDevices(SwitchPort port);
+    public Collection<Host> getHosts(SwitchPort port);
 
     /**
      * Acquire a read lock on the entire topology. The topology will not

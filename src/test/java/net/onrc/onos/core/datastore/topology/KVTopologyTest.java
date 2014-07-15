@@ -222,7 +222,7 @@ public class KVTopologyTest {
             }
         } catch (ObjectExistsException e) {
             e.printStackTrace();
-            fail("Device creation failed " + e);
+            fail("Host creation failed " + e);
         }
 
         KVSwitch sw2 = new KVSwitch(DPID2, NAMESPACE);
@@ -245,7 +245,7 @@ public class KVTopologyTest {
             for (WriteOp op : groupOp) {
                 System.err.println(op);
             }
-            fail("Some of Switch/Port/Device creation failed");
+            fail("Some of Switch/Port/Host creation failed");
         } else {
             assertNotEquals(VERSION_NONEXISTENT, sw2.getVersion());
             assertEquals(DPID2, sw2.getDpid());

@@ -124,7 +124,7 @@ public interface Port extends ITopologyElement, StringAttributes {
     /**
      * Gets all the devices attached to this port.
      *
-     * @return {@link Device}s attached to this port
+     * @return {@link Host}s attached to this port
      */
-    public Iterable<Device> getDevices();
+    public Iterable<Host> getHosts();
 }

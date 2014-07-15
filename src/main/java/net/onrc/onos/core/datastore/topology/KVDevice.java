@@ -16,7 +16,7 @@ import net.onrc.onos.core.datastore.topology.KVLink.STATUS;
 import net.onrc.onos.core.datastore.utils.ByteArrayComparator;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
 import net.onrc.onos.core.datastore.utils.KVObject;
-import net.onrc.onos.core.topology.DeviceEvent;
+import net.onrc.onos.core.topology.HostEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
- * Device object.
+ * Host object.
  * <p/>
  */
 public class KVDevice extends KVObject {
@@ -47,7 +47,7 @@ public class KVDevice extends KVObject {
         }
     };
 
-    static final String DEVICE_TABLE_SUFFIX = ":Device";
+    static final String DEVICE_TABLE_SUFFIX = ":Host";
 
     private final byte[] mac;
     private TreeSet<byte[]> portIds;
@@ -55,13 +55,13 @@ public class KVDevice extends KVObject {
     /**
      * Generate a DeviceID from MAC address.
      * <p/>
-     * We're assuming MAC address can be an unique identifier for Device.
+     * We're assuming MAC address can be an unique identifier for Host.
      *
      * @param mac MAC address
      * @return DeviceID
      */
     public static byte[] getDeviceID(final byte[] mac) {
-        return DeviceEvent.getDeviceID(mac).array();
+        return HostEvent.getDeviceID(mac).array();
     }
 
     /**
@@ -73,7 +73,7 @@ public class KVDevice extends KVObject {
     public static byte[] getMacFromKey(final byte[] key) {
         ByteBuffer keyBuf = ByteBuffer.wrap(key);
         if (keyBuf.getChar() != 'D') {
-            throw new IllegalArgumentException("Invalid Device key");
+            throw new IllegalArgumentException("Invalid Host key");
         }
         byte[] mac = new byte[keyBuf.remaining()];
         keyBuf.get(mac);
@@ -171,7 +171,7 @@ public class KVDevice extends KVObject {
     }
 
     /**
-     * Utility class to provide Iterator over all the Device objects.
+     * Utility class to provide Iterator over all the Host objects.
      */
     public static class DeviceIterator extends AbstractObjectIterator<KVDevice> {
 
@@ -214,16 +214,16 @@ public class KVDevice extends KVObject {
     }
 
     /**
-     * Add a port to this Device's attachment points.
+     * Add a port to this Host's attachment points.
      *
-     * @param portId PortID of the port which this Device is attached
+     * @param portId PortID of the port which this Host is attached
      */
     public void addPortId(final byte[] portId) {
         portIds.add(portId.clone());
     }
 
     /**
-     * Remove a port from this Device's attachment points.
+     * Remove a port from this Host's attachment points.
      *
      * @param portId PortID to remove
      */
@@ -232,16 +232,16 @@ public class KVDevice extends KVObject {
     }
 
     /**
-     * Empty this Device's attachment points.
+     * Empty this Host's attachment points.
      */
     public void emptyPortIds() {
         portIds.clear();
     }
 
     /**
-     * Add ports to this Device's attachment points.
+     * Add ports to this Host's attachment points.
      *
-     * @param newPortIds PortIDs which this Device is attached
+     * @param newPortIds PortIDs which this Host is attached
      */
     public void addAllToPortIds(final Collection<byte[]> newPortIds) {
         // TODO: Should we copy each portId, or reference is OK.
@@ -249,7 +249,7 @@ public class KVDevice extends KVObject {
     }
 
     /**
-     * Gets all the PortIDs which this Device is attached.
+     * Gets all the PortIDs which this Host is attached.
      *
      * @return Unmodifiable Set view of all the PortIds;
      */
@@ -290,7 +290,7 @@ public class KVDevice extends KVObject {
             success &= deserializePropertyMap(DEVICE_KRYO.get(), props);
             return success;
         } catch (InvalidProtocolBufferException e) {
-            log.error("Deserializing Device: " + this + " failed.", e);
+            log.error("Deserializing Host: " + this + " failed.", e);
             return false;
         }
     }

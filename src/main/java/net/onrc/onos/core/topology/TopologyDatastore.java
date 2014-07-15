@@ -174,8 +174,8 @@ public class TopologyDatastore {
      * @param device the device to add.
      * @return true on success, otherwise false.
      */
-    public boolean addDevice(DeviceEvent device) {
-        log.debug("Adding device into DB. mac {}", device.getMac());
+    public boolean addHost(HostEvent device) {
+        log.debug("Adding host into DB. mac {}", device.getMac());
 
         KVDevice rcDevice = new KVDevice(device.getMac().toBytes());
 
@@ -195,8 +195,8 @@ public class TopologyDatastore {
      * @param device the device to remove.
      * @return true on success, otherwise false.
      */
-    public boolean removeDevice(DeviceEvent device) {
-        log.debug("Removing device into DB. mac {}", device.getMac());
+    public boolean removeHost(HostEvent device) {
+        log.debug("Removing host into DB. mac {}", device.getMac());
 
         KVDevice rcDevice = new KVDevice(device.getMac().toBytes());
         rcDevice.forceDelete();

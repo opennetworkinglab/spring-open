@@ -24,7 +24,6 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.packet.Ethernet;
-import net.onrc.onos.core.topology.Device;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Topology;
@@ -172,8 +171,8 @@ public class HostManager implements IFloodlightModule,
             log.debug("called HostCleaner");
             topology.acquireReadLock();
             try {
-                Set<Device> deleteSet = new HashSet<Device>();
-                for (Device host : topology.getDevices()) {
+                Set<net.onrc.onos.core.topology.Host> deleteSet = new HashSet<>();
+                for (net.onrc.onos.core.topology.Host host : topology.getHosts()) {
                     long now = System.currentTimeMillis();
                     if ((now - host.getLastSeenTime() > agingMillisecConfig)) {
                         if (log.isTraceEnabled()) {
@@ -184,7 +183,7 @@ public class HostManager implements IFloodlightModule,
                     }
                 }
 
-                for (Device host : deleteSet) {
+                for (net.onrc.onos.core.topology.Host host : deleteSet) {
                     deleteHostByMac(host.getMacAddress());
                 }
             } catch (Exception e) {
@@ -277,7 +276,7 @@ public class HostManager implements IFloodlightModule,
         Host deleteHost = null;
         topology.acquireReadLock();
         try {
-            Device host = topology.getDeviceByMac(mac);
+            net.onrc.onos.core.topology.Host host = topology.getHostByMac(mac);
 
             for (Port switchPort : host.getAttachmentPoints()) {
                 // We don't handle vlan now and multiple attachment points.

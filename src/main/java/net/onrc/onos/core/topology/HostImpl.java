@@ -9,15 +9,15 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
- * Device Object stored in In-memory Topology.
+ * Host Object stored in In-memory Topology.
  */
-public class DeviceImpl extends TopologyObject implements Device {
+public class HostImpl extends TopologyObject implements Host {
 
     //////////////////////////////////////////////////////
     /// Topology element attributes
     ///  - any changes made here needs to be replicated.
     //////////////////////////////////////////////////////
-    private DeviceEvent deviceObj;
+    private HostEvent deviceObj;
 
     ///////////////////
     /// In-memory index
@@ -26,12 +26,12 @@ public class DeviceImpl extends TopologyObject implements Device {
     // none
 
     /**
-     * Creates a Device object based on {@link DeviceEvent}.
+     * Creates a Host object based on {@link HostEvent}.
      *
      * @param topology Topology instance this object belongs to
-     * @param scHost self contained {@link DeviceEvent}
+     * @param scHost self contained {@link HostEvent}
      */
-    public DeviceImpl(Topology topology, DeviceEvent scHost) {
+    public HostImpl(Topology topology, HostEvent scHost) {
         super(topology);
         Validate.notNull(scHost);
 
@@ -40,19 +40,19 @@ public class DeviceImpl extends TopologyObject implements Device {
         if (scHost.isFrozen()) {
             this.deviceObj = scHost;
         } else {
-            this.deviceObj = new DeviceEvent(scHost);
+            this.deviceObj = new HostEvent(scHost);
             this.deviceObj.freeze();
         }
     }
 
     /**
-     * Creates a Device object with empty attributes.
+     * Creates a Host object with empty attributes.
      *
      * @param topology Topology instance this object belongs to
      * @param mac MAC address of the host
      */
-    public DeviceImpl(Topology topology, MACAddress mac) {
-        this(topology, new DeviceEvent(mac).freeze());
+    public HostImpl(Topology topology, MACAddress mac) {
+        this(topology, new HostEvent(mac).freeze());
     }
 
     @Override
@@ -90,7 +90,7 @@ public class DeviceImpl extends TopologyObject implements Device {
     // TODO we may no longer need this. confirm and delete later.
     void setLastSeenTime(long lastSeenTime) {
         // XXX Following will make this instance thread unsafe. Need to use AtomicRef.
-        DeviceEvent updated = new DeviceEvent(this.deviceObj);
+        HostEvent updated = new HostEvent(this.deviceObj);
         updated.setLastSeenTime(lastSeenTime);
         updated.freeze();
         this.deviceObj = updated;
@@ -103,7 +103,7 @@ public class DeviceImpl extends TopologyObject implements Device {
      */
     void addAttachmentPoint(Port port) {
         // XXX Following will make this instance thread unsafe. Need to use AtomicRef.
-        DeviceEvent updated = new DeviceEvent(this.deviceObj);
+        HostEvent updated = new HostEvent(this.deviceObj);
         updated.removeAttachmentPoint(port.asSwitchPort());
         updated.addAttachmentPoint(port.asSwitchPort());
         updated.freeze();
@@ -117,7 +117,7 @@ public class DeviceImpl extends TopologyObject implements Device {
      */
     boolean removeAttachmentPoint(Port port) {
         // XXX Following will make this instance thread unsafe. Need to use AtomicRef.
-        DeviceEvent updated = new DeviceEvent(this.deviceObj);
+        HostEvent updated = new HostEvent(this.deviceObj);
         final boolean result = updated.removeAttachmentPoint(port.asSwitchPort());
         updated.freeze();
         this.deviceObj = updated;

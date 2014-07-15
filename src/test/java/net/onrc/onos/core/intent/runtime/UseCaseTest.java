@@ -29,7 +29,7 @@ import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.topology.DeviceEvent;
+import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
@@ -231,8 +231,8 @@ public class UseCaseTest {
         List<PortEvent> removedPortEvents = new LinkedList<>();
         List<LinkEvent> addedLinkEvents = new LinkedList<>();
         List<LinkEvent> removedLinkEvents = new LinkedList<>();
-        List<DeviceEvent> addedDeviceEvents = new LinkedList<>();
-        List<DeviceEvent> removedDeviceEvents = new LinkedList<>();
+        List<HostEvent> addedHostEvents = new LinkedList<>();
+        List<HostEvent> removedHostEvents = new LinkedList<>();
         TopologyEvents topologyEvents;
 
         // create shortest path intents
@@ -283,8 +283,8 @@ public class UseCaseTest {
                                             removedPortEvents,
                                             addedLinkEvents,
                                             removedLinkEvents,
-                                            addedDeviceEvents,
-                                            removedDeviceEvents);
+                                            addedHostEvents,
+                                            removedHostEvents);
 
         runtime1.topologyEvents(topologyEvents);
         System.out.println("*** Link goes down. ***");
@@ -317,8 +317,8 @@ public class UseCaseTest {
                                             removedPortEvents,
                                             addedLinkEvents,
                                             removedLinkEvents,
-                                            addedDeviceEvents,
-                                            removedDeviceEvents);
+                                            addedHostEvents,
+                                            removedHostEvents);
 
         runtime1.topologyEvents(topologyEvents);
         System.out.println("*** Link goes up. ***");

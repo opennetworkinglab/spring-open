@@ -37,8 +37,8 @@ public final class TopologyEvents {
     private final Collection<PortEvent> removedPortEvents;
     private final Collection<LinkEvent> addedLinkEvents;
     private final Collection<LinkEvent> removedLinkEvents;
-    private final Collection<DeviceEvent> addedHostEvents;
-    private final Collection<DeviceEvent> removedHostEvents;
+    private final Collection<HostEvent> addedHostEvents;
+    private final Collection<HostEvent> removedHostEvents;
 
     /**
      * Constructor.
@@ -61,8 +61,8 @@ public final class TopologyEvents {
                           Collection<PortEvent> removedPortEvents,
                           Collection<LinkEvent> addedLinkEvents,
                           Collection<LinkEvent> removedLinkEvents,
-                          Collection<DeviceEvent> addedHostEvents,
-                          Collection<DeviceEvent> removedHostEvents) {
+                          Collection<HostEvent> addedHostEvents,
+                          Collection<HostEvent> removedHostEvents) {
         // CHECKSTYLE:ON
         this.timestamp = timestamp;
         this.addedSwitchEvents =
@@ -151,7 +151,7 @@ public final class TopologyEvents {
      *
      * @return the collection of added Host Events.
      */
-    public Collection<DeviceEvent> getAddedHostEvents() {
+    public Collection<HostEvent> getAddedHostEvents() {
         return addedHostEvents;
     }
 
@@ -160,7 +160,7 @@ public final class TopologyEvents {
      *
      * @return the collection of removed Host Events.
      */
-    public Collection<DeviceEvent> getRemovedHostEvents() {
+    public Collection<HostEvent> getRemovedHostEvents() {
         return removedHostEvents;
     }
 }

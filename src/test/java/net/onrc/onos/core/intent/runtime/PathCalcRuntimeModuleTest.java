@@ -18,7 +18,7 @@ import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
-import net.onrc.onos.core.topology.DeviceEvent;
+import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
@@ -456,7 +456,7 @@ public class PathCalcRuntimeModuleTest {
         //  Remove one of the links and check results
         final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
         final List<PortEvent> emptyPortEvents = new LinkedList<>();
-        final List<DeviceEvent> emptyDeviceEvents = new LinkedList<>();
+        final List<HostEvent> emptyHostEvents = new LinkedList<>();
         final List<LinkEvent> addedLinkEvents = new LinkedList<>();
         final List<LinkEvent> removedLinkEvents = new LinkedList<>();
         TopologyEvents topologyEvents;
@@ -478,8 +478,8 @@ public class PathCalcRuntimeModuleTest {
                                             emptyPortEvents,
                                             addedLinkEvents,
                                             removedLinkEvents,
-                                            emptyDeviceEvents,
-                                            emptyDeviceEvents);
+                                            emptyHostEvents,
+                                            emptyHostEvents);
 
         runtime.topologyEvents(topologyEvents);
 
@@ -692,7 +692,7 @@ public class PathCalcRuntimeModuleTest {
         //  Remove one of the links and check results
         final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
         final List<PortEvent> emptyPortEvents = new LinkedList<>();
-        final List<DeviceEvent> emptyDeviceEvents = new LinkedList<>();
+        final List<HostEvent> emptyHostEvents = new LinkedList<>();
         final List<LinkEvent> addedLinkEvents = new LinkedList<>();
         final List<LinkEvent> removedLinkEvents = new LinkedList<>();
         TopologyEvents topologyEvents;
@@ -714,8 +714,8 @@ public class PathCalcRuntimeModuleTest {
                                             emptyPortEvents,
                                             addedLinkEvents,
                                             removedLinkEvents,
-                                            emptyDeviceEvents,
-                                            emptyDeviceEvents);
+                                            emptyHostEvents,
+                                            emptyHostEvents);
 
         runtime.topologyEvents(topologyEvents);
 
@@ -767,8 +767,8 @@ public class PathCalcRuntimeModuleTest {
                                             emptyPortEvents,
                                             addedLinkEvents,
                                             removedLinkEvents,
-                                            emptyDeviceEvents,
-                                            emptyDeviceEvents);
+                                            emptyHostEvents,
+                                            emptyHostEvents);
 
         runtime.topologyEvents(topologyEvents);
 

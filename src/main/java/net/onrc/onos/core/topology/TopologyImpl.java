@@ -35,9 +35,9 @@ public class TopologyImpl implements Topology {
     // XXX may need to be careful when shallow copying.
     private final ConcurrentMap<Dpid, ConcurrentMap<PortNumber, Port>> ports;
 
-    // Index from Port to Device
-    private final Multimap<SwitchPort, Device> devices;
-    private final ConcurrentMap<MACAddress, Device> mac2Device;
+    // Index from Port to Host
+    private final Multimap<SwitchPort, Host> hosts;
+    private final ConcurrentMap<MACAddress, Host> mac2Host;
 
     // SwitchPort -> (type -> Link)
     private final ConcurrentMap<SwitchPort, ConcurrentMap<String, Link>> outgoingLinks;
@@ -52,9 +52,9 @@ public class TopologyImpl implements Topology {
         // TODO: Does these object need to be stored in Concurrent Collection?
         switches = new ConcurrentHashMap<>();
         ports = new ConcurrentHashMap<>();
-        devices = Multimaps.synchronizedMultimap(
-                HashMultimap.<SwitchPort, Device>create());
-        mac2Device = new ConcurrentHashMap<>();
+        hosts = Multimaps.synchronizedMultimap(
+                HashMultimap.<SwitchPort, Host>create());
+        mac2Host = new ConcurrentHashMap<>();
         outgoingLinks = new ConcurrentHashMap<>();
         incomingLinks = new ConcurrentHashMap<>();
     }
@@ -301,44 +301,44 @@ public class TopologyImpl implements Topology {
     }
 
     @Override
-    public Device getDeviceByMac(MACAddress address) {
-        return mac2Device.get(address);
+    public Host getHostByMac(MACAddress address) {
+        return mac2Host.get(address);
     }
 
     @Override
-    public Iterable<Device> getDevices() {
-        return Collections.unmodifiableCollection(mac2Device.values());
+    public Iterable<Host> getHosts() {
+        return Collections.unmodifiableCollection(mac2Host.values());
     }
 
     @Override
-    public Collection<Device> getDevices(SwitchPort port) {
-        return Collections.unmodifiableCollection(devices.get(port));
+    public Collection<Host> getHosts(SwitchPort port) {
+        return Collections.unmodifiableCollection(hosts.get(port));
     }
 
     // This method is expected to be serialized by writeLock.
     // XXX new or updated device
-    protected void putDevice(Device device) {
-        // assuming Device is immutable
-        Device oldDevice = mac2Device.get(device.getMacAddress());
-        if (oldDevice != null) {
+    protected void putHost(Host host) {
+        // assuming Host is immutable
+        Host oldHost = mac2Host.get(host.getMacAddress());
+        if (oldHost != null) {
             // remove old attachment point
-            removeDevice(oldDevice);
+            removeHost(oldHost);
         }
         // add new attachment points
-        for (Port port : device.getAttachmentPoints()) {
-            // TODO Won't need remove() if we define Device equality to reflect
+        for (Port port : host.getAttachmentPoints()) {
+            // TODO Won't need remove() if we define Host equality to reflect
             //      all of it's fields.
-            devices.remove(port.asSwitchPort(), device);
-            devices.put(port.asSwitchPort(), device);
+            hosts.remove(port.asSwitchPort(), host);
+            hosts.put(port.asSwitchPort(), host);
         }
-        mac2Device.put(device.getMacAddress(), device);
+        mac2Host.put(host.getMacAddress(), host);
     }
 
-    protected void removeDevice(Device device) {
-        for (Port port : device.getAttachmentPoints()) {
-            devices.remove(port.asSwitchPort(), device);
+    protected void removeHost(Host host) {
+        for (Port port : host.getAttachmentPoints()) {
+            hosts.remove(port.asSwitchPort(), host);
         }
-        mac2Device.remove(device.getMacAddress());
+        mac2Host.remove(host.getMacAddress());
     }
 
     @Override

@@ -11,7 +11,7 @@ import org.restlet.resource.ServerResource;
 /**
  * A class to access hosts information from the network topology.
  */
-public class DevicesResource extends ServerResource {
+public class HostsResource extends ServerResource {
     /**
      * Gets the hosts information from the network topology.
      *
@@ -27,7 +27,7 @@ public class DevicesResource extends ServerResource {
         Topology topology = topologyService.getTopology();
         topology.acquireReadLock();
         try {
-            return eval(toRepresentation(topology.getDevices(), null));
+            return eval(toRepresentation(topology.getHosts(), null));
         } finally {
             topology.releaseReadLock();
         }

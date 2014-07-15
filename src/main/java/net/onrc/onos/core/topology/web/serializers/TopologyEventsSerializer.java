@@ -1,6 +1,6 @@
 package net.onrc.onos.core.topology.web.serializers;
 
-import net.onrc.onos.core.topology.DeviceEvent;
+import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
@@ -87,14 +87,14 @@ public class TopologyEventsSerializer extends SerializerBase<TopologyEvents> {
 
         // Output the added hosts array
         jsonGenerator.writeArrayFieldStart("addedHosts");
-        for (final DeviceEvent hostEvent : topologyEvents.getAddedHostEvents()) {
+        for (final HostEvent hostEvent : topologyEvents.getAddedHostEvents()) {
             jsonGenerator.writeObject(hostEvent);
         }
         jsonGenerator.writeEndArray();
 
         // Output the removed hosts array
         jsonGenerator.writeArrayFieldStart("removedHosts");
-        for (final DeviceEvent hostEvent : topologyEvents.getRemovedHostEvents()) {
+        for (final HostEvent hostEvent : topologyEvents.getRemovedHostEvents()) {
             jsonGenerator.writeObject(hostEvent);
         }
         jsonGenerator.writeEndArray();

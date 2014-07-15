@@ -52,16 +52,16 @@ public interface TopologyDiscoveryInterface {
     public void removeLinkDiscoveryEvent(LinkEvent linkEvent);
 
     /**
-     * Device discovered event.
+     * Host discovered event.
      *
-     * @param deviceEvent the device event.
+     * @param hostEvent the device event.
      */
-    public void putDeviceDiscoveryEvent(DeviceEvent deviceEvent);
+    public void putHostDiscoveryEvent(HostEvent hostEvent);
 
     /**
-     * Device removed event.
+     * Host removed event.
      *
-     * @param deviceEvent the device event.
+     * @param hostEvent the device event.
      */
-    public void removeDeviceDiscoveryEvent(DeviceEvent deviceEvent);
+    public void removeHostDiscoveryEvent(HostEvent hostEvent);
 }

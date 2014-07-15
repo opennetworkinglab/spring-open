@@ -73,23 +73,23 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             new HashMap<ByteBuffer, PortEvent>();
     private Map<ByteBuffer, LinkEvent> reorderedAddedLinkEvents =
             new HashMap<ByteBuffer, LinkEvent>();
-    private Map<ByteBuffer, DeviceEvent> reorderedAddedDeviceEvents =
-            new HashMap<ByteBuffer, DeviceEvent>();
+    private Map<ByteBuffer, HostEvent> reorderedAddedHostEvents =
+            new HashMap<ByteBuffer, HostEvent>();
 
     //
     // Local state for keeping track of locally discovered events so we can
     // cleanup properly when a Switch or Port is removed.
     //
-    // We keep all Port, (incoming) Link and Device events per Switch DPID:
+    // We keep all Port, (incoming) Link and Host events per Switch DPID:
     //  - If a switch goes down, we remove all corresponding Port, Link and
-    //    Device events.
+    //    Host events.
     //  - If a port on a switch goes down, we remove all corresponding Link
-    //    and Device events discovered by this instance.
+    //    and Host events discovered by this instance.
     //
     // How to handle side-effect of remote events.
     //  - Remote Port Down event -> Link Down
     //      Not handled. (XXX Shouldn't it be removed from discovered.. Map)
-    //  - Remote Device Added -> lose ownership of Device)
+    //  - Remote Host Added -> lose ownership of Host)
     //      Not handled. (XXX Shouldn't it be removed from discovered.. Map)
     //
     // XXX Domain knowledge based invariant maintenance should be moved to
@@ -97,7 +97,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     //
     // What happens on leadership change?
     //  - Probably should: remove from discovered.. Maps, but not send DELETE events
-    //     XXX Switch/Port can be rediscovered by new leader, but Link, Device?
+    //     XXX Switch/Port can be rediscovered by new leader, but Link, Host?
     //  - Current: There is no way to recognize leadership change?
     //      ZookeeperRegistry.requestControl(long, ControlChangeCallback)
     //      is the only way to register listener, and it allows only 1 listener,
@@ -110,7 +110,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             new HashMap<>();
     private Map<Dpid, Map<ByteBuffer, LinkEvent>> discoveredAddedLinkEvents =
             new HashMap<>();
-    private Map<Dpid, Map<ByteBuffer, DeviceEvent>> discoveredAddedDeviceEvents =
+    private Map<Dpid, Map<ByteBuffer, HostEvent>> discoveredAddedHostEvents =
             new HashMap<>();
 
     //
@@ -125,8 +125,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     private List<PortEvent> apiRemovedPortEvents = new LinkedList<>();
     private List<LinkEvent> apiAddedLinkEvents = new LinkedList<>();
     private List<LinkEvent> apiRemovedLinkEvents = new LinkedList<>();
-    private List<DeviceEvent> apiAddedDeviceEvents = new LinkedList<>();
-    private List<DeviceEvent> apiRemovedDeviceEvents = new LinkedList<>();
+    private List<HostEvent> apiAddedHostEvents = new LinkedList<>();
+    private List<HostEvent> apiRemovedHostEvents = new LinkedList<>();
 
     /**
      * Constructor.
@@ -227,8 +227,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             Map<ByteBuffer, PortEvent> removedPortEvents = new HashMap<>();
             Map<ByteBuffer, LinkEvent> addedLinkEvents = new HashMap<>();
             Map<ByteBuffer, LinkEvent> removedLinkEvents = new HashMap<>();
-            Map<ByteBuffer, DeviceEvent> addedDeviceEvents = new HashMap<>();
-            Map<ByteBuffer, DeviceEvent> removedDeviceEvents = new HashMap<>();
+            Map<ByteBuffer, HostEvent> addedHostEvents = new HashMap<>();
+            Map<ByteBuffer, HostEvent> removedHostEvents = new HashMap<>();
 
             //
             // Classify and suppress matching events
@@ -238,7 +238,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 SwitchEvent switchEvent = topologyEvent.switchEvent;
                 PortEvent portEvent = topologyEvent.portEvent;
                 LinkEvent linkEvent = topologyEvent.linkEvent;
-                DeviceEvent deviceEvent = topologyEvent.deviceEvent;
+                HostEvent hostEvent = topologyEvent.hostEvent;
 
                 //
                 // Extract the events
@@ -264,11 +264,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                             removedLinkEvents.remove(id);
                             reorderedAddedLinkEvents.remove(id);
                         }
-                        if (deviceEvent != null) {
-                            ByteBuffer id = deviceEvent.getIDasByteBuffer();
-                            addedDeviceEvents.put(id, deviceEvent);
-                            removedDeviceEvents.remove(id);
-                            reorderedAddedDeviceEvents.remove(id);
+                        if (hostEvent != null) {
+                            ByteBuffer id = hostEvent.getIDasByteBuffer();
+                            addedHostEvents.put(id, hostEvent);
+                            removedHostEvents.remove(id);
+                            reorderedAddedHostEvents.remove(id);
                         }
                         break;
                     case ENTRY_REMOVE:
@@ -291,11 +291,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                             removedLinkEvents.put(id, linkEvent);
                             reorderedAddedLinkEvents.remove(id);
                         }
-                        if (deviceEvent != null) {
-                            ByteBuffer id = deviceEvent.getIDasByteBuffer();
-                            addedDeviceEvents.remove(id);
-                            removedDeviceEvents.put(id, deviceEvent);
-                            reorderedAddedDeviceEvents.remove(id);
+                        if (hostEvent != null) {
+                            ByteBuffer id = hostEvent.getIDasByteBuffer();
+                            addedHostEvents.remove(id);
+                            removedHostEvents.put(id, hostEvent);
+                            reorderedAddedHostEvents.remove(id);
                         }
                         break;
                     default:
@@ -314,7 +314,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 // Apply the classified events.
                 //
                 // Apply the "add" events in the proper order:
-                //   switch, port, link, device
+                //   switch, port, link, host
                 //
                 for (SwitchEvent switchEvent : addedSwitchEvents.values()) {
                     addSwitch(switchEvent);
@@ -325,15 +325,15 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 for (LinkEvent linkEvent : addedLinkEvents.values()) {
                     addLink(linkEvent);
                 }
-                for (DeviceEvent deviceEvent : addedDeviceEvents.values()) {
-                    addDevice(deviceEvent);
+                for (HostEvent hostEvent : addedHostEvents.values()) {
+                    addHost(hostEvent);
                 }
                 //
                 // Apply the "remove" events in the reverse order:
-                //   device, link, port, switch
+                //   host, link, port, switch
                 //
-                for (DeviceEvent deviceEvent : removedDeviceEvents.values()) {
-                    removeDevice(deviceEvent);
+                for (HostEvent hostEvent : removedHostEvents.values()) {
+                    removeHost(hostEvent);
                 }
                 for (LinkEvent linkEvent : removedLinkEvents.values()) {
                     removeLink(linkEvent);
@@ -425,8 +425,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 apiRemovedPortEvents.isEmpty() &&
                 apiAddedLinkEvents.isEmpty() &&
                 apiRemovedLinkEvents.isEmpty() &&
-                apiAddedDeviceEvents.isEmpty() &&
-                apiRemovedDeviceEvents.isEmpty()) {
+                apiAddedHostEvents.isEmpty() &&
+                apiRemovedHostEvents.isEmpty()) {
             return;        // No events to dispatch
         }
 
@@ -453,11 +453,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             for (LinkEvent linkEvent : apiRemovedLinkEvents) {
                 log.debug("Dispatch Topology Event: REMOVED {}", linkEvent);
             }
-            for (DeviceEvent deviceEvent : apiAddedDeviceEvents) {
-                log.debug("Dispatch Topology Event: ADDED {}", deviceEvent);
+            for (HostEvent hostEvent : apiAddedHostEvents) {
+                log.debug("Dispatch Topology Event: ADDED {}", hostEvent);
             }
-            for (DeviceEvent deviceEvent : apiRemovedDeviceEvents) {
-                log.debug("Dispatch Topology Event: REMOVED {}", deviceEvent);
+            for (HostEvent hostEvent : apiRemovedHostEvents) {
+                log.debug("Dispatch Topology Event: REMOVED {}", hostEvent);
             }
         }
 
@@ -472,8 +472,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                                    kryo.copy(apiRemovedPortEvents),
                                    kryo.copy(apiAddedLinkEvents),
                                    kryo.copy(apiRemovedLinkEvents),
-                                   kryo.copy(apiAddedDeviceEvents),
-                                   kryo.copy(apiRemovedDeviceEvents));
+                                   kryo.copy(apiAddedHostEvents),
+                                   kryo.copy(apiRemovedHostEvents));
             listener.topologyEvents(events);
         }
 
@@ -486,8 +486,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         apiRemovedPortEvents.clear();
         apiAddedLinkEvents.clear();
         apiRemovedLinkEvents.clear();
-        apiAddedDeviceEvents.clear();
-        apiRemovedDeviceEvents.clear();
+        apiAddedHostEvents.clear();
+        apiRemovedHostEvents.clear();
     }
 
     /**
@@ -509,7 +509,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         // NOTE: For simplicity we try to apply all events of a particular
         // type if any "parent" type event was processed:
         //  - Apply reordered Port Events if Switches were added
-        //  - Apply reordered Link and Device Events if Switches or Ports
+        //  - Apply reordered Link and Host Events if Switches or Ports
         //    were added
         //
 
@@ -524,7 +524,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             }
         }
         //
-        // Apply reordered Link and Device Events if Switches or Ports
+        // Apply reordered Link and Host Events if Switches or Ports
         // were added.
         //
         Map<ByteBuffer, LinkEvent> linkEvents = reorderedAddedLinkEvents;
@@ -533,10 +533,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             addLink(linkEvent);
         }
         //
-        Map<ByteBuffer, DeviceEvent> deviceEvents = reorderedAddedDeviceEvents;
-        reorderedAddedDeviceEvents = new HashMap<>();
-        for (DeviceEvent deviceEvent : deviceEvents.values()) {
-            addDevice(deviceEvent);
+        Map<ByteBuffer, HostEvent> hostEvents = reorderedAddedHostEvents;
+        reorderedAddedHostEvents = new HashMap<>();
+        for (HostEvent hostEvent : hostEvents.values()) {
+            addHost(hostEvent);
         }
     }
 
@@ -642,14 +642,14 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 discoveredAddedLinkEvents.remove(switchEvent.getDpid());
             }
 
-            // Cleanup for each device
-            Map<ByteBuffer, DeviceEvent> oldDeviceEvents =
-                    discoveredAddedDeviceEvents.get(switchEvent.getDpid());
-            if (oldDeviceEvents != null) {
-                for (DeviceEvent deviceEvent : new ArrayList<>(oldDeviceEvents.values())) {
-                    removeDeviceDiscoveryEvent(deviceEvent);
+            // Cleanup for each host
+            Map<ByteBuffer, HostEvent> oldHostEvents =
+                    discoveredAddedHostEvents.get(switchEvent.getDpid());
+            if (oldHostEvents != null) {
+                for (HostEvent hostEvent : new ArrayList<>(oldHostEvents.values())) {
+                    removeHostDiscoveryEvent(hostEvent);
                 }
-                discoveredAddedDeviceEvents.remove(switchEvent.getDpid());
+                discoveredAddedHostEvents.remove(switchEvent.getDpid());
             }
         }
     }
@@ -714,21 +714,21 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 }
             }
 
-            // Cleanup for the connected devices
+            // Cleanup for the connected hosts
             // TODO: The implementation below is probably wrong
-            List<DeviceEvent> removedDeviceEvents = new LinkedList<>();
-            Map<ByteBuffer, DeviceEvent> oldDeviceEvents =
-                    discoveredAddedDeviceEvents.get(portEvent.getDpid());
-            if (oldDeviceEvents != null) {
-                for (DeviceEvent deviceEvent : new ArrayList<>(oldDeviceEvents.values())) {
-                    for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
+            List<HostEvent> removedHostEvents = new LinkedList<>();
+            Map<ByteBuffer, HostEvent> oldHostEvents =
+                    discoveredAddedHostEvents.get(portEvent.getDpid());
+            if (oldHostEvents != null) {
+                for (HostEvent hostEvent : new ArrayList<>(oldHostEvents.values())) {
+                    for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
                         if (swp.equals(portEvent.getSwitchPort())) {
-                            removedDeviceEvents.add(deviceEvent);
+                            removedHostEvents.add(hostEvent);
                         }
                     }
                 }
-                for (DeviceEvent deviceEvent : removedDeviceEvents) {
-                    removeDeviceDiscoveryEvent(deviceEvent);
+                for (HostEvent hostEvent : removedHostEvents) {
+                    removeHostDiscoveryEvent(hostEvent);
                 }
             }
         }
@@ -783,54 +783,54 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Device discovered event.
+     * Host discovered event.
      *
-     * @param deviceEvent the device event.
+     * @param hostEvent the host event.
      */
     @Override
-    public void putDeviceDiscoveryEvent(DeviceEvent deviceEvent) {
-        if (datastore.addDevice(deviceEvent)) {
+    public void putHostDiscoveryEvent(HostEvent hostEvent) {
+        if (datastore.addHost(hostEvent)) {
             // Send out notification
-            TopologyEvent topologyEvent = new TopologyEvent(deviceEvent);
+            TopologyEvent topologyEvent = new TopologyEvent(hostEvent);
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
-            log.debug("Put the device info into the cache of the topology. mac {}", deviceEvent.getMac());
+            log.debug("Put the host info into the cache of the topology. mac {}", hostEvent.getMac());
 
-            // Store the new Device Event in the local cache
+            // Store the new Host Event in the local cache
             // TODO: The implementation below is probably wrong
-            for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
-                Map<ByteBuffer, DeviceEvent> oldDeviceEvents =
-                        discoveredAddedDeviceEvents.get(swp.getDpid());
-                if (oldDeviceEvents == null) {
-                    oldDeviceEvents = new HashMap<>();
-                    discoveredAddedDeviceEvents.put(swp.getDpid(),
-                            oldDeviceEvents);
+            for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
+                Map<ByteBuffer, HostEvent> oldHostEvents =
+                        discoveredAddedHostEvents.get(swp.getDpid());
+                if (oldHostEvents == null) {
+                    oldHostEvents = new HashMap<>();
+                    discoveredAddedHostEvents.put(swp.getDpid(),
+                            oldHostEvents);
                 }
-                ByteBuffer id = deviceEvent.getIDasByteBuffer();
-                oldDeviceEvents.put(id, deviceEvent);
+                ByteBuffer id = hostEvent.getIDasByteBuffer();
+                oldHostEvents.put(id, hostEvent);
             }
         }
     }
 
     /**
-     * Device removed event.
+     * Host removed event.
      *
-     * @param deviceEvent the device event.
+     * @param hostEvent the host event.
      */
     @Override
-    public void removeDeviceDiscoveryEvent(DeviceEvent deviceEvent) {
-        if (datastore.removeDevice(deviceEvent)) {
+    public void removeHostDiscoveryEvent(HostEvent hostEvent) {
+        if (datastore.removeHost(hostEvent)) {
             // Send out notification
-            eventChannel.removeEntry(deviceEvent.getID());
-            log.debug("Remove the device info into the cache of the topology. mac {}", deviceEvent.getMac());
+            eventChannel.removeEntry(hostEvent.getID());
+            log.debug("Remove the host info into the cache of the topology. mac {}", hostEvent.getMac());
 
-            // Cleanup the Device Event from the local cache
+            // Cleanup the Host Event from the local cache
             // TODO: The implementation below is probably wrong
-            ByteBuffer id = ByteBuffer.wrap(deviceEvent.getID());
-            for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
-                Map<ByteBuffer, DeviceEvent> oldDeviceEvents =
-                        discoveredAddedDeviceEvents.get(swp.getDpid());
-                if (oldDeviceEvents != null) {
-                    oldDeviceEvents.remove(id);
+            ByteBuffer id = ByteBuffer.wrap(hostEvent.getID());
+            for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
+                Map<ByteBuffer, HostEvent> oldHostEvents =
+                        discoveredAddedHostEvents.get(swp.getDpid());
+                if (oldHostEvents != null) {
+                    oldHostEvents.remove(id);
                 }
             }
         }
@@ -923,7 +923,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     /**
      * Removes a port from the topology replica.
      * <p/>
-     * It will call {@link #removeDevice(DeviceEvent)} for each hosts on this port
+     * It will call {@link #removeHost(HostEvent)} for each hosts on this port
      * and call {@link #removeLink(LinkEvent)} for each links on this port.
      *
      * @param portEvent the PortEvent with the port to remove.
@@ -944,19 +944,19 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         //
-        // Remove all Devices attached to the Port
+        // Remove all Hosts attached to the Port
         //
-        ArrayList<DeviceEvent> devicesToRemove = new ArrayList<>();
-        for (Device device : port.getDevices()) {
-            log.debug("Removing Device {} on Port {}", device, portEvent);
-            DeviceEvent deviceEvent = new DeviceEvent(device.getMacAddress());
+        ArrayList<HostEvent> hostsToRemove = new ArrayList<>();
+        for (Host host : port.getHosts()) {
+            log.debug("Removing Host {} on Port {}", host, portEvent);
+            HostEvent hostEvent = new HostEvent(host.getMacAddress());
             SwitchPort switchPort = new SwitchPort(port.getSwitch().getDpid(),
                     port.getNumber());
-            deviceEvent.addAttachmentPoint(switchPort);
-            devicesToRemove.add(deviceEvent);
+            hostEvent.addAttachmentPoint(switchPort);
+            hostsToRemove.add(hostEvent);
         }
-        for (DeviceEvent deviceEvent : devicesToRemove) {
-            removeDevice(deviceEvent);
+        for (HostEvent hostEvent : hostsToRemove) {
+            removeHost(hostEvent);
         }
 
         //
@@ -990,7 +990,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     /**
      * Adds a link to the topology replica.
      * <p/>
-     * It will call {@link #removeDevice(DeviceEvent)} for each hosts on both ports.
+     * It will call {@link #removeHost(HostEvent)} for each hosts on both ports.
      *
      * @param linkEvent the LinkEvent with the link to add.
      */
@@ -1022,28 +1022,28 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             link = new LinkImpl(topology, linkEvent);
             topology.putLink(link);
 
-            // Remove all Devices attached to the Ports
-            ArrayList<DeviceEvent> devicesToRemove = new ArrayList<>();
+            // Remove all Hosts attached to the Ports
+            ArrayList<HostEvent> hostsToRemove = new ArrayList<>();
             ArrayList<Port> ports = new ArrayList<>();
             ports.add(srcPort);
             ports.add(dstPort);
             for (Port port : ports) {
-                for (Device device : port.getDevices()) {
-                    log.error("Device {} on Port {} should have been removed prior to adding Link {}",
-                            device, port, linkEvent);
-                    // FIXME must get Device info from topology, when we add attrs.
-                    DeviceEvent deviceEvent =
-                            new DeviceEvent(device.getMacAddress());
+                for (Host host : port.getHosts()) {
+                    log.error("Host {} on Port {} should have been removed prior to adding Link {}",
+                            host, port, linkEvent);
+                    // FIXME must get Host info from topology, when we add attrs.
+                    HostEvent hostEvent =
+                            new HostEvent(host.getMacAddress());
                     SwitchPort switchPort =
                             new SwitchPort(port.getSwitch().getDpid(),
                                     port.getNumber());
                     // adding attachment port which needs to be removed
-                    deviceEvent.addAttachmentPoint(switchPort);
-                    devicesToRemove.add(deviceEvent);
+                    hostEvent.addAttachmentPoint(switchPort);
+                    hostsToRemove.add(hostEvent);
                 }
             }
-            for (DeviceEvent deviceEvent : devicesToRemove) {
-                removeDevice(deviceEvent);
+            for (HostEvent hostEvent : hostsToRemove) {
+                removeHost(hostEvent);
             }
         } else {
             // TODO: Update the link attributes
@@ -1100,38 +1100,38 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     }
 
     /**
-     * Adds a device to the topology replica.
+     * Adds a host to the topology replica.
      * <p/>
-     * TODO: Device-related work is incomplete.
+     * TODO: Host-related work is incomplete.
      * TODO: Eventually, we might need to consider reordering
      * or addLink() and addDevice() events on the same port.
      *
-     * @param deviceEvent the DeviceEvent with the device to add.
+     * @param hostEvent the HostEvent with the host to add.
      */
     @GuardedBy("topology.writeLock")
-    private void addDevice(DeviceEvent deviceEvent) {
-        log.debug("Adding a device to the topology with mac {}", deviceEvent.getMac());
-        Device device = topology.getDeviceByMac(deviceEvent.getMac());
+    private void addHost(HostEvent hostEvent) {
+        log.debug("Adding a host to the topology with mac {}", hostEvent.getMac());
+        Host host = topology.getHostByMac(hostEvent.getMac());
 
-        if (device == null) {
-            log.debug("Existing device was not found in the Topology: Adding new device: mac {}", deviceEvent.getMac());
-            device = new DeviceImpl(topology, deviceEvent.getMac());
+        if (host == null) {
+            log.debug("Existing host was not found in the Topology: Adding new host: mac {}", hostEvent.getMac());
+            host = new HostImpl(topology, hostEvent.getMac());
         }
 
-        DeviceImpl deviceImpl = (DeviceImpl) device;
+        HostImpl hostImpl = (HostImpl) host;
 
         // Process each attachment point
         boolean attachmentFound = false;
-        for (SwitchPort swp : deviceEvent.getAttachmentPoints()) {
-            // XXX domain knowledge: Port must exist before Device
+        for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
+            // XXX domain knowledge: Port must exist before Host
             //      but this knowledge cannot be pushed down to driver.
 
             // Attached Ports must exist
             Port port = topology.getPort(swp.getDpid(), swp.getPortNumber());
             if (port == null) {
                 // Reordered event: delay the event in local cache
-                ByteBuffer id = deviceEvent.getIDasByteBuffer();
-                reorderedAddedDeviceEvents.put(id, deviceEvent);
+                ByteBuffer id = hostEvent.getIDasByteBuffer();
+                reorderedAddedHostEvents.put(id, hostEvent);
                 continue;
             }
             // Attached Ports must not have Link
@@ -1143,39 +1143,39 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 continue;
             }
 
-            // Add Device <-> Port attachment
-            deviceImpl.addAttachmentPoint(port);
+            // Add Host <-> Port attachment
+            hostImpl.addAttachmentPoint(port);
             attachmentFound = true;
         }
 
-        deviceImpl.setLastSeenTime(deviceEvent.getLastSeenTime());
+        hostImpl.setLastSeenTime(hostEvent.getLastSeenTime());
 
-        // Update the device in the topology
+        // Update the host in the topology
         if (attachmentFound) {
-            log.debug("Storing the device info into the Topology: mac {}", deviceEvent.getMac());
-            topology.putDevice(device);
-            apiAddedDeviceEvents.add(deviceEvent);
+            log.debug("Storing the host info into the Topology: mac {}", hostEvent.getMac());
+            topology.putHost(host);
+            apiAddedHostEvents.add(hostEvent);
         }
     }
 
     /**
-     * Removes a device from the topology replica.
+     * Removes a host from the topology replica.
      * <p/>
-     * TODO: Device-related work is incomplete.
+     * TODO: Host-related work is incomplete.
      *
-     * @param deviceEvent the Device Event with the device to remove.
+     * @param hostEvent the Host Event with the host to remove.
      */
     @GuardedBy("topology.writeLock")
-    private void removeDevice(DeviceEvent deviceEvent) {
-        log.debug("Removing a device from the topology: mac {}", deviceEvent.getMac());
-        Device device = topology.getDeviceByMac(deviceEvent.getMac());
-        if (device == null) {
-            log.warn("Device {} already removed, ignoring", deviceEvent);
+    private void removeHost(HostEvent hostEvent) {
+        log.debug("Removing a host from the topology: mac {}", hostEvent.getMac());
+        Host host = topology.getHostByMac(hostEvent.getMac());
+        if (host == null) {
+            log.warn("Host {} already removed, ignoring", hostEvent);
             return;
         }
 
-        topology.removeDevice(device);
-        apiRemovedDeviceEvents.add(deviceEvent);
+        topology.removeHost(host);
+        apiRemovedHostEvents.add(hostEvent);
     }
 
     /**
@@ -1222,7 +1222,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
          for (KVDevice d : KVDevice.getAllDevices()) {
-              DeviceEvent devEvent = new DeviceEvent(MACAddress.valueOf(d.getMac()));
+              HostEvent devEvent = new HostEvent(MACAddress.valueOf(d.getMac()));
               for (byte[] portId : d.getAllPortIds()) {
                   devEvent.addAttachmentPoint(
                           new SwitchPort(KVPort.getDpidFromKey(portId),

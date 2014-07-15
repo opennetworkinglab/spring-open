@@ -4,14 +4,14 @@ package net.onrc.onos.core.topology;
  * Self-contained Topology event Object
  * <p/>
  * TODO: For now the topology event contains one of the following events:
- * Switch, Port, Link, Device. In the future it will contain multiple events
+ * Switch, Port, Link, Host. In the future it will contain multiple events
  * in a single transaction.
  */
 public class TopologyEvent {
     SwitchEvent switchEvent = null;        // Set for Switch event
     PortEvent portEvent = null;            // Set for Port event
     LinkEvent linkEvent = null;            // Set for Link event
-    DeviceEvent deviceEvent = null;        // Set for Device event
+    HostEvent hostEvent = null;        // Set for Host event
 
     /**
      * Default constructor.
@@ -47,12 +47,12 @@ public class TopologyEvent {
     }
 
     /**
-     * Constructor for given Device event.
+     * Constructor for given Host event.
      *
-     * @param deviceEvent the Device event to use.
+     * @param hostEvent the Host event to use.
      */
-    TopologyEvent(DeviceEvent deviceEvent) {
-        this.deviceEvent = deviceEvent;
+    TopologyEvent(HostEvent hostEvent) {
+        this.hostEvent = hostEvent;
     }
 
     /**
@@ -71,8 +71,8 @@ public class TopologyEvent {
         if (linkEvent != null) {
             return linkEvent.toString();
         }
-        if (deviceEvent != null) {
-            return deviceEvent.toString();
+        if (hostEvent != null) {
+            return hostEvent.toString();
         }
         return "[Empty TopologyEvent]";
     }
@@ -92,8 +92,8 @@ public class TopologyEvent {
         if (linkEvent != null) {
             return linkEvent.getID();
         }
-        if (deviceEvent != null) {
-            return deviceEvent.getID();
+        if (hostEvent != null) {
+            return hostEvent.getID();
         }
         return null;
     }

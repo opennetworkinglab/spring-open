@@ -128,16 +128,16 @@ public class MockTopology extends TopologyImpl {
         Port port43 = addPort(sw4, 43L); // sw4 -> sw3
 
         MACAddress mac1 = MACAddress.valueOf("00:44:33:22:11:00");
-        DeviceImpl dev1 = new DeviceImpl(this, mac1);
+        HostImpl dev1 = new HostImpl(this, mac1);
         dev1.addAttachmentPoint(port15);
         dev1.setLastSeenTime(1L);
-        this.putDevice(dev1);
+        this.putHost(dev1);
 
         MACAddress mac3 = MACAddress.valueOf("00:11:22:33:44:55");
-        DeviceImpl dev3 = new DeviceImpl(this, mac3);
+        HostImpl dev3 = new HostImpl(this, mac3);
         dev3.addAttachmentPoint(port35);
         dev3.setLastSeenTime(1L);
-        this.putDevice(dev3);
+        this.putHost(dev3);
 
         addBidirectionalLinks(1L, 12L, 2L, 21L);
         addBidirectionalLinks(2L, 23L, 3L, 32L);

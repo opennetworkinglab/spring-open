@@ -82,12 +82,12 @@ public class TopologyManagerTest {
                 anyObject(PortEvent.class)))
                 .andReturn(true).anyTimes();
 
-        expect(dataStoreService.addDevice(
-                anyObject(DeviceEvent.class)))
+        expect(dataStoreService.addHost(
+                anyObject(HostEvent.class)))
                 .andReturn(true).anyTimes();
 
-        expect(dataStoreService.removeDevice(
-                anyObject(DeviceEvent.class)))
+        expect(dataStoreService.removeHost(
+                anyObject(HostEvent.class)))
                 .andReturn(true).anyTimes();
 
         expect(dataStoreService.addLink(
@@ -210,11 +210,11 @@ public class TopologyManagerTest {
         SwitchPort sp = new SwitchPort(swDPId, portId);
         List<SwitchPort> spLists = new ArrayList<SwitchPort>();
         spLists.add(sp);
-        DeviceEvent deviceEvent = new DeviceEvent(devMac);
-        deviceEvent.setAttachmentPoints(spLists);
+        HostEvent hostEvent = new HostEvent(devMac);
+        hostEvent.setAttachmentPoints(spLists);
 
         // Call the topologyManager function for adding a device
-        theTopologyManager.putDeviceDiscoveryEvent(deviceEvent);
+        theTopologyManager.putHostDiscoveryEvent(hostEvent);
 
         // Verify the function calls
         verify(eventChannel);
@@ -240,11 +240,11 @@ public class TopologyManagerTest {
         SwitchPort sp = new SwitchPort(swDPId, portId);
         List<SwitchPort> spLists = new ArrayList<SwitchPort>();
         spLists.add(sp);
-        DeviceEvent deviceEvent = new DeviceEvent(devMac);
-        deviceEvent.setAttachmentPoints(spLists);
+        HostEvent hostEvent = new HostEvent(devMac);
+        hostEvent.setAttachmentPoints(spLists);
 
         // Call the topologyManager function for removing a device
-        theTopologyManager.removeDeviceDiscoveryEvent(deviceEvent);
+        theTopologyManager.removeHostDiscoveryEvent(hostEvent);
 
         // Verify the function calls
         verify(eventChannel);

@@ -1,6 +1,6 @@
 package net.onrc.onos.core.topology.web.serializers;
 
-import net.onrc.onos.core.topology.Device;
+import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
@@ -57,8 +57,8 @@ public class TopologySerializer extends SerializerBase<Topology> {
 
         // Output the hosts array
         jsonGenerator.writeArrayFieldStart("hosts");
-        for (final Device device : topology.getDevices()) {
-            jsonGenerator.writeObject(device);
+        for (final Host host : topology.getHosts()) {
+            jsonGenerator.writeObject(host);
         }
         jsonGenerator.writeEndArray();
 

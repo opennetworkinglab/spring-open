@@ -190,10 +190,10 @@ public class PortImpl extends TopologyObject implements Port {
     }
 
     @Override
-    public Iterable<Device> getDevices() {
+    public Iterable<Host> getHosts() {
         topology.acquireReadLock();
         try {
-            return topology.getDevices(this.asSwitchPort());
+            return topology.getHosts(this.asSwitchPort());
         } finally {
             topology.releaseReadLock();
         }

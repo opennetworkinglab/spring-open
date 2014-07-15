@@ -15,7 +15,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 /**
  * Self-contained Link event Object.
  * <p/>
- * TODO: Rename to match what it is. (Switch/Port/Link/Device)Snapshot?
+ * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
  * FIXME: Current implementation directly use this object as
  *        Replication message, but should be sending update operation info.
  */

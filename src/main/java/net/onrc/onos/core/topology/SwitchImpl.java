@@ -117,18 +117,18 @@ public class SwitchImpl extends TopologyObject implements Switch {
     }
 
     @Override
-    public Collection<Device> getDevices() {
+    public Collection<Host> getHosts() {
         // TODO Should switch also store a list of attached devices to avoid
         // calculating this every time?
-        List<Device> devices = new ArrayList<Device>();
+        List<Host> hosts = new ArrayList<Host>();
 
         for (Port port : getPorts()) {
-            for (Device device : port.getDevices()) {
-                devices.add(device);
+            for (Host host : port.getHosts()) {
+                hosts.add(host);
             }
         }
 
-        return devices;
+        return hosts;
     }
 
     void replaceStringAttributes(SwitchEvent updated) {

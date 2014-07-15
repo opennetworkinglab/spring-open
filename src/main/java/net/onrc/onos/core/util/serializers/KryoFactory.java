@@ -25,7 +25,7 @@ import net.onrc.onos.core.intent.runtime.IntentStateList;
 import net.onrc.onos.core.packetservice.BroadcastPacketOutNotification;
 import net.onrc.onos.core.packetservice.PacketOutNotification;
 import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
-import net.onrc.onos.core.topology.DeviceEvent;
+import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
@@ -197,7 +197,7 @@ public class KryoFactory {
         kryo.register(LinkTuple.class);
 
         // New data model-related classes
-        kryo.register(DeviceEvent.class);
+        kryo.register(HostEvent.class);
         kryo.register(LinkedList.class);
         kryo.register(LinkEvent.class);
         kryo.register(PortEvent.class);
@@ -221,7 +221,7 @@ public class KryoFactory {
         kryo.register(IntentStateList.class);
         kryo.register(HashMap.class);
 
-        // Device-related classes
+        // Host-related classes
         kryo.register(HashSet.class);
         kryo.register(Host.class);
         kryo.register(Date.class);

@@ -8,27 +8,27 @@ import java.util.List;
 import java.util.Objects;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.topology.web.serializers.DeviceEventSerializer;
+import net.onrc.onos.core.topology.web.serializers.HostEventSerializer;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
- * Self-contained Device event(s) Object
+ * Self-contained Host event(s) Object
  * <p/>
- * Device event differ from other events.
- * Device Event represent add/remove of attachmentPoint.
+ * Host event differ from other events.
+ * Host Event represent add/remove of attachmentPoint.
  * Not add/remove of the DeviceObject itself.
  * <p/>
  * Multiple attachmentPoints can be specified to batch events into 1 object.
  * Each should be treated as independent events.
  * <p/>
- * TODO: Rename to match what it is. (Switch/Port/Link/Device)Snapshot?
+ * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
  * FIXME: Current implementation directly use this object as
  *        Replication message, but should be sending update operation info.
  */
-@JsonSerialize(using = DeviceEventSerializer.class)
-public class DeviceEvent extends TopologyElement<DeviceEvent> {
+@JsonSerialize(using = HostEventSerializer.class)
+public class HostEvent extends TopologyElement<HostEvent> {
 
     private final MACAddress mac;
     private List<SwitchPort> attachmentPoints;
@@ -38,13 +38,13 @@ public class DeviceEvent extends TopologyElement<DeviceEvent> {
      * Default constructor for Serializer to use.
      */
     @Deprecated
-    protected DeviceEvent() {
+    protected HostEvent() {
         mac = null;
     }
 
-    public DeviceEvent(MACAddress mac) {
+    public HostEvent(MACAddress mac) {
         if (mac == null) {
-            throw new IllegalArgumentException("Device mac cannot be null");
+            throw new IllegalArgumentException("Host mac cannot be null");
         }
         this.mac = mac;
         this.attachmentPoints = new LinkedList<>();
@@ -55,7 +55,7 @@ public class DeviceEvent extends TopologyElement<DeviceEvent> {
      *
      * @param original to make copy of.
      */
-    public DeviceEvent(DeviceEvent original) {
+    public HostEvent(HostEvent original) {
         super(original);
         this.mac = original.mac;
         this.attachmentPoints = new ArrayList<>(original.attachmentPoints);
@@ -106,7 +106,7 @@ public class DeviceEvent extends TopologyElement<DeviceEvent> {
 
     @Override
     public String toString() {
-        return "[DeviceEvent " + mac + " attachmentPoints:" + attachmentPoints + "]";
+        return "[HostEvent " + mac + " attachmentPoints:" + attachmentPoints + "]";
     }
 
     @Override
@@ -132,7 +132,7 @@ public class DeviceEvent extends TopologyElement<DeviceEvent> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        DeviceEvent other = (DeviceEvent) obj;
+        HostEvent other = (HostEvent) obj;
 
         if (!super.equals(obj)) {
             return false;
