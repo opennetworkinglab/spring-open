@@ -103,9 +103,11 @@ public class TopologyManagerTest {
         replay(dataStoreService);
 
         allTopologyEvents = new CopyOnWriteArrayList<>();
-        expect(eventChannel.getAllEntries()).andReturn(allTopologyEvents);
-        EasyMock.expectLastCall().anyTimes();
+        expect(eventChannel.getAllEntries())
+            .andReturn(allTopologyEvents).anyTimes();
+    }
 
+    private void setupTopologyManager() {
         // Create a topologyManager object for testing
         topologyListeners = new CopyOnWriteArrayList<>();
         theTopologyManager = new TopologyManager(registryService, topologyListeners);
@@ -128,6 +130,8 @@ public class TopologyManagerTest {
                 anyObject(TopologyEvent.class));
         EasyMock.expectLastCall().times(3, 3); // (1 switch + 1 port), 1 port
         replay(eventChannel);
+
+        setupTopologyManager();
 
         // mockSwitch has one port
         Dpid swDPId = new Dpid(100L);
@@ -162,6 +166,8 @@ public class TopologyManagerTest {
         EasyMock.expectLastCall().times(2, 2); //1 switch, 1 port
         replay(eventChannel);
 
+        setupTopologyManager();
+
         Dpid swDPId = new Dpid(100L);
         PortNumber portId = new PortNumber((short) 1);
 
@@ -194,6 +200,8 @@ public class TopologyManagerTest {
         EasyMock.expectLastCall().times(1, 1); // 1 device
         replay(eventChannel);
 
+        setupTopologyManager();
+
         long swDPId = 100L;
         long portId = 1L;
 
@@ -221,6 +229,8 @@ public class TopologyManagerTest {
         eventChannel.removeEntry(anyObject(byte[].class));
         EasyMock.expectLastCall().times(1, 1); // 1 device
         replay(eventChannel);
+
+        setupTopologyManager();
 
         long swDPId = 100L;
         long portId = 1L;
@@ -250,6 +260,8 @@ public class TopologyManagerTest {
                 anyObject(TopologyEvent.class));
         EasyMock.expectLastCall().times(5, 5); // (2 switch + 2 port + 1 link)
         replay(eventChannel);
+
+        setupTopologyManager();
 
         // Assign the switch and port IDs
         Dpid sw1DPId = new Dpid(100L);
@@ -290,6 +302,8 @@ public class TopologyManagerTest {
         eventChannel.removeEntry(anyObject(byte[].class));
         EasyMock.expectLastCall().times(1, 1); // (1 link)
         replay(eventChannel);
+
+        setupTopologyManager();
 
         // Assign the switch and port IDs
         Dpid sw1DPId = new Dpid(100L);
