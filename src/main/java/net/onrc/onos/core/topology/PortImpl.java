@@ -71,22 +71,6 @@ public class PortImpl extends TopologyObject implements Port {
         Validate.notNull(number);
     }
 
-    public PortImpl(Topology topology, Long dpid, Long number) {
-        this(topology, new SwitchPort(dpid, number));
-        Validate.notNull(dpid);
-        Validate.notNull(number);
-    }
-
-    @Deprecated
-    public PortImpl(Topology topology, Switch parentSwitch, PortNumber number) {
-        this(topology, new SwitchPort(parentSwitch.getDpid(), number));
-    }
-
-    @Deprecated
-    public PortImpl(Topology topology, Switch parentSwitch, Long number) {
-        this(topology, parentSwitch, new PortNumber(number.shortValue()));
-    }
-
     @Override
     public Dpid getDpid() {
         return asSwitchPort().getDpid();

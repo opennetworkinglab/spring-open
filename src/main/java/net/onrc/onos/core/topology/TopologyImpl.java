@@ -71,11 +71,6 @@ public class TopologyImpl implements Topology {
         ports.putIfAbsent(sw.getDpid(), new ConcurrentHashMap<PortNumber, Port>());
     }
 
-    // TODO remove me when ready
-    protected void removeSwitch(Long dpid) {
-        removeSwitch(new Dpid(dpid));
-    }
-
     // XXX Will remove ports in snapshot as side-effect.
     protected void removeSwitch(Dpid dpid) {
         switches.remove(dpid);

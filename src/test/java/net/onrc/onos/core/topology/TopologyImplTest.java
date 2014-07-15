@@ -39,7 +39,7 @@ public class TopologyImplTest {
 
         // Create a number of switches and install two ports for each switch
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
-            SwitchImpl testSwitch = new SwitchImpl(testTopology, switchID);
+            SwitchImpl testSwitch = new SwitchImpl(testTopology, new Dpid(switchID));
             testTopology.putSwitch(testSwitch);
             testTopology.putPort(new PortImpl(testTopology,
                     new Dpid(switchID), PORT_NUMBER_1));
@@ -246,7 +246,7 @@ public class TopologyImplTest {
             while (itr.hasNext()) {
                 testTopology.removeHost(itr.next());
             }
-            testTopology.removeSwitch(switchID);
+            testTopology.removeSwitch(new Dpid(switchID));
 
             // Verify the switch has been removed from the graphDB successfully
             assertNull(testTopology.getSwitch(new Dpid(switchID)));

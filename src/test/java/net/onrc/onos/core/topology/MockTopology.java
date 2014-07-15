@@ -20,7 +20,7 @@ public class MockTopology extends TopologyImpl {
     public SwitchImpl sw1, sw2, sw3, sw4;
 
     public Switch addSwitch(Long switchId) {
-        SwitchImpl sw = new SwitchImpl(this, switchId);
+        SwitchImpl sw = new SwitchImpl(this, new Dpid(switchId));
         this.putSwitch(sw);
         return sw;
     }

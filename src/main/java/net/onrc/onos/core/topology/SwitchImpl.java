@@ -33,11 +33,6 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     // none
 
-    // TODO remove when test codes are cleaned up.
-    public SwitchImpl(Topology topology, Long dpid) {
-        this(topology, new Dpid(dpid));
-    }
-
     /**
      * Creates a Switch object with empty attributes.
      *
