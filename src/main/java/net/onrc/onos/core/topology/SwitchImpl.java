@@ -98,6 +98,17 @@ public class SwitchImpl extends TopologyObject implements Switch {
         return hosts;
     }
 
+    /**
+     * Returns the switch type of this switch.
+     *
+     * @return switch type {@link net.onrc.onos.core.topology.SwitchType} of this switch.
+     */
+    @Override
+    public SwitchType getSwitchType() {
+        return SwitchType.valueOf(getStringAttribute(TopologyElement.ELEMENT_TYPE,
+                SwitchType.ETHERNET_SWITCH.toString()));
+    }
+
     @Override
     public Iterable<Link> getOutgoingLinks() {
         LinkedList<Link> links = new LinkedList<Link>();

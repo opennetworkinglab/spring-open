@@ -83,6 +83,17 @@ public class LinkImpl extends TopologyObject implements Link {
         return this.topology.getLinkEvent(id).getCapacity();
     }
 
+    /**
+     * Returns the link type of the link.
+     *
+     * @return {@link net.onrc.onos.core.topology.LinkType} for this link
+     */
+    @Override
+    public LinkType getLinkType() {
+        return LinkType.valueOf(getStringAttribute(TopologyElement.ELEMENT_TYPE,
+                LinkType.ETHERNET_LINK.toString()));
+    }
+
     @Override
     public String getStringAttribute(String attr) {
         return this.topology.getLinkEvent(id).getStringAttribute(attr);

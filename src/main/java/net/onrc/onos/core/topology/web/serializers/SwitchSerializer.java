@@ -34,6 +34,7 @@ public class SwitchSerializer extends SerializerBase<Switch> {
 
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField(TopologyElement.TYPE, sw.getType());
+        jsonGenerator.writeStringField(TopologyElement.ELEMENT_TYPE, sw.getSwitchType().toString());
         jsonGenerator.writeStringField("dpid", sw.getDpid().toString());
         jsonGenerator.writeStringField("state", "ACTIVE");
         jsonGenerator.writeArrayFieldStart("ports");

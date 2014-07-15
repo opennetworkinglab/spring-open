@@ -79,4 +79,11 @@ public interface Switch extends ITopologyElement, StringAttributes {
      * @return {@link Host}s attached to this switch
      */
     public Collection<Host> getHosts();
+
+    /**
+     * Returns the switch type of this switch.
+     *
+     * @return switch type {@link SwitchType} of this switch.
+     */
+    public SwitchType getSwitchType();
 }

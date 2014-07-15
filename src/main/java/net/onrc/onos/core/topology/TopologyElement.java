@@ -38,6 +38,11 @@ public class TopologyElement<T extends TopologyElement<T>>
 
     public static final String ELEMENT_ADMIN_STATUS = "AdminStatus";
 
+    /**
+     * Attribute name for device type.
+     */
+    public static final String ELEMENT_TYPE = "ElementType";
+
     private boolean isFrozen = false;
 
     private ConcurrentMap<String, String> stringAttributes;

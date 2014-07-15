@@ -34,6 +34,7 @@ public class LinkSerializer extends SerializerBase<Link> {
         //
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField(TopologyElement.TYPE, link.getType());
+        jsonGenerator.writeStringField(TopologyElement.ELEMENT_TYPE, link.getLinkType().toString());
         jsonGenerator.writeObjectField("src", link.getSrcPort().getSwitchPort());
         jsonGenerator.writeObjectField("dst", link.getDstPort().getSwitchPort());
         jsonGenerator.writeObjectFieldStart("stringAttributes");

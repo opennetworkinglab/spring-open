@@ -133,4 +133,12 @@ public interface Port extends ITopologyElement, StringAttributes {
      * @return {@link Host}s attached to this port
      */
     public Collection<Host> getHosts();
+
+
+    /**
+     * Returns the port type of this port.
+     *
+     * @return {@link PortType}
+     */
+    public PortType getPortType();
 }

@@ -152,6 +152,18 @@ public class PortImpl extends TopologyObject implements Port {
         }
     }
 
+    /**
+     * Returns the port type of this port.
+     *
+     * @return {@link net.onrc.onos.core.topology.PortType}
+     */
+    @Override
+    public PortType getPortType() {
+        return PortType.valueOf(getStringAttribute(TopologyElement.ELEMENT_TYPE,
+                PortType.ETHERNET_PORT.toString()));
+    }
+
+
     @Override
     public String getStringAttribute(String attr) {
         return this.topology.getPortEvent(id).getStringAttribute(attr);

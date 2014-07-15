@@ -65,4 +65,11 @@ public interface Link extends ITopologyElement, StringAttributes {
      * @return the link capacity.
      */
     public Double getCapacity();
+
+    /**
+     * Returns the link type of the link.
+     *
+     * @return {@link LinkType} for this link
+     */
+    public LinkType getLinkType();
 }
