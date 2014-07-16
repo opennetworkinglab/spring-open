@@ -48,35 +48,40 @@ public class TestRestMetricsCounters extends TestRestMetrics {
     }
 
     //  Test Counter data objects
+    private static final OnosMetrics.MetricsComponent COMPONENT =
+            OnosMetrics.registerComponent("MetricsUnitTests");
+    private static final OnosMetrics.MetricsFeature FEATURE =
+            COMPONENT.registerFeature("Counters");
+
     private static final String COUNTER1_NAME = "COUNTER1";
-    private static final String COUNTER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                                                     OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String COUNTER1_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+                                                     FEATURE,
                                                      COUNTER1_NAME);
     private static final int COUNTER1_COUNT = 0;
 
     private static final String COUNTER2_NAME = "COUNTER2";
-    private static final String COUNTER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                                                     OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String COUNTER2_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+                                                     FEATURE,
                                                      COUNTER2_NAME);
     private static final int COUNTER2_COUNT = -1;
 
     private static final String COUNTER3_NAME = "COUNTER3";
-    private static final String COUNTER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                                                     OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String COUNTER3_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+                                                     FEATURE,
                                                      COUNTER3_NAME);
     private static final int COUNTER3_COUNT = 5;
 
     private final Counter counter1 =
-            OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
-                                      OnosMetrics.MetricsFeatures.GLOBAL,
+            OnosMetrics.createCounter(COMPONENT,
+                                      FEATURE,
                                       COUNTER1_NAME);
     private final Counter counter2 =
-            OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
-                                      OnosMetrics.MetricsFeatures.GLOBAL,
+            OnosMetrics.createCounter(COMPONENT,
+                                      FEATURE,
                                       COUNTER2_NAME);
     private final Counter counter3 =
-            OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
-                                      OnosMetrics.MetricsFeatures.GLOBAL,
+            OnosMetrics.createCounter(COMPONENT,
+                                      FEATURE,
                                       COUNTER3_NAME);
 
     /**

@@ -48,22 +48,25 @@ public class TestRestMetricsGauges extends TestRestMetrics {
     }
 
     // Test data for Gauges
+
+    private static final OnosMetrics.MetricsComponent COMPONENT =
+            OnosMetrics.registerComponent("MetricsUnitTests");
+    private static final OnosMetrics.MetricsFeature FEATURE =
+            COMPONENT.registerFeature("Gauges");
+
     private static final String GAUGE1_NAME = "gauge1";
-    private static final String GAUGE1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                                                   OnosMetrics.MetricsFeatures.GLOBAL,
-                                                   GAUGE1_NAME);
+    private static final String GAUGE1_FULL_NAME =
+            OnosMetrics.generateName(COMPONENT, FEATURE, GAUGE1_NAME);
     private static final int GAUGE1_VALUE = 0;
 
     private static final String GAUGE2_NAME = "gauge2";
-    private static final String GAUGE2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                                                   OnosMetrics.MetricsFeatures.GLOBAL,
-                                                   GAUGE2_NAME);
+    private static final String GAUGE2_FULL_NAME =
+            OnosMetrics.generateName(COMPONENT, FEATURE, GAUGE2_NAME);
     private static final int GAUGE2_VALUE = -1;
 
     private static final String GAUGE3_NAME = "gauge3";
-    private static final String GAUGE3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                                                   OnosMetrics.MetricsFeatures.GLOBAL,
-                                                   GAUGE3_NAME);
+    private static final String GAUGE3_FULL_NAME =
+            OnosMetrics.generateName(COMPONENT, FEATURE, GAUGE3_NAME);
     private static final int GAUGE3_VALUE = 123456789;
 
     private final Gauge<Integer> gauge1 =
@@ -91,18 +94,18 @@ public class TestRestMetricsGauges extends TestRestMetrics {
                     };
 
     private void registerGauges() {
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                                   OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
                                    GAUGE1_NAME,
                                    gauge1);
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                                   OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
                                    GAUGE2_NAME,
                                    gauge2);
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                                   OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
                                    GAUGE3_NAME,
                                    gauge3);
     }

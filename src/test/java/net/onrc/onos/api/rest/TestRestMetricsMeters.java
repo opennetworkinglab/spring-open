@@ -52,28 +52,25 @@ public class TestRestMetricsMeters extends TestRestMetrics {
 
     //  Test data for Meters
 
+
+    private static final OnosMetrics.MetricsComponent COMPONENT =
+            OnosMetrics.registerComponent("MetricsUnitTest");
+    private static final OnosMetrics.MetricsFeature FEATURE =
+            COMPONENT.registerFeature("Meters");
+
     private static final String METER1_NAME = "METER1";
     private static final String METER1_FULL_NAME =
-            OnosMetrics.generateName(
-                    OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
-                    METER1_NAME);
+            OnosMetrics.generateName(COMPONENT, FEATURE, METER1_NAME);
     private static final int METER1_ITERATIONS = 1;
 
     private static final String METER2_NAME = "METER2";
     private static final String METER2_FULL_NAME =
-            OnosMetrics.generateName(
-                    OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
-                    METER2_NAME);
+            OnosMetrics.generateName(COMPONENT, FEATURE, METER2_NAME);
     private static final int METER2_ITERATIONS = 10;
 
     private static final String METER3_NAME = "METER3";
     private static final String METER3_FULL_NAME =
-            OnosMetrics.generateName(
-                    OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
-                    METER3_NAME);
+            OnosMetrics.generateName(COMPONENT, FEATURE, METER3_NAME);
     private static final int METER3_ITERATIONS = 100;
 
     private final Meter meter1 = new Meter(mockClock);
@@ -101,20 +98,20 @@ public class TestRestMetricsMeters extends TestRestMetrics {
         fillMeter(meter2, METER2_ITERATIONS);
         fillMeter(meter3, METER3_ITERATIONS);
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                                   OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
                                    METER1_NAME,
                                    meter1);
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                                   OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
                                    METER2_NAME,
                                    meter2);
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
-                METER3_NAME,
-                meter3);
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
+                                   METER3_NAME,
+                                   meter3);
     }
 
     /**

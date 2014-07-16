@@ -45,20 +45,25 @@ public class TestRestMetricsTimers extends TestRestMetrics {
 
     //  Test data objects for Timers
 
+    private static final OnosMetrics.MetricsComponent COMPONENT =
+            OnosMetrics.registerComponent("MetricsUnitTests");
+    private static final OnosMetrics.MetricsFeature FEATURE =
+            COMPONENT.registerFeature("Timers");
+
     //  timer1 will be called 3 times
     private static final String TIMER1_NAME = "timer1";
     private static final String TIMER1_FULL_NAME =
-            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                                     OnosMetrics.MetricsFeatures.GLOBAL,
+            OnosMetrics.generateName(COMPONENT,
+                                     FEATURE,
                                      TIMER1_NAME);
     private static final int TIMER1_COUNT = 3;
 
     //  timer2 will be called 10 times
     private static final String TIMER2_NAME = "timer2";
     private static final String TIMER2_FULL_NAME =
-            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
-                    TIMER2_NAME);
+            OnosMetrics.generateName(COMPONENT,
+                                     FEATURE,
+                                     TIMER2_NAME);
     private static final int TIMER2_COUNT = 10;
 
     private static final int RESERVOIR_SIZE = 100;
@@ -90,13 +95,13 @@ public class TestRestMetricsTimers extends TestRestMetrics {
         // add the two timers to the registry so the REST APIs will pick them
         // up
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                                   OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
                                    TIMER1_NAME,
                                    timer1);
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                                   OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                                   FEATURE,
                                    TIMER2_NAME,
                                    timer2);
     }

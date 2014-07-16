@@ -53,69 +53,74 @@ public class TestRestMetricsFilters extends TestRestMetrics {
     }
 
     //  Test data objects
+    private static final OnosMetrics.MetricsComponent COMPONENT =
+            OnosMetrics.registerComponent("MetricsUnitTests");
+    private static final OnosMetrics.MetricsFeature FEATURE =
+            COMPONENT.registerFeature("Filters");
+
     private static final String TIMER1_NAME = "timer1";
-    private static final String TIMER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String TIMER1_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "timer1");
     private static final String TIMER2_NAME = "timer2";
-    private static final String TIMER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String TIMER2_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "timer2");
     private static final String TIMER3_NAME = "timer3";
-    private static final String TIMER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String TIMER3_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "timer3");
 
     private static final String GAUGE1_NAME = "gauge1";
-    private static final String GAUGE1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String GAUGE1_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "gauge1");
     private static final String GAUGE2_NAME = "gauge2";
-    private static final String GAUGE2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String GAUGE2_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "gauge2");
     private static final String GAUGE3_NAME = "gauge3";
-    private static final String GAUGE3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String GAUGE3_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "gauge3");
 
     private static final String COUNTER1_NAME = "counter1";
-    private static final String COUNTER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String COUNTER1_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "counter1");
     private static final String COUNTER2_NAME = "counter2";
-    private static final String COUNTER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String COUNTER2_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "counter2");
     private static final String COUNTER3_NAME = "counter3";
-    private static final String COUNTER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String COUNTER3_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "counter3");
 
     private static final String METER1_NAME = "meter1";
-    private static final String METER1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String METER1_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "meter1");
     private static final String METER2_NAME = "meter2";
-    private static final String METER2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String METER2_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "meter2");
     private static final String METER3_NAME = "meter3";
-    private static final String METER3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String METER3_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "meter3");
 
     private static final String HISTOGRAM1_NAME = "histogram1";
-    private static final String HISTOGRAM1_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String HISTOGRAM1_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "histogram1");
     private static final String HISTOGRAM2_NAME = "histogram2";
-    private static final String HISTOGRAM2_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String HISTOGRAM2_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "histogram2");
     private static final String HISTOGRAM3_NAME = "histogram3";
-    private static final String HISTOGRAM3_FULL_NAME = OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-            OnosMetrics.MetricsFeatures.GLOBAL,
+    private static final String HISTOGRAM3_FULL_NAME = OnosMetrics.generateName(COMPONENT,
+            FEATURE,
             "histogram3");
 
     private final Gauge<Integer> testGauge = new Gauge<Integer>() {
@@ -129,56 +134,56 @@ public class TestRestMetricsFilters extends TestRestMetrics {
      * Creates Metrics objects for test.
      */
     private void createMetrics() {
-        OnosMetrics.createTimer(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createTimer(COMPONENT,
+                FEATURE,
                 TIMER1_NAME);
-        OnosMetrics.createTimer(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createTimer(COMPONENT,
+                FEATURE,
                 TIMER2_NAME);
-        OnosMetrics.createTimer(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createTimer(COMPONENT,
+                FEATURE,
                 TIMER3_NAME);
 
-        OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createCounter(COMPONENT,
+                FEATURE,
                 COUNTER1_NAME);
-        OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createCounter(COMPONENT,
+                FEATURE,
                 COUNTER2_NAME);
-        OnosMetrics.createCounter(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createCounter(COMPONENT,
+                FEATURE,
                 COUNTER3_NAME);
 
-        OnosMetrics.createMeter(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createMeter(COMPONENT,
+                FEATURE,
                 METER1_NAME);
-        OnosMetrics.createMeter(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createMeter(COMPONENT,
+                FEATURE,
                 METER2_NAME);
-        OnosMetrics.createMeter(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createMeter(COMPONENT,
+                FEATURE,
                 METER3_NAME);
 
-        OnosMetrics.createHistogram(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createHistogram(COMPONENT,
+                FEATURE,
                 HISTOGRAM1_NAME);
-        OnosMetrics.createHistogram(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createHistogram(COMPONENT,
+                FEATURE,
                 HISTOGRAM2_NAME);
-        OnosMetrics.createHistogram(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.createHistogram(COMPONENT,
+                FEATURE,
                 HISTOGRAM3_NAME);
 
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                FEATURE,
                 GAUGE1_NAME,
                 testGauge);
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                FEATURE,
                 GAUGE2_NAME,
                 testGauge);
-        OnosMetrics.registerMetric(OnosMetrics.MetricsComponents.GLOBAL,
-                OnosMetrics.MetricsFeatures.GLOBAL,
+        OnosMetrics.registerMetric(COMPONENT,
+                FEATURE,
                 GAUGE3_NAME,
                 testGauge);
     }

@@ -55,46 +55,46 @@ public class TestRestMetricsHistograms extends TestRestMetrics {
 
     // Test data for Histograms
 
+    private static final OnosMetrics.MetricsComponent COMPONENT =
+            OnosMetrics.registerComponent("MetricsUnitTests");
+    private static final OnosMetrics.MetricsFeature FEATURE =
+            COMPONENT.registerFeature("Histograms");
+
     private static final String HISTOGRAM1_NAME = "HISTOGRAM1";
     private static final String HISTOGRAM1_FULL_NAME =
-            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
-                    HISTOGRAM1_NAME);
+            OnosMetrics.generateName(COMPONENT, FEATURE, HISTOGRAM1_NAME);
+
     private static final int[] HISTOGRAM1_VALUES =
             {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     private static final String HISTOGRAM2_NAME = "HISTOGRAM2";
     private static final String HISTOGRAM2_FULL_NAME =
-            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
-                    HISTOGRAM2_NAME);
+            OnosMetrics.generateName(COMPONENT, FEATURE, HISTOGRAM2_NAME);
     private static final int[] HISTOGRAM2_VALUES =
             {100, 100, 100, 100, 100, 100, 100};
 
     private static final String HISTOGRAM3_NAME = "HISTOGRAM3";
     private static final String HISTOGRAM3_FULL_NAME =
-            OnosMetrics.generateName(OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
-                    HISTOGRAM3_NAME);
+            OnosMetrics.generateName(COMPONENT, FEATURE, HISTOGRAM3_NAME);
     private static final int[] HISTOGRAM3_VALUES =
             {555};
 
     private final Histogram histogram1 =
             OnosMetrics.createHistogram(
-                    OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    COMPONENT,
+                    FEATURE,
                     HISTOGRAM1_NAME);
 
     private final Histogram histogram2 =
             OnosMetrics.createHistogram(
-                    OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    COMPONENT,
+                    FEATURE,
                     HISTOGRAM2_NAME);
 
     private final Histogram histogram3 =
             OnosMetrics.createHistogram(
-                    OnosMetrics.MetricsComponents.GLOBAL,
-                    OnosMetrics.MetricsFeatures.GLOBAL,
+                    COMPONENT,
+                    FEATURE,
                     HISTOGRAM3_NAME);
 
     /**

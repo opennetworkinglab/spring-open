@@ -10,9 +10,40 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * This class acts a singleton to hold the Metrics registry for ONOS.
+ * All metrics (Counter, Histogram, Timer, Meter, Gauge) use a hierarchical
+ * string-based naming scheme: COMPONENT.FEATURE.NAME.
+ * Example: "Topology.Counters.TopologyUpdates".
+ * The COMPONENT and FEATURE names have to be registered in advance before
+ * a metric can be created. Example:
+ * <pre>
+ *   <code>
+ *     private static final OnosMetrics.MetricsComponent COMPONENT =
+ *         OnosMetrics.registerComponent("Topology");
+ *     private static final OnosMetrics.MetricsFeature FEATURE =
+ *         COMPONENT.registerFeature("Counters");
+ *     private final Counter counterTopologyUpdates =
+ *         OnosMetrics.createCounter(COMPONENT, FEATURE, "TopologyUpdates");
+ *   </code>
+ * </pre>
+ * Gauges are slightly different because they are not created directly in
+ * this class, but are allocated by the caller and passed in for registration:
+ * <pre>
+ *   <code>
+ *     private final Gauge<Long> gauge =
+ *         new {@literal Gauge<Long>}() {
+ *             {@literal @}Override
+ *             public Long getValue() {
+ *                 return gaugeValue;
+ *             }
+ *         };
+ *     OnosMetrics.registerMetric(COMPONENT, FEATURE, GAUGE_NAME, gauge);
+ *   </code>
+ * </pre>
  */
 public final class OnosMetrics {
 
@@ -26,66 +57,126 @@ public final class OnosMetrics {
      * Components that can hold Metrics.  This is used as the first part of
      * a Metric's name.
      */
-    public enum MetricsComponents {
+    public interface MetricsComponent {
         /**
-         * Global scope, not associated with a particular component.
-         */
-        GLOBAL("Global"),
-
-        /**
-         * Topology component.
-         */
-        TOPOLOGY("Topology");
-
-        private final String name;
-
-        /**
-         * Constructor allows specifying an alternate string name.
+         * Fetches the name of the Component.
          *
-         * @param name string for the name of the component
+         * @return name of the Component
          */
-        private MetricsComponents(String name) {
-            this.name = name;
-        }
+        public String getName();
 
-        @Override
-        public String toString() {
-            return name;
-        }
+        /**
+         * Registers a Feature for this component.
+         *
+         * @param featureName name of the Feature to register
+         * @return Feature object that can be used when creating Metrics
+         */
+        public MetricsFeature registerFeature(final String featureName);
     }
 
     /**
      * Features that can hold Metrics.  This is used as the second part of
      * a Metric's name.
      */
-    public enum MetricsFeatures {
+    public interface MetricsFeature {
         /**
-         * Global scope, not associated with a particular feature.
+         * Fetches the name of the Feature.
+         *
+         * @return name of the Feature
          */
-        GLOBAL("Global"),
+        public String getName();
+    }
 
-        /**
-         * Topology Intents Framework feature. (example)
-         */
-        TOPOLOGY_INTENTS("IntentsFramework");
-
+    /**
+     * Implementation of a class to represent the Component portion of a
+     * Metric's name.
+     */
+    private static final class Component implements MetricsComponent {
         private final String name;
 
         /**
-         * Constructor allows specifying an alternate string name.
+         * Constructs a component from a name.
          *
-         * @param name string for the name of the component
+         * @param newName name of the component
          */
-        private MetricsFeatures(String name) {
-            this.name = name;
+        private Component(final String newName) {
+            name = newName;
         }
 
         @Override
-        public String toString() {
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * Registry to hold the Features defined in this Component.
+         */
+        private ConcurrentMap<String, MetricsFeature> featuresRegistry =
+                new ConcurrentHashMap<>();
+
+        @Override
+        public MetricsFeature registerFeature(final String featureName) {
+            MetricsFeature feature = featuresRegistry.get(featureName);
+            if (feature == null) {
+                final MetricsFeature createdFeature = new Feature(featureName);
+                feature = featuresRegistry.putIfAbsent(featureName, createdFeature);
+                if (feature == null) {
+                    feature = createdFeature;
+                }
+            }
+            return feature;
+        }
+    }
+
+    /**
+     * Implementation of a class to represent the Feature portion of a Metric's
+     * name.
+     */
+    private static final class Feature implements MetricsFeature {
+        private final String name;
+
+        /**
+         * Constructs a Feature from a name.
+         *
+         * @param newName name of the Feature
+         */
+        private Feature(final String newName) {
+            name = newName;
+        }
+
+        @Override
+        public String getName() {
             return name;
         }
     }
 
+    /**
+     * Registry to hold the Components defined in the system.
+     */
+    private static ConcurrentMap<String, MetricsComponent> componentsRegistry =
+            new ConcurrentHashMap<>();
+
+    /**
+     * Registers a component.
+     *
+     * @param name name of the Component to register
+     * @return MetricsComponent object that can be used to create Metrics.
+     */
+    public static MetricsComponent registerComponent(final String name) {
+        MetricsComponent component = componentsRegistry.get(name);
+        if (component == null) {
+            final MetricsComponent createdComponent = new Component(name);
+            component = componentsRegistry.putIfAbsent(name, createdComponent);
+            if (component == null) {
+                component = createdComponent;
+            }
+        }
+        return component;
+    }
+
+    /**
+     * Registry for the Metrics objects created in the system.
+     */
     private static final MetricRegistry METRICS_REGISTRY = new MetricRegistry();
 
     /**
@@ -97,12 +188,12 @@ public final class OnosMetrics {
      *
      * @return full name of the metric
      */
-    public static String generateName(final MetricsComponents component,
-                                      final MetricsFeatures feature,
+    public static String generateName(final MetricsComponent component,
+                                      final MetricsFeature feature,
                                       final String metricName) {
-        return MetricRegistry.name(component.toString(),
-                feature.toString(),
-                metricName);
+        return MetricRegistry.name(component.getName(),
+                                   feature.getName(),
+                                   metricName);
     }
 
     /**
@@ -113,8 +204,8 @@ public final class OnosMetrics {
      * @param metricName local name of the metric
      * @return Counter Meteric
      */
-    public static Counter createCounter(final MetricsComponents component,
-                                        final MetricsFeatures feature,
+    public static Counter createCounter(final MetricsComponent component,
+                                        final MetricsFeature feature,
                                         final String metricName) {
         final String name = generateName(component, feature, metricName);
         return METRICS_REGISTRY.counter(name);
@@ -128,8 +219,8 @@ public final class OnosMetrics {
      * @param metricName local name of the metric
      * @return Histogram Metric
      */
-    public static Histogram createHistogram(final MetricsComponents component,
-                                            final MetricsFeatures feature,
+    public static Histogram createHistogram(final MetricsComponent component,
+                                            final MetricsFeature feature,
                                             final String metricName) {
         final String name = generateName(component, feature, metricName);
         return METRICS_REGISTRY.histogram(name);
@@ -143,8 +234,8 @@ public final class OnosMetrics {
      * @param metricName local name of the metric
      * @return Timer Metric
      */
-    public static Timer createTimer(final MetricsComponents component,
-                                    final MetricsFeatures feature,
+    public static Timer createTimer(final MetricsComponent component,
+                                    final MetricsFeature feature,
                                     final String metricName) {
         final String name = generateName(component, feature, metricName);
         return METRICS_REGISTRY.timer(name);
@@ -158,8 +249,8 @@ public final class OnosMetrics {
      * @param metricName local name of the metric
      * @return Meter Metric
      */
-    public static Meter createMeter(final MetricsComponents component,
-                                    final MetricsFeatures feature,
+    public static Meter createMeter(final MetricsComponent component,
+                                    final MetricsFeature feature,
                                     final String metricName) {
         final String name = generateName(component, feature, metricName);
         return METRICS_REGISTRY.meter(name);
@@ -175,8 +266,8 @@ public final class OnosMetrics {
      * @param metricName local name of the metric
      * @param metric Metric to register
      */
-    public static void registerMetric(final MetricsComponents component,
-                                      final MetricsFeatures feature,
+    public static void registerMetric(final MetricsComponent component,
+                                      final MetricsFeature feature,
                                       final String metricName,
                                       final Metric metric) {
         final String name = generateName(component, feature, metricName);
