@@ -20,15 +20,6 @@ public class LinkImpl extends TopologyObject implements Link {
     //////////////////////////////////////////////////////
     private LinkEvent linkObj;
 
-    // TODO remove?
-    protected static final Double DEFAULT_CAPACITY = Double.POSITIVE_INFINITY;
-    protected Double capacity = DEFAULT_CAPACITY;
-
-    ///////////////////
-    /// In-memory index
-    ///////////////////
-
-    // none
 
     /**
      * Creates a Link object based on {@link LinkEvent}.
@@ -116,13 +107,20 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Double getCapacity() {
-        return capacity;
+        return this.linkObj.getCapacity();
     }
 
     void setCapacity(Double capacity) {
-        this.capacity = capacity;
+        if (this.linkObj.isFrozen()) {
+            this.linkObj = new LinkEvent(this.linkObj);
+            this.linkObj.setCapacity(capacity);
+            this.linkObj.freeze();
+        } else {
+            this.linkObj.setCapacity(capacity);
+        }
     }
 
+    // XXX actually replaces everything
     void replaceStringAttributes(LinkEvent updated) {
         Validate.isTrue(this.linkObj.getSrc().equals(updated.getSrc()),
                 "Wrong LinkEvent given.");

@@ -27,11 +27,6 @@ public class SwitchImpl extends TopologyObject implements Switch {
     //////////////////////////////////////////////////////
     private SwitchEvent switchObj;
 
-    ///////////////////
-    /// In-memory index
-    ///////////////////
-
-    // none
 
     /**
      * Creates a Switch object with empty attributes.

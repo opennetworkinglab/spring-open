@@ -25,6 +25,8 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
 
     private final LinkTuple id;
     // TODO add LastSeenTime, Capacity if appropriate
+    protected static final Double DEFAULT_CAPACITY = Double.POSITIVE_INFINITY;
+    private Double capacity = DEFAULT_CAPACITY;
 
     /**
      * Default constructor for Serializer to use.
@@ -62,8 +64,6 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      */
     public LinkEvent(LinkEvent original) {
         super(original);
-        Validate.isTrue(Objects.equals(this.id, original.id));
-
         this.id = original.id;
     }
 
@@ -111,6 +111,30 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      */
     public SwitchPort getDst() {
         return getLinkTuple().getDst();
+    }
+
+    /**
+     * Gets the link capacity.
+     * TODO: What is the unit?
+     *
+     * @return capacity
+     */
+    public Double getCapacity() {
+        return capacity;
+    }
+
+    /**
+     * Sets the link capacity.
+     * TODO: What is the unit?
+     *
+     * @param capacity capacity
+     */
+    void setCapacity(Double capacity) {
+        if (isFrozen()) {
+            throw new IllegalStateException("Tried to modify frozen instance: " + this);
+        }
+
+        this.capacity = capacity;
     }
 
     @Override

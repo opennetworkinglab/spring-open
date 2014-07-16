@@ -23,10 +23,6 @@ public class PortImpl extends TopologyObject implements Port {
     //////////////////////////////////////////////////////
     private PortEvent portObj;
 
-    ///////////////////
-    /// In-memory index
-    ///////////////////
-
 
     /**
      * Creates a Port object based on {@link PortEvent}.

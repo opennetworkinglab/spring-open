@@ -19,11 +19,6 @@ public class HostImpl extends TopologyObject implements Host {
     //////////////////////////////////////////////////////
     private HostEvent deviceObj;
 
-    ///////////////////
-    /// In-memory index
-    ///////////////////
-
-    // none
 
     /**
      * Creates a Host object based on {@link HostEvent}.
