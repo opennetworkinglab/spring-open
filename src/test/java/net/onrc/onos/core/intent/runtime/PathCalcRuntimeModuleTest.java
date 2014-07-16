@@ -23,6 +23,7 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -465,6 +466,8 @@ public class PathCalcRuntimeModuleTest {
         topology.removeLink(2L, 21L, 1L, 12L);
         LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
         LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
+        linkEvent1.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+        linkEvent2.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
@@ -699,6 +702,8 @@ public class PathCalcRuntimeModuleTest {
         topology.removeLink(2L, 21L, 1L, 12L);
         final LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
         final LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
+        linkEvent1.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+        linkEvent2.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 

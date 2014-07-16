@@ -45,6 +45,7 @@ import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.LinkTuple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,7 +204,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     private static final String INTENT_STATE_EVENT_CHANNEL_NAME = "onos.pathintent_state";
     private static final Logger log = LoggerFactory.getLogger(PathCalcRuntimeModule.class);
 
-    private HashSet<LinkEvent> unmatchedLinkEvents = new HashSet<>();
+    private HashSet<LinkTuple> unmatchedLinkEvents = new HashSet<>();
     private ConcurrentMap<String, Set<Long>> intentInstalledMap = new ConcurrentHashMap<String, Set<Long>>();
     private ConcurrentMap<String, Intent> staleIntents = new ConcurrentHashMap<String, Intent>();
     private DeleteIntentsTracker deleteIntentsTracker = new DeleteIntentsTracker();
@@ -652,21 +653,19 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
 
         boolean rerouteAll = false;
         for (LinkEvent le : topologyEvents.getAddedLinkEvents()) {
-            LinkEvent rev = new LinkEvent(le.getDst().getDpid(),
-                    le.getDst().getPortNumber(), le.getSrc().getDpid(),
-                    le.getSrc().getPortNumber());
+            final LinkTuple rev = new LinkTuple(le.getDst(), le.getSrc());
             if (unmatchedLinkEvents.contains(rev)) {
                 rerouteAll = true;
                 unmatchedLinkEvents.remove(rev);
                 log.debug("Found matched LinkEvent: {} {}", rev, le);
             } else {
-                unmatchedLinkEvents.add(le);
+                unmatchedLinkEvents.add(le.getLinkTuple());
                 log.debug("Adding unmatched LinkEvent: {}", le);
             }
         }
         for (LinkEvent le : topologyEvents.getRemovedLinkEvents()) {
-            if (unmatchedLinkEvents.contains(le)) {
-                unmatchedLinkEvents.remove(le);
+            if (unmatchedLinkEvents.contains(le.getLinkTuple())) {
+                unmatchedLinkEvents.remove(le.getLinkTuple());
                 log.debug("Removing LinkEvent: {}", le);
             }
         }
