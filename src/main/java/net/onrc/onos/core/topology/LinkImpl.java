@@ -121,4 +121,24 @@ public class LinkImpl extends TopologyObject implements Link {
     public String getType() {
         return getStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
     }
+
+    /**
+     * Returns the config state of topology element.
+     *
+     * @return ConfigState
+     */
+    @Override
+    public ConfigState getConfigState() {
+        return ConfigState.valueOf(getStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE));
+    }
+
+    /**
+     * Returns the status of topology element.
+     *
+     * @return AdminStatus
+     */
+    @Override
+    public AdminStatus getStatus() {
+        return AdminStatus.valueOf(getStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS));
+    }
 }

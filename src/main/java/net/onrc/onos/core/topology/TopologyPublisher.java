@@ -143,7 +143,10 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO populate appropriate attributes.
         linkEvent.createStringAttribute(TopologyElement.TYPE,
                                         TopologyElement.TYPE_PACKET_LAYER);
-
+        linkEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.NOT_CONFIGURED.toString());
+        linkEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+                AdminStatus.ACTIVE.toString());
         linkEvent.freeze();
 
         if (!registryService.hasControl(link.getDst())) {
@@ -234,7 +237,10 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
                                           TopologyElement.TYPE_PACKET_LAYER);
         switchEvent.createStringAttribute("ConnectedSince",
                 sw.getConnectedSince().toString());
-
+        switchEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.NOT_CONFIGURED.toString());
+        switchEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+                AdminStatus.ACTIVE.toString());
         switchEvent.freeze();
 
         // TODO Not very robust
@@ -253,6 +259,10 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
             portEvent.createStringAttribute("name", port.getName());
             portEvent.createStringAttribute(TopologyElement.TYPE,
                                             TopologyElement.TYPE_PACKET_LAYER);
+            portEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                    ConfigState.NOT_CONFIGURED.toString());
+            portEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+                    AdminStatus.ACTIVE.toString());
 
             portEvent.freeze();
             portEvents.add(portEvent);

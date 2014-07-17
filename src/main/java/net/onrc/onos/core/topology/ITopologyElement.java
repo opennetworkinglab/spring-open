@@ -13,4 +13,20 @@ public interface ITopologyElement {
      * @return the type of the topology element
      */
     public String getType();
+
+    /**
+     * Returns the config state of topology element.
+     *
+     * @return ConfigState
+     */
+    public ConfigState getConfigState();
+
+    /**
+     * Returns the status of topology element.
+     *
+     * @return  AdminStatus
+     */
+    public AdminStatus getStatus();
+
+
 }

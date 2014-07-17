@@ -34,6 +34,9 @@ public class TopologyElement<T extends TopologyElement<T>>
      */
     public static final String TYPE_OPTICAL_LAYER = "optical";
 
+    public static final String ELEMENT_CONFIG_STATE = "ConfigState";
+
+    public static final String ELEMENT_ADMIN_STATUS = "AdminStatus";
 
     private boolean isFrozen = false;
 
@@ -59,6 +62,7 @@ public class TopologyElement<T extends TopologyElement<T>>
     public TopologyElement(TopologyElement<T> original) {
         this.isFrozen = false;
         this.stringAttributes = new ConcurrentHashMap<>(original.stringAttributes);
+
     }
 
 
@@ -171,4 +175,25 @@ public class TopologyElement<T extends TopologyElement<T>>
     public String getType() {
         return getStringAttribute(TYPE, TYPE_PACKET_LAYER);
     }
+
+    /**
+     * Returns the config state of topology element.
+     *
+     * @return ConfigState
+     */
+    @Override
+    public ConfigState getConfigState() {
+        return ConfigState.valueOf(getStringAttribute(ELEMENT_CONFIG_STATE));
+    }
+
+    /**
+     * Returns the status of topology element.
+     *
+     * @return AdminStatus
+     */
+    @Override
+    public AdminStatus getStatus() {
+        return AdminStatus.valueOf(getStringAttribute(ELEMENT_ADMIN_STATUS));
+    }
+
 }

@@ -80,4 +80,24 @@ public class HostImpl extends TopologyObject implements Host {
         // FIXME assuming device is always in packet layer for now.
         return TopologyElement.TYPE_PACKET_LAYER;
     }
+
+    /**
+     * Returns the config state of topology element.
+     *
+     * @return ConfigState
+     */
+    @Override
+    public ConfigState getConfigState() {
+        return ConfigState.NOT_CONFIGURED;
+    }
+
+    /**
+     * Returns the status of topology element.
+     *
+     * @return AdminStatus
+     */
+    @Override
+    public AdminStatus getStatus() {
+        return AdminStatus.ACTIVE;
+    }
 }

@@ -25,12 +25,14 @@ import net.onrc.onos.core.intent.runtime.IntentStateList;
 import net.onrc.onos.core.packetservice.BroadcastPacketOutNotification;
 import net.onrc.onos.core.packetservice.PacketOutNotification;
 import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
+import net.onrc.onos.core.topology.AdminStatus;
+import net.onrc.onos.core.topology.ConfigState;
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
-import net.onrc.onos.core.topology.TopologyEvent;
 import net.onrc.onos.core.topology.TopologyElement;
+import net.onrc.onos.core.topology.TopologyEvent;
 import net.onrc.onos.core.util.CallerId;
 import net.onrc.onos.core.util.DataPath;
 import net.onrc.onos.core.util.Dpid;
@@ -205,6 +207,8 @@ public class KryoFactory {
         kryo.register(TopologyEvent.class);
         kryo.register(TopologyElement.class);
         kryo.register(ConcurrentHashMap.class);
+        kryo.register(ConfigState.class);
+        kryo.register(AdminStatus.class);
 
         // Intent-related classes
         kryo.register(Path.class);
