@@ -18,9 +18,9 @@ import net.onrc.onos.core.util.Dpid;
  */
 public class ConstrainedBFSTree {
     LinkedList<Switch> switchQueue = new LinkedList<>();
-    HashSet<Switch> switchSearched = new HashSet<>();
+    HashSet<Dpid> switchSearched = new HashSet<>();
     HashMap<Dpid, LinkEvent> upstreamLinks = new HashMap<>();
-    HashMap<Switch, Path> paths = new HashMap<>();
+    HashMap<Dpid, Path> paths = new HashMap<>();
     Switch rootSwitch;
     PathIntentMap intents = null;
     double bandwidth = 0.0; // 0.0 means no limit for bandwidth (normal BFS tree)
@@ -54,12 +54,12 @@ public class ConstrainedBFSTree {
      */
     protected void calcTree() {
         switchQueue.add(rootSwitch);
-        switchSearched.add(rootSwitch);
+        switchSearched.add(rootSwitch.getDpid());
         while (!switchQueue.isEmpty()) {
             Switch sw = switchQueue.poll();
             for (Link link : sw.getOutgoingLinks()) {
                 Switch reachedSwitch = link.getDstPort().getSwitch();
-                if (switchSearched.contains(reachedSwitch)) {
+                if (switchSearched.contains(reachedSwitch.getDpid())) {
                     continue;
                 }
                 if (intents != null &&
@@ -67,7 +67,7 @@ public class ConstrainedBFSTree {
                     continue;
                 }
                 switchQueue.add(reachedSwitch);
-                switchSearched.add(reachedSwitch);
+                switchSearched.add(reachedSwitch.getDpid());
                 upstreamLinks.put(reachedSwitch.getDpid(), new LinkEvent(link));
             }
         }
@@ -80,9 +80,9 @@ public class ConstrainedBFSTree {
      * @return the Path from the root switch to the leaf switch
      */
     public Path getPath(Switch leafSwitch) {
-        Path path = paths.get(leafSwitch);
+        Path path = paths.get(leafSwitch.getDpid());
         Dpid rootSwitchDpid = rootSwitch.getDpid();
-        if (path == null && switchSearched.contains(leafSwitch)) {
+        if (path == null && switchSearched.contains(leafSwitch.getDpid())) {
             path = new Path();
             Dpid sw = leafSwitch.getDpid();
             while (!sw.equals(rootSwitchDpid)) {
@@ -90,7 +90,7 @@ public class ConstrainedBFSTree {
                 path.add(0, upstreamLink);
                 sw = upstreamLink.getSrc().getDpid();
             }
-            paths.put(leafSwitch, path);
+            paths.put(leafSwitch.getDpid(), path);
         }
         return path;
     }
