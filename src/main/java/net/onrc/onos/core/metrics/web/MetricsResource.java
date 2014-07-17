@@ -1,4 +1,4 @@
-package net.onrc.onos.core.metrics;
+package net.onrc.onos.core.metrics.web;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
@@ -7,6 +7,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.Timer;
+import net.onrc.onos.core.metrics.OnosMetrics;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;

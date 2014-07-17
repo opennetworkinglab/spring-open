@@ -5,6 +5,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
+import net.onrc.onos.core.metrics.web.MetricsWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 
 import java.util.ArrayList;

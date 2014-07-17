@@ -1,4 +1,4 @@
-package net.onrc.onos.core.metrics;
+package net.onrc.onos.core.metrics.web;
 
 
 import com.codahale.metrics.Counter;
@@ -6,6 +6,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Histogram;
+import net.onrc.onos.core.metrics.web.serializers.MetricsObjectSerializer;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class MetricsObjectResource {
      * Base Metric object that all metrics inherit from.  Defines common
      * attributes.
      */
-    static class BaseMetricObject {
+    public static class BaseMetricObject {
         private final String name;
 
         /**
@@ -47,7 +48,7 @@ public class MetricsObjectResource {
     /**
      * Metric object that represents a Timer.
      */
-    static class TimerObjectResource extends BaseMetricObject {
+    public static class TimerObjectResource extends BaseMetricObject {
         private final Timer timer;
 
         /**
@@ -75,7 +76,7 @@ public class MetricsObjectResource {
     /**
      * Metric object that represents a Gauge.
      */
-    static class GaugeObjectResource extends BaseMetricObject {
+    public static class GaugeObjectResource extends BaseMetricObject {
         private final Gauge gauge;
 
         /**
@@ -103,7 +104,7 @@ public class MetricsObjectResource {
     /**
      * Metric object that represents a Counter.
      */
-    static class CounterObjectResource extends BaseMetricObject {
+    public static class CounterObjectResource extends BaseMetricObject {
         private final Counter counter;
 
         /**
@@ -131,7 +132,7 @@ public class MetricsObjectResource {
     /**
      * Metric object that represents a Meter.
      */
-    static class MeterObjectResource extends BaseMetricObject {
+    public static class MeterObjectResource extends BaseMetricObject {
         private final Meter meter;
 
         /**
@@ -159,7 +160,7 @@ public class MetricsObjectResource {
     /**
      * Metric objerct that represents a Histogram.
      */
-    static class HistogramObjectResource extends BaseMetricObject {
+    public static class HistogramObjectResource extends BaseMetricObject {
         private final Histogram histogram;
 
         /**

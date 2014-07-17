@@ -1,4 +1,4 @@
-package net.onrc.onos.core.metrics;
+package net.onrc.onos.core.metrics.web;
 
 import net.floodlightcontroller.restserver.RestletRoutable;
 import org.restlet.Context;

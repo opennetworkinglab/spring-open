@@ -1,7 +1,8 @@
-package net.onrc.onos.core.metrics;
+package net.onrc.onos.core.metrics.web.serializers;
 
 import com.codahale.metrics.json.MetricsModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.onrc.onos.core.metrics.web.MetricsObjectResource;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;

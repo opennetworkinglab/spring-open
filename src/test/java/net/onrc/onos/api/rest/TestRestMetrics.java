@@ -5,7 +5,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.onrc.onos.core.intent.runtime.IntentTestMocks;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
-import net.onrc.onos.core.metrics.MetricsWebRoutable;
+import net.onrc.onos.core.metrics.web.MetricsWebRoutable;
 import net.onrc.onos.core.topology.ITopologyService;
 import org.json.JSONArray;
 import org.json.JSONException;
