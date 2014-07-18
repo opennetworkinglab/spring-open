@@ -7,63 +7,36 @@ import net.onrc.onos.core.util.LinkTuple;
 import org.apache.commons.lang.Validate;
 
 /**
- * Link Object stored in In-memory Topology.
+ * Handler to Link object stored in In-memory Topology snapshot.
  * <p/>
- * TODO REMOVE following design memo: This object itself may hold the DBObject,
- * but this Object itself will not issue any read/write to the DataStore.
  */
 public class LinkImpl extends TopologyObject implements Link {
 
-    //////////////////////////////////////////////////////
-    /// Topology element attributes
-    ///  - any changes made here needs to be replicated.
-    //////////////////////////////////////////////////////
-    private LinkEvent linkObj;
+    private final LinkTuple id;
 
 
     /**
-     * Creates a Link object based on {@link LinkEvent}.
+     * Creates a Link handler object.
      *
      * @param topology Topology instance this object belongs to
-     * @param scPort self contained {@link LinkEvent}
+     * @param linkTuple Link identifier
      */
-    public LinkImpl(Topology topology, LinkEvent scPort) {
+    LinkImpl(TopologyInternal topology, LinkTuple linkTuple) {
         super(topology);
-        Validate.notNull(scPort);
-
-        // TODO should we assume linkObj is already frozen before this call
-        //      or expect attribute update will happen after .
-        if (scPort.isFrozen()) {
-            this.linkObj = scPort;
-        } else {
-            this.linkObj = new LinkEvent(scPort);
-            this.linkObj.freeze();
-        }
-    }
-
-    /**
-     * Creates a Link object with empty attributes.
-     *
-     * @param topology Topology instance this object belongs to
-     * @param srcPort source port
-     * @param dstPort destination port
-     */
-    public LinkImpl(Topology topology, Port srcPort, Port dstPort) {
-        this(topology,
-             new LinkEvent(srcPort.asSwitchPort(),
-                           dstPort.asSwitchPort()).freeze());
+        Validate.notNull(linkTuple);
+        this.id = linkTuple;
     }
 
     @Override
     public LinkTuple getLinkTuple() {
-        return linkObj.getLinkTuple();
+        return id;
     }
 
     @Override
     public Switch getSrcSwitch() {
         topology.acquireReadLock();
         try {
-            return topology.getSwitch(linkObj.getSrc().getDpid());
+            return topology.getSwitch(id.getSrc().getDpid());
         } finally {
             topology.releaseReadLock();
         }
@@ -73,7 +46,7 @@ public class LinkImpl extends TopologyObject implements Link {
     public Port getSrcPort() {
         topology.acquireReadLock();
         try {
-            return topology.getPort(linkObj.getSrc());
+            return topology.getPort(id.getSrc());
         } finally {
             topology.releaseReadLock();
         }
@@ -83,7 +56,7 @@ public class LinkImpl extends TopologyObject implements Link {
     public Switch getDstSwitch() {
         topology.acquireReadLock();
         try {
-            return topology.getSwitch(linkObj.getDst().getDpid());
+            return topology.getSwitch(id.getDst().getDpid());
         } finally {
             topology.releaseReadLock();
         }
@@ -93,7 +66,7 @@ public class LinkImpl extends TopologyObject implements Link {
     public Port getDstPort() {
         topology.acquireReadLock();
         try {
-            return topology.getPort(linkObj.getDst());
+            return topology.getPort(id.getDst());
         } finally {
             topology.releaseReadLock();
         }
@@ -107,38 +80,12 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Double getCapacity() {
-        return this.linkObj.getCapacity();
+        return this.topology.getLinkEvent(id).getCapacity();
     }
-
-    void setCapacity(Double capacity) {
-        if (this.linkObj.isFrozen()) {
-            this.linkObj = new LinkEvent(this.linkObj);
-            this.linkObj.setCapacity(capacity);
-            this.linkObj.freeze();
-        } else {
-            this.linkObj.setCapacity(capacity);
-        }
-    }
-
-    // XXX actually replaces everything
-    void replaceStringAttributes(LinkEvent updated) {
-        Validate.isTrue(this.linkObj.getSrc().equals(updated.getSrc()),
-                "Wrong LinkEvent given.");
-        Validate.isTrue(this.linkObj.getDst().equals(updated.getDst()),
-                "Wrong LinkEvent given.");
-
-        // XXX simply replacing whole self-contained object for now
-        if (updated.isFrozen()) {
-            this.linkObj = updated;
-        } else {
-            this.linkObj = new LinkEvent(updated).freeze();
-        }
-    }
-
 
     @Override
     public String getStringAttribute(String attr) {
-        return linkObj.getStringAttribute(attr);
+        return this.topology.getLinkEvent(id).getStringAttribute(attr);
     }
 
     @Override
@@ -153,7 +100,7 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Map<String, String> getAllStringAttributes() {
-        return linkObj.getAllStringAttributes();
+        return this.topology.getLinkEvent(id).getAllStringAttributes();
     }
 
     @Override

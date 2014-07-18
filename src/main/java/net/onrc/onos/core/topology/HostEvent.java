@@ -59,6 +59,7 @@ public class HostEvent extends TopologyElement<HostEvent> {
         super(original);
         this.mac = original.mac;
         this.attachmentPoints = new ArrayList<>(original.attachmentPoints);
+        this.lastSeenTime = original.lastSeenTime;
     }
 
 

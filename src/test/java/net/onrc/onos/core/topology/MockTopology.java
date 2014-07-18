@@ -2,7 +2,9 @@ package net.onrc.onos.core.topology;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * A mock class of Topology.
@@ -20,35 +22,35 @@ public class MockTopology extends TopologyImpl {
     public SwitchImpl sw1, sw2, sw3, sw4;
 
     public Switch addSwitch(Long switchId) {
-        SwitchImpl sw = new SwitchImpl(this, new Dpid(switchId));
+        SwitchEvent sw = new SwitchEvent(new Dpid(switchId));
         this.putSwitch(sw);
-        return sw;
+        return this.getSwitch(sw.getDpid());
     }
 
     public Port addPort(Switch sw, Long portNumber) {
-        PortImpl port = new PortImpl(this, sw.getDpid(),
+        PortEvent port = new PortEvent(sw.getDpid(),
                                 new PortNumber(portNumber.shortValue()));
         ((TopologyImpl) this).putPort(port);
-        return port;
+        return this.getPort(port.getSwitchPort());
     }
 
-    public Link[] addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
-        Link[] links = new Link[2];
-        final Dpid srcDpidObj = new Dpid(srcDpid);
-        final Dpid dstDpidObj = new Dpid(dstDpid);
-        final PortNumber srcPortNum = new PortNumber(srcPortNo.shortValue());
-        final PortNumber dstPortNum = new PortNumber(dstPortNo.shortValue());
-        links[0] = new LinkImpl(this,
-                getPort(srcDpidObj, srcPortNum),
-                getPort(dstDpidObj, dstPortNum));
-        links[1] = new LinkImpl(this,
-                getPort(dstDpidObj, dstPortNum),
-                getPort(srcDpidObj, srcPortNum));
+    public void addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
+        addBidirectionalLinks(srcDpid, srcPortNo, dstDpid, dstPortNo, null);
+    }
+
+    public void addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo, Double capacity) {
+        LinkEvent[] links = new LinkEvent[2];
+        final SwitchPort src = new SwitchPort(srcDpid, srcPortNo);
+        final SwitchPort dst = new SwitchPort(dstDpid, dstPortNo);
+        links[0] = new LinkEvent(src, dst);
+        links[1] = new LinkEvent(dst, src);
+        if (capacity != null) {
+            links[0].setCapacity(capacity);
+            links[1].setCapacity(capacity);
+        }
 
         putLink(links[0]);
         putLink(links[1]);
-
-        return links;
     }
 
     /**
@@ -81,16 +83,11 @@ public class MockTopology extends TopologyImpl {
         addPort(sw4, 42L); // sw4 -> sw2
         addPort(sw4, 43L); // sw4 -> sw3
 
-        addBidirectionalLinks(1L, 12L, 2L, 21L);
-        addBidirectionalLinks(2L, 23L, 3L, 32L);
-        addBidirectionalLinks(3L, 34L, 4L, 43L);
-        addBidirectionalLinks(4L, 41L, 1L, 14L);
-        addBidirectionalLinks(2L, 24L, 4L, 42L);
-
-        // set capacity of all links to 1000Mbps
-        for (Link link : getLinks()) {
-            ((LinkImpl) link).setCapacity(1000.0);
-        }
+        addBidirectionalLinks(1L, 12L, 2L, 21L, 1000.0);
+        addBidirectionalLinks(2L, 23L, 3L, 32L, 1000.0);
+        addBidirectionalLinks(3L, 34L, 4L, 43L, 1000.0);
+        addBidirectionalLinks(4L, 41L, 1L, 14L, 1000.0);
+        addBidirectionalLinks(2L, 24L, 4L, 42L, 1000.0);
     }
 
     /**
@@ -128,38 +125,39 @@ public class MockTopology extends TopologyImpl {
         Port port43 = addPort(sw4, 43L); // sw4 -> sw3
 
         MACAddress mac1 = MACAddress.valueOf("00:44:33:22:11:00");
-        HostImpl dev1 = new HostImpl(this, mac1);
-        dev1.addAttachmentPoint(port15);
-        dev1.setLastSeenTime(1L);
-        this.putHost(dev1);
+        HostEvent host1 = new HostEvent(mac1);
+        host1.addAttachmentPoint(port15.asSwitchPort());
+        host1.setLastSeenTime(1L);
+        this.putHost(host1);
 
         MACAddress mac3 = MACAddress.valueOf("00:11:22:33:44:55");
-        HostImpl dev3 = new HostImpl(this, mac3);
-        dev3.addAttachmentPoint(port35);
-        dev3.setLastSeenTime(1L);
-        this.putHost(dev3);
+        HostEvent host3 = new HostEvent(mac3);
+        host3.addAttachmentPoint(port35.asSwitchPort());
+        host3.setLastSeenTime(1L);
+        this.putHost(host3);
 
-        addBidirectionalLinks(1L, 12L, 2L, 21L);
-        addBidirectionalLinks(2L, 23L, 3L, 32L);
-        addBidirectionalLinks(3L, 34L, 4L, 43L);
-        addBidirectionalLinks(4L, 41L, 1L, 14L);
-        addBidirectionalLinks(2L, 24L, 4L, 42L);
-
-        // set capacity of all links to 1000Mbps
-        for (Link link : getLinks()) {
-            ((LinkImpl) link).setCapacity(1000.0);
-        }
+        addBidirectionalLinks(1L, 12L, 2L, 21L, 1000.0);
+        addBidirectionalLinks(2L, 23L, 3L, 32L, 1000.0);
+        addBidirectionalLinks(3L, 34L, 4L, 43L, 1000.0);
+        addBidirectionalLinks(4L, 41L, 1L, 14L, 1000.0);
+        addBidirectionalLinks(2L, 24L, 4L, 42L, 1000.0);
     }
 
     public void removeLink(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
-        removeLink(getLink(new Dpid(srcDpid),
+        this.removeLink(new Dpid(srcDpid),
                            new PortNumber(srcPortNo.shortValue()),
                            new Dpid(dstDpid),
-                           new PortNumber(dstPortNo.shortValue())));
+                           new PortNumber(dstPortNo.shortValue()));
     }
 
     public void removeLink(Dpid srcDpid, PortNumber srcPortNo,
-                           Dpid dstDpid, PortNumber dstPortNo) {
-        super.removeLink(getLink(srcDpid, srcPortNo, dstDpid, dstPortNo));
+            Dpid dstDpid, PortNumber dstPortNo) {
+        this.removeLink(srcDpid, srcPortNo, dstDpid, dstPortNo,
+                TopologyElement.TYPE_PACKET_LAYER);
+    }
+    public void removeLink(Dpid srcDpid, PortNumber srcPortNo,
+                           Dpid dstDpid, PortNumber dstPortNo, String type) {
+        super.removeLink(new LinkTuple(srcDpid, srcPortNo, dstDpid, dstPortNo),
+                        type);
     }
 }

@@ -6,6 +6,8 @@ import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +22,7 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
+import net.onrc.onos.core.util.TestUtils;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -111,8 +114,14 @@ public class TopologyManagerTest {
         // Create a topologyManager object for testing
         topologyListeners = new CopyOnWriteArrayList<>();
         theTopologyManager = new TopologyManager(registryService, topologyListeners);
+
+        // replace EventHandler to avoid thread from starting
+        TestUtils.setField(theTopologyManager, "eventHandler",
+            EasyMock.createNiceMock(TopologyManager.EventHandler.class));
         theTopologyManager.startup(datagridService);
-        theTopologyManager.debugReplaceDataStore(dataStoreService);
+
+        // replace data store with Mocked object
+        TestUtils.setField(theTopologyManager, "datastore", dataStoreService);
     }
 
     @After
@@ -335,4 +344,621 @@ public class TopologyManagerTest {
         verify(eventChannel);
     }
 
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testAddSwitch() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        // check events to be fired
+        List<SwitchEvent> apiAddedSwitchEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedSwitchEvents");
+        assertThat(apiAddedSwitchEvents, hasItem(sw));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testAddPort() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumber = new PortNumber((short) 2);
+        PortEvent port = new PortEvent(dpid, portNumber);
+        port.createStringAttribute("fuzz", "buzz");
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, port);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portId = new SwitchPort(dpid, portNumber);
+        PortEvent portInTopo = topology.getPortEvent(portId);
+        assertEquals(port, portInTopo);
+        assertTrue(portInTopo.isFrozen());
+        assertEquals("buzz", portInTopo.getStringAttribute("fuzz"));
+
+        // check events to be fired
+        List<PortEvent> apiAddedPortEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedPortEvents");
+        assertThat(apiAddedPortEvents, hasItem(port));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testRemovePortThenSwitch() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumber = new PortNumber((short) 2);
+        PortEvent port = new PortEvent(dpid, portNumber);
+        port.createStringAttribute("fuzz", "buzz");
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, port);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portId = new SwitchPort(dpid, portNumber);
+        PortEvent portInTopo = topology.getPortEvent(portId);
+        assertEquals(port, portInTopo);
+        assertTrue(portInTopo.isFrozen());
+        assertEquals("buzz", portInTopo.getStringAttribute("fuzz"));
+
+        // remove in proper order
+        TestUtils.callMethod(theTopologyManager, "removePort",
+                            PortEvent.class, new PortEvent(port));
+        TestUtils.callMethod(theTopologyManager, "removeSwitch",
+                            SwitchEvent.class, new SwitchEvent(sw));
+
+
+        // check events to be fired
+        List<PortEvent> apiRemovedPortEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedPortEvents");
+        assertThat(apiRemovedPortEvents, hasItem(port));
+        List<SwitchEvent> apiRemovedSwitchEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedSwitchEvents");
+        assertThat(apiRemovedSwitchEvents, hasItem(sw));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testRemoveSwitch() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumber = new PortNumber((short) 2);
+        PortEvent port = new PortEvent(dpid, portNumber);
+        port.createStringAttribute("fuzz", "buzz");
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, port);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portId = new SwitchPort(dpid, portNumber);
+        PortEvent portInTopo = topology.getPortEvent(portId);
+        assertEquals(port, portInTopo);
+        assertTrue(portInTopo.isFrozen());
+        assertEquals("buzz", portInTopo.getStringAttribute("fuzz"));
+
+        // remove in in-proper order
+//        TestUtils.callMethod(theTopologyManager, "removePort",
+//                            PortEvent.class, new PortEvent(port));
+        TestUtils.callMethod(theTopologyManager, "removeSwitch",
+                            SwitchEvent.class, new SwitchEvent(sw));
+
+
+        // check events to be fired
+        // outcome should be the same as #testRemovePortThenSwitch
+        List<PortEvent> apiRemovedPortEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedPortEvents");
+        assertThat(apiRemovedPortEvents, hasItem(port));
+        List<SwitchEvent> apiRemovedSwitchEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedSwitchEvents");
+        assertThat(apiRemovedSwitchEvents, hasItem(sw));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testAddLink() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumberA = new PortNumber((short) 2);
+        PortEvent portA = new PortEvent(dpid, portNumberA);
+        portA.createStringAttribute("fuzz", "buzz");
+
+        final PortNumber portNumberB = new PortNumber((short) 3);
+        PortEvent portB = new PortEvent(dpid, portNumberB);
+        portB.createStringAttribute("fizz", "buz");
+
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        linkA.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        linkB.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        assertEquals(portA, portAInTopo);
+        assertTrue(portAInTopo.isFrozen());
+        assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
+
+        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        assertEquals(portB, portBInTopo);
+        assertTrue(portBInTopo.isFrozen());
+        assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
+
+        LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
+        assertEquals(linkA, linkAInTopo);
+        assertTrue(linkAInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+
+        LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
+        assertEquals(linkB, linkBInTopo);
+        assertTrue(linkBInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+
+        // check events to be fired
+        List<LinkEvent> apiAddedLinkEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedLinkEvents");
+        assertThat(apiAddedLinkEvents, containsInAnyOrder(linkA, linkB));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testAddLinkKickingOffHost() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumberA = new PortNumber((short) 2);
+        PortEvent portA = new PortEvent(dpid, portNumberA);
+        portA.createStringAttribute("fuzz", "buzz");
+
+        final PortNumber portNumberB = new PortNumber((short) 3);
+        PortEvent portB = new PortEvent(dpid, portNumberB);
+        portB.createStringAttribute("fizz", "buz");
+
+        final PortNumber portNumberC = new PortNumber((short) 4);
+        PortEvent portC = new PortEvent(dpid, portNumberC);
+        portC.createStringAttribute("fizz", "buz");
+
+        final MACAddress macA = MACAddress.valueOf(666L);
+        HostEvent hostA = new HostEvent(macA);
+        hostA.addAttachmentPoint(portA.getSwitchPort());
+        final long timestampA = 392893200L;
+        hostA.setLastSeenTime(timestampA);
+
+        final MACAddress macB = MACAddress.valueOf(999L);
+        HostEvent hostB = new HostEvent(macB);
+        hostB.addAttachmentPoint(portB.getSwitchPort());
+        hostB.addAttachmentPoint(portC.getSwitchPort());
+        final long timestampB = 392893201L;
+        hostB.setLastSeenTime(timestampB);
+
+
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        linkA.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        linkB.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portC);
+        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostA);
+        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostB);
+
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        assertEquals(portA, portAInTopo);
+        assertTrue(portAInTopo.isFrozen());
+        assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
+
+        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        assertEquals(portB, portBInTopo);
+        assertTrue(portBInTopo.isFrozen());
+        assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
+
+        // hostA expected to be removed
+        assertNull(topology.getHostEvent(macA));
+        // hostB expected to be there with reduced attachment point
+        HostEvent hostBrev = new HostEvent(macB);
+        hostBrev.addAttachmentPoint(portC.getSwitchPort());
+        hostBrev.setLastSeenTime(timestampB);
+        hostBrev.freeze();
+        assertEquals(hostBrev, topology.getHostEvent(macB));
+
+
+        LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
+        assertEquals(linkA, linkAInTopo);
+        assertTrue(linkAInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+
+        LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
+        assertEquals(linkB, linkBInTopo);
+        assertTrue(linkBInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+
+        // check events to be fired
+        List<HostEvent> apiAddedHostEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedHostEvents");
+        assertThat(apiAddedHostEvents, hasItem(hostBrev));
+
+        List<HostEvent> apiRemovedHostEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedHostEvents");
+        assertThat(apiRemovedHostEvents, hasItem(hostA));
+        List<LinkEvent> apiAddedLinkEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedLinkEvents");
+        assertThat(apiAddedLinkEvents, containsInAnyOrder(linkA, linkB));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testRemoveLink() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumberA = new PortNumber((short) 2);
+        PortEvent portA = new PortEvent(dpid, portNumberA);
+        portA.createStringAttribute("fuzz", "buzz");
+
+        final PortNumber portNumberB = new PortNumber((short) 3);
+        PortEvent portB = new PortEvent(dpid, portNumberB);
+        portB.createStringAttribute("fizz", "buz");
+
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        linkA.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        linkB.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        assertEquals(portA, portAInTopo);
+        assertTrue(portAInTopo.isFrozen());
+        assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
+
+        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        assertEquals(portB, portBInTopo);
+        assertTrue(portBInTopo.isFrozen());
+        assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
+
+        LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
+        assertEquals(linkA, linkAInTopo);
+        assertTrue(linkAInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+
+
+        LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
+        assertEquals(linkB, linkBInTopo);
+        assertTrue(linkBInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+
+        // check events to be fired
+        // FIXME if link flapped (linkA in this scenario),
+        //  linkA appears in both removed and added is this expected behavior?
+        List<LinkEvent> apiAddedLinkEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedLinkEvents");
+        assertThat(apiAddedLinkEvents, containsInAnyOrder(linkA, linkB));
+
+        // clear event before removing Link
+        apiAddedLinkEvents.clear();
+
+        // remove link
+        TestUtils.callMethod(theTopologyManager, "removeLink", LinkEvent.class, new LinkEvent(linkA));
+
+        LinkEvent linkANotInTopo = topology.getLinkEvent(linkA.getLinkTuple());
+        assertNull(linkANotInTopo);
+
+        List<LinkEvent> apiRemovedLinkEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedLinkEvents");
+        assertThat(apiRemovedLinkEvents, hasItem(linkA));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testAddHostIgnoredByLink() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumberA = new PortNumber((short) 2);
+        PortEvent portA = new PortEvent(dpid, portNumberA);
+        portA.createStringAttribute("fuzz", "buzz");
+
+        final PortNumber portNumberB = new PortNumber((short) 3);
+        PortEvent portB = new PortEvent(dpid, portNumberB);
+        portB.createStringAttribute("fizz", "buz");
+
+        final PortNumber portNumberC = new PortNumber((short) 4);
+        PortEvent portC = new PortEvent(dpid, portNumberC);
+        portC.createStringAttribute("fizz", "buz");
+
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        linkA.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        linkB.createStringAttribute(TopologyElement.TYPE,
+                                    TopologyElement.TYPE_OPTICAL_LAYER);
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portC);
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+
+        // Add hostA attached to a port which already has a link
+        final MACAddress macA = MACAddress.valueOf(666L);
+        HostEvent hostA = new HostEvent(macA);
+        hostA.addAttachmentPoint(portA.getSwitchPort());
+        final long timestampA = 392893200L;
+        hostA.setLastSeenTime(timestampA);
+
+        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostA);
+
+        // Add hostB attached to multiple ports,
+        // some of them which already has a link
+        final MACAddress macB = MACAddress.valueOf(999L);
+        HostEvent hostB = new HostEvent(macB);
+        hostB.addAttachmentPoint(portB.getSwitchPort());
+        hostB.addAttachmentPoint(portC.getSwitchPort());
+        final long timestampB = 392893201L;
+        hostB.setLastSeenTime(timestampB);
+
+        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostB);
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        assertEquals(portA, portAInTopo);
+        assertTrue(portAInTopo.isFrozen());
+        assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
+
+        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        assertEquals(portB, portBInTopo);
+        assertTrue(portBInTopo.isFrozen());
+        assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
+
+        // hostA expected to be completely ignored
+        assertNull(topology.getHostEvent(macA));
+        // hostB expected to be there with reduced attachment point
+        HostEvent hostBrev = new HostEvent(macB);
+        hostBrev.addAttachmentPoint(portC.getSwitchPort());
+        hostBrev.setLastSeenTime(timestampB);
+        hostBrev.freeze();
+        assertEquals(hostBrev, topology.getHostEvent(macB));
+
+
+        LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
+        assertEquals(linkA, linkAInTopo);
+        assertTrue(linkAInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+
+        LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
+        assertEquals(linkB, linkBInTopo);
+        assertTrue(linkBInTopo.isFrozen());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+
+        // check events to be fired
+        // hostB should be added with reduced attachment points
+        List<HostEvent> apiAddedHostEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedHostEvents");
+        assertThat(apiAddedHostEvents, hasItem(hostBrev));
+
+        // hostA should not be ignored
+        List<HostEvent> apiRemovedHostEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedHostEvents");
+        assertThat(apiRemovedHostEvents, not(hasItem(hostA)));
+
+        List<LinkEvent> apiAddedLinkEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedLinkEvents");
+        assertThat(apiAddedLinkEvents, containsInAnyOrder(linkA, linkB));
+    }
+
+    /**
+     * Test to confirm topology replica transformation.
+     */
+    @Test
+    public void testAddHostMove() {
+        setupTopologyManager();
+
+        final Dpid dpid = new Dpid(1);
+        SwitchEvent sw = new SwitchEvent(dpid);
+        sw.createStringAttribute("foo", "bar");
+
+        final PortNumber portNumberA = new PortNumber((short) 2);
+        PortEvent portA = new PortEvent(dpid, portNumberA);
+        portA.createStringAttribute("fuzz", "buzz");
+
+        final PortNumber portNumberB = new PortNumber((short) 3);
+        PortEvent portB = new PortEvent(dpid, portNumberB);
+        portB.createStringAttribute("fizz", "buz");
+
+        final PortNumber portNumberC = new PortNumber((short) 4);
+        PortEvent portC = new PortEvent(dpid, portNumberC);
+        portC.createStringAttribute("fizz", "buz");
+
+        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portC);
+
+        // Add hostA attached to a port which already has a link
+        final MACAddress macA = MACAddress.valueOf(666L);
+        HostEvent hostA = new HostEvent(macA);
+        hostA.addAttachmentPoint(portA.getSwitchPort());
+        final long timestampA = 392893200L;
+        hostA.setLastSeenTime(timestampA);
+
+        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostA);
+
+
+        // check topology structure
+        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        assertEquals(sw, swInTopo);
+        assertTrue(swInTopo.isFrozen());
+        assertEquals("bar", swInTopo.getStringAttribute("foo"));
+
+        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        assertEquals(portA, portAInTopo);
+        assertTrue(portAInTopo.isFrozen());
+        assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
+
+        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        assertEquals(portB, portBInTopo);
+        assertTrue(portBInTopo.isFrozen());
+        assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
+
+        // hostA expected to be there
+        assertEquals(hostA, topology.getHostEvent(macA));
+        assertEquals(timestampA, topology.getHostEvent(macA).getLastSeenTime());
+
+        // check events to be fired
+        // hostA should be added
+        List<HostEvent> apiAddedHostEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedHostEvents");
+        assertThat(apiAddedHostEvents, hasItem(hostA));
+
+
+        // clear event before moving host
+        apiAddedHostEvents.clear();
+
+        HostEvent hostAmoved = new HostEvent(macA);
+        hostAmoved.addAttachmentPoint(portB.getSwitchPort());
+        final long timestampAmoved = 392893201L;
+        hostAmoved.setLastSeenTime(timestampAmoved);
+
+        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostAmoved);
+
+        assertEquals(hostAmoved, topology.getHostEvent(macA));
+        assertEquals(timestampAmoved, topology.getHostEvent(macA).getLastSeenTime());
+
+        // hostA expected to be there with new attachment point
+        apiAddedHostEvents
+            = TestUtils.getField(theTopologyManager, "apiAddedHostEvents");
+        assertThat(apiAddedHostEvents, hasItem(hostAmoved));
+
+        // hostA is updated not removed
+        List<HostEvent> apiRemovedHostEvents
+            = TestUtils.getField(theTopologyManager, "apiRemovedHostEvents");
+        assertThat(apiRemovedHostEvents, not(hasItem(hostA)));
+    }
 }

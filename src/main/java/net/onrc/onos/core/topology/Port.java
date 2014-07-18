@@ -120,11 +120,10 @@ public interface Port extends ITopologyElement, StringAttributes {
      */
     public Collection<Link> getIncomingLinks();
 
-    // XXX Iterable or Collection?
     /**
      * Gets all the devices attached to this port.
      *
      * @return {@link Host}s attached to this port
      */
-    public Iterable<Host> getHosts();
+    public Collection<Host> getHosts();
 }

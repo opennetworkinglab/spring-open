@@ -2,13 +2,16 @@ package net.onrc.onos.core.topology;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -153,7 +156,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     /**
      * Event handler class.
      */
-    private class EventHandler extends Thread implements
+    class EventHandler extends Thread implements
             IEventChannelListener<byte[], TopologyEvent> {
         private BlockingQueue<EventEntry<TopologyEvent>> topologyEvents =
                 new LinkedBlockingQueue<EventEntry<TopologyEvent>>();
@@ -243,6 +246,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 //
                 // Extract the events
                 //
+                // FIXME Following event squashing logic based only on ID
+                //       potentially lose attribute change.
                 switch (event.eventType()) {
                     case ENTRY_ADD:
                         log.debug("Topology event ENTRY_ADD: {}", topologyEvent);
@@ -836,6 +841,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
     }
 
+    //
+    // Methods to update topology replica
+    //
+
     /**
      * Adds a switch to the topology replica.
      *
@@ -843,16 +852,15 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      */
     @GuardedBy("topology.writeLock")
     private void addSwitch(SwitchEvent switchEvent) {
-        Switch sw = topology.getSwitch(switchEvent.getDpid());
-        if (sw == null) {
-            sw = new SwitchImpl(topology, switchEvent);
-            topology.putSwitch(sw);
-        } else {
-            // TODO: Update the switch attributes
-            log.debug("Update switch attributes");
-            SwitchImpl impl = (SwitchImpl) sw;
-            impl.replaceStringAttributes(switchEvent);
+        if (log.isDebugEnabled()) {
+            SwitchEvent sw = topology.getSwitchEvent(switchEvent.getDpid());
+            if (sw != null) {
+                log.debug("Update {}", switchEvent);
+            } else {
+                log.debug("Added {}", switchEvent);
+            }
         }
+        topology.putSwitch(switchEvent.freeze());
         apiAddedSwitchEvents.add(switchEvent);
     }
 
@@ -865,8 +873,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      */
     @GuardedBy("topology.writeLock")
     private void removeSwitch(SwitchEvent switchEvent) {
-        Switch sw = topology.getSwitch(switchEvent.getDpid());
-        if (sw == null) {
+        final Dpid dpid = switchEvent.getDpid();
+
+        SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
+        if (swInTopo == null) {
             log.warn("Switch {} already removed, ignoring", switchEvent);
             return;
         }
@@ -875,19 +885,19 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         // Remove all Ports on the Switch
         //
         ArrayList<PortEvent> portsToRemove = new ArrayList<>();
-        for (Port port : sw.getPorts()) {
+        for (Port port : topology.getPorts(dpid)) {
             log.warn("Port {} on Switch {} should be removed prior to removing Switch. Removing Port now.",
                     port, switchEvent);
-            PortEvent portEvent = new PortEvent(port.getDpid(),
-                    port.getNumber());
+            PortEvent portEvent = new PortEvent(port.asSwitchPort());
             portsToRemove.add(portEvent);
         }
         for (PortEvent portEvent : portsToRemove) {
             removePort(portEvent);
         }
 
-        topology.removeSwitch(switchEvent.getDpid());
-        apiRemovedSwitchEvents.add(switchEvent);
+        log.debug("Removed {}", swInTopo);
+        topology.removeSwitch(dpid);
+        apiRemovedSwitchEvents.add(swInTopo);
     }
 
     /**
@@ -906,100 +916,101 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             return;
         }
 
-
-        Port port = sw.getPort(portEvent.getPortNumber());
-        if (port == null) {
-            port = new PortImpl(topology, portEvent);
-            topology.putPort(port);
-        } else {
-            // TODO: Update the port attributes
-            log.debug("Update port attributes");
-            PortImpl impl = (PortImpl) port;
-            impl.replaceStringAttributes(portEvent);
+        if (log.isDebugEnabled()) {
+            PortEvent port = topology.getPortEvent(portEvent.getSwitchPort());
+            if (port != null) {
+                log.debug("Update {}", portEvent);
+            } else {
+                log.debug("Added {}", portEvent);
+            }
         }
+        topology.putPort(portEvent.freeze());
         apiAddedPortEvents.add(portEvent);
     }
 
     /**
      * Removes a port from the topology replica.
      * <p/>
-     * It will call {@link #removeHost(HostEvent)} for each hosts on this port
+     * It will remove attachment points from each hosts on this port
      * and call {@link #removeLink(LinkEvent)} for each links on this port.
      *
      * @param portEvent the PortEvent with the port to remove.
      */
     @GuardedBy("topology.writeLock")
     private void removePort(PortEvent portEvent) {
-        Switch sw = topology.getSwitch(portEvent.getDpid());
+        SwitchEvent sw = topology.getSwitchEvent(portEvent.getDpid());
         if (sw == null) {
             log.warn("Parent Switch for Port {} already removed, ignoring",
                     portEvent);
             return;
         }
 
-        Port port = sw.getPort(portEvent.getPortNumber());
-        if (port == null) {
+        final SwitchPort switchPort = portEvent.getSwitchPort();
+        PortEvent portInTopo = topology.getPortEvent(switchPort);
+        if (portInTopo == null) {
             log.warn("Port {} already removed, ignoring", portEvent);
             return;
         }
 
         //
-        // Remove all Hosts attached to the Port
+        // Remove all Host attachment points bound to this Port
         //
-        ArrayList<HostEvent> hostsToRemove = new ArrayList<>();
-        for (Host host : port.getHosts()) {
-            log.debug("Removing Host {} on Port {}", host, portEvent);
-            HostEvent hostEvent = new HostEvent(host.getMacAddress());
-            SwitchPort switchPort = new SwitchPort(port.getSwitch().getDpid(),
-                    port.getNumber());
-            hostEvent.addAttachmentPoint(switchPort);
-            hostsToRemove.add(hostEvent);
+        List<HostEvent> hostsToUpdate = new ArrayList<>();
+        for (Host host : topology.getHosts(switchPort)) {
+            log.debug("Removing Host {} on Port {}", host, portInTopo);
+            HostEvent hostEvent = topology.getHostEvent(host.getMacAddress());
+            hostsToUpdate.add(hostEvent);
         }
-        for (HostEvent hostEvent : hostsToRemove) {
-            removeHost(hostEvent);
+        for (HostEvent hostEvent : hostsToUpdate) {
+            HostEvent newHostEvent = new HostEvent(hostEvent);
+            newHostEvent.removeAttachmentPoint(switchPort);
+            newHostEvent.freeze();
+
+            // TODO should this event be fired inside #addHost?
+            if (newHostEvent.getAttachmentPoints().isEmpty()) {
+                // No more attachment point left -> remove Host
+                removeHost(hostEvent);
+            } else {
+                // Update Host
+                addHost(newHostEvent);
+            }
         }
 
         //
         // Remove all Links connected to the Port
         //
         Set<Link> links = new HashSet<>();
-        links.add(port.getOutgoingLink());
-        links.add(port.getIncomingLink());
-        ArrayList<LinkEvent> linksToRemove = new ArrayList<>();
+        links.addAll(topology.getOutgoingLinks(switchPort));
+        links.addAll(topology.getIncomingLinks(switchPort));
         for (Link link : links) {
             if (link == null) {
                 continue;
             }
-            log.debug("Removing Link {} on Port {}", link, portEvent);
-            LinkEvent linkEvent = new LinkEvent(link.getSrcSwitch().getDpid(),
-                    link.getSrcPort().getNumber(),
-                    link.getDstSwitch().getDpid(),
-                    link.getDstPort().getNumber());
-            linksToRemove.add(linkEvent);
-        }
-        for (LinkEvent linkEvent : linksToRemove) {
-            removeLink(linkEvent);
+            LinkEvent linkEvent = topology.getLinkEvent(link.getLinkTuple());
+            if (linkEvent != null) {
+                log.debug("Removing Link {} on Port {}", link, portInTopo);
+                removeLink(linkEvent);
+            }
         }
 
-        // Remove the Port from the Switch
-        topology.removePort(port);
+        // Remove the Port from Topology
+        log.debug("Removed {}", portInTopo);
+        topology.removePort(switchPort);
 
-        apiRemovedPortEvents.add(portEvent);
+        apiRemovedPortEvents.add(portInTopo);
     }
 
     /**
      * Adds a link to the topology replica.
      * <p/>
-     * It will call {@link #removeHost(HostEvent)} for each hosts on both ports.
+     * It will remove attachment points from each hosts using the same ports.
      *
      * @param linkEvent the LinkEvent with the link to add.
      */
     @GuardedBy("topology.writeLock")
     private void addLink(LinkEvent linkEvent) {
-        Port srcPort = topology.getPort(linkEvent.getSrc().getDpid(),
-                linkEvent.getSrc().getPortNumber());
-        Port dstPort = topology.getPort(linkEvent.getDst().getDpid(),
-                linkEvent.getDst().getPortNumber());
+        PortEvent srcPort = topology.getPortEvent(linkEvent.getSrc());
+        PortEvent dstPort = topology.getPortEvent(linkEvent.getDst());
         if ((srcPort == null) || (dstPort == null)) {
             log.debug("{} reordered because {} port is null", linkEvent,
                     (srcPort == null) ? "src" : "dst");
@@ -1011,47 +1022,64 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             return;
         }
 
-        // Get the Link instance from the Destination Port Incoming Link
-        // XXX domain knowledge: Link is discovered by LLDP,
-        //      thus incoming link is likely to be more up-to-date
+        // XXX domain knowledge: Sanity check: Port cannot have both Link and Host
         // FIXME potentially local replica may not be up-to-date yet due to HZ delay.
         //        may need to manage local truth and use them instead.
-        Link link = dstPort.getIncomingLink();
-        assert (link == srcPort.getOutgoingLink());
-        if (link == null) {
-            link = new LinkImpl(topology, linkEvent);
-            topology.putLink(link);
+        if (topology.getLinkEvent(linkEvent.getLinkTuple()) == null) {
+            // Only check for existing Host when adding new Link.
 
-            // Remove all Hosts attached to the Ports
-            ArrayList<HostEvent> hostsToRemove = new ArrayList<>();
-            ArrayList<Port> ports = new ArrayList<>();
-            ports.add(srcPort);
-            ports.add(dstPort);
-            for (Port port : ports) {
-                for (Host host : port.getHosts()) {
+            // Remove all Hosts attached to the ports on both ends
+
+            Set<HostEvent> hostsToUpdate = new TreeSet<>(new Comparator<HostEvent>() {
+                // comparison only using ID(=MAC)
+                @Override
+                public int compare(HostEvent o1, HostEvent o2) {
+                    return Long.compare(o1.getMac().toLong(), o2.getMac().toLong());
+                }
+            });
+
+            List<SwitchPort> portsToCheck = Arrays.asList(
+                    srcPort.getSwitchPort(),
+                    dstPort.getSwitchPort());
+
+            // Enumerate Host which needs to be updated by this Link add event
+            for (SwitchPort port : portsToCheck) {
+                for (Host host : topology.getHosts(port)) {
                     log.error("Host {} on Port {} should have been removed prior to adding Link {}",
                             host, port, linkEvent);
-                    // FIXME must get Host info from topology, when we add attrs.
-                    HostEvent hostEvent =
-                            new HostEvent(host.getMacAddress());
-                    SwitchPort switchPort =
-                            new SwitchPort(port.getSwitch().getDpid(),
-                                    port.getNumber());
-                    // adding attachment port which needs to be removed
-                    hostEvent.addAttachmentPoint(switchPort);
-                    hostsToRemove.add(hostEvent);
+
+                    HostEvent hostEvent = topology.getHostEvent(host.getMacAddress());
+                    hostsToUpdate.add(hostEvent);
                 }
             }
-            for (HostEvent hostEvent : hostsToRemove) {
-                removeHost(hostEvent);
+            // remove attachment point from them.
+            for (HostEvent hostEvent : hostsToUpdate) {
+                // remove port from attachment point and update
+                HostEvent newHostEvent = new HostEvent(hostEvent);
+                newHostEvent.removeAttachmentPoint(srcPort.getSwitchPort());
+                newHostEvent.removeAttachmentPoint(dstPort.getSwitchPort());
+                newHostEvent.freeze();
+
+                // TODO should this event be fired inside #addHost?
+                if (newHostEvent.getAttachmentPoints().isEmpty()) {
+                    // No more attachment point left -> remove Host
+                    removeHost(hostEvent);
+                } else {
+                    // Update Host
+                    addHost(newHostEvent);
+                }
             }
-        } else {
-            // TODO: Update the link attributes
-            log.debug("Update link attributes");
-            LinkImpl impl = (LinkImpl) link;
-            impl.replaceStringAttributes(linkEvent);
         }
 
+        if (log.isDebugEnabled()) {
+            LinkEvent link = topology.getLinkEvent(linkEvent.getLinkTuple());
+            if (link != null) {
+                log.debug("Update {}", linkEvent);
+            } else {
+                log.debug("Added {}", linkEvent);
+            }
+        }
+        topology.putLink(linkEvent.freeze());
         apiAddedLinkEvents.add(linkEvent);
     }
 
@@ -1078,25 +1106,29 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             return;
         }
 
-        //
-        // Remove the Link instance from the Destination Port Incoming Link
-        // and the Source Port Outgoing Link.
-        //
-        Link link = dstPort.getIncomingLink();
-        if (link == null) {
-            log.warn("Link {} already removed on destination Port", linkEvent);
-        }
-        link = srcPort.getOutgoingLink();
-        if (link == null) {
-            log.warn("Link {} already removed on src Port", linkEvent);
+        LinkEvent linkInTopo = topology.getLinkEvent(linkEvent.getLinkTuple(),
+                linkEvent.getType());
+        if (linkInTopo == null) {
+            log.warn("Link {} already removed, ignoring", linkEvent);
+            return;
         }
 
-        // TODO should we check that we get the same link from each port?
-        if (link != null) {
-            topology.removeLink(link);
+        if (log.isDebugEnabled()) {
+            // only do sanity check on debug level
+
+            Link linkIn = dstPort.getIncomingLink(linkEvent.getType());
+            if (linkIn == null) {
+                log.warn("Link {} already removed on destination Port", linkEvent);
+            }
+            Link linkOut = srcPort.getOutgoingLink(linkEvent.getType());
+            if (linkOut == null) {
+                log.warn("Link {} already removed on src Port", linkEvent);
+            }
         }
 
-        apiRemovedLinkEvents.add(linkEvent);
+        log.debug("Removed {}", linkInTopo);
+        topology.removeLink(linkEvent.getLinkTuple(), linkEvent.getType());
+        apiRemovedLinkEvents.add(linkInTopo);
     }
 
     /**
@@ -1104,23 +1136,23 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      * <p/>
      * TODO: Host-related work is incomplete.
      * TODO: Eventually, we might need to consider reordering
-     * or addLink() and addDevice() events on the same port.
+     * or {@link #addLink(LinkEvent)} and {@link #addHost(HostEvent)} events on the same port.
      *
      * @param hostEvent the HostEvent with the host to add.
      */
     @GuardedBy("topology.writeLock")
     private void addHost(HostEvent hostEvent) {
-        log.debug("Adding a host to the topology with mac {}", hostEvent.getMac());
-        Host host = topology.getHostByMac(hostEvent.getMac());
 
-        if (host == null) {
-            log.debug("Existing host was not found in the Topology: Adding new host: mac {}", hostEvent.getMac());
-            host = new HostImpl(topology, hostEvent.getMac());
-        }
+        // TODO Decide how to handle update scenario.
+        // If the new HostEvent has less attachment point compared to
+        // existing HostEvent, what should the event be?
+        // - AddHostEvent with some attachment point removed? (current behavior)
 
-        HostImpl hostImpl = (HostImpl) host;
+        // create unfrozen copy
+        //  for removing attachment points which already has a link
+        HostEvent modifiedHostEvent = new HostEvent(hostEvent);
 
-        // Process each attachment point
+        // Verify each attachment point
         boolean attachmentFound = false;
         for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
             // XXX domain knowledge: Port must exist before Host
@@ -1129,32 +1161,49 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             // Attached Ports must exist
             Port port = topology.getPort(swp.getDpid(), swp.getPortNumber());
             if (port == null) {
+                log.debug("{} reordered because port {} was not there", hostEvent, swp);
                 // Reordered event: delay the event in local cache
                 ByteBuffer id = hostEvent.getIDasByteBuffer();
                 reorderedAddedHostEvents.put(id, hostEvent);
-                continue;
+                return; // should not continue if re-applying later
             }
             // Attached Ports must not have Link
             if (port.getOutgoingLink() != null ||
                     port.getIncomingLink() != null) {
-                log.warn("Link (Out:{},In:{}) exist on the attachment point, skipping mutation.",
-                        port.getOutgoingLink(),
-                        port.getIncomingLink());
+                log.warn("Link (Out:{},In:{}) exist on the attachment point. "
+                        + "Ignoring this attachmentpoint ({}) from {}.",
+                        port.getOutgoingLink(), port.getIncomingLink(),
+                        swp, modifiedHostEvent);
+                // FIXME Should either reject, reorder this HostEvent,
+                //       or remove attachment point from given HostEvent
+                // Removing attachment point from given HostEvent for now.
+                modifiedHostEvent.removeAttachmentPoint(swp);
                 continue;
             }
 
-            // Add Host <-> Port attachment
-            hostImpl.addAttachmentPoint(port);
             attachmentFound = true;
         }
 
-        hostImpl.setLastSeenTime(hostEvent.getLastSeenTime());
-
         // Update the host in the topology
         if (attachmentFound) {
-            log.debug("Storing the host info into the Topology: mac {}", hostEvent.getMac());
-            topology.putHost(host);
-            apiAddedHostEvents.add(hostEvent);
+            if (modifiedHostEvent.getAttachmentPoints().isEmpty()) {
+                log.warn("No valid attachment point left. Ignoring."
+                        + "original: {}, modified: {}", hostEvent, modifiedHostEvent);
+                // TODO Should we call #removeHost to trigger remove event?
+                //      only if this call is update.
+                return;
+            }
+
+            if (log.isDebugEnabled()) {
+                HostEvent host = topology.getHostEvent(hostEvent.getMac());
+                if (host != null) {
+                    log.debug("Update {}", modifiedHostEvent);
+                } else {
+                    log.debug("Added {}", modifiedHostEvent);
+                }
+            }
+            topology.putHost(modifiedHostEvent.freeze());
+            apiAddedHostEvents.add(modifiedHostEvent);
         }
     }
 
@@ -1167,15 +1216,17 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      */
     @GuardedBy("topology.writeLock")
     private void removeHost(HostEvent hostEvent) {
-        log.debug("Removing a host from the topology: mac {}", hostEvent.getMac());
-        Host host = topology.getHostByMac(hostEvent.getMac());
-        if (host == null) {
+
+        final MACAddress mac = hostEvent.getMac();
+        HostEvent hostInTopo = topology.getHostEvent(mac);
+        if (hostInTopo == null) {
             log.warn("Host {} already removed, ignoring", hostEvent);
             return;
         }
 
-        topology.removeHost(host);
-        apiRemovedHostEvents.add(hostEvent);
+        log.debug("Removed {}", hostInTopo);
+        topology.removeHost(mac);
+        apiRemovedHostEvents.add(hostInTopo);
     }
 
     /**
@@ -1242,15 +1293,5 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         }
 
         return collection;
-    }
-    /**
-     * Replaces the internal datastore instance.
-     *
-     * @param dataStore instance
-     *
-     * @exclude Backdoor for unit testing purpose only, do not use.
-     */
-    void debugReplaceDataStore(final TopologyDatastore dataStoreService) {
-        this.datastore = dataStoreService;
     }
 }

@@ -9,50 +9,29 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
- * Host Object stored in In-memory Topology.
+ * Handler to Host object stored in In-memory Topology snapshot.
+ * <p/>
  */
 public class HostImpl extends TopologyObject implements Host {
 
-    //////////////////////////////////////////////////////
-    /// Topology element attributes
-    ///  - any changes made here needs to be replicated.
-    //////////////////////////////////////////////////////
-    private HostEvent deviceObj;
+    private final MACAddress id;
 
 
     /**
-     * Creates a Host object based on {@link HostEvent}.
-     *
-     * @param topology Topology instance this object belongs to
-     * @param scHost self contained {@link HostEvent}
-     */
-    public HostImpl(Topology topology, HostEvent scHost) {
-        super(topology);
-        Validate.notNull(scHost);
-
-        // TODO should we assume deviceObj is already frozen before this call
-        //      or expect attribute update will happen after .
-        if (scHost.isFrozen()) {
-            this.deviceObj = scHost;
-        } else {
-            this.deviceObj = new HostEvent(scHost);
-            this.deviceObj.freeze();
-        }
-    }
-
-    /**
-     * Creates a Host object with empty attributes.
+     * Creates a Host handler object.
      *
      * @param topology Topology instance this object belongs to
      * @param mac MAC address of the host
      */
-    public HostImpl(Topology topology, MACAddress mac) {
-        this(topology, new HostEvent(mac).freeze());
+    HostImpl(TopologyInternal topology, MACAddress mac) {
+        super(topology);
+        Validate.notNull(mac);
+        this.id = mac;
     }
 
     @Override
     public MACAddress getMacAddress() {
-        return this.deviceObj.getMac();
+        return id;
     }
 
     @Override
@@ -60,7 +39,7 @@ public class HostImpl extends TopologyObject implements Host {
         List<Port> ports = new ArrayList<>();
         topology.acquireReadLock();
         try {
-            for (SwitchPort swp : this.deviceObj.getAttachmentPoints()) {
+            for (SwitchPort swp : getHostEvent().getAttachmentPoints()) {
                 Port p = this.topology.getPort(swp);
                 if (p != null) {
                     ports.add(p);
@@ -74,7 +53,7 @@ public class HostImpl extends TopologyObject implements Host {
 
     @Override
     public long getLastSeenTime() {
-        return deviceObj.getLastSeenTime();
+        return this.topology.getHostEvent(id).getLastSeenTime();
     }
 
     @Override
@@ -82,43 +61,14 @@ public class HostImpl extends TopologyObject implements Host {
         return getMacAddress().toString();
     }
 
-    // TODO we may no longer need this. confirm and delete later.
-    void setLastSeenTime(long lastSeenTime) {
-        // XXX Following will make this instance thread unsafe. Need to use AtomicRef.
-        HostEvent updated = new HostEvent(this.deviceObj);
-        updated.setLastSeenTime(lastSeenTime);
-        updated.freeze();
-        this.deviceObj = updated;
-    }
-
     /**
-     * Only {@link TopologyManager} should use this method.
+     * Gets the current HostEvent.
      *
-     * @param port the port that the device is attached to
+     * @return HostEvent
      */
-    void addAttachmentPoint(Port port) {
-        // XXX Following will make this instance thread unsafe. Need to use AtomicRef.
-        HostEvent updated = new HostEvent(this.deviceObj);
-        updated.removeAttachmentPoint(port.asSwitchPort());
-        updated.addAttachmentPoint(port.asSwitchPort());
-        updated.freeze();
-        this.deviceObj = updated;
+    private HostEvent getHostEvent() {
+        return this.topology.getHostEvent(id);
     }
-
-    /**
-     * Only {@link TopologyManager} should use this method.
-     *
-     * @param port the port that the device is attached to
-     */
-    boolean removeAttachmentPoint(Port port) {
-        // XXX Following will make this instance thread unsafe. Need to use AtomicRef.
-        HostEvent updated = new HostEvent(this.deviceObj);
-        final boolean result = updated.removeAttachmentPoint(port.asSwitchPort());
-        updated.freeze();
-        this.deviceObj = updated;
-        return result;
-    }
-
 
     /**
      * Returns the type of topology object.

@@ -14,53 +14,30 @@ import net.onrc.onos.core.util.PortNumber;
 import org.apache.commons.lang.Validate;
 
 /**
- * Switch Object stored in In-memory Topology.
+ * Handler to Switch object stored in In-memory Topology snapshot.
  * <p/>
- * TODO REMOVE following design memo: This object itself may hold the DBObject,
- * but this Object itself will not issue any read/write to the DataStore.
+ *
  */
 public class SwitchImpl extends TopologyObject implements Switch {
 
-    //////////////////////////////////////////////////////
-    /// Topology element attributes
-    ///  - any changes made here needs to be replicated.
-    //////////////////////////////////////////////////////
-    private SwitchEvent switchObj;
+    private final Dpid id;
 
 
     /**
-     * Creates a Switch object with empty attributes.
+     * Creates a Switch handler object.
      *
      * @param topology Topology instance this object belongs to
      * @param dpid DPID
      */
-    public SwitchImpl(Topology topology, Dpid dpid) {
-        this(topology, new SwitchEvent(dpid).freeze());
-    }
-
-    /**
-     * Creates a Switch object based on {@link SwitchEvent}.
-     *
-     * @param topology Topology instance this object belongs to
-     * @param scSw self contained {@link SwitchEvent}
-     */
-    public SwitchImpl(Topology topology, SwitchEvent scSw) {
+    SwitchImpl(TopologyInternal topology, Dpid dpid) {
         super(topology);
-        Validate.notNull(scSw);
-
-        // TODO should we assume switchObj is already frozen before this call
-        //      or expect attribute update will happen after .
-        if (scSw.isFrozen()) {
-            this.switchObj = scSw;
-        } else {
-            this.switchObj = new SwitchEvent(scSw);
-            this.switchObj.freeze();
-        }
+        Validate.notNull(dpid);
+        this.id = dpid;
     }
 
     @Override
     public Dpid getDpid() {
-        return switchObj.getDpid();
+        return this.id;
     }
 
     @Override
@@ -121,18 +98,6 @@ public class SwitchImpl extends TopologyObject implements Switch {
         return hosts;
     }
 
-    void replaceStringAttributes(SwitchEvent updated) {
-        Validate.isTrue(this.getDpid().equals(updated.getDpid()),
-                "Wrong SwitchEvent given.");
-
-        // XXX simply replacing whole self-contained object for now
-        if (updated.isFrozen()) {
-            this.switchObj = updated;
-        } else {
-            this.switchObj = new SwitchEvent(updated).freeze();
-        }
-    }
-
     @Override
     public Iterable<Link> getOutgoingLinks() {
         LinkedList<Link> links = new LinkedList<Link>();
@@ -159,7 +124,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public String getStringAttribute(String attr) {
-        return this.switchObj.getStringAttribute(attr);
+        return this.topology.getSwitchEvent(getDpid()).getStringAttribute(attr);
     }
 
     @Override
@@ -174,7 +139,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public Map<String, String> getAllStringAttributes() {
-        return this.switchObj.getAllStringAttributes();
+        return this.topology.getSwitchEvent(getDpid()).getAllStringAttributes();
     }
 
     @Override
