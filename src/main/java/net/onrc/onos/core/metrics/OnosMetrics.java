@@ -202,7 +202,7 @@ public final class OnosMetrics {
      * @param component component the Counter is defined in
      * @param feature feature the Counter is defined in
      * @param metricName local name of the metric
-     * @return Counter Meteric
+     * @return the created Counter Meteric
      */
     public static Counter createCounter(final MetricsComponent component,
                                         final MetricsFeature feature,
@@ -217,7 +217,7 @@ public final class OnosMetrics {
      * @param component component the Histogram is defined in
      * @param feature feature the Histogram is defined in
      * @param metricName local name of the metric
-     * @return Histogram Metric
+     * @return the created Histogram Metric
      */
     public static Histogram createHistogram(final MetricsComponent component,
                                             final MetricsFeature feature,
@@ -232,7 +232,7 @@ public final class OnosMetrics {
      * @param component component the Timer is defined in
      * @param feature feature the Timeer is defined in
      * @param metricName local name of the metric
-     * @return Timer Metric
+     * @return the created Timer Metric
      */
     public static Timer createTimer(final MetricsComponent component,
                                     final MetricsFeature feature,
@@ -247,7 +247,7 @@ public final class OnosMetrics {
      * @param component component the Meter is defined in
      * @param feature feature the Meter is defined in
      * @param metricName local name of the metric
-     * @return Meter Metric
+     * @return the created Meter Metric
      */
     public static Meter createMeter(final MetricsComponent component,
                                     final MetricsFeature feature,
@@ -262,16 +262,19 @@ public final class OnosMetrics {
      * system.
      *
      * @param component component the Metric is defined in
-     * @param feature feature the metric is defined in
+     * @param feature feature the Metric is defined in
      * @param metricName local name of the metric
      * @param metric Metric to register
+     * @return the registered Metric
      */
-    public static void registerMetric(final MetricsComponent component,
-                                      final MetricsFeature feature,
-                                      final String metricName,
-                                      final Metric metric) {
+    public static <T extends Metric> T registerMetric(
+                                        final MetricsComponent component,
+                                        final MetricsFeature feature,
+                                        final String metricName,
+                                        final T metric) {
         final String name = generateName(component, feature, metricName);
         METRICS_REGISTRY.register(name, metric);
+        return metric;
     }
 
     /**
