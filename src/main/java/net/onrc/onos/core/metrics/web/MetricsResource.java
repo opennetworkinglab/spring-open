@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * REST APIs for Metrics objects.
@@ -27,7 +28,7 @@ public class MetricsResource extends ServerResource {
      * Metric filter to allow selecting metrics by name.
      */
     private static class MetricNameFilter implements MetricFilter {
-        final HashSet<String> names;
+        private final Set<String> names;
 
         /**
          * Hide default constructor.

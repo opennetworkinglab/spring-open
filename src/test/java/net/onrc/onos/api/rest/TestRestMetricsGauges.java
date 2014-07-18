@@ -93,6 +93,9 @@ public class TestRestMetricsGauges extends TestRestMetrics {
                         }
                     };
 
+    /**
+     * Registers the test Gauge objects.
+     */
     private void registerGauges() {
         OnosMetrics.registerMetric(COMPONENT,
                                    FEATURE,
@@ -141,7 +144,7 @@ public class TestRestMetricsGauges extends TestRestMetrics {
      * @throws JSONException if any JSON operation fails
      */
     @Test
-    public void testGauges() throws Exception {
+    public void testGauges() throws JSONException {
         registerGauges();
 
         //  Read the metrics from the REST API for the test data

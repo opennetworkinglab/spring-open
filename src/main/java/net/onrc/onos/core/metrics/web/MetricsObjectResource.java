@@ -19,6 +19,12 @@ import java.util.List;
 @SuppressWarnings("rawtypes")
 public class MetricsObjectResource {
 
+    private List<TimerObjectResource> timers;
+    private List<GaugeObjectResource> gauges;
+    private List<CounterObjectResource> counters;
+    private List<MeterObjectResource> meters;
+    private List<HistogramObjectResource> histograms;
+
     /**
      * Base Metric object that all metrics inherit from.  Defines common
      * attributes.
@@ -184,13 +190,6 @@ public class MetricsObjectResource {
             return histogram;
         }
     }
-
-
-    private List<TimerObjectResource> timers;
-    private List<GaugeObjectResource> gauges;
-    private List<CounterObjectResource> counters;
-    private List<MeterObjectResource> meters;
-    private List<HistogramObjectResource> histograms;
 
     /**
      * Gets the list of Gauge objects.

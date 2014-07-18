@@ -11,6 +11,9 @@ import org.restlet.routing.Router;
 public class MetricsWebRoutable implements RestletRoutable {
     /**
      * Creates the Restlet router and binds to the proper resources.
+     *
+     * @param context Context to use for the restlet
+     * @return the router for Metrics REST calls
      */
     @Override
     public Restlet getRestlet(Context context) {
@@ -22,7 +25,9 @@ public class MetricsWebRoutable implements RestletRoutable {
 
 
     /**
-     * Sets the base path for the Metrics.
+     * Defines the base path for the Metrics.
+     *
+     * @return base path for Metrics REST APIs
      */
     @Override
     public String basePath() {

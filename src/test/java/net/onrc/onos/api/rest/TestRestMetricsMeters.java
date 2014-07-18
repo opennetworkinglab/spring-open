@@ -73,9 +73,9 @@ public class TestRestMetricsMeters extends TestRestMetrics {
             OnosMetrics.generateName(COMPONENT, FEATURE, METER3_NAME);
     private static final int METER3_ITERATIONS = 100;
 
-    private final Meter meter1 = new Meter(mockClock);
-    private final Meter meter2 = new Meter(mockClock);
-    private final Meter meter3 = new Meter(mockClock);
+    private final Meter meter1 = new Meter(getMockClock());
+    private final Meter meter2 = new Meter(getMockClock());
+    private final Meter meter3 = new Meter(getMockClock());
 
     /**
      * Fill in test data for a given Meter.

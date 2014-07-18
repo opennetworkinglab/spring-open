@@ -96,6 +96,9 @@ public class TestRestMetrics extends TestRest {
         }
     }
 
+    /**
+     * Tick time of the mock clock, in milliseconds.
+     */
     public static final int MOCK_CLOCK_MILISECONDS_PER_TICK = 50;
 
     /**
@@ -104,7 +107,7 @@ public class TestRestMetrics extends TestRest {
      * MOCK_CLOCK_MILISECONDS_PER_TICK which is currently defined for 50
      * millisecond ticks.
      */
-    protected final Clock mockClock = new Clock() {
+    private final Clock mockClock = new Clock() {
         private long currentTime = 0;
 
         @Override
@@ -116,4 +119,13 @@ public class TestRestMetrics extends TestRest {
             return currentTime;
         }
     };
+
+    /**
+     * Fetches a mock clock that can be used for Timers and Meters.
+     *
+     * @return Mock clock base on 50 msec ticks
+     */
+    public Clock getMockClock() {
+        return mockClock;
+    }
 }

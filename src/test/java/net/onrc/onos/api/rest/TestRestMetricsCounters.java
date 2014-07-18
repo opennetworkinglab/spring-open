@@ -118,7 +118,7 @@ public class TestRestMetricsCounters extends TestRestMetrics {
     /**
      * Test the REST APIs for Metrics Counter objects.
      *
-     * @throws JSONException
+     * @throws JSONException if JSON processing fails
      */
     @Test
     public void testCounters() throws JSONException {

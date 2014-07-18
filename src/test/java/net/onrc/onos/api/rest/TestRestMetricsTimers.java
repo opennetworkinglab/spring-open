@@ -69,8 +69,8 @@ public class TestRestMetricsTimers extends TestRestMetrics {
     private static final int RESERVOIR_SIZE = 100;
     private Reservoir reservoir = new SlidingWindowReservoir(RESERVOIR_SIZE);
 
-    private final Timer timer1 = new Timer(reservoir, mockClock);
-    private final Timer timer2 = new Timer(reservoir, mockClock);
+    private final Timer timer1 = new Timer(reservoir, getMockClock());
+    private final Timer timer2 = new Timer(reservoir, getMockClock());
 
     /**
      * Fill in test data in the Timer objects.

@@ -146,9 +146,11 @@ public class TestRestTopologyGet extends TestRestTopology {
      * Test that the GET of all Topology REST call returns the proper result.
      * The call to get all Topology should return 3 items (switches, links,
      * and hosts), an HTTP status of OK, and the proper topology data.
+     *
+     * @throws JSONException if JSON processing fails
      */
     @Test
-    public void testFetchOfAllTopology() throws Exception {
+    public void testFetchOfAllTopology() throws JSONException {
         final ClientResource client = new ClientResource(getBaseRestTopologyUrl());
         final JSONObject topology = getJSONObject(client);
 
@@ -174,9 +176,11 @@ public class TestRestTopologyGet extends TestRestTopology {
     /**
      * Test that the GET of all switches REST call returns the proper result.
      * The call to get all switches should return the correct switch data.
+     *
+     * @throws JSONException if JSON processing fails
      */
     @Test
-    public void testFetchOfAllSwitches() throws Exception {
+    public void testFetchOfAllSwitches() throws JSONException {
         final ClientResource client = new ClientResource(getBaseRestTopologyUrl() + "/switches");
         final JSONArray switches = getJSONArray(client);
 
@@ -189,9 +193,11 @@ public class TestRestTopologyGet extends TestRestTopology {
     /**
      * Test that the GET of all links REST call returns the proper result.
      * The call to get all links should return the proper link data.
+     *
+     * @throws JSONException if JSON processing fails
      */
     @Test
-    public void testFetchOfAllLinks() throws Exception {
+    public void testFetchOfAllLinks() throws JSONException {
         final ClientResource client = new ClientResource(getBaseRestTopologyUrl() + "/links");
         final JSONArray links = getJSONArray(client);
 
@@ -204,9 +210,11 @@ public class TestRestTopologyGet extends TestRestTopology {
     /**
      * Test that the GET of all hosts REST call returns the proper result.
      * The call to get all hosts should return no hosts.
+     *
+     * @throws JSONException if JSON processing fails
      */
     @Test
-    public void testFetchOfAllHosts() throws Exception {
+    public void testFetchOfAllHosts() throws JSONException {
         final ClientResource client = new ClientResource(getBaseRestTopologyUrl() + "/hosts");
         final JSONArray hosts = getJSONArray(client);
 

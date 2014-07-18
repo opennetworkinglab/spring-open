@@ -48,6 +48,17 @@ import java.util.concurrent.ConcurrentMap;
 public final class OnosMetrics {
 
     /**
+     * Registry to hold the Components defined in the system.
+     */
+    private static ConcurrentMap<String, MetricsComponent> componentsRegistry =
+            new ConcurrentHashMap<>();
+
+    /**
+     * Registry for the Metrics objects created in the system.
+     */
+    private static final MetricRegistry METRICS_REGISTRY = new MetricRegistry();
+
+    /**
      * Hide constructor.  The only way to get the registry is through the
      * singleton getter.
      */
@@ -95,11 +106,17 @@ public final class OnosMetrics {
         private final String name;
 
         /**
+         * Registry to hold the Features defined in this Component.
+         */
+        private final ConcurrentMap<String, MetricsFeature> featuresRegistry =
+                new ConcurrentHashMap<>();
+
+        /**
          * Constructs a component from a name.
          *
          * @param newName name of the component
          */
-        private Component(final String newName) {
+        Component(final String newName) {
             name = newName;
         }
 
@@ -107,12 +124,6 @@ public final class OnosMetrics {
         public String getName() {
             return name;
         }
-
-        /**
-         * Registry to hold the Features defined in this Component.
-         */
-        private ConcurrentMap<String, MetricsFeature> featuresRegistry =
-                new ConcurrentHashMap<>();
 
         @Override
         public MetricsFeature registerFeature(final String featureName) {
@@ -140,7 +151,7 @@ public final class OnosMetrics {
          *
          * @param newName name of the Feature
          */
-        private Feature(final String newName) {
+        Feature(final String newName) {
             name = newName;
         }
 
@@ -149,12 +160,6 @@ public final class OnosMetrics {
             return name;
         }
     }
-
-    /**
-     * Registry to hold the Components defined in the system.
-     */
-    private static ConcurrentMap<String, MetricsComponent> componentsRegistry =
-            new ConcurrentHashMap<>();
 
     /**
      * Registers a component.
@@ -173,11 +178,6 @@ public final class OnosMetrics {
         }
         return component;
     }
-
-    /**
-     * Registry for the Metrics objects created in the system.
-     */
-    private static final MetricRegistry METRICS_REGISTRY = new MetricRegistry();
 
     /**
      * Generates a name for a Metric from its component and feature.
