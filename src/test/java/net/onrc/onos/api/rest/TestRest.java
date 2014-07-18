@@ -1,6 +1,8 @@
 package net.onrc.onos.api.rest;
 
+import com.codahale.metrics.MetricFilter;
 import net.floodlightcontroller.restserver.RestletRoutable;
+import net.onrc.onos.core.metrics.OnosMetrics;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -70,6 +72,7 @@ public class TestRest {
 
     public void tearDown() {
         getRestApiServer().stopServer();
+        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     /**

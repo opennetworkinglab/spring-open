@@ -1,12 +1,7 @@
 package net.onrc.onos.api.rest;
 
 import com.codahale.metrics.Clock;
-import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.floodlightcontroller.core.module.FloodlightModuleException;
-import net.onrc.onos.core.intent.runtime.IntentTestMocks;
-import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import net.onrc.onos.core.metrics.web.MetricsWebRoutable;
-import net.onrc.onos.core.topology.ITopologyService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,54 +18,27 @@ import static org.hamcrest.Matchers.notNullValue;
  * for metrics should inherit from this class.
  */
 public class TestRestMetrics extends TestRest {
-
-    private IntentTestMocks mocks;
-
     /**
-     * Fetch the Intent mocking object.
-     *
-     * @return intent mocking object
-     */
-    IntentTestMocks getMocks() {
-        return mocks;
-    }
-
-    /**
-     * Create the web server and mocks required for the topology tests.
+     * Creates the web server and mocks required for the metrics tests.
      */
     @Override
     public void setUp() {
-        mocks = new IntentTestMocks();
-        mocks.setUpIntentMocks();
-
         addRestlet(new MetricsWebRoutable());
         super.setUp();
-
-        final PathCalcRuntimeModule runtime = new PathCalcRuntimeModule();
-        final FloodlightModuleContext moduleContext = getMocks().getModuleContext();
-        try {
-            runtime.init(moduleContext);
-        } catch (FloodlightModuleException floodlightEx) {
-            throw new IllegalArgumentException(floodlightEx);
-        }
-        runtime.startUp(moduleContext);
-
-        getRestApiServer().addAttribute(ITopologyService.class.getCanonicalName(),
-                mocks.getTopologyService());
     }
 
     /**
-     * Remove anything that will interfere with the next test running correctly.
+     * Removes anything that will interfere with the next test running
+     * correctly.
      * Shuts down the test REST web server and removes the mocks.
      */
     @Override
     public void tearDown() {
-        getMocks().tearDownIntentMocks();
         super.tearDown();
     }
 
     /**
-     * Fetch the base URL for Metrics REST APIs.
+     * Fetches the base URL for Metrics REST APIs.
      *
      * @return base URL
      */
@@ -79,7 +47,7 @@ public class TestRestMetrics extends TestRest {
     }
 
     /**
-     * Check that the given list of elements in a JSON object are all 0 length
+     * Checks that the given list of elements in a JSON object are all 0 length
      * arrays.
      *
      * @param elementNames names of top level elements to check

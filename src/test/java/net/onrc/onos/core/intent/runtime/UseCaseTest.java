@@ -28,6 +28,7 @@ import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
+import net.onrc.onos.core.metrics.OnosMetrics;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.ITopologyListener;
@@ -40,6 +41,7 @@ import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
 
+import com.codahale.metrics.MetricFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -130,6 +132,7 @@ public class UseCaseTest {
         verify(controllerRegistryService);
         PowerMock.verify(persistIntent, PersistIntent.class);
         verify(restApi);
+        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     private void showResult(PathIntentMap intents) {

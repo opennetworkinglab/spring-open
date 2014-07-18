@@ -3,7 +3,6 @@ package net.onrc.onos.api.rest;
 import com.codahale.metrics.Reservoir;
 import com.codahale.metrics.SlidingWindowReservoir;
 import com.codahale.metrics.Timer;
-import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import net.onrc.onos.core.metrics.OnosMetrics;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,7 +11,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.resource.ClientResource;
 
@@ -27,9 +25,7 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * Unit tests for REST APIs for Timer Metrics.
  */
-
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(PathCalcRuntimeModule.class)
 public class TestRestMetricsTimers extends TestRestMetrics {
 
     /**

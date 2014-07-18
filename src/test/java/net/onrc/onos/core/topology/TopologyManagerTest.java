@@ -18,12 +18,14 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
+import net.onrc.onos.core.metrics.OnosMetrics;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.onrc.onos.core.util.TestUtils;
 
+import com.codahale.metrics.MetricFilter;
 import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
@@ -126,7 +128,7 @@ public class TopologyManagerTest {
 
     @After
     public void tearDown() throws Exception {
-
+        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     /**

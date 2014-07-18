@@ -26,6 +26,9 @@ import net.onrc.onos.core.datastore.topology.KVDevice;
 import net.onrc.onos.core.datastore.topology.KVLink;
 import net.onrc.onos.core.datastore.topology.KVPort;
 import net.onrc.onos.core.datastore.topology.KVSwitch;
+import net.onrc.onos.core.metrics.OnosMetrics;
+import net.onrc.onos.core.metrics.OnosMetrics.MetricsComponent;
+import net.onrc.onos.core.metrics.OnosMetrics.MetricsFeature;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.EventEntry;
@@ -36,6 +39,8 @@ import net.onrc.onos.core.util.serializers.KryoFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Meter;
 import com.esotericsoftware.kryo.Kryo;
 
 /**
@@ -67,6 +72,32 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     private final IControllerRegistryService registryService;
     private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
     private Kryo kryo = KryoFactory.newKryoObject();
+
+    //
+    // Metrics
+    //
+    private static final MetricsComponent METRICS_COMPONENT =
+        OnosMetrics.registerComponent("Topology");
+    private static final MetricsFeature METRICS_FEATURE_EVENT_NOTIFICATION =
+        METRICS_COMPONENT.registerFeature("EventNotification");
+    //
+    // Timestamp of the last Topology event (system nanoseconds)
+    private volatile long lastEventTimestamp = 0;
+    private final Gauge<Long> gaugeLastEventTimestamp =
+        OnosMetrics.registerMetric(METRICS_COMPONENT,
+                                   METRICS_FEATURE_EVENT_NOTIFICATION,
+                                   "LastEventTimestamp",
+                                   new Gauge<Long>() {
+                                       @Override
+                                       public Long getValue() {
+                                           return lastEventTimestamp;
+                                       }
+                                   });
+    // Rate of the Topology events published to the Topology listeners
+    private final Meter listenerEventRate =
+        OnosMetrics.createMeter(METRICS_COMPONENT,
+                                METRICS_FEATURE_EVENT_NOTIFICATION,
+                                "ListenerEventRate");
 
     //
     // Local state for keeping track of reordered events.
@@ -466,11 +497,23 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             }
         }
 
+        //
+        // Update the metrics
+        //
+        long totalEvents =
+            apiAddedSwitchEvents.size() + apiRemovedSwitchEvents.size() +
+            apiAddedPortEvents.size() + apiRemovedPortEvents.size() +
+            apiAddedLinkEvents.size() + apiRemovedLinkEvents.size() +
+            apiAddedHostEvents.size() + apiRemovedHostEvents.size();
+        this.listenerEventRate.mark(totalEvents);
+        this.lastEventTimestamp = System.nanoTime();
+
+        //
         // Deliver the events
-        long timestamp = System.nanoTime();
+        //
         for (ITopologyListener listener : this.topologyListeners) {
             TopologyEvents events =
-                new TopologyEvents(timestamp,
+                new TopologyEvents(lastEventTimestamp,
                                    kryo.copy(apiAddedSwitchEvents),
                                    kryo.copy(apiRemovedSwitchEvents),
                                    kryo.copy(apiAddedPortEvents),

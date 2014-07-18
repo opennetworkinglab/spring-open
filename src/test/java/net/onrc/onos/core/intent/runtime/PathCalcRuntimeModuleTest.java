@@ -18,6 +18,7 @@ import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
+import net.onrc.onos.core.metrics.OnosMetrics;
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.MockTopology;
@@ -27,6 +28,7 @@ import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
 
+import com.codahale.metrics.MetricFilter;
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
@@ -169,6 +171,7 @@ public class PathCalcRuntimeModuleTest {
     @After
     public void tearDown() {
         mocks.tearDownIntentMocks();
+        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     private static final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";

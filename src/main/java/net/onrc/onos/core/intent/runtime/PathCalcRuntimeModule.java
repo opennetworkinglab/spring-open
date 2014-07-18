@@ -37,6 +37,9 @@ import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
+import net.onrc.onos.core.metrics.OnosMetrics;
+import net.onrc.onos.core.metrics.OnosMetrics.MetricsComponent;
+import net.onrc.onos.core.metrics.OnosMetrics.MetricsFeature;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
@@ -49,6 +52,9 @@ import net.onrc.onos.core.util.LinkTuple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Meter;
 
 /**
  * The PathCalcRuntimeModule contains the PathCalcRuntime and PersistIntent.
@@ -105,6 +111,61 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     }
 
     /**
+     * A class to track the status of high-level intents.
+     * Currently, it is used for monitoring and measurement purposes.
+     */
+    private class HighLevelIntentsTracker implements ChangedListener {
+        @Override
+        public void intentsChange(LinkedList<ChangedEvent> events) {
+            //
+            // Process the events one-by-one and collect measurements.
+            //
+            for (ChangedEvent event : events) {
+                log.debug("HighLevelIntentsTracker: Intent ID {}, eventType {}, intentState {}",
+                          event.intent.getId(), event.eventType,
+                          event.intent.getState());
+
+                //
+                // Update the metrics
+                //
+                switch (event.eventType) {
+                case ADDED:
+                    break;
+                case REMOVED:
+                    break;
+                case STATE_CHANGED:
+                    IntentState state = event.intent.getState();
+                    switch (state) {
+                        case INST_REQ:
+                            break;
+                        case INST_ACK:
+                            intentAddProcessingRate.mark(1);
+                            intentAddEndTimestamp = System.nanoTime();
+                            break;
+                        case INST_NACK:
+                            break;
+                        case DEL_REQ:
+                            break;
+                        case DEL_ACK:
+                            intentRemoveProcessingRate.mark(1);
+                            intentRemoveEndTimestamp = System.nanoTime();
+                            break;
+                        case DEL_PENDING:
+                            break;
+                        case REROUTE_REQ:
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
      * A class to track the deletion of intents and purge them as appropriate.
      */
     private class DeleteIntentsTracker implements ChangedListener {
@@ -119,7 +180,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             //
             for (ChangedEvent event : events) {
                 log.debug("DeleteIntentsTracker: Intent ID {}, eventType {}",
-                          event.intent.getId() , event.eventType);
+                          event.intent.getId(), event.eventType);
                 PathIntent pathIntent = (PathIntent) pathIntents.getIntent(event.intent.getId());
                 if (pathIntent == null) {
                     continue;
@@ -209,6 +270,87 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     private ConcurrentMap<String, Intent> staleIntents = new ConcurrentHashMap<String, Intent>();
     private DeleteIntentsTracker deleteIntentsTracker = new DeleteIntentsTracker();
     private Set<String> removedApplicationIntentIds = new HashSet<String>();
+    private HighLevelIntentsTracker highLevelIntentsTracker = new HighLevelIntentsTracker();
+
+    //
+    // Metrics
+    //
+    private static final MetricsComponent METRICS_COMPONENT =
+        OnosMetrics.registerComponent("Intents");
+    private static final MetricsFeature METRICS_FEATURE_ADD_OPERATION =
+        METRICS_COMPONENT.registerFeature("AddOperation");
+    private static final MetricsFeature METRICS_FEATURE_REMOVE_OPERATION =
+        METRICS_COMPONENT.registerFeature("RemoveOperation");
+    //
+    // Timestamp of the incoming Add Intent API operation (system nanoseconds)
+    private volatile long intentAddBeginTimestamp = 0;
+    private final Gauge<Long> gaugeIntentAddBeginTimestamp =
+        OnosMetrics.registerMetric(METRICS_COMPONENT,
+                                   METRICS_FEATURE_ADD_OPERATION,
+                                   "BeginOperationTimestamp",
+                                   new Gauge<Long>() {
+                                       @Override
+                                       public Long getValue() {
+                                           return intentAddBeginTimestamp;
+                                       }
+                                   });
+    // Timestamp of the Add Intent operation completion (system nanoseconds)
+    private volatile long intentAddEndTimestamp = 0;
+    private final Gauge<Long> gaugeIntentAddEndTimestamp =
+        OnosMetrics.registerMetric(METRICS_COMPONENT,
+                                   METRICS_FEATURE_ADD_OPERATION,
+                                   "EndOperationTimestamp",
+                                   new Gauge<Long>() {
+                                       @Override
+                                       public Long getValue() {
+                                           return intentAddEndTimestamp;
+                                       }
+                                   });
+    // Timestamp of the incoming Remove Intent API operation (system nanoseconds)
+    private volatile long intentRemoveBeginTimestamp = 0;
+    private final Gauge<Long> gaugeIntentRemoveBeginTimestamp =
+        OnosMetrics.registerMetric(METRICS_COMPONENT,
+                                   METRICS_FEATURE_REMOVE_OPERATION,
+                                   "BeginOperationTimestamp",
+                                   new Gauge<Long>() {
+                                       @Override
+                                       public Long getValue() {
+                                           return intentRemoveBeginTimestamp;
+                                       }
+                                   });
+    // Timestamp of the Remove Intent operation completion (system nanoseconds)
+    private volatile long intentRemoveEndTimestamp = 0;
+    private final Gauge<Long> gaugeIntentRemoveEndTimestamp =
+        OnosMetrics.registerMetric(METRICS_COMPONENT,
+                                   METRICS_FEATURE_REMOVE_OPERATION,
+                                   "EndOperationTimestamp",
+                                   new Gauge<Long>() {
+                                       @Override
+                                       public Long getValue() {
+                                           return intentRemoveEndTimestamp;
+                                       }
+                                   });
+    //
+    // Rate of the incoming Add Intent API operations
+    private final Meter intentAddIncomingRate =
+        OnosMetrics.createMeter(METRICS_COMPONENT,
+                                METRICS_FEATURE_ADD_OPERATION,
+                                "IncomingRate");
+    // Rate of processing the Add Intent operations
+    private final Meter intentAddProcessingRate =
+        OnosMetrics.createMeter(METRICS_COMPONENT,
+                                METRICS_FEATURE_ADD_OPERATION,
+                                "ProcessingRate");
+    // Rate of the incoming Remove Intent API operations
+    private final Meter intentRemoveIncomingRate =
+        OnosMetrics.createMeter(METRICS_COMPONENT,
+                                METRICS_FEATURE_REMOVE_OPERATION,
+                                "IncomingRate");
+    // Rate of processing the Remove Intent operations
+    private final Meter intentRemoveProcessingRate =
+        OnosMetrics.createMeter(METRICS_COMPONENT,
+                                METRICS_FEATURE_REMOVE_OPERATION,
+                                "ProcessingRate");
 
     // ================================================================================
     // private methods
@@ -376,6 +518,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     @Override
     public void startUp(FloodlightModuleContext context) {
         highLevelIntents = new IntentMap();
+        highLevelIntents.addChangeListener(highLevelIntentsTracker);
         runtime = new PathCalcRuntime(topologyService.getTopology());
         pathIntents = new PathIntentMap();
         pathIntents.addChangeListener(deleteIntentsTracker);
@@ -398,6 +541,14 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     public boolean addApplicationIntents(
                         final String appId,
                         Collection<ApplicationIntent> appIntents) {
+        //
+        // Update the metrics
+        //
+        if (!appIntents.isEmpty()) {
+            this.intentAddBeginTimestamp = System.nanoTime();
+            this.intentAddIncomingRate.mark(appIntents.size());
+        }
+
         //
         // Process all intents one-by-one
         //
@@ -460,6 +611,11 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     @Override
     public boolean removeApplicationIntents(final String appId,
                                             Collection<String> intentIds) {
+        //
+        // Prepare the timestamp for metrics
+        //
+        long nanoTimeTimestamp = System.nanoTime();
+
         IntentMap intentMap = getHighLevelIntents();
         List<String> removeIntentIds = new LinkedList<String>();
 
@@ -481,8 +637,19 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             }
         }
 
+        //
+        // Update the metrics
+        //
+        if (!operations.isEmpty()) {
+            this.intentRemoveBeginTimestamp = nanoTimeTimestamp;
+            this.intentRemoveIncomingRate.mark(operations.size());
+        }
+
+        //
         // Purge intents
+        //
         if (!removeIntentIds.isEmpty()) {
+
             lock.lock(); // TODO optimize locking using smaller steps
             try {
                 highLevelIntents.purge(removeIntentIds);
@@ -501,14 +668,20 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
      */
     @Override
     public boolean removeAllApplicationIntents(final String appId) {
-        IntentMap intentMap = getHighLevelIntents();
-        List<String> removeIntentIds = new LinkedList<String>();
+        //
+        // Prepare the timestamp for metrics
+        //
+        long nanoTimeTimestamp = System.nanoTime();
+
+        Collection<Intent> allHighLevelIntents =
+            getHighLevelIntents().getAllIntents();
 
         //
         // Remove all intents
         //
+        List<String> removeIntentIds = new LinkedList<String>();
         IntentOperationList operations = new IntentOperationList();
-        for (Intent intent : intentMap.getAllIntents()) {
+        for (Intent intent : allHighLevelIntents) {
             if (intent.getState() == IntentState.INST_NACK) {
                 // TODO: A hack to remove intents stuck in INST_NACK state
                 removeIntentIds.add(intent.getId());
@@ -518,7 +691,17 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
             removedApplicationIntentIds.add(intent.getId());
         }
 
+        //
+        // Update the metrics
+        //
+        if (!operations.isEmpty()) {
+            this.intentRemoveBeginTimestamp = nanoTimeTimestamp;
+            this.intentRemoveIncomingRate.mark(operations.size());
+        }
+
+        //
         // Purge intents
+        //
         if (!removeIntentIds.isEmpty()) {
             lock.lock(); // TODO optimize locking using smaller steps
             try {
