@@ -22,9 +22,11 @@
 #####################################################
 
 ONOS_HOME=${ONOS_HOME:-$(cd `dirname $0`; pwd)}
+ONOS_VERSION=`grep -E "<version>.*</version>" ${ONOS_HOME}/pom.xml | head -n 1 | sed -e "s|<version>\(.*\)</version>|\\1|" | tr -d "[:space:]"`
 ONOS_CONF_DIR=${ONOS_CONF_DIR:-${ONOS_HOME}/conf}
 ONOS_CONF=${ONOS_CONF:-${ONOS_CONF_DIR}/onos_node.`hostname`.conf}
 ONOS_DUMP_DIR=${ONOS_DUMP_DIR:-${ONOS_HOME}}
+ONOS_JAR=${ONOS_JAR:-${ONOS_HOME}/lib/onos-${ONOS_VERSION}-jar-with-dependencies.jar}
 
 source ${ONOS_HOME}/scripts/common/utils.sh
 
@@ -182,8 +184,9 @@ JVM_OPTS="$JVM_OPTS -XX:+PrintFlagsFinal"
 
 # Set ONOS core main class
 MAIN_CLASS="net.onrc.onos.core.main.Main"
+MAIN_CLASS_FILE="${ONOS_HOME}/target/classes/net/onrc/onos/core/main/Main.class"
 
-MVN=${MVN:-mvn -o}
+MVN=${MVN:-mvn -B}
 ############################################
 
 
@@ -972,13 +975,6 @@ function stop-server {
 
 ## Functions related to ONOS core process ##
 function onos {
-  CPFILE=${ONOS_HOME}/.javacp.${ONOS_HOST_NAME}
-  if [ ! -f ${CPFILE} ]; then
-    echo "ONOS core needs to be built"
-    ${MVN} -f ${ONOS_HOME}/pom.xml compile
-  fi
-  JAVA_CP=`cat ${CPFILE}`
-  JAVA_CP="${JAVA_CP}:${ONOS_HOME}/target/classes"
 
   case "$1" in
     start*) # <- start, startnokill, startifdown
@@ -1010,6 +1006,30 @@ function onos {
 }
 
 function start-onos {
+
+  JAVA_CP=""
+  CPFILE=${ONOS_HOME}/.javacp.${ONOS_HOST_NAME}
+  if [ ! -f ${MAIN_CLASS_FILE} ]; then
+    # No .class
+    if [ -f ${ONOS_JAR} ]; then
+      echo "Starting ONOS using packaged jar file"
+      JAVA_CP="${JAVA_CP}:${ONOS_JAR}"
+    else
+      echo "Building ONOS from source"
+      ${MVN} -f ${ONOS_HOME}/pom.xml compile -T 1C
+    fi
+  else
+    # .class exists
+    if [ ! -f ${CPFILE} ]; then
+      echo "Building ONOS dependency classpath"
+      ${MVN} -f ${ONOS_HOME}/pom.xml -T 1C dependency:go-offline -Dsilent dependency:build-classpath -Dmdep.outputFile=${CPFILE}
+    fi
+  fi
+  if [ -f ${CPFILE} ]; then
+    JAVA_CP="${JAVA_CP}:`cat ${CPFILE}`"
+  fi
+  JAVA_CP="${JAVA_CP}:${ONOS_HOME}/target/classes"
+
   if [ ! -d ${LOGDIR} ]; then
     mkdir -p ${LOGDIR}
   fi
