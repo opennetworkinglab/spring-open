@@ -20,7 +20,7 @@ import net.onrc.onos.api.flowmanager.IFlow;
  * data-plane to satisfy those constraints.
  */
 public abstract class Intent implements IBatchOperationTarget {
-    protected String id;
+    protected final IntentId id;
 
     /**
      * Constructor.
@@ -28,7 +28,7 @@ public abstract class Intent implements IBatchOperationTarget {
      * @param id ID for this Intent object.
      */
     public Intent(String id) {
-        this.id = id;
+        this.id = new IntentId(id);
     }
 
     /**
@@ -37,7 +37,7 @@ public abstract class Intent implements IBatchOperationTarget {
      * @return ID for this Intent object.
      */
     @Override
-    public String getId() {
+    public IntentId getId() {
         return id;
     }
 

@@ -8,6 +8,7 @@ import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.IFlow;
 import net.onrc.onos.api.intent.IIntentRuntimeService;
 import net.onrc.onos.api.intent.Intent;
+import net.onrc.onos.api.intent.IntentId;
 
 /**
  * Implementation of Intent-Runtime Service.
@@ -25,21 +26,21 @@ public class IntentRuntimeModule implements IIntentRuntimeService {
     }
 
     @Override
-    public boolean removeIntent(String id) {
+    public boolean removeIntent(IntentId id) {
         BatchOperation<Intent> ops = new BatchOperation<Intent>();
         ops.addRemoveOperation(id);
         return executeBatch(ops);
     }
 
     @Override
-    public boolean updateIntent(String id, Intent intent) {
+    public boolean updateIntent(IntentId id, Intent intent) {
         BatchOperation<Intent> ops = new BatchOperation<Intent>();
         ops.addUpdateOperation(id, intent);
         return executeBatch(ops);
     }
 
     @Override
-    public Intent getIntent(String id) {
+    public Intent getIntent(IntentId id) {
         // TODO Auto-generated method stub
         // - retrieves intents from global distributed maps
         return null;

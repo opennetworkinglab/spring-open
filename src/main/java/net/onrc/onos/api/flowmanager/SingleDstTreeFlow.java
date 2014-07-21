@@ -18,7 +18,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * address modifications or other the label-switching-like schemes.
  */
 public class SingleDstTreeFlow implements IFlow {
-    protected String id;
+    protected final FlowId id;
     protected PacketMatch match;
     protected Set<SwitchPort> ingressPorts;
     protected Tree tree;
@@ -35,7 +35,7 @@ public class SingleDstTreeFlow implements IFlow {
      */
     public SingleDstTreeFlow(String id, PacketMatch match,
             Collection<SwitchPort> ingressPorts, Tree tree, OutputAction outputAction) {
-        this.id = id;
+        this.id = new FlowId(id);
         this.match = match;
         this.ingressPorts = new HashSet<SwitchPort>(ingressPorts);
         this.tree = tree;
@@ -46,7 +46,7 @@ public class SingleDstTreeFlow implements IFlow {
     }
 
     @Override
-    public String getId() {
+    public FlowId getId() {
         return id;
     }
 

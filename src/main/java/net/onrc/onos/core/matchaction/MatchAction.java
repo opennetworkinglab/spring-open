@@ -18,7 +18,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * A filter and actions for traffic.
  */
 public class MatchAction implements IBatchOperationTarget {
-    protected String id;
+    protected final MatchActionId id;
     protected SwitchPort port;
     protected List<IMatch> matches;
     protected List<IAction> actions;
@@ -33,7 +33,7 @@ public class MatchAction implements IBatchOperationTarget {
      */
     public MatchAction(String id, SwitchPort port, List<IMatch> matches,
             List<IAction> actions) {
-        this.id = id;
+        this.id = new MatchActionId(id);
         this.port = port;
         this.matches = matches;
         this.actions = actions;
@@ -64,7 +64,7 @@ public class MatchAction implements IBatchOperationTarget {
     }
 
     @Override
-    public String getId() {
+    public MatchActionId getId() {
         return id;
     }
 

@@ -14,7 +14,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * layer.
  */
 public class SingleSrcTreeFlow implements IFlow {
-    protected String id;
+    protected final FlowId id;
     protected PacketMatch match;
     protected SwitchPort ingressPort;
     protected Tree tree;
@@ -32,7 +32,7 @@ public class SingleSrcTreeFlow implements IFlow {
      */
     public SingleSrcTreeFlow(String id, PacketMatch match,
             SwitchPort ingressPort, Tree tree, Set<Pair<Dpid, OutputAction>> outputActions) {
-        this.id = id;
+        this.id = new FlowId(id);
         this.match = match;
         this.ingressPort = ingressPort;
         this.tree = tree;
@@ -43,7 +43,7 @@ public class SingleSrcTreeFlow implements IFlow {
     }
 
     @Override
-    public String getId() {
+    public FlowId getId() {
         return id;
     }
 

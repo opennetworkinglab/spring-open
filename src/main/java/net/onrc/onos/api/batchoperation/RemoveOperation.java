@@ -4,16 +4,16 @@ package net.onrc.onos.api.batchoperation;
  * A remove-operation entry of a batch operation.
  */
 public class RemoveOperation implements BatchOperationEntry {
-    protected String targetId;
+    private final BatchOperationTargetId targetId;
 
     /**
      * Creates a remove-operation with specified target.
      *
-     * @param targetId The target object ID to be assigned to this
+     * @param id The target object ID to be assigned to this
      *        remove-operation.
      */
-    public RemoveOperation(String targetId) {
-        this.targetId = targetId;
+    public RemoveOperation(BatchOperationTargetId id) {
+        this.targetId = id;
     }
 
     @Override
@@ -26,7 +26,7 @@ public class RemoveOperation implements BatchOperationEntry {
      *
      * @return The target ID to be removed.
      */
-    public String getTargetId() {
+    public BatchOperationTargetId getTargetId() {
         return targetId;
     }
 }

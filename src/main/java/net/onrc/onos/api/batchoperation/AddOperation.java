@@ -4,7 +4,7 @@ package net.onrc.onos.api.batchoperation;
  * An add-operation entry of a batch operation.
  */
 public class AddOperation implements BatchOperationEntry {
-    protected IBatchOperationTarget target;
+    private final IBatchOperationTarget target;
 
     /**
      * Creates a add-operation with specified target.

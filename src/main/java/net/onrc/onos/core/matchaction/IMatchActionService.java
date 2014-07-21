@@ -23,7 +23,7 @@ public interface IMatchActionService {
      * @param id ID for MatchaAction object to be removed.
      * @return true if succeeded, false otherwise.
      */
-    boolean removeMatchAction(String id);
+    boolean removeMatchAction(MatchActionId id);
 
     /**
      * Replaces the existing match-action entry by specified match-action entry.

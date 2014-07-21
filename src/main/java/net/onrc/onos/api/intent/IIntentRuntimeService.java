@@ -32,7 +32,7 @@ public interface IIntentRuntimeService {
      * @param id ID of the intent to be removed.
      * @return true if succeeded, false otherwise.
      */
-    boolean removeIntent(String id);
+    boolean removeIntent(IntentId id);
 
     /**
      * Overwrites existing intent by new specified intent.
@@ -41,7 +41,7 @@ public interface IIntentRuntimeService {
      * @param intent The new intent to be added.
      * @return true if succeeded, false otherwise.
      */
-    boolean updateIntent(String id, Intent intent);
+    boolean updateIntent(IntentId id, Intent intent);
 
     /**
      * Gets specific intent.
@@ -49,7 +49,7 @@ public interface IIntentRuntimeService {
      * @param id ID of the intent should be retrieved
      * @return Intent if it exists, null otherwise.
      */
-    Intent getIntent(String id);
+    Intent getIntent(IntentId id);
 
     /**
      * Gets all intents.

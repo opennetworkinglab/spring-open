@@ -52,7 +52,7 @@ public class BatchOperation<T extends IBatchOperationTarget> {
      * @param id ID of the target to be removed.
      * @return true if succeeded, false otherwise.
      */
-    public boolean addRemoveOperation(String id) {
+    public boolean addRemoveOperation(BatchOperationTargetId id) {
         return ops.add(new RemoveOperation(id));
     }
 
@@ -63,7 +63,7 @@ public class BatchOperation<T extends IBatchOperationTarget> {
      * @param newTarget The new target to be added.
      * @return true if succeeded, false otherwise.
      */
-    public boolean addUpdateOperation(String oldTargetId, T newTarget) {
+    public boolean addUpdateOperation(BatchOperationTargetId oldTargetId, T newTarget) {
         return ops.add(new UpdateOperation(oldTargetId, newTarget));
     }
 }

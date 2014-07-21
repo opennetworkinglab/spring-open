@@ -23,7 +23,7 @@ public class MatchActionModule implements IMatchActionService {
     }
 
     @Override
-    public boolean removeMatchAction(String id) {
+    public boolean removeMatchAction(MatchActionId id) {
         BatchOperation<MatchAction> phase = new BatchOperation<MatchAction>();
         phase.addRemoveOperation(id);
         MatchActionPlan plan = new MatchActionPlan();

@@ -31,7 +31,7 @@ public interface IFlowManagerService {
      * @param id ID for IFlow object to be removed.
      * @return true if succeeded, false otherwise.
      */
-    boolean removeFlow(String id);
+    boolean removeFlow(FlowId id);
 
     /**
      * Updates IFlow object, calculates match-action plan and executes it.
@@ -50,7 +50,7 @@ public interface IFlowManagerService {
      * @param id ID of IFlow object.
      * @return IFlow object if found, null otherwise.
      */
-    IFlow getFlow(String id);
+    IFlow getFlow(FlowId id);
 
     /**
      * Gets All IFlow objects.

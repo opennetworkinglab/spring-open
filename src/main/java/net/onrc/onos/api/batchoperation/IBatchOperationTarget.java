@@ -9,5 +9,5 @@ public interface IBatchOperationTarget {
      *
      * @return ID of the object.
      */
-    public String getId();
+    public BatchOperationTargetId getId();
 }

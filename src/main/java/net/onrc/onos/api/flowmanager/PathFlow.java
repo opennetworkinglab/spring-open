@@ -14,7 +14,7 @@ import net.onrc.onos.core.util.PortNumber;
  * have only the PacketPathFlow and OpticalPathFlow classes?
  */
 public class PathFlow implements IFlow {
-    protected final String id;
+    protected final FlowId id;
     protected IMatch match;
     protected PortNumber ingressPort;
     protected Path path;
@@ -32,7 +32,7 @@ public class PathFlow implements IFlow {
      */
     public PathFlow(String id,
             IMatch match, PortNumber ingressPort, Path path, List<IAction> edgeActions) {
-        this.id = id;
+        this.id = new FlowId(id);
         this.match = match;
         this.ingressPort = ingressPort;
         this.path = path;
@@ -40,7 +40,7 @@ public class PathFlow implements IFlow {
     }
 
     @Override
-    public String getId() {
+    public FlowId getId() {
         return id;
     }
 

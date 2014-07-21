@@ -18,7 +18,7 @@ public interface IFlow extends IBatchOperationTarget {
      * @return ID for this object.
      */
     @Override
-    public String getId();
+    public FlowId getId();
 
     /**
      * Gets traffic filter for this flow object.

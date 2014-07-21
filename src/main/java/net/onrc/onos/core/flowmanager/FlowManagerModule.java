@@ -5,6 +5,7 @@ import java.util.EventListener;
 
 import net.onrc.onos.api.batchoperation.BatchOperation;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
+import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.IFlow;
 import net.onrc.onos.api.flowmanager.IFlowManagerService;
 
@@ -32,7 +33,7 @@ public class FlowManagerModule implements IFlowManagerService {
     }
 
     @Override
-    public boolean removeFlow(String id) {
+    public boolean removeFlow(FlowId id) {
         BatchOperation<IFlow> ops = new BatchOperation<IFlow>();
         ops.addRemoveOperation(id);
         return executeBatch(ops);
@@ -46,7 +47,7 @@ public class FlowManagerModule implements IFlowManagerService {
     }
 
     @Override
-    public IFlow getFlow(String id) {
+    public IFlow getFlow(FlowId id) {
         // TODO Auto-generated method stub
         return null;
     }
