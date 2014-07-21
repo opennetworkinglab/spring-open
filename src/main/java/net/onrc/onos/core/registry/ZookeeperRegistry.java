@@ -56,6 +56,8 @@ import com.google.common.base.Charsets;
 public class ZookeeperRegistry implements IFloodlightModule,
                                           IControllerRegistryService {
 
+    private static final String DEFAULT_CONNECTION_STRING = "localhost:2181";
+
     private static final Logger log = LoggerFactory.getLogger(ZookeeperRegistry.class);
 
     private String controllerId;
@@ -64,7 +66,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
 
     // This is the default. It is overwritten by the connectionString
     // configuration parameter
-    private String connectionString = "localhost:2181";
+    private String connectionString = DEFAULT_CONNECTION_STRING;
 
     /**
      * JVM Option to specify ZooKeeper namespace.
@@ -570,6 +572,10 @@ public class ZookeeperRegistry implements IFloodlightModule,
         String connectionStringParam = configParams.get("connectionString");
         if (connectionStringParam != null) {
             connectionString = connectionStringParam;
+        } else {
+            connectionString = System.getProperty(
+                    "net.onrc.onos.core.registry.ZookeeperRegistry.connectionString",
+                    DEFAULT_CONNECTION_STRING);
         }
         log.info("Setting Zookeeper connection string to {}", this.connectionString);
 

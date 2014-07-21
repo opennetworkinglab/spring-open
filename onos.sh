@@ -45,6 +45,8 @@ ONOS_HOST_IP=$(read-conf ${ONOS_CONF}       host.ip)
 ONOS_HOST_ROLE=$(read-conf ${ONOS_CONF}     host.role)
 ONOS_HOST_BACKEND=$(read-conf ${ONOS_CONF}  host.backend)
 ZK_HOSTS=$(read-conf ${ONOS_CONF}           zookeeper.hosts               ${ONOS_HOST_NAME})
+ZK_CLIENTPORT=$(read-conf ${ONOS_CONF}      zookeeper.clientPort          2181)
+ZK_PORTS=$(read-conf ${ONOS_CONF}           zookeeper.ports               2888:3888)
 RC_COORD_PROTOCOL=$(read-conf ${ONOS_CONF}  ramcloud.coordinator.protocol "fast+udp")
 RC_COORD_IP=$(read-conf ${ONOS_CONF}        ramcloud.coordinator.ip       ${ONOS_HOST_IP})
 RC_COORD_PORT=$(read-conf ${ONOS_CONF}      ramcloud.coordinator.port     12246)
@@ -328,8 +330,8 @@ function create-zk-conf {
     if [[ $line =~ ^__HOSTS__$ ]]; then
       i=1
       for host in ${hostarr}; do
-        # TODO: ports might be configurable
-        local hostline="server.${i}=${host}:2888:3888"
+        # TODO: ZK ports should be configurable per host
+        local hostline="server.${i}=${host}:${ZK_PORTS}"
         echo $hostline
         i=`expr $i + 1`
       done
@@ -339,6 +341,7 @@ function create-zk-conf {
       echo $line
     fi
   done < ${ZK_CONF_TEMPLATE} > ${temp_zk}
+  sed -e "s|__CLIENTPORT__|${ZK_CLIENTPORT}|" -i "" ${temp_zk}
   
   end-conf-creation ${ZK_CONF}
   
@@ -391,11 +394,12 @@ function create-ramcloud-conf {
 
   local temp_rc=`begin-conf-creation ${RAMCLOUD_CONF}`
 
+  local rc_locator=`echo "${ZK_HOSTS}" | sed -e "s/,/:${ZK_CLIENTPORT},/g"`
+  rc_locator+=":${ZK_CLIENTPORT}"
+
   local rc_cluster_name=$(read-conf ${ONOS_CONF} ramcloud.clusterName ${ONOS_CLUSTER_NAME})
 
-  # TODO make ZooKeeper address configurable.
-  echo "ramcloud.locator=zk:localhost:2181" > ${temp_rc}
-  echo "#ramcloud.locator=zk:localhost:2181,otherhost:2181" >> ${temp_rc}
+  echo "ramcloud.locator=zk:localhost:2181,${rc_locator}" > ${temp_rc}
   echo "ramcloud.clusterName=${rc_cluster_name}" >> ${temp_rc}
 
   end-conf-creation ${RAMCLOUD_CONF}
@@ -955,6 +959,13 @@ function start-onos {
 
   # specify ZooKeeper(curator) namespace
   JVM_OPTS="${JVM_OPTS} -Dzookeeper.namespace=${ONOS_CLUSTER_NAME}"
+
+  # specify ZooKeeper connectionString
+  local zk_locator=`echo "${ZK_HOSTS}" | sed -e "s/,/:${ZK_CLIENTPORT},/g"`
+  zk_locator+=":${ZK_CLIENTPORT}"
+  zk_locator="localhost:${ZK_CLIENTPORT},${zk_locator}"
+
+  JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.registry.ZookeeperRegistry.connectionString=${zk_locator}"
 
   # specify hazelcast.xml to datagrid
   JVM_OPTS="${JVM_OPTS} -Dnet.onrc.onos.core.datagrid.HazelcastDatagrid.datagridConfig=${HC_CONF}"
