@@ -4,7 +4,6 @@ import org.hamcrest.Description;
 import org.hamcrest.StringDescription;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -71,15 +70,9 @@ public class UtilityClassChecker {
 
         }
 
-        // Trigger an allocation of the object to force the hidden
-        // constructor call
-        try {
-            constructor.setAccessible(true);
-            constructor.newInstance();
-            constructor.setAccessible(false);
-        } catch (InstantiationException|IllegalAccessException|
-                 InvocationTargetException error) {
-            failureReason = error.getCause() + " when calling constructor";
+        final Object newObject = TestUtils.callConstructor(constructor);
+        if (newObject == null) {
+            failureReason = "could not instantiate a new object";
             return false;
         }
         return true;

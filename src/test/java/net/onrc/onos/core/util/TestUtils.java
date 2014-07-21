@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -113,6 +114,24 @@ public final class TestUtils {
      */
     public static <T, U> U callMethod(T subject, String methodName, Class<?> paramType, Object arg) {
         return callMethod(subject, methodName, new Class<?>[]{paramType}, arg);
+    }
+
+    /**
+     * Triggers an allocation of an object of type <T> and forces a call to
+     * the private constructor.
+     *
+     * @param constructor Constructor to call
+     * @param <T> type of the object to create
+     * @return created object of type <T>
+     */
+    public static <T> T callConstructor(Constructor<T> constructor) {
+        try {
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+        } catch (InstantiationException | IllegalAccessException |
+                InvocationTargetException error) {
+            return null;
+        }
     }
 
     /**
