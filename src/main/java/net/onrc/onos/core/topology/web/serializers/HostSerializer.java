@@ -10,8 +10,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+/**
+ * Serializes Host objects as JSON.
+ */
 public class HostSerializer extends SerializerBase<Host> {
 
+    /**
+     * Constructs a Host serializer.
+     */
     public HostSerializer() {
         super(Host.class);
     }

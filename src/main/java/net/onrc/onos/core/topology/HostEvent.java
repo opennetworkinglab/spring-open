@@ -132,11 +132,12 @@ public class HostEvent extends TopologyElement<HostEvent> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        HostEvent other = (HostEvent) obj;
 
         if (!super.equals(obj)) {
             return false;
         }
+
+        HostEvent other = (HostEvent) obj;
 
         // XXX lastSeenTime excluded from Equality condition, is it OK?
         return Objects.equals(mac, other.mac) &&

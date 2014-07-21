@@ -11,8 +11,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+/**
+ * Serializes a Switch object as JSON.
+ */
 public class SwitchSerializer extends SerializerBase<Switch> {
 
+    /**
+     * Constructs a Switch object serializer.
+     */
     public SwitchSerializer() {
         super(Switch.class);
     }

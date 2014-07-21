@@ -9,8 +9,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+/**
+ * Serializes a SwitchEvent as JSON.
+ */
 public class SwitchEventSerializer extends SerializerBase<SwitchEvent> {
 
+    /**
+     * Constructs a SwitchEvent serializer.
+     */
     public SwitchEventSerializer() {
         super(SwitchEvent.class);
     }

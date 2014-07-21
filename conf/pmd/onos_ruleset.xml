@@ -35,6 +35,7 @@
     <rule ref="rulesets/java/braces.xml"/>
     <rule ref="rulesets/java/naming.xml">
       <exclude name="AvoidInstantiatingObjectsInLoops" />
+      <exclude name="ShortClassName" />
       <exclude name="ShortMethodName" />
       <exclude name="ShortVariable" />
       <exclude name="LongVariable" />

@@ -10,8 +10,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+/**
+ * Serializes HostEvents as JSON.
+ */
 public class HostEventSerializer extends SerializerBase<HostEvent> {
 
+    /**
+     * Constructs a HostEvent Serializer.
+     */
     public HostEventSerializer() {
         super(HostEvent.class);
     }

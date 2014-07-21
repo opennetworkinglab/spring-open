@@ -10,8 +10,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+/**
+ * Serializes a Link object as JSON.
+ */
 public class LinkSerializer extends SerializerBase<Link> {
 
+    /**
+     * Constructs a Link serializer.
+     */
     public LinkSerializer() {
         super(Link.class);
     }

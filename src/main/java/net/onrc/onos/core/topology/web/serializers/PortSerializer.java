@@ -10,8 +10,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+/**
+ * Serializes a Port object as JSON.
+ */
 public class PortSerializer extends SerializerBase<Port> {
 
+    /**
+     * Constructs a Port serializer.
+     */
     public PortSerializer() {
         super(Port.class);
     }

@@ -9,8 +9,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
+/**
+ * Serializes a PortEvent object as JSON.
+ */
 public class PortEventSerializer extends SerializerBase<PortEvent> {
 
+    /**
+     * Constructs a PortEvent serializer.
+     */
     public PortEventSerializer() {
         super(PortEvent.class);
     }

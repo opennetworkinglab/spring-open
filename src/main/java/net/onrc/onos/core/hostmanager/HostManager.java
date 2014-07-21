@@ -123,7 +123,6 @@ public class HostManager implements IFloodlightModule,
 
         final Dpid dpid = new Dpid(sw.getId());
         final PortNumber portNum = new PortNumber(pi.getInPort());
-        Long mac = eth.getSourceMAC().toLong();
 
         Host srcHost =
                 getSourceHostFromPacket(eth, dpid.value(), portNum.value());
@@ -149,6 +148,7 @@ public class HostManager implements IFloodlightModule,
             topology.releaseReadLock();
         }
 
+        Long mac = eth.getSourceMAC().toLong();
         addHost(mac, srcHost);
 
         if (log.isTraceEnabled()) {
@@ -285,7 +285,8 @@ public class HostManager implements IFloodlightModule,
                         switchPort.getDpid().value(),
                         switchPort.getNumber().value(),
                         new Date(host.getLastSeenTime()));
-                break;
+                // FIXME: remove NOPMD flag after multiple attachment points are implemented
+                break; // NOPMD
             }
         } finally {
             topology.releaseReadLock();

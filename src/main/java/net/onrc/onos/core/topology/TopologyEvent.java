@@ -60,7 +60,7 @@ public class TopologyEvent {
 
     /**
      * Check if all events contained are equal.
-     * @param object.
+     * @param obj.
      */
     @Override
     public boolean equals(Object obj) {
@@ -128,6 +128,6 @@ public class TopologyEvent {
         if (hostEvent != null) {
             return hostEvent.getID();
         }
-        return null;
+        throw new IllegalStateException("Invalid TopologyEvent ID");
     }
 }
