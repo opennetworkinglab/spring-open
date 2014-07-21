@@ -15,6 +15,15 @@ import net.onrc.onos.api.flowmanager.IFlowManagerService;
  * TODO: Make all methods thread-safe
  */
 public class FlowManagerModule implements IFlowManagerService {
+    private ConflictDetectionPolicy conflictDetectionPolicy;
+
+    /**
+     * Constructor.
+     */
+    public FlowManagerModule() {
+        this.conflictDetectionPolicy = ConflictDetectionPolicy.FREE;
+    }
+
     @Override
     public boolean addFlow(IFlow flow) {
         BatchOperation<IFlow> ops = new BatchOperation<IFlow>();
@@ -56,14 +65,17 @@ public class FlowManagerModule implements IFlowManagerService {
 
     @Override
     public void setConflictDetectionPolicy(ConflictDetectionPolicy policy) {
-        // TODO Auto-generated method stub
-
+        if (policy == ConflictDetectionPolicy.FREE) {
+            conflictDetectionPolicy = policy;
+        } else {
+            throw new UnsupportedOperationException(
+                    policy.toString() + " is not supported.");
+        }
     }
 
     @Override
     public ConflictDetectionPolicy getConflictDetectionPolicy() {
-        // TODO Auto-generated method stub
-        return null;
+        return conflictDetectionPolicy;
     }
 
     @Override
