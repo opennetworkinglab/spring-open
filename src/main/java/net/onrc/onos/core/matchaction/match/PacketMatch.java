@@ -1,5 +1,6 @@
 package net.onrc.onos.core.matchaction.match;
 
+import com.google.common.base.Objects;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.IPv4;
 
@@ -74,5 +75,37 @@ public class PacketMatch implements IMatch {
      */
     public IPv4 getDstIpAddress() {
         return dstIpAddress;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(srcMacAddress, dstMacAddress, srcIpAddress, dstIpAddress);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof PacketMatch)) {
+            return false;
+        }
+
+        PacketMatch that = (PacketMatch) obj;
+        return Objects.equal(this.srcMacAddress, that.srcMacAddress)
+                && Objects.equal(this.dstMacAddress, that.dstMacAddress)
+                && Objects.equal(this.srcIpAddress, that.srcIpAddress)
+                && Objects.equal(this.dstIpAddress, that.dstIpAddress);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("srcMacAddress", srcMacAddress)
+                .add("dstMacAddress", dstMacAddress)
+                .add("srcIpAddress", srcIpAddress)
+                .add("dstIpAddress", dstIpAddress)
+                .toString();
     }
 }
