@@ -131,7 +131,7 @@ public class ControllerTest extends FloodlightTestCase {
         cm.startUp(fmc);
         tp.startUp(fmc);
         sr.startUp(fmc);
-        linkDiscovery.startUp(fmc);
+        //linkDiscovery.startUp(fmc);
     }
 
     public Controller getController() {
@@ -177,6 +177,7 @@ public class ControllerTest extends FloodlightTestCase {
      * Run the controller's main loop so that updates are processed
      */
     protected class ControllerRunThread extends Thread {
+        @Override
         public void run() {
             controller.openFlowPort = 0; // Don't listen
             controller.run();
@@ -412,22 +413,25 @@ public class ControllerTest extends FloodlightTestCase {
                 nPortChanged = 0;
             }
 
+            @Override
             public synchronized void addedSwitch(IOFSwitch sw) {
                 nAdded++;
                 notifyAll();
             }
 
+            @Override
             public synchronized void removedSwitch(IOFSwitch sw) {
                 nRemoved++;
                 notifyAll();
             }
 
+            @Override
             public String getName() {
                 return "dummy";
             }
 
             @Override
-            public void switchPortChanged(Long switchId) {
+            public synchronized void switchPortChanged(Long switchId) {
                 nPortChanged++;
                 notifyAll();
             }

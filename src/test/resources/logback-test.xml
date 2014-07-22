@@ -1,0 +1,19 @@
+<configuration scan="true" debug="false">
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>${basedir}/onos-logs/test.log</file>
+    <encoder>
+      <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+      <immediateFlush>false</immediateFlush>
+    </encoder>
+  </appender>
+
+  <logger name="org" level="WARN"/>
+  <logger name="LogService" level="WARN"/> <!-- Restlet access logging -->
+  <logger name="net.floodlightcontroller.logging" level="WARN"/>
+  <logger name="com.hazelcast" level="WARN"/>
+
+  <root level="TRACE">
+    <appender-ref ref="FILE" />
+  </root>
+</configuration>
+
