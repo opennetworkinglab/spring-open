@@ -25,7 +25,7 @@ public class OpticalConnectivityIntent extends Intent {
      * @param srcSwitchPort The source transponder port.
      * @param dstSwitchPort The destination transponder port.
      */
-    public OpticalConnectivityIntent(String id,
+    public OpticalConnectivityIntent(IntentId id,
             SwitchPort srcSwitchPort, SwitchPort dstSwitchPort) {
         super(id);
         this.srcSwitchPort = srcSwitchPort;

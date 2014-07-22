@@ -2,29 +2,46 @@ package net.onrc.onos.api.intent;
 
 import net.onrc.onos.api.batchoperation.BatchOperationTargetId;
 
-public class IntentId extends BatchOperationTargetId {
-    private final String value;
+/**
+ * The class representing intent's ID.
+ *
+ * This class is immutable.
+ */
+public final class IntentId extends BatchOperationTargetId {
+    private final long id;
 
-    public IntentId(String id) {
-        value = id;
-    }
-
-    @Override
-    public String toString() {
-        return value;
+    /**
+     * Constructs the ID corresponding to a given long value.
+     *
+     * In the future, this constructor will not be exposed to avoid misuses.
+     *
+     * @param id the underlay value of this ID.
+     */
+    public IntentId(long id) {
+        this.id = id;
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return (int) (id ^ (id >>> 32));
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof IntentId) {
-            IntentId other = (IntentId) obj;
-            return (this.value.equals(other.value));
+        if (obj == this) {
+            return true;
         }
-        return false;
+
+        if (!(obj instanceof IntentId)) {
+            return false;
+        }
+
+        IntentId that = (IntentId) obj;
+        return this.id == that.id;
+    }
+
+    @Override
+    public String toString() {
+        return "0x" + Long.toHexString(id);
     }
 }

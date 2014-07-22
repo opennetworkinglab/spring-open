@@ -6,6 +6,8 @@ import net.onrc.onos.api.batchoperation.BatchOperation;
 import net.onrc.onos.api.batchoperation.IBatchOperationTarget;
 import net.onrc.onos.api.flowmanager.IFlow;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * The base class for the connectivity abstraction. It allows applications to
  * specify end hosts, apply some basic filtering to traffic, and constrain
@@ -20,15 +22,15 @@ import net.onrc.onos.api.flowmanager.IFlow;
  * data-plane to satisfy those constraints.
  */
 public abstract class Intent implements IBatchOperationTarget {
-    protected final IntentId id;
+    private final IntentId id;
 
     /**
      * Constructor.
      *
      * @param id ID for this Intent object.
      */
-    public Intent(String id) {
-        this.id = new IntentId(id);
+    protected Intent(IntentId id) {
+        this.id = checkNotNull(id);
     }
 
     /**

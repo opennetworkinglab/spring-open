@@ -42,7 +42,7 @@ public class PacketConnectivityIntent extends Intent {
      * @param canSetupOpticalFlow The flag whether this intent can create
      *        optical flows if needed.
      */
-    public PacketConnectivityIntent(String id,
+    public PacketConnectivityIntent(IntentId id,
             Collection<SwitchPort> srcSwitchPorts, PacketMatch match,
             Collection<SwitchPort> dstSwitchPorts, boolean canSetupOpticalFlow) {
         super(id);
