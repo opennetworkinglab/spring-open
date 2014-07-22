@@ -1,15 +1,12 @@
 package net.onrc.onos.api.intent;
 
+import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.util.SwitchPort;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
-import net.onrc.onos.api.batchoperation.BatchOperation;
-import net.onrc.onos.api.flowmanager.IFlow;
-import net.onrc.onos.core.matchaction.match.PacketMatch;
-import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * A packet layer Intent for a connectivity from a set of ports to a set of
@@ -162,11 +159,5 @@ public class PacketConnectivityIntent extends Intent {
      */
     public boolean canSetupOpticalFlow() {
         return canSetupOpticalFlow;
-    }
-
-    @Override
-    public List<BatchOperation<IFlow>> compile() {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

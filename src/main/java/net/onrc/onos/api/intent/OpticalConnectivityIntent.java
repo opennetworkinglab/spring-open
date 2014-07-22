@@ -1,9 +1,5 @@
 package net.onrc.onos.api.intent;
 
-import java.util.List;
-
-import net.onrc.onos.api.batchoperation.BatchOperation;
-import net.onrc.onos.api.flowmanager.IFlow;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
@@ -48,11 +44,5 @@ public class OpticalConnectivityIntent extends Intent {
      */
     public SwitchPort getDstSwitchPort() {
         return dstSwitchPort;
-    }
-
-    @Override
-    public List<BatchOperation<IFlow>> compile() {
-        // TODO Auto-generated method stub
-        return null;
     }
 }
