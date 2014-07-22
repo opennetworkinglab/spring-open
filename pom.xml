@@ -47,6 +47,7 @@
      -->
     <hazelcast.version>3.2.3</hazelcast.version>
     <metrics.version>3.0.1</metrics.version>
+    <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
   </properties>
   <build>
     <plugins>
@@ -127,7 +128,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.16</version>
+        <version>${maven.surefire.plugin.version}</version>
         <configuration>
           <argLine>-XX:MaxPermSize=256m</argLine>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
@@ -750,6 +751,21 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>all-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven.surefire.plugin.version}</version>
+            <configuration combine.self="merge">
+              <excludedGroups></excludedGroups>
+            </configuration>
           </plugin>
         </plugins>
       </build>

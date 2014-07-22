@@ -128,9 +128,30 @@ You can manually start/stop individual ONOS components as follows:
         ## Confirm the REST API server is running:
         $ ./start-rest.sh status
 
+Running unit tests
+------------------
+Unit tests bundled with ONOS source code, can be executed by using the following:
+
+        $ cd ${ONOS_HOME}/
+        $ mvn test
+
+Some of the unit tests, which take longer time to execute are excluded from the above goal.
+To force running all the unit tests, use the following commands:
+
+        $ cd ${ONOS_HOME}/
+        $ mvn test -P all-tests
+
+To run only a subset of the unit tests, use the following commands:
+
+        $ cd ${ONOS_HOME}/
+        $ mvn test -Dtest=PortNumberTest
+
+Comma and wildcards can be used to specify multiple test cases.
+See [maven-surefire-plugin website](http://maven.apache.org/surefire/maven-surefire-plugin/examples/single-test.html) for details.
+
 
 Developing ONOS in offline environment (Optional)
----------------------------------------------------------------------------
+-------------------------------------------------
 
 Maven need the Internet connection to download required dependencies and plugins,
 when they're used for the first time.
