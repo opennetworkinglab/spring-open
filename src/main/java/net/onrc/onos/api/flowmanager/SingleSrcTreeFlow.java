@@ -81,7 +81,7 @@ public class SingleSrcTreeFlow implements IFlow {
      *
      * @return The set of the pairs of Dpid and OutputAction object.
      */
-    public Set<Pair<Dpid, OutputAction>> getActions() {
+    public Set<Pair<Dpid, OutputAction>> getOutputActions() {
         return outputActions;
     }
 }

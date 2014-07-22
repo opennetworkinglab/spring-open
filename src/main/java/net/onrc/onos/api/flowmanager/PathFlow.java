@@ -18,7 +18,7 @@ public class PathFlow implements IFlow {
     protected IMatch match;
     protected PortNumber ingressPort;
     protected Path path;
-    protected List<IAction> edgeActions;
+    protected List<IAction> egressActions;
 
     /**
      * Constructor.
@@ -28,15 +28,15 @@ public class PathFlow implements IFlow {
      * @param ingressPort The ingress port number at the ingress node of the
      *        path.
      * @param path Path between ingress and egress edge node.
-     * @param edgeActions The list of IAction objects at the egress edge node.
+     * @param egressActions The list of IAction objects at the egress edge node.
      */
     public PathFlow(String id,
-            IMatch match, PortNumber ingressPort, Path path, List<IAction> edgeActions) {
+            IMatch match, PortNumber ingressPort, Path path, List<IAction> egressActions) {
         this.id = new FlowId(id);
         this.match = match;
         this.ingressPort = ingressPort;
         this.path = path;
-        this.edgeActions = edgeActions;
+        this.egressActions = egressActions;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class PathFlow implements IFlow {
      *
      * @return The list of IAction objects at the egress edge node.
      */
-    public List<IAction> getActions() {
-        return edgeActions;
+    public List<IAction> getEgressActions() {
+        return egressActions;
     }
 }
