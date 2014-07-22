@@ -32,8 +32,12 @@ import net.onrc.onos.core.datastore.utils.KVObject.WriteOp;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KVTopologyTest {
+
+    private static final Logger log = LoggerFactory.getLogger(KVTopologyTest.class);
 
     static {
         // configuration to quickly fall back to instance mode for faster test run
@@ -87,7 +91,7 @@ public class KVTopologyTest {
             assertEquals(DPID1, sw.getDpid());
             assertEquals(KVSwitch.STATUS.ACTIVE, sw.getStatus());
         } catch (ObjectExistsException e) {
-            e.printStackTrace();
+            log.error("Create Switch Failed ", e);
             fail("Create Switch Failed " + e);
         }
 
@@ -99,7 +103,7 @@ public class KVTopologyTest {
             assertEquals(DPID1, swRead.getDpid());
             assertEquals(KVSwitch.STATUS.ACTIVE, swRead.getStatus());
         } catch (ObjectDoesntExistException e) {
-            e.printStackTrace();
+            log.error("Reading Switch Failed ", e);
             fail("Reading Switch Failed " + e);
         }
 
@@ -111,7 +115,7 @@ public class KVTopologyTest {
             assertEquals(DPID1, swRead.getDpid());
             assertEquals(KVSwitch.STATUS.INACTIVE, swRead.getStatus());
         } catch (ObjectDoesntExistException | WrongVersionException e) {
-            e.printStackTrace();
+            log.error("Updating Switch Failed ", e);
             fail("Updating Switch Failed " + e);
         }
 
@@ -123,7 +127,7 @@ public class KVTopologyTest {
             assertEquals(DPID1, swRead2.getDpid());
             assertEquals(KVSwitch.STATUS.INACTIVE, swRead2.getStatus());
         } catch (ObjectDoesntExistException e) {
-            e.printStackTrace();
+            log.error("Reading Switch Again Failed ", e);
             fail("Reading Switch Again Failed " + e);
         }
 
@@ -131,7 +135,7 @@ public class KVTopologyTest {
             swRead2.delete();
             assertNotEquals(VERSION_NONEXISTENT, swRead2.getVersion());
         } catch (ObjectDoesntExistException | WrongVersionException e) {
-            e.printStackTrace();
+            log.error("Deleting Switch Failed ", e);
             fail("Deleting Switch Failed " + e);
         }
 
@@ -141,9 +145,7 @@ public class KVTopologyTest {
             swRead3.read();
             fail(swRead3 + " was supposed to be deleted, but read succeed");
         } catch (ObjectDoesntExistException e) {
-            System.out.println("-- " + swRead3 + " not found as expected--");
-            e.printStackTrace(System.out);
-            System.out.println("---------------------------------------");
+            log.info(swRead3 + " not found as expected--", e);
         }
     }
 
@@ -166,7 +168,7 @@ public class KVTopologyTest {
             assertEquals(DPID1, sw1.getDpid());
             assertEquals(KVSwitch.STATUS.ACTIVE, sw1.getStatus());
         } catch (ObjectExistsException e) {
-            e.printStackTrace();
+            log.error("Switch creation failed ", e);
             fail("Switch creation failed " + e);
         }
 
@@ -187,7 +189,7 @@ public class KVTopologyTest {
             assertEquals(SW1_PORTNO2, sw1p2.getNumber());
             assertEquals(KVPort.STATUS.ACTIVE, sw1p2.getStatus());
         } catch (ObjectExistsException e) {
-            e.printStackTrace();
+            log.error("Port creation failed ", e);
             fail("Port creation failed " + e);
         }
 
@@ -197,7 +199,7 @@ public class KVTopologyTest {
             assertEquals(DPID1, sw1.getDpid());
             assertEquals(KVSwitch.STATUS.ACTIVE, sw1.getStatus());
         } catch (ObjectDoesntExistException | WrongVersionException e) {
-            e.printStackTrace();
+            log.error("Switch update failed ", e);
             fail("Switch update failed " + e);
         }
 
@@ -217,11 +219,11 @@ public class KVTopologyTest {
                 assertEquals(SW1_PORTNO1, sw1p1.getNumber());
                 assertEquals(KVPort.STATUS.ACTIVE, sw1p1.getStatus());
             } catch (ObjectDoesntExistException | WrongVersionException e) {
-                e.printStackTrace();
+                log.error("Link update failed ", e);
                 fail("Link update failed " + e);
             }
         } catch (ObjectExistsException e) {
-            e.printStackTrace();
+            log.error("Host creation failed ", e);
             fail("Host creation failed " + e);
         }
 
@@ -243,7 +245,7 @@ public class KVTopologyTest {
         boolean failed = KVObject.multiWrite(groupOp);
         if (failed) {
             for (WriteOp op : groupOp) {
-                System.err.println(op);
+                log.error("Operation failed: {}", op);
             }
             fail("Some of Switch/Port/Host creation failed");
         } else {
@@ -291,11 +293,11 @@ public class KVTopologyTest {
                 assertEquals(SW2_PORTNO1, sw2p1.getNumber());
                 assertEquals(KVPort.STATUS.ACTIVE, sw2p1.getStatus());
             } catch (ObjectDoesntExistException | WrongVersionException e) {
-                e.printStackTrace();
+                log.error("Port update failed ", e);
                 fail("Port update failed " + e);
             }
         } catch (ObjectExistsException e) {
-            e.printStackTrace();
+            log.error("Link creation failed ", e);
             fail("Link creation failed " + e);
         }
     }
@@ -305,16 +307,16 @@ public class KVTopologyTest {
         Iterable<KVSwitch> swIt = KVSwitch.getAllSwitches(NAMESPACE);
         List<Long> switchesExpected = new ArrayList<>(Arrays.asList(DPID1, DPID2));
 
-        System.out.println("Enumerating Switches start");
+        log.info("Enumerating Switches start");
         for (KVSwitch sw : swIt) {
-            System.out.println(sw + " @ " + sw.getVersion());
+            log.info(sw + " @ " + sw.getVersion());
             assertNotEquals(VERSION_NONEXISTENT, sw.getVersion());
             assertEquals(KVSwitch.STATUS.ACTIVE, sw.getStatus());
             assertThat(sw.getDpid(), is(anyOf(equalTo(DPID1), equalTo(DPID2))));
             assertThat(switchesExpected, hasItem(sw.getDpid()));
             switchesExpected.remove(sw.getDpid());
         }
-        System.out.println("Enumerating Switches end");
+        log.info("Enumerating Switches end");
 
         KVSwitch sw1 = new KVSwitch(DPID1, NAMESPACE);
         try {
@@ -323,7 +325,7 @@ public class KVTopologyTest {
             assertEquals(DPID1, sw1.getDpid());
             assertEquals(KVSwitch.STATUS.ACTIVE, sw1.getStatus());
         } catch (ObjectDoesntExistException e) {
-            e.printStackTrace();
+            log.error("Reading switch failed ", e);
             fail("Reading switch failed " + e);
         }
 
@@ -345,7 +347,7 @@ public class KVTopologyTest {
         } };
 
         for (KVPort port : KVPort.getAllPorts(NAMESPACE)) {
-            System.out.println(port + " @ " + port.getVersion());
+            log.info(port + " @ " + port.getVersion());
             assertNotEquals(VERSION_NONEXISTENT, port.getVersion());
             assertEquals(KVPort.STATUS.ACTIVE, port.getStatus());
             assertThat(port.getDpid(), is(anyOf(equalTo(DPID1), equalTo(DPID2))));
@@ -364,7 +366,7 @@ public class KVTopologyTest {
         } };
 
         for (KVDevice device : KVDevice.getAllDevices(NAMESPACE)) {
-            System.out.println(device + " @ " + device.getVersion());
+            log.info(device + " @ " + device.getVersion());
             assertNotEquals(VERSION_NONEXISTENT, device.getVersion());
 
             assertThat(expectedDevice, hasKey(device.getMac()));
@@ -373,7 +375,7 @@ public class KVTopologyTest {
         }
 
         for (KVLink link : KVLink.getAllLinks(NAMESPACE)) {
-            System.out.println(link + " @ " + link.getVersion());
+            log.info(link + " @ " + link.getVersion());
             assertNotEquals(VERSION_NONEXISTENT, link.getVersion());
 
             // there is currently only 1 link SW1P2->SW2P1
@@ -394,7 +396,7 @@ public class KVTopologyTest {
                 sw.delete();
                 assertNotEquals(VERSION_NONEXISTENT, sw.getVersion());
             } catch (ObjectDoesntExistException | WrongVersionException e) {
-                e.printStackTrace();
+                log.error("Delete Switch Failed ", e);
                 fail("Delete Switch Failed " + e);
             }
         }
@@ -405,7 +407,7 @@ public class KVTopologyTest {
                 p.delete();
                 assertNotEquals(VERSION_NONEXISTENT, p.getVersion());
             } catch (ObjectDoesntExistException | WrongVersionException e) {
-                e.printStackTrace();
+                log.error("Delete Port Failed ", e);
                 fail("Delete Port Failed " + e);
             }
         }
@@ -421,7 +423,7 @@ public class KVTopologyTest {
                 l.delete();
                 assertNotEquals(VERSION_NONEXISTENT, l.getVersion());
             } catch (ObjectDoesntExistException | WrongVersionException e) {
-                e.printStackTrace();
+                log.error("Delete Link Failed ", e);
                 fail("Delete Link Failed " + e);
             }
         }
