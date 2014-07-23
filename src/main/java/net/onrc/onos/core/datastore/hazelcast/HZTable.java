@@ -1,5 +1,8 @@
 package net.onrc.onos.core.datastore.hazelcast;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +18,6 @@ import net.onrc.onos.core.datastore.ObjectExistsException;
 import net.onrc.onos.core.datastore.WrongVersionException;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
 
-import org.apache.commons.collections.BufferOverflowException;
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,9 +87,10 @@ public class HZTable implements IKVTable, IKVTableID {
         }
 
         public void setValue(final byte[] value) {
-            if (value != null && value.length > DataStoreClient.MAX_VALUE_BYTES) {
-                throw new BufferOverflowException("Value must be smaller than 1MB");
-            }
+            checkArgument(value == null ||
+                    value.length <= DataStoreClient.MAX_VALUE_BYTES,
+                    "Value must be smaller than 1MB");
+
             this.value = ArrayUtils.clone(value);
         }
 
@@ -160,9 +163,11 @@ public class HZTable implements IKVTable, IKVTableID {
         long version;
 
         public Entry(final byte[] key, final byte[] value, final long version) {
-            if (key.length > DataStoreClient.MAX_KEY_BYTES) {
-                throw new BufferOverflowException("Key must be smaller than 64KB");
-            }
+            checkNotNull(key);
+            checkArgument(
+                    key.length <= DataStoreClient.MAX_KEY_BYTES,
+                    "Key must be smaller than 64KB");
+
             this.key = key.clone();
             this.setValue(value);
             this.setVersion(version);
