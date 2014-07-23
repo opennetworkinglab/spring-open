@@ -7,14 +7,15 @@ import java.util.Objects;
  * Self-contained Topology event Object
  * <p/>
  * TODO: For now the topology event contains one of the following events:
- * Switch, Port, Link, Host. In the future it will contain multiple events
- * in a single transaction.
+ * Switch, Port, Link, Host, Switch Mastership. In the future it will contain
+ * multiple events in a single transaction.
  */
 public class TopologyEvent {
-    SwitchEvent switchEvent = null;        // Set for Switch event
-    PortEvent portEvent = null;            // Set for Port event
-    LinkEvent linkEvent = null;            // Set for Link event
-    HostEvent hostEvent = null;        // Set for Host event
+    SwitchEvent switchEvent = null;             // Set for Switch event
+    PortEvent portEvent = null;                 // Set for Port event
+    LinkEvent linkEvent = null;                 // Set for Link event
+    HostEvent hostEvent = null;                 // Set for Host event
+    MastershipEvent mastershipEvent = null;     // Set for Mastership event
 
     /**
      * Default constructor.
@@ -59,6 +60,15 @@ public class TopologyEvent {
     }
 
     /**
+     * Constructor for given Switch Mastership event.
+     *
+     * @param mastershipEvent the Switch Mastership event to use.
+     */
+    TopologyEvent(MastershipEvent mastershipEvent) {
+        this.mastershipEvent = mastershipEvent;
+    }
+
+    /**
      * Check if all events contained are equal.
      *
      * @param obj TopologyEvent to compare against
@@ -81,12 +91,14 @@ public class TopologyEvent {
         return Objects.equals(switchEvent, other.switchEvent) &&
                 Objects.equals(portEvent, other.portEvent) &&
                 Objects.equals(linkEvent, other.linkEvent) &&
-                Objects.equals(hostEvent, other.hostEvent);
+                Objects.equals(hostEvent, other.hostEvent) &&
+                Objects.equals(mastershipEvent, other.mastershipEvent);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(switchEvent, portEvent, linkEvent, hostEvent);
+        return Objects.hash(switchEvent, portEvent, linkEvent, hostEvent,
+                            mastershipEvent);
     }
 
     /**
@@ -108,6 +120,9 @@ public class TopologyEvent {
         if (hostEvent != null) {
             return hostEvent.toString();
         }
+        if (mastershipEvent != null) {
+            return mastershipEvent.toString();
+        }
         return "[Empty TopologyEvent]";
     }
 
@@ -128,6 +143,9 @@ public class TopologyEvent {
         }
         if (hostEvent != null) {
             return hostEvent.getID();
+        }
+        if (mastershipEvent != null) {
+            return mastershipEvent.getID();
         }
         throw new IllegalStateException("Invalid TopologyEvent ID");
     }

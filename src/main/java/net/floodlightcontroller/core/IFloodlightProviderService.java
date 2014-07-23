@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.onrc.onos.api.registry.ILocalSwitchMastershipListener;
 import net.onrc.onos.core.packet.Ethernet;
 
 import org.openflow.protocol.OFMessage;
@@ -79,6 +80,24 @@ public interface IFloodlightProviderService extends IFloodlightService {
      * @return listeners
      */
     public Map<OFType, List<IOFMessageListener>> getListeners();
+
+    /**
+     * Adds a switch mastership listener for controller role changes for
+     * local switches.
+     *
+     * @param listener the listener to add.
+     */
+    public void addLocalSwitchMastershipListener(
+                ILocalSwitchMastershipListener listener);
+
+    /**
+     * Removes a switch mastership listener for controller role changes for
+     * local switches.
+     *
+     * @param listener the listener to remove.
+     */
+    public void removeLocalSwitchMastershipListener(
+                ILocalSwitchMastershipListener listener);
 
     /**
      * Returns an unmodifiable map of all actively connected OpenFlow switches. This doesn't

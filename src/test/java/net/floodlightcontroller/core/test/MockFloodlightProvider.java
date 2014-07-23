@@ -42,6 +42,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.ListenerDispatcher;
+import net.onrc.onos.api.registry.ILocalSwitchMastershipListener;
 import net.onrc.onos.core.packet.Ethernet;
 
 import org.openflow.protocol.OFMessage;
@@ -61,6 +62,8 @@ public class MockFloodlightProvider implements IFloodlightModule, IFloodlightPro
     protected Map<Long, IOFSwitch> switches;
     protected BasicFactory factory;
 
+    private CopyOnWriteArrayList<ILocalSwitchMastershipListener> localSwitchMastershipListeners;
+
     /**
      *
      */
@@ -69,6 +72,7 @@ public class MockFloodlightProvider implements IFloodlightModule, IFloodlightPro
                 IOFMessageListener>>();
         switches = new ConcurrentHashMap<Long, IOFSwitch>();
         switchListeners = new CopyOnWriteArrayList<IOFSwitchListener>();
+        localSwitchMastershipListeners = new CopyOnWriteArrayList<>();
         factory = new BasicFactory();
     }
 
@@ -129,6 +133,18 @@ public class MockFloodlightProvider implements IFloodlightModule, IFloodlightPro
     @Override
     public void removeOFSwitchListener(IOFSwitchListener listener) {
         switchListeners.remove(listener);
+    }
+
+    @Override
+    public void addLocalSwitchMastershipListener(
+                ILocalSwitchMastershipListener listener) {
+        this.localSwitchMastershipListeners.addIfAbsent(listener);
+    }
+
+    @Override
+    public void removeLocalSwitchMastershipListener(
+                ILocalSwitchMastershipListener listener) {
+        this.localSwitchMastershipListeners.remove(listener);
     }
 
     public void dispatchMessage(IOFSwitch sw, OFMessage msg) {

@@ -263,6 +263,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             Map<ByteBuffer, LinkEvent> removedLinkEvents = new HashMap<>();
             Map<ByteBuffer, HostEvent> addedHostEvents = new HashMap<>();
             Map<ByteBuffer, HostEvent> removedHostEvents = new HashMap<>();
+            Map<ByteBuffer, MastershipEvent> addedMastershipEvents =
+                new HashMap<>();
+            Map<ByteBuffer, MastershipEvent> removedMastershipEvents =
+                new HashMap<>();
 
             //
             // Classify and suppress matching events
@@ -273,6 +277,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 PortEvent portEvent = topologyEvent.portEvent;
                 LinkEvent linkEvent = topologyEvent.linkEvent;
                 HostEvent hostEvent = topologyEvent.hostEvent;
+                MastershipEvent mastershipEvent = topologyEvent.mastershipEvent;
 
                 //
                 // Extract the events
@@ -306,6 +311,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                             removedHostEvents.remove(id);
                             reorderedAddedHostEvents.remove(id);
                         }
+                        if (mastershipEvent != null) {
+                            ByteBuffer id = mastershipEvent.getIDasByteBuffer();
+                            addedMastershipEvents.put(id, mastershipEvent);
+                            removedMastershipEvents.remove(id);
+                        }
                         break;
                     case ENTRY_REMOVE:
                         log.debug("Topology event ENTRY_REMOVE: {}", topologyEvent);
@@ -333,6 +343,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                             removedHostEvents.put(id, hostEvent);
                             reorderedAddedHostEvents.remove(id);
                         }
+                        if (mastershipEvent != null) {
+                            ByteBuffer id = mastershipEvent.getIDasByteBuffer();
+                            addedMastershipEvents.remove(id);
+                            removedMastershipEvents.put(id, mastershipEvent);
+                        }
                         break;
                     default:
                         log.error("Unknown topology event {}",
@@ -350,8 +365,15 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 // Apply the classified events.
                 //
                 // Apply the "add" events in the proper order:
-                //   switch, port, link, host
+                //   mastership, switch, port, link, host
                 //
+                // TODO: Currently, the Mastership events are not used,
+                // so their processing ordering is not important (undefined).
+                //
+                for (MastershipEvent mastershipEvent :
+                         addedMastershipEvents.values()) {
+                    processAddedMastershipEvent(mastershipEvent);
+                }
                 for (SwitchEvent switchEvent : addedSwitchEvents.values()) {
                     addSwitch(switchEvent);
                 }
@@ -366,7 +388,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 }
                 //
                 // Apply the "remove" events in the reverse order:
-                //   host, link, port, switch
+                //   host, link, port, switch, mastership
                 //
                 for (HostEvent hostEvent : removedHostEvents.values()) {
                     removeHost(hostEvent);
@@ -379,6 +401,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 }
                 for (SwitchEvent switchEvent : removedSwitchEvents.values()) {
                     removeSwitch(switchEvent);
+                }
+                for (MastershipEvent mastershipEvent :
+                         removedMastershipEvents.values()) {
+                    processRemovedMastershipEvent(mastershipEvent);
                 }
 
                 //
@@ -888,6 +914,29 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     //
 
     /**
+     * Mastership updated event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    @Override
+    public void putSwitchMastershipEvent(MastershipEvent mastershipEvent) {
+        // Send out notification
+        TopologyEvent topologyEvent = new TopologyEvent(mastershipEvent);
+        eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
+    }
+
+    /**
+     * Mastership removed event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    @Override
+    public void removeSwitchMastershipEvent(MastershipEvent mastershipEvent) {
+        // Send out notification
+        eventChannel.removeEntry(mastershipEvent.getID());
+    }
+
+    /**
      * Adds a switch to the topology replica.
      *
      * @param switchEvent the SwitchEvent with the switch to add.
@@ -1269,6 +1318,30 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         log.debug("Removed {}", hostInTopo);
         topology.removeHost(mac);
         apiRemovedHostEvents.add(hostInTopo);
+    }
+
+    /**
+     * Processes added Switch Mastership event.
+     *
+     * @param mastershipEvent the MastershipEvent to process.
+     */
+    @GuardedBy("topology.writeLock")
+    private void processAddedMastershipEvent(MastershipEvent mastershipEvent) {
+        log.debug("Processing added Mastership event {}",
+                  mastershipEvent);
+        // TODO: Not implemented/used yet.
+    }
+
+    /**
+     * Processes removed Switch Mastership event.
+     *
+     * @param mastershipEvent the MastershipEvent to process.
+     */
+    @GuardedBy("topology.writeLock")
+    private void processRemovedMastershipEvent(MastershipEvent mastershipEvent) {
+        log.debug("Processing removed Mastership event {}",
+                  mastershipEvent);
+        // TODO: Not implemented/used yet.
     }
 
     /**

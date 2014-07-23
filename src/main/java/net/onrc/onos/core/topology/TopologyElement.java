@@ -26,13 +26,20 @@ public class TopologyElement<T extends TopologyElement<T>>
      */
     public static final String TYPE = "type";
     /**
-     * Attribute "type" value representing that the object belongs to Packet layer.
+     * Attribute "type" value representing that the object belongs to Packet
+     * layer.
      */
     public static final String TYPE_PACKET_LAYER = "packet";
     /**
-     * Attribute "type" value representing that the object belongs to Optical layer.
+     * Attribute "type" value representing that the object belongs to Optical
+     * layer.
      */
     public static final String TYPE_OPTICAL_LAYER = "optical";
+    /**
+     * Attribute "type" value representing that the object belongs to all
+     * layers.
+     */
+    public static final String TYPE_ALL_LAYERS = "AllLayers";
 
     public static final String ELEMENT_CONFIG_STATE = "ConfigState";
 

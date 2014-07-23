@@ -36,6 +36,7 @@ import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -59,12 +60,14 @@ import net.floodlightcontroller.core.util.ListenerDispatcher;
 import net.floodlightcontroller.core.web.CoreWebRoutable;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
+import net.onrc.onos.api.registry.ILocalSwitchMastershipListener;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.main.IOFSwitchPortListener;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
 import net.onrc.onos.core.registry.RegistryException;
+import net.onrc.onos.core.util.Dpid;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -161,6 +164,9 @@ public class Controller implements IFloodlightProviderService {
 
     protected Set<IOFSwitchListener> switchListeners;
     protected BlockingQueue<IUpdate> updates;
+
+    private CopyOnWriteArrayList<ILocalSwitchMastershipListener> localSwitchMastershipListeners =
+        new CopyOnWriteArrayList<>();
 
     // Module dependencies
     protected IRestApiService restApi;
@@ -300,46 +306,59 @@ public class Controller implements IFloodlightProviderService {
 
     protected class RoleChangeCallback implements ControlChangeCallback {
         @Override
-        public void controlChanged(long dpid, boolean hasControl) {
+        public void controlChanged(long dpidLong, boolean hasControl) {
+            Dpid dpid = new Dpid(dpidLong);
             log.info("Role change callback for switch {}, hasControl {}",
-                    HexString.toHexString(dpid), hasControl);
+                     dpid, hasControl);
 
             synchronized (roleChanger) {
+                Role role = null;
+                /*
+                 * issue #229
+                 * Cannot rely on sw.getRole() as it can be behind due to pending
+                 * role changes in the queue. Just submit it and late the RoleChanger
+                 * handle duplicates.
+                 */
+                if (hasControl) {
+                    role = Role.MASTER;
+                } else {
+                    role = Role.SLAVE;
+                }
+                //
+                // Inform all listeners about the Controller role change.
+                //
+                // NOTE: The role change here is triggered by the mastership
+                // election mechanism, and reflects what the Controller itself
+                // believes its role should be. The role change request hasn't
+                // been accepted by the switch itself.
+                // If the semantics for informing the listeners is changed
+                // (i.e., the listeners should be informed after the switch
+                // has accepted the role change), then the code below should
+                // be moved to method handleRoleReplyMessage() or its
+                // equivalent.
+                // 
+                for (ILocalSwitchMastershipListener listener : localSwitchMastershipListeners) {
+                    listener.controllerRoleChanged(dpid, role);
+                }
+
                 OFSwitchImpl sw = null;
                 for (OFSwitchImpl connectedSw : connectedSwitches) {
-                    if (connectedSw.getId() == dpid) {
+                    if (connectedSw.getId() == dpidLong) {
                         sw = connectedSw;
                         break;
                     }
                 }
                 if (sw == null) {
                     log.warn("Switch {} not found in connected switches",
-                            HexString.toHexString(dpid));
+                             dpid);
                     return;
-                }
-
-                Role role = null;
-                                
-                                /*
-                                 * issue #229
-                                 * Cannot rely on sw.getRole() as it can be behind due to pending
-                                 * role changes in the queue. Just submit it and late the RoleChanger
-                                 * handle duplicates.
-                                 */
-
-                if (hasControl) {
-                    role = Role.MASTER;
-                } else {
-                    role = Role.SLAVE;
                 }
 
                 log.debug("Sending role request {} msg to {}", role, sw);
                 Collection<OFSwitchImpl> swList = new ArrayList<OFSwitchImpl>(1);
                 swList.add(sw);
                 roleChanger.submitRequest(swList, role);
-
             }
-
         }
     }
 
@@ -392,6 +411,16 @@ public class Controller implements IFloodlightProviderService {
                 }
                 synchronized (roleChanger) {
                     if (controlRequested) {
+
+                        //
+                        // Inform all listeners about the switch disconnection
+                        //
+                        Dpid dpid = new Dpid(sw.getId());
+                        for (ILocalSwitchMastershipListener listener :
+                                 localSwitchMastershipListeners) {
+                            listener.switchDisconnected(dpid);
+                        }
+
                         registryService.releaseControl(sw.getId());
                     }
                     connectedSwitches.remove(sw);
@@ -1516,6 +1545,18 @@ public class Controller implements IFloodlightProviderService {
             lers.put(e.getKey(), e.getValue().getOrderedListeners());
         }
         return Collections.unmodifiableMap(lers);
+    }
+
+    @Override
+    public void addLocalSwitchMastershipListener(
+                ILocalSwitchMastershipListener listener) {
+        this.localSwitchMastershipListeners.addIfAbsent(listener);
+    }
+
+    @Override
+    public void removeLocalSwitchMastershipListener(
+                ILocalSwitchMastershipListener listener) {
+        this.localSwitchMastershipListeners.remove(listener);
     }
 
     @Override

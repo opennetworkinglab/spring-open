@@ -226,7 +226,7 @@ public class KryoFactoryTest {
             Result result = benchType(obj, EqualityCheck.TO_STRING);
             results.add(result);
             // update me if serialized form is expected to change
-            assertEquals(26, result.size);
+            assertEquals(27, result.size);
         }
 
         // TODO Add registered classes we still use.

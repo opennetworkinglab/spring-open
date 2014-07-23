@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
@@ -256,6 +257,59 @@ public class TopologyManagerTest {
 
         // Call the topologyManager function for removing a device
         theTopologyManager.removeHostDiscoveryEvent(hostEvent);
+
+        // Verify the function calls
+        verify(eventChannel);
+    }
+
+    /**
+     * Test the Switch Mastership updated event.
+     */
+    @Test
+    public void testPutSwitchMastershipEvent() {
+        // Mock the eventChannel functions first
+        eventChannel.addEntry(anyObject(byte[].class),
+                anyObject(TopologyEvent.class));
+        EasyMock.expectLastCall().times(1, 1); // 1 event
+        replay(eventChannel);
+
+        setupTopologyManager();
+
+        // Generate a new Switch Mastership event
+        Dpid dpid = new Dpid(100L);
+        String onosInstanceId = "ONOS-Test-Instance-ID";
+        Role role = Role.MASTER;
+        MastershipEvent mastershipEvent =
+            new MastershipEvent(dpid, onosInstanceId, role);
+
+        // Call the topologyManager function for adding the event
+        theTopologyManager.putSwitchMastershipEvent(mastershipEvent);
+
+        // Verify the function calls
+        verify(eventChannel);
+    }
+
+    /**
+     * Test the Switch Mastership removed event.
+     */
+    @Test
+    public void testRemoveSwitchMastershipEvent() {
+        // Mock the eventChannel functions first
+        eventChannel.removeEntry(anyObject(byte[].class));
+        EasyMock.expectLastCall().times(1, 1); // 1 event
+        replay(eventChannel);
+
+        setupTopologyManager();
+
+        // Generate a new Switch Mastership event
+        Dpid dpid = new Dpid(100L);
+        String onosInstanceId = "ONOS-Test-Instance-ID";
+        Role role = Role.MASTER;
+        MastershipEvent mastershipEvent =
+            new MastershipEvent(dpid, onosInstanceId, role);
+
+        // Call the topologyManager function for removing the event
+        theTopologyManager.removeSwitchMastershipEvent(mastershipEvent);
 
         // Verify the function calls
         verify(eventChannel);

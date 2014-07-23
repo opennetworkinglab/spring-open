@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
@@ -14,6 +15,7 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
+import net.onrc.onos.api.registry.ILocalSwitchMastershipListener;
 import net.onrc.onos.core.hostmanager.Host;
 import net.onrc.onos.core.hostmanager.IHostListener;
 import net.onrc.onos.core.hostmanager.IHostService;
@@ -42,7 +44,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         IOFSwitchPortListener,
         ILinkDiscoveryListener,
         IFloodlightModule,
-        IHostListener {
+        IHostListener,
+        ILocalSwitchMastershipListener {
     private static final Logger log =
             LoggerFactory.getLogger(TopologyPublisher.class);
 
@@ -331,6 +334,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         hostService = context.getServiceImpl(IHostService.class);
 
         topologyService = context.getServiceImpl(ITopologyService.class);
+
+        floodlightProvider.addLocalSwitchMastershipListener(this);
     }
 
     @Override
@@ -386,5 +391,36 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         //XXX shouldn't we be setting attachment points?
         event.freeze();
         topologyDiscoveryInterface.removeHostDiscoveryEvent(event);
+    }
+
+    @Override
+    public void controllerRoleChanged(Dpid dpid, Role role) {
+        log.debug("Local switch controller mastership role changed: dpid = {} role = {}", dpid, role);
+        MastershipEvent mastershipEvent =
+            new MastershipEvent(dpid, registryService.getControllerId(), role);
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        mastershipEvent.createStringAttribute(TopologyElement.TYPE,
+                                              TopologyElement.TYPE_ALL_LAYERS);
+        mastershipEvent.freeze();
+        topologyDiscoveryInterface.putSwitchMastershipEvent(mastershipEvent);
+    }
+
+    @Override
+    public void switchDisconnected(Dpid dpid) {
+        log.debug("Local switch disconnected: dpid = {} role = {}", dpid);
+
+        Role role = Role.SLAVE;         // TODO: Should be Role.UNKNOWN
+
+        MastershipEvent mastershipEvent =
+            new MastershipEvent(dpid, registryService.getControllerId(), role);
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        mastershipEvent.createStringAttribute(TopologyElement.TYPE,
+                                              TopologyElement.TYPE_ALL_LAYERS);
+        mastershipEvent.freeze();
+        topologyDiscoveryInterface.removeSwitchMastershipEvent(mastershipEvent);
     }
 }

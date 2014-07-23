@@ -54,14 +54,28 @@ public interface TopologyDiscoveryInterface {
     /**
      * Host discovered event.
      *
-     * @param hostEvent the device event.
+     * @param hostEvent the host event.
      */
     public void putHostDiscoveryEvent(HostEvent hostEvent);
 
     /**
      * Host removed event.
      *
-     * @param hostEvent the device event.
+     * @param hostEvent the host event.
      */
     public void removeHostDiscoveryEvent(HostEvent hostEvent);
+
+    /**
+     * Switch Mastership updated event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    public void putSwitchMastershipEvent(MastershipEvent mastershipEvent);
+
+    /**
+     * Switch Mastership removed event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    public void removeSwitchMastershipEvent(MastershipEvent mastershipEvent);
 }
