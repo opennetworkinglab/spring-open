@@ -67,6 +67,23 @@ public interface IIntentRuntimeService {
     boolean executeBatch(BatchOperation<Intent> ops);
 
     /**
+     * Adds an IntentResolver associated with a given intent type.
+     *
+     * @param type the class instance of the intent type.
+     * @param resolver the resolver of the given intent type.
+     * @param <T> the type of the intent.
+     */
+    public <T extends Intent> void addResolver(Class<T> type, IntentResolver<T> resolver);
+
+    /**
+     * Removes the IntentResolver associated with the intent type.
+     *
+     * @param type the class instance of the intent type.
+     * @param <T> the type of the intent.
+     */
+    public <T extends Intent> void removeResolver(Class<T> type);
+
+    /**
      * Gets IFlow objects managed by the specified intent.
      *
      * @param intentId ID of the target Intent.

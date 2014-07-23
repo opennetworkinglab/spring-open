@@ -9,6 +9,7 @@ import net.onrc.onos.api.flowmanager.IFlow;
 import net.onrc.onos.api.intent.IIntentRuntimeService;
 import net.onrc.onos.api.intent.Intent;
 import net.onrc.onos.api.intent.IntentId;
+import net.onrc.onos.api.intent.IntentResolver;
 
 /**
  * Implementation of Intent-Runtime Service.
@@ -61,6 +62,16 @@ public class IntentRuntimeModule implements IIntentRuntimeService {
         // - combines and executes flow operations using FlowManager Service.
         // - updates global distributed maps
         return false;
+    }
+
+    @Override
+    public <T extends Intent> void addResolver(Class<T> type, IntentResolver<T> resolver) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public <T extends Intent> void removeResolver(Class<T> type) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
