@@ -132,7 +132,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                 arpCache.update(targetIpAddress,
                         MACAddress.valueOf(value.getTargetMacAddress()));
             } catch (UnknownHostException e) {
-                log.error("Exception: ", e);
+                log.error("Unknown host", e);
             }
         }
 
@@ -143,7 +143,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             try {
                 arpCache.remove(InetAddress.getByAddress(value.getTargetAddress()));
             } catch (UnknownHostException e) {
-                log.error("Exception: ", e);
+                log.error("Unknown host", e);
             }
         }
 
@@ -158,7 +158,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                 arpCache.update(targetIpAddress,
                         MACAddress.valueOf(value.getTargetMacAddress()));
             } catch (UnknownHostException e) {
-                log.error("Exception: ", e);
+                log.error("Unknown host", e);
             }
         }
     }
@@ -393,7 +393,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             arpCacheEventChannel.addEntry(InetAddress.getByAddress(
                     arp.getSenderProtocolAddress()).toString(), arpCacheNotification);
         } catch (UnknownHostException e) {
-            log.error("Exception : ", e);
+            log.error("Unknown host", e);
         }
     }
 

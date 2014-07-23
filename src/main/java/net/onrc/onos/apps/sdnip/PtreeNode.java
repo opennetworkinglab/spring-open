@@ -33,7 +33,7 @@ public class PtreeNode {
                     log.debug(octet + ": filling key[{}] {}", i, key[i]);
                     this.key[i] = key[i];
                 } else {
-                    log.debug("no filling, null key", i);
+                    log.debug("no filling, null key");
                 }
             } else {
                 log.debug("filling key {} as 0", i);

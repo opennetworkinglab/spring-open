@@ -168,7 +168,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         boolean add(SwitchQueueEntry entry, MsgPriority priority) {
             Queue<SwitchQueueEntry> queue = getQueue(priority);
             if (queue == null) {
-                log.error("Unexpected priority : ", priority);
+                log.error("Unexpected priority: {}", priority);
                 return false;
             }
             return queue.add(entry);
@@ -197,7 +197,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                     return entry;
                 }
                 default:
-                    log.error("Unexpected QueueState : ", state);
+                    log.error("Unexpected QueueState: {}", state);
                     return null;
             }
         }
@@ -220,7 +220,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                     // Only checking high priority queue
                     return (!getQueue(MsgPriority.HIGH).isEmpty());
                 default:
-                    log.error("Unexpected QueueState : ", state);
+                    log.error("Unexpected QueueState: {}", state);
                     return false;
             }
 
@@ -378,7 +378,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                     try {
                         messageDamper.write(sw, msg, context);
                         if (log.isTraceEnabled()) {
-                            log.trace("Pusher sends message : {}", msg);
+                            log.trace("Pusher sends message: {}", msg);
                         }
                         size += msg.getLength();
                     } catch (IOException e) {
@@ -504,7 +504,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         SwitchQueue queue = getQueue(sw);
 
         if (queue == null) {
-            log.error("No queue is attached to DPID : {}", sw.getId());
+            log.error("No queue is attached to DPID: {}", sw.getId());
             return false;
         }
 
@@ -983,7 +983,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         synchronized (queue) {
             queue.add(entry, priority);
             if (log.isTraceEnabled()) {
-                log.trace("Message is pushed : {}", entry.getOFMessage());
+                log.trace("Message is pushed: {}", entry.getOFMessage());
             }
         }
 
@@ -1002,10 +1002,10 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         try {
             return future.get();
         } catch (InterruptedException e) {
-            log.error("InterruptedException:", e);
+            log.error("InterruptedException", e);
             return null;
         } catch (ExecutionException e) {
-            log.error("ExecutionException:", e);
+            log.error("ExecutionException", e);
             return null;
         }
     }
@@ -1096,12 +1096,12 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
         if (log.isTraceEnabled()) {
-            log.trace("Received BARRIER_REPLY from : {}", sw.getId());
+            log.trace("Received BARRIER_REPLY from: {}", sw.getId());
         }
 
         if ((msg.getType() != OFType.BARRIER_REPLY) ||
             !(msg instanceof OFBarrierReply)) {
-            log.error("Unexpected reply message : {}", msg.getType());
+            log.error("Unexpected reply message: {}", msg.getType());
             return Command.CONTINUE;
         }
 
