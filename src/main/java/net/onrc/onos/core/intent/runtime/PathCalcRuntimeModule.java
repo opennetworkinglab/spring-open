@@ -140,7 +140,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                             break;
                         case INST_ACK:
                             intentAddProcessingRate.mark(1);
-                            intentAddEndTimestamp = System.nanoTime();
+                            intentAddEndTimestampEpochMs = System.currentTimeMillis();
                             break;
                         case INST_NACK:
                             break;
@@ -148,7 +148,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                             break;
                         case DEL_ACK:
                             intentRemoveProcessingRate.mark(1);
-                            intentRemoveEndTimestamp = System.nanoTime();
+                            intentRemoveEndTimestampEpochMs = System.currentTimeMillis();
                             break;
                         case DEL_PENDING:
                             break;
@@ -282,52 +282,52 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     private static final MetricsFeature METRICS_FEATURE_REMOVE_OPERATION =
         METRICS_COMPONENT.registerFeature("RemoveOperation");
     //
-    // Timestamp of the incoming Add Intent API operation (system nanoseconds)
-    private volatile long intentAddBeginTimestamp = 0;
-    private final Gauge<Long> gaugeIntentAddBeginTimestamp =
+    // Timestamp of the incoming Add Intent API operation (ms from the Epoch)
+    private volatile long intentAddBeginTimestampEpochMs = 0;
+    private final Gauge<Long> gaugeIntentAddBeginTimestampEpochMs =
         OnosMetrics.registerMetric(METRICS_COMPONENT,
                                    METRICS_FEATURE_ADD_OPERATION,
-                                   "BeginOperationTimestamp",
+                                   "BeginOperationTimestamp.EpochMs",
                                    new Gauge<Long>() {
                                        @Override
                                        public Long getValue() {
-                                           return intentAddBeginTimestamp;
+                                           return intentAddBeginTimestampEpochMs;
                                        }
                                    });
-    // Timestamp of the Add Intent operation completion (system nanoseconds)
-    private volatile long intentAddEndTimestamp = 0;
-    private final Gauge<Long> gaugeIntentAddEndTimestamp =
+    // Timestamp of the Add Intent operation completion (ms from the Epoch)
+    private volatile long intentAddEndTimestampEpochMs = 0;
+    private final Gauge<Long> gaugeIntentAddEndTimestampEpochMs =
         OnosMetrics.registerMetric(METRICS_COMPONENT,
                                    METRICS_FEATURE_ADD_OPERATION,
-                                   "EndOperationTimestamp",
+                                   "EndOperationTimestamp.EpochMs",
                                    new Gauge<Long>() {
                                        @Override
                                        public Long getValue() {
-                                           return intentAddEndTimestamp;
+                                           return intentAddEndTimestampEpochMs;
                                        }
                                    });
-    // Timestamp of the incoming Remove Intent API operation (system nanoseconds)
-    private volatile long intentRemoveBeginTimestamp = 0;
-    private final Gauge<Long> gaugeIntentRemoveBeginTimestamp =
+    // Timestamp of the incoming Remove Intent API operation (ms from the Epoch)
+    private volatile long intentRemoveBeginTimestampEpochMs = 0;
+    private final Gauge<Long> gaugeIntentRemoveBeginTimestampEpochMs =
         OnosMetrics.registerMetric(METRICS_COMPONENT,
                                    METRICS_FEATURE_REMOVE_OPERATION,
-                                   "BeginOperationTimestamp",
+                                   "BeginOperationTimestamp.EpochMs",
                                    new Gauge<Long>() {
                                        @Override
                                        public Long getValue() {
-                                           return intentRemoveBeginTimestamp;
+                                           return intentRemoveBeginTimestampEpochMs;
                                        }
                                    });
-    // Timestamp of the Remove Intent operation completion (system nanoseconds)
-    private volatile long intentRemoveEndTimestamp = 0;
-    private final Gauge<Long> gaugeIntentRemoveEndTimestamp =
+    // Timestamp of the Remove Intent operation completion (ms from the Epoch)
+    private volatile long intentRemoveEndTimestampEpochMs = 0;
+    private final Gauge<Long> gaugeIntentRemoveEndTimestampEpochMs =
         OnosMetrics.registerMetric(METRICS_COMPONENT,
                                    METRICS_FEATURE_REMOVE_OPERATION,
-                                   "EndOperationTimestamp",
+                                   "EndOperationTimestamp.EpochMs",
                                    new Gauge<Long>() {
                                        @Override
                                        public Long getValue() {
-                                           return intentRemoveEndTimestamp;
+                                           return intentRemoveEndTimestampEpochMs;
                                        }
                                    });
     //
@@ -545,7 +545,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         // Update the metrics
         //
         if (!appIntents.isEmpty()) {
-            this.intentAddBeginTimestamp = System.nanoTime();
+            this.intentAddBeginTimestampEpochMs = System.currentTimeMillis();
             this.intentAddIncomingRate.mark(appIntents.size());
         }
 
@@ -614,7 +614,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         //
         // Prepare the timestamp for metrics
         //
-        long nanoTimeTimestamp = System.nanoTime();
+        long timestampEpochMs = System.currentTimeMillis();
 
         IntentMap intentMap = getHighLevelIntents();
         List<String> removeIntentIds = new LinkedList<String>();
@@ -641,7 +641,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         // Update the metrics
         //
         if (!operations.isEmpty()) {
-            this.intentRemoveBeginTimestamp = nanoTimeTimestamp;
+            this.intentRemoveBeginTimestampEpochMs = timestampEpochMs;
             this.intentRemoveIncomingRate.mark(operations.size());
         }
 
@@ -671,7 +671,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         //
         // Prepare the timestamp for metrics
         //
-        long nanoTimeTimestamp = System.nanoTime();
+        long timestampEpochMs = System.currentTimeMillis();
 
         Collection<Intent> allHighLevelIntents =
             getHighLevelIntents().getAllIntents();
@@ -695,7 +695,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         // Update the metrics
         //
         if (!operations.isEmpty()) {
-            this.intentRemoveBeginTimestamp = nanoTimeTimestamp;
+            this.intentRemoveBeginTimestampEpochMs = timestampEpochMs;
             this.intentRemoveIncomingRate.mark(operations.size());
         }
 

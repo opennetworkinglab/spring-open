@@ -30,7 +30,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = TopologyEventsSerializer.class)
 public final class TopologyEvents {
-    private final long timestamp;       // Topology event timestamp (system ns)
+    private final long timestamp;       // Topology event timestamp (Epoch ms)
     private final Collection<SwitchEvent> addedSwitchEvents;
     private final Collection<SwitchEvent> removedSwitchEvents;
     private final Collection<PortEvent> addedPortEvents;
@@ -43,7 +43,7 @@ public final class TopologyEvents {
     /**
      * Constructor.
      *
-     * @param timestamp the timestamp for the event (system nanoseconds)
+     * @param timestamp the timestamp for the event (Epoch ms)
      * @param addedSwitchEvents the collection of added Switch Events.
      * @param removedSwitchEvents the collection of removed Switch Events.
      * @param addedPortEvents the collection of added Port Events.
@@ -84,9 +84,9 @@ public final class TopologyEvents {
     }
 
     /**
-     * Gets the timestamp for the events (system nanoseconds).
+     * Gets the timestamp for the events (Epoch ms).
      *
-     * @return the timestamp for the events (system nanoseconds).
+     * @return the timestamp for the events (Epoch ms).
      */
     public long getTimestamp() {
         return timestamp;

@@ -81,16 +81,16 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     private static final MetricsFeature METRICS_FEATURE_EVENT_NOTIFICATION =
         METRICS_COMPONENT.registerFeature("EventNotification");
     //
-    // Timestamp of the last Topology event (system nanoseconds)
-    private volatile long lastEventTimestamp = 0;
-    private final Gauge<Long> gaugeLastEventTimestamp =
+    // Timestamp of the last Topology event (ms from the Epoch)
+    private volatile long lastEventTimestampEpochMs = 0;
+    private final Gauge<Long> gaugeLastEventTimestampEpochMs =
         OnosMetrics.registerMetric(METRICS_COMPONENT,
                                    METRICS_FEATURE_EVENT_NOTIFICATION,
-                                   "LastEventTimestamp",
+                                   "LastEventTimestamp.EpochMs",
                                    new Gauge<Long>() {
                                        @Override
                                        public Long getValue() {
-                                           return lastEventTimestamp;
+                                           return lastEventTimestampEpochMs;
                                        }
                                    });
     // Rate of the Topology events published to the Topology listeners
@@ -506,14 +506,14 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             apiAddedLinkEvents.size() + apiRemovedLinkEvents.size() +
             apiAddedHostEvents.size() + apiRemovedHostEvents.size();
         this.listenerEventRate.mark(totalEvents);
-        this.lastEventTimestamp = System.nanoTime();
+        this.lastEventTimestampEpochMs = System.currentTimeMillis();
 
         //
         // Deliver the events
         //
         for (ITopologyListener listener : this.topologyListeners) {
             TopologyEvents events =
-                new TopologyEvents(lastEventTimestamp,
+                new TopologyEvents(lastEventTimestampEpochMs,
                                    kryo.copy(apiAddedSwitchEvents),
                                    kryo.copy(apiRemovedSwitchEvents),
                                    kryo.copy(apiAddedPortEvents),
