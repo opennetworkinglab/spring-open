@@ -58,7 +58,7 @@ public class OFMessage {
     
     protected synchronized ConcurrentHashMap<String, Object> getMessageStore() {
         if (storage == null) {
-            storage = new ConcurrentHashMap<String, Object>();;
+            storage = new ConcurrentHashMap<String, Object>();
         }
         return storage;
     }

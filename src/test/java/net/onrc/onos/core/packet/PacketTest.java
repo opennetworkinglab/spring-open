@@ -1,8 +1,7 @@
 package net.onrc.onos.core.packet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -110,8 +109,8 @@ public class PacketTest {
             ARP arp = (ARP) pkt;
             ARP newArp = (ARP) newPkt;
             newArp.setSenderProtocolAddress(new byte[]{1, 2, 3, 4});
-            assertEquals(false, newArp.getSenderProtocolAddress()
-                    .equals(arp.getSenderProtocolAddress()));
+            assertThat(newArp.getSenderProtocolAddress(),
+                    not(equalTo(arp.getSenderProtocolAddress())));
             assertEquals(false, newPkt.equals(pkt));
         }
 

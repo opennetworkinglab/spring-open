@@ -770,5 +770,43 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>error-prone</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.1</version>
+            <configuration>
+              <compilerArgs combine.children="append">
+                <!-- FIXME -Xlint:-path required when using findbugs + error-prone -->
+                <arg>-Xlint:-path</arg>
+              </compilerArgs>
+              <!-- Turn on error-prone -->
+              <compilerId>javac-with-errorprone</compilerId>
+              <forceJavacCompilerUse>true</forceJavacCompilerUse>
+            </configuration>
+            <dependencies combine.children="append">
+              <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>1.1.2</version>
+              </dependency>
+              <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-compiler-javac</artifactId>
+                <version>2.3</version>
+              </dependency>
+              <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-compiler-javac-errorprone</artifactId>
+                <version>2.3</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

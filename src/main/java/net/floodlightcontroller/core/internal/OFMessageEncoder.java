@@ -48,7 +48,7 @@ public class OFMessageEncoder extends OneToOneEncoder {
         }
 
         ChannelBuffer buf = ChannelBuffers.buffer(size);
-        ;
+
         for (OFMessage ofm : msglist) {
             ofm.writeTo(buf);
         }
