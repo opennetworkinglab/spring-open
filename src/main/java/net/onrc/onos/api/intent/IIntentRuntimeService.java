@@ -84,6 +84,35 @@ public interface IIntentRuntimeService {
     public <T extends Intent> void removeResolver(Class<T> type);
 
     /**
+     * Adds an IntentInstaller associated with a given intent type.
+     *
+     * If there is an Intent instance of the specified Intent type in the runtime,
+     * the specified IntentInstaller doesn't replace the existing installer.
+     * Otherwise, the existing installer is replaced with the specified installer.
+     *
+     * @param type the class instance of the intent type.
+     * @param installer the installer of the given intent type.
+     * @param <T> the type of the intent.
+     * @return false when there is an Intent instance of the specified intent type
+     * in the runtime. Otherwise, true.
+     */
+    public <T extends Intent> boolean addInstaller(Class<T> type, IntentInstaller<T> installer);
+
+    /**
+     * Removes the IntentInstaller associated with a given intent type.
+     *
+     * If there is an Intent instance of the specified Intent type in the runtime,
+     * the specified IntentInstaller is not removed. Otherwise, the existing
+     * IntentInstaller is removed from the runtime.
+     *
+     * @param type the class instance of the intent type.
+     * @param <T> the type of the intent.
+     * @return false when there is an Intent instance of the specified intent type
+     * in the runtime. Otherwise, true.
+     */
+    public <T extends Intent> boolean removeInstaller(Class<T> type);
+
+    /**
      * Gets IFlow objects managed by the specified intent.
      *
      * @param intentId ID of the target Intent.

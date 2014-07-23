@@ -9,6 +9,7 @@ import net.onrc.onos.api.flowmanager.IFlow;
 import net.onrc.onos.api.intent.IIntentRuntimeService;
 import net.onrc.onos.api.intent.Intent;
 import net.onrc.onos.api.intent.IntentId;
+import net.onrc.onos.api.intent.IntentInstaller;
 import net.onrc.onos.api.intent.IntentResolver;
 
 /**
@@ -72,6 +73,18 @@ public class IntentRuntimeModule implements IIntentRuntimeService {
     @Override
     public <T extends Intent> void removeResolver(Class<T> type) {
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public <T extends Intent> boolean addInstaller(Class<T> type, IntentInstaller<T> installer) {
+        // TODO: implement this method
+        return false;
+    }
+
+    @Override
+    public <T extends Intent> boolean removeInstaller(Class<T> type) {
+        // TODO: impelment this method
+        return false;
     }
 
     @Override
