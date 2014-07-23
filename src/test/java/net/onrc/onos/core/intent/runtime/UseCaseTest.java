@@ -284,8 +284,7 @@ public class UseCaseTest {
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(0,
-                                            addedSwitchEvents,
+        topologyEvents = new TopologyEvents(addedSwitchEvents,
                                             removedSwitchEvents,
                                             addedPortEvents,
                                             removedPortEvents,
@@ -318,8 +317,7 @@ public class UseCaseTest {
         addedLinkEvents.add(linkEvent1);
         addedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(0,
-                                            addedSwitchEvents,
+        topologyEvents = new TopologyEvents(addedSwitchEvents,
                                             removedSwitchEvents,
                                             addedPortEvents,
                                             removedPortEvents,

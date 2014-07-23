@@ -30,7 +30,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = TopologyEventsSerializer.class)
 public final class TopologyEvents {
-    private final long timestamp;       // Topology event timestamp (Epoch ms)
     private final Collection<SwitchEvent> addedSwitchEvents;
     private final Collection<SwitchEvent> removedSwitchEvents;
     private final Collection<PortEvent> addedPortEvents;
@@ -43,7 +42,6 @@ public final class TopologyEvents {
     /**
      * Constructor.
      *
-     * @param timestamp the timestamp for the event (Epoch ms)
      * @param addedSwitchEvents the collection of added Switch Events.
      * @param removedSwitchEvents the collection of removed Switch Events.
      * @param addedPortEvents the collection of added Port Events.
@@ -54,8 +52,7 @@ public final class TopologyEvents {
      * @param removedHostEvents the collection of removed Host Events.
      */
     // CHECKSTYLE:OFF suppress the warning about too many parameters
-    public TopologyEvents(long timestamp,
-                          Collection<SwitchEvent> addedSwitchEvents,
+    public TopologyEvents(Collection<SwitchEvent> addedSwitchEvents,
                           Collection<SwitchEvent> removedSwitchEvents,
                           Collection<PortEvent> addedPortEvents,
                           Collection<PortEvent> removedPortEvents,
@@ -64,7 +61,6 @@ public final class TopologyEvents {
                           Collection<HostEvent> addedHostEvents,
                           Collection<HostEvent> removedHostEvents) {
         // CHECKSTYLE:ON
-        this.timestamp = timestamp;
         this.addedSwitchEvents =
             Collections.unmodifiableCollection(addedSwitchEvents);
         this.removedSwitchEvents =
@@ -81,15 +77,6 @@ public final class TopologyEvents {
             Collections.unmodifiableCollection(addedHostEvents);
         this.removedHostEvents =
             Collections.unmodifiableCollection(removedHostEvents);
-    }
-
-    /**
-     * Gets the timestamp for the events (Epoch ms).
-     *
-     * @return the timestamp for the events (Epoch ms).
-     */
-    public long getTimestamp() {
-        return timestamp;
     }
 
     /**

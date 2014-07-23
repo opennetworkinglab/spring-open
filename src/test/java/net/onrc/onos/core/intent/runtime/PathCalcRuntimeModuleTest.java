@@ -474,8 +474,7 @@ public class PathCalcRuntimeModuleTest {
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(0,
-                                            emptySwitchEvents,
+        topologyEvents = new TopologyEvents(emptySwitchEvents,
                                             emptySwitchEvents,
                                             emptyPortEvents,
                                             emptyPortEvents,
@@ -710,8 +709,7 @@ public class PathCalcRuntimeModuleTest {
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(0,
-                                            emptySwitchEvents,
+        topologyEvents = new TopologyEvents(emptySwitchEvents,
                                             emptySwitchEvents,
                                             emptyPortEvents,
                                             emptyPortEvents,
@@ -763,8 +761,7 @@ public class PathCalcRuntimeModuleTest {
         addedLinkEvents.add(linkEvent1);
         addedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(0,
-                                            emptySwitchEvents,
+        topologyEvents = new TopologyEvents(emptySwitchEvents,
                                             emptySwitchEvents,
                                             emptyPortEvents,
                                             emptyPortEvents,

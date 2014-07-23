@@ -513,8 +513,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         //
         for (ITopologyListener listener : this.topologyListeners) {
             TopologyEvents events =
-                new TopologyEvents(lastEventTimestampEpochMs,
-                                   kryo.copy(apiAddedSwitchEvents),
+                new TopologyEvents(kryo.copy(apiAddedSwitchEvents),
                                    kryo.copy(apiRemovedSwitchEvents),
                                    kryo.copy(apiAddedPortEvents),
                                    kryo.copy(apiRemovedPortEvents),
