@@ -19,29 +19,24 @@ import net.onrc.onos.api.flowmanager.IFlow;
  */
 public interface IIntentRuntimeService {
     /**
-     * Adds specified intent.
+     * Installs the specified intent synchronously.
      *
-     * @param intent Intent to be added.
-     * @return true if succeeded, false otherwise.
+     * This method blocks until the installation succeeds or fails.
+     *
+     * @param intent the intent to be installed.
+     * @return true if the intent is successfully installed. Otherwise, false.
      */
-    boolean addIntent(Intent intent);
+    public boolean install(Intent intent);
 
     /**
-     * Removes specified intent.
+     * Removes the specified intent synchronously.
      *
-     * @param id ID of the intent to be removed.
-     * @return true if succeeded, false otherwise.
-     */
-    boolean removeIntent(IntentId id);
-
-    /**
-     * Overwrites existing intent by new specified intent.
+     * This method blocks until the removal succeeds or fails.
      *
-     * @param id ID of the existing intent to be overwritten.
-     * @param intent The new intent to be added.
-     * @return true if succeeded, false otherwise.
+     * @param id the ID of the intent to be uninstalled.
+     * @return true if the intent is successfully uninstalled. Otherwise, false.
      */
-    boolean updateIntent(IntentId id, Intent intent);
+    public boolean remove(IntentId id);
 
     /**
      * Gets specific intent.

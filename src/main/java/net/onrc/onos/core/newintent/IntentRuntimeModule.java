@@ -19,26 +19,16 @@ import net.onrc.onos.api.intent.IntentResolver;
  * TODO: Design methods to support the ReactiveForwarding and the SDN-IP.
  */
 public class IntentRuntimeModule implements IIntentRuntimeService {
-
     @Override
-    public boolean addIntent(Intent intent) {
-        BatchOperation<Intent> ops = new BatchOperation<Intent>();
-        ops.addAddOperation(intent);
-        return executeBatch(ops);
+    public boolean install(Intent intent) {
+        // TODO: implement this method
+        return false;
     }
 
     @Override
-    public boolean removeIntent(IntentId id) {
-        BatchOperation<Intent> ops = new BatchOperation<Intent>();
-        ops.addRemoveOperation(id);
-        return executeBatch(ops);
-    }
-
-    @Override
-    public boolean updateIntent(IntentId id, Intent intent) {
-        BatchOperation<Intent> ops = new BatchOperation<Intent>();
-        ops.addUpdateOperation(id, intent);
-        return executeBatch(ops);
+    public boolean remove(IntentId id) {
+        // TODO: implement this method
+        return false;
     }
 
     @Override
