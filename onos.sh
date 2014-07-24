@@ -122,6 +122,10 @@ JVM_OPTS="$JVM_OPTS -XX:CompileThreshold=1500"
 
 JVM_OPTS="$JVM_OPTS -XX:OnError=crash-logger" ;# For dumping core
 
+# This option tells the VM to generate a heap dump when memory allocation cannot be satisfied.
+# http://www.oracle.com/technetwork/java/javase/clopts-139448.html#gbzrr
+JVM_OPTS="$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${ONOS_HOME}"
+
 # Workaround for Thread Priority http://tech.stolsvik.com/2010/01/linux-java-thread-priorities-workaround.html
 JVM_OPTS="$JVM_OPTS -XX:+UseThreadPriorities -XX:ThreadPriorityPolicy=42"
 
