@@ -43,16 +43,21 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public Dpid getDpid() {
-        return asSwitchPort().getDpid();
+        return getSwitchPort().getDpid();
     }
 
     @Override
     public PortNumber getNumber() {
-        return asSwitchPort().getPortNumber();
+        return getPortNumber();
     }
 
     @Override
-    public SwitchPort asSwitchPort() {
+    public PortNumber getPortNumber() {
+        return getSwitchPort().getPortNumber();
+    }
+
+    @Override
+    public SwitchPort getSwitchPort() {
         return id;
     }
 
@@ -81,7 +86,7 @@ public class PortImpl extends TopologyObject implements Port {
     public Link getOutgoingLink() {
         topology.acquireReadLock();
         try {
-            return topology.getOutgoingLink(asSwitchPort());
+            return topology.getOutgoingLink(getSwitchPort());
         } finally {
             topology.releaseReadLock();
         }
@@ -91,7 +96,7 @@ public class PortImpl extends TopologyObject implements Port {
     public Link getOutgoingLink(String type) {
         topology.acquireReadLock();
         try {
-            return topology.getOutgoingLink(asSwitchPort(), type);
+            return topology.getOutgoingLink(getSwitchPort(), type);
         } finally {
             topology.releaseReadLock();
         }
@@ -101,7 +106,7 @@ public class PortImpl extends TopologyObject implements Port {
     public Collection<Link> getOutgoingLinks() {
         topology.acquireReadLock();
         try {
-            return topology.getOutgoingLinks(asSwitchPort());
+            return topology.getOutgoingLinks(getSwitchPort());
         } finally {
             topology.releaseReadLock();
         }
@@ -111,7 +116,7 @@ public class PortImpl extends TopologyObject implements Port {
     public Link getIncomingLink() {
         topology.acquireReadLock();
         try {
-            return topology.getIncomingLink(asSwitchPort());
+            return topology.getIncomingLink(getSwitchPort());
         } finally {
             topology.releaseReadLock();
         }
@@ -121,7 +126,7 @@ public class PortImpl extends TopologyObject implements Port {
     public Link getIncomingLink(String type) {
         topology.acquireReadLock();
         try {
-            return topology.getIncomingLink(asSwitchPort(), type);
+            return topology.getIncomingLink(getSwitchPort(), type);
         } finally {
             topology.releaseReadLock();
         }
@@ -131,7 +136,7 @@ public class PortImpl extends TopologyObject implements Port {
     public Collection<Link> getIncomingLinks() {
         topology.acquireReadLock();
         try {
-            return topology.getIncomingLinks(asSwitchPort());
+            return topology.getIncomingLinks(getSwitchPort());
         } finally {
             topology.releaseReadLock();
         }
@@ -141,7 +146,7 @@ public class PortImpl extends TopologyObject implements Port {
     public Collection<Host> getHosts() {
         topology.acquireReadLock();
         try {
-            return topology.getHosts(this.asSwitchPort());
+            return topology.getHosts(this.getSwitchPort());
         } finally {
             topology.releaseReadLock();
         }

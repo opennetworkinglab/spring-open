@@ -931,7 +931,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         for (Port port : topology.getPorts(dpid)) {
             log.warn("Port {} on Switch {} should be removed prior to removing Switch. Removing Port now.",
                     port, switchEvent);
-            PortEvent portEvent = new PortEvent(port.asSwitchPort());
+            PortEvent portEvent = new PortEvent(port.getSwitchPort());
             portsToRemove.add(portEvent);
         }
         for (PortEvent portEvent : portsToRemove) {

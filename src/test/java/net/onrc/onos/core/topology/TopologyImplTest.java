@@ -64,12 +64,12 @@ public class TopologyImplTest {
             final Dpid dpidA = new Dpid(switchID);
             final Dpid dpidB = new Dpid(switchID % TEST_SWITCH_NUM + 1);
             LinkEvent testLinkEast = new LinkEvent(
-                    testTopology.getPort(dpidA, PORT_NUMBER_2).asSwitchPort(),
-                    testTopology.getPort(dpidB, PORT_NUMBER_1).asSwitchPort()
+                    testTopology.getPort(dpidA, PORT_NUMBER_2).getSwitchPort(),
+                    testTopology.getPort(dpidB, PORT_NUMBER_1).getSwitchPort()
                     );
             LinkEvent testLinkWest = new LinkEvent(
-                    testTopology.getPort(dpidB, PORT_NUMBER_1).asSwitchPort(),
-                    testTopology.getPort(dpidA, PORT_NUMBER_2).asSwitchPort()
+                    testTopology.getPort(dpidB, PORT_NUMBER_1).getSwitchPort(),
+                    testTopology.getPort(dpidA, PORT_NUMBER_2).getSwitchPort()
                     );
             testTopology.putLink(testLinkEast);
             testTopology.putLink(testLinkWest);
@@ -300,7 +300,7 @@ public class TopologyImplTest {
                 testTopology.removeHost(itr.next().getMacAddress());
             }
             for (Port port : testTopology.getSwitch(dpid).getPorts()) {
-                testTopology.removePort(port.asSwitchPort());
+                testTopology.removePort(port.getSwitchPort());
             }
             testTopology.removeSwitch(dpid);
 

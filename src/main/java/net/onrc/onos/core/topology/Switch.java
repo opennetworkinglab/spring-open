@@ -33,11 +33,11 @@ public interface Switch extends ITopologyElement, StringAttributes {
     /**
      * Gets a port on switch by port number.
      *
-     * @param number port number
+     * @param portNumber port number
      * @return {@link Port} with {@code number} on this switch, or {@code null}
      *         if this switch did not have a port for specified port number
      */
-    public Port getPort(PortNumber number);
+    public Port getPort(PortNumber portNumber);
 
     // Graph traversal API
 
@@ -73,7 +73,6 @@ public interface Switch extends ITopologyElement, StringAttributes {
      */
     public Link getLinkToNeighbor(Dpid dpid);
 
-    // XXX Iterable or Collection?
     /**
      * Gets all the devices attached to this switch.
      *

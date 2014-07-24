@@ -126,13 +126,13 @@ public class MockTopology extends TopologyImpl {
 
         MACAddress mac1 = MACAddress.valueOf("00:44:33:22:11:00");
         HostEvent host1 = new HostEvent(mac1);
-        host1.addAttachmentPoint(port15.asSwitchPort());
+        host1.addAttachmentPoint(port15.getSwitchPort());
         host1.setLastSeenTime(1L);
         this.putHost(host1);
 
         MACAddress mac3 = MACAddress.valueOf("00:11:22:33:44:55");
         HostEvent host3 = new HostEvent(mac3);
-        host3.addAttachmentPoint(port35.asSwitchPort());
+        host3.addAttachmentPoint(port35.getSwitchPort());
         host3.setLastSeenTime(1L);
         this.putHost(host3);
 

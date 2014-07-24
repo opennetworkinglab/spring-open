@@ -38,7 +38,7 @@ public class HostSerializer extends SerializerBase<Host> {
         jsonGenerator.writeFieldName("attachmentPoints");
         jsonGenerator.writeStartArray();
         for (Port port : host.getAttachmentPoints()) {
-            jsonGenerator.writeObject(port.asSwitchPort());
+            jsonGenerator.writeObject(port.getSwitchPort());
         }
         jsonGenerator.writeEndArray();
         jsonGenerator.writeEndObject();

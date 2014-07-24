@@ -37,10 +37,10 @@ public interface Topology {
      * Gets the port on a switch.
      *
      * @param dpid   the switch DPID.
-     * @param number the switch port number.
+     * @param portNumber the switch port number.
      * @return the switch port if found, otherwise null.
      */
-    public Port getPort(Dpid dpid, PortNumber number);
+    public Port getPort(Dpid dpid, PortNumber portNumber);
 
     /**
      * Gets the port on a switch.
@@ -65,20 +65,20 @@ public interface Topology {
      * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
-     * @param number the switch port number.
+     * @param portNumber the switch port number.
      * @return the outgoing link if found, otherwise null.
      */
-    public Link getOutgoingLink(Dpid dpid, PortNumber number);
+    public Link getOutgoingLink(Dpid dpid, PortNumber portNumber);
 
     /**
      * Gets the outgoing link from a switch port.
      *
      * @param dpid   the switch DPID.
-     * @param number the switch port number.
+     * @param portNumber the switch port number.
      * @param type   type of the link
      * @return the outgoing link if found, otherwise null.
      */
-    public Link getOutgoingLink(Dpid dpid, PortNumber number, String type);
+    public Link getOutgoingLink(Dpid dpid, PortNumber portNumber, String type);
 
     /**
      * Gets the outgoing link from a switch port.
@@ -115,10 +115,10 @@ public interface Topology {
      * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
-     * @param number the switch port number.
+     * @param portNumber the switch port number.
      * @return the incoming link if found, otherwise null.
      */
-    public Link getIncomingLink(Dpid dpid, PortNumber number);
+    public Link getIncomingLink(Dpid dpid, PortNumber portNumber);
 
     /**
      * Gets the incoming link to a switch port.
@@ -127,11 +127,11 @@ public interface Topology {
      * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
-     * @param number the switch port number.
+     * @param portNumber the switch port number.
      * @param type type of the link
      * @return the incoming link if found, otherwise null.
      */
-    public Link getIncomingLink(Dpid dpid, PortNumber number, String type);
+    public Link getIncomingLink(Dpid dpid, PortNumber portNumber, String type);
 
 
     /**
@@ -167,27 +167,27 @@ public interface Topology {
      * a port.
      *
      * @param srcDpid   the source switch DPID.
-     * @param srcNumber the source switch port number.
+     * @param srcPortNumber the source switch port number.
      * @param dstDpid   the destination switch DPID.
-     * @param dstNumber the destination switch port number.
+     * @param dstPortNumber the destination switch port number.
      * @return the outgoing link if found, otherwise null.
      */
-    public Link getLink(Dpid srcDpid, PortNumber srcNumber,
-                        Dpid dstDpid, PortNumber dstNumber);
+    public Link getLink(Dpid srcDpid, PortNumber srcPortNumber,
+                        Dpid dstDpid, PortNumber dstPortNumber);
 
     /**
      * Gets the outgoing link from a switch and a port to another switch and
      * a port.
      *
      * @param srcDpid   the source switch DPID.
-     * @param srcNumber the source switch port number.
+     * @param srcPortNumber the source switch port number.
      * @param dstDpid   the destination switch DPID.
-     * @param dstNumber the destination switch port number.
+     * @param dstPortNumber the destination switch port number.
      * @param type      type of the link
      * @return the outgoing link if found, otherwise null.
      */
-    public Link getLink(Dpid srcDpid, PortNumber srcNumber,
-                        Dpid dstDpid, PortNumber dstNumber,
+    public Link getLink(Dpid srcDpid, PortNumber srcPortNumber,
+                        Dpid dstDpid, PortNumber dstPortNumber,
                         String type);
 
     /**

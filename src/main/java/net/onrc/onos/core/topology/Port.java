@@ -33,12 +33,19 @@ public interface Port extends ITopologyElement, StringAttributes {
     public PortNumber getNumber();
 
     /**
+     * Gets the port number of this port.
+     *
+     * @return port number
+     */
+    public PortNumber getPortNumber();
+
+    /**
      * Gets a {@link SwitchPort} that represents this Port's dpid and port
      * number.
      *
      * @return a SwitchPort representing the Port
      */
-    public SwitchPort asSwitchPort();
+    public SwitchPort getSwitchPort();
 
     /**
      * Gets the hardware address of this port.

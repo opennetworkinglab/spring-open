@@ -282,7 +282,7 @@ public class TopologyImpl implements Topology, TopologyInternal {
             if (link == null) {
                 continue;
             }
-            if (link.getDstPort().asSwitchPort().equals(dstSwitchPort)) {
+            if (link.getDstPort().getSwitchPort().equals(dstSwitchPort)) {
                 return link;
             }
         }
