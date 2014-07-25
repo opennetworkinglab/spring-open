@@ -22,6 +22,8 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -31,8 +33,11 @@ import net.floodlightcontroller.test.FloodlightTestCase;
 
 import org.junit.Test;
 import org.openflow.protocol.OFType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MessageDispatcherTest extends FloodlightTestCase {
+    private static final Logger log = LoggerFactory.getLogger(MessageDispatcherTest.class);
 
     IOFMessageListener createLMock(String name) {
         IOFMessageListener mock = createNiceMock(IOFMessageListener.class);
@@ -58,12 +63,16 @@ public class MessageDispatcherTest extends FloodlightTestCase {
         }
 
         List<IOFMessageListener> result = ld.getOrderedListeners();
-        System.out.print("Ordering: ");
+        StringWriter sw = new StringWriter();
+        PrintWriter out = new PrintWriter(sw);
+
+        out.print("Ordering: ");
         for (IOFMessageListener l : result) {
-            System.out.print(l.getName());
-            System.out.print(",");
+            out.print(l.getName());
+            out.print(",");
         }
-        System.out.print("\n");
+        out.print("\n");
+        log.debug(sw.toString());
 
         for (int ind_i = 0; ind_i < result.size(); ind_i++) {
             IOFMessageListener i = result.get(ind_i);
