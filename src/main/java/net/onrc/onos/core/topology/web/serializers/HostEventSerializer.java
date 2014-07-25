@@ -1,6 +1,7 @@
 package net.onrc.onos.core.topology.web.serializers;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.TopologyElement;
@@ -11,20 +12,28 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * Serializes HostEvents as JSON.
+ * JSON serializer for HostEvent objects.
  */
 public class HostEventSerializer extends SerializerBase<HostEvent> {
-
     /**
-     * Constructs a HostEvent Serializer.
+     * Default constructor.
      */
     public HostEventSerializer() {
         super(HostEvent.class);
     }
 
+    /**
+     * Serializes a HostEvent object in JSON.
+     *
+     * @param hostEvent the HostEvent that is being converted to JSON
+     * @param jsonGenerator generator to place the serialized JSON into
+     * @param serializerProvider unused but required for method override
+     * @throws IOException if the JSON serialization process fails
+     */
     @Override
     public void serialize(HostEvent hostEvent, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider) throws IOException {
+                          SerializerProvider serializerProvider)
+        throws IOException {
 
         //
         // TODO: For now, the JSON format of the serialized output should
@@ -41,6 +50,11 @@ public class HostEventSerializer extends SerializerBase<HostEvent> {
             jsonGenerator.writeObject(switchPort);
         }
         jsonGenerator.writeEndArray();
+        jsonGenerator.writeObjectFieldStart("stringAttributes");
+        for (Entry<String, String> entry : hostEvent.getAllStringAttributes().entrySet()) {
+            jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
+        }
+        jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }

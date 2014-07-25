@@ -11,20 +11,28 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * Serializes Host objects as JSON.
+ * JSON serializer for Host objects.
  */
 public class HostSerializer extends SerializerBase<Host> {
-
     /**
-     * Constructs a Host serializer.
+     * Default constructor.
      */
     public HostSerializer() {
         super(Host.class);
     }
 
+    /**
+     * Serializes a Host object in JSON.
+     *
+     * @param host the Host that is being converted to JSON
+     * @param jsonGenerator generator to place the serialized JSON into
+     * @param serializerProvider unused but required for method override
+     * @throws IOException if the JSON serialization process fails
+     */
     @Override
     public void serialize(Host host, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider) throws IOException {
+                          SerializerProvider serializerProvider)
+        throws IOException {
 
         //
         // TODO: For now, the JSON format of the serialized output should
@@ -41,6 +49,17 @@ public class HostSerializer extends SerializerBase<Host> {
             jsonGenerator.writeObject(port.getSwitchPort());
         }
         jsonGenerator.writeEndArray();
+        //
+        // NOTE: Class Host itself doesn't have stringAttributes.
+        // Adding empty object for now for consistency with HostEventSerializer
+        //
+        jsonGenerator.writeObjectFieldStart("stringAttributes");
+        /*
+        for (Entry<String, String> entry : host.getAllStringAttributes().entrySet()) {
+            jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
+        }
+        */
+        jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }

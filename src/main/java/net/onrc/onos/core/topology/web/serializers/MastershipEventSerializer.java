@@ -1,5 +1,8 @@
 package net.onrc.onos.core.topology.web.serializers;
 
+import java.io.IOException;
+import java.util.Map.Entry;
+
 import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.TopologyElement;
 
@@ -7,33 +10,31 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
-import java.io.IOException;
-
 /**
- * JSON serializer for MastershipEvents.
+ * JSON serializer for MastershipEvent objects.
  */
 public class MastershipEventSerializer extends SerializerBase<MastershipEvent> {
-
     /**
-     * Public constructor - just calls its super class constructor.
+     * Default constructor.
      */
     public MastershipEventSerializer() {
         super(MastershipEvent.class);
     }
 
     /**
-     * Serializes a MastershipEvent object.
+     * Serializes a MastershipEvent object in JSON.
      *
-     * @param mastershipEvent MastershipEvent to serialize
-     * @param jsonGenerator generator to add the serialized object to
-     * @param serializerProvider not used
-     * @throws IOException if the JSON serialization fails
+     * @param mastershipEvent the MastershipEvent that is being converted to
+     * JSON
+     * @param jsonGenerator generator to place the serialized JSON into
+     * @param serializerProvider unused but required for method override
+     * @throws IOException if the JSON serialization process fails
      */
     @Override
     public void serialize(final MastershipEvent mastershipEvent,
                           final JsonGenerator jsonGenerator,
                           final SerializerProvider serializerProvider)
-            throws IOException {
+        throws IOException {
 
         //
         // TODO: For now, the JSON format of the serialized output should
@@ -50,6 +51,11 @@ public class MastershipEventSerializer extends SerializerBase<MastershipEvent> {
                                        mastershipEvent.getOnosInstanceId());
         jsonGenerator.writeStringField("role",
                                        mastershipEvent.getRole().name());
+        jsonGenerator.writeObjectFieldStart("stringAttributes");
+        for (Entry<String, String> entry : mastershipEvent.getAllStringAttributes().entrySet()) {
+            jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
+        }
+        jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }

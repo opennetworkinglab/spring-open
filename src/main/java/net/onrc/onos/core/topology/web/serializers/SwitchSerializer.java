@@ -12,20 +12,29 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * Serializes a Switch object as JSON.
+ * JSON serializer for Switch objects.
  */
 public class SwitchSerializer extends SerializerBase<Switch> {
-
     /**
-     * Constructs a Switch object serializer.
+     * Default constructor.
      */
     public SwitchSerializer() {
         super(Switch.class);
     }
 
+    /**
+     * Serializes a Switch object in JSON.
+     *
+     * @param sw the Switch that is being converted to JSON
+     * @param jsonGenerator generator to place the serialized JSON into
+     * @param serializerProvider unused but required for method override
+     * @throws IOException if the JSON serialization process fails
+     */
     @Override
     public void serialize(Switch sw, JsonGenerator jsonGenerator,
-                          SerializerProvider serializerProvider) throws IOException {
+                          SerializerProvider serializerProvider)
+        throws IOException {
+
         //
         // TODO: For now, the JSON format of the serialized output should
         // be same as the JSON format of the corresponding class SwitchEvent.
@@ -46,7 +55,7 @@ public class SwitchSerializer extends SerializerBase<Switch> {
         for (Entry<String, String> entry : sw.getAllStringAttributes().entrySet()) {
             jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
         }
-        jsonGenerator.writeEndObject(); // stringAttributes
+        jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }

@@ -11,21 +11,29 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * Serializes a Port object as JSON.
+ * JSON serializer for Port objects.
  */
 public class PortSerializer extends SerializerBase<Port> {
-
     /**
-     * Constructs a Port serializer.
+     * Default constructor.
      */
     public PortSerializer() {
         super(Port.class);
     }
 
+    /**
+     * Serializes a Port object in JSON.
+     *
+     * @param port the Port that is being converted to JSON
+     * @param jsonGenerator generator to place the serialized JSON into
+     * @param serializerProvider unused but required for method override
+     * @throws IOException if the JSON serialization process fails
+     */
     @Override
     public void serialize(Port port, JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
-            throws IOException {
+        throws IOException {
+
         //
         // TODO: For now, the JSON format of the serialized output should
         // be same as the JSON format of the corresponding class PortEvent.
@@ -44,7 +52,7 @@ public class PortSerializer extends SerializerBase<Port> {
         for (Entry<String, String> entry : port.getAllStringAttributes().entrySet()) {
             jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
         }
-        jsonGenerator.writeEndObject(); // stringAttributes
+        jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
     }
 }

@@ -1,5 +1,7 @@
 package net.onrc.onos.core.topology.web.serializers;
 
+import java.io.IOException;
+
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
@@ -9,24 +11,19 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
-import java.io.IOException;
-
 /**
- * JSON serializer for TopologyEvents objects.  Used by WebSocket
- * implementation of the topology APIs.
+ * JSON serializer for TopologyEvents objects.
  */
 public class TopologyEventsSerializer extends SerializerBase<TopologyEvents> {
-
     /**
-     * Default constructor. Performs basic initialization of the JSON
-     * serializer.
+     * Default constructor.
      */
     public TopologyEventsSerializer() {
         super(TopologyEvents.class);
     }
 
     /**
-     * Serialize a TopologyEvents object in JSON.  The resulting JSON contains
+     * Serializes a TopologyEvents object in JSON.  The resulting JSON contains
      * the added and removed topology objects: switches, links and ports.
      *
      * @param topologyEvents the TopologyEvents that is being converted to JSON
@@ -38,7 +35,7 @@ public class TopologyEventsSerializer extends SerializerBase<TopologyEvents> {
     public void serialize(TopologyEvents topologyEvents,
                           JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
-            throws IOException {
+        throws IOException {
 
         // Start the object
         jsonGenerator.writeStartObject();

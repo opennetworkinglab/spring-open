@@ -1,31 +1,29 @@
 package net.onrc.onos.core.topology.web.serializers;
 
+import java.io.IOException;
+
 import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
+
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
-import java.io.IOException;
-
 /**
- * JSON serializer for Topology objects.  Used by REST implementation of the
- * topology APIs.
+ * JSON serializer for Topology objects.
  */
 public class TopologySerializer extends SerializerBase<Topology> {
-
     /**
-     * Default constructor. Performs basic initialization of the JSON
-     * serializer.
+     * Default constructor.
      */
     public TopologySerializer() {
         super(Topology.class);
     }
 
     /**
-     * Serialize a Topology object in JSON.  The resulting JSON contains the
+     * Serializes a Topology object in JSON.  The resulting JSON contains the
      * switches, links and ports provided by the Topology object.
      *
      * @param topology the Topology that is being converted to JSON
@@ -37,7 +35,8 @@ public class TopologySerializer extends SerializerBase<Topology> {
     public void serialize(Topology topology,
                           JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
-            throws IOException {
+        throws IOException {
+
         // Start the object
         jsonGenerator.writeStartObject();
 
