@@ -6,7 +6,10 @@ package net.floodlightcontroller.util;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IOFSwitch;
@@ -81,6 +84,8 @@ public class OFMessageDamper {
 
     TimedCache<DamperEntry> cache;
     EnumSet<OFType> msgTypesToCache;
+    // executor for invalidate task
+    private static ExecutorService executor = Executors.newFixedThreadPool(1);
 
     /**
      * @param capacity      the maximum number of messages that should be
@@ -147,4 +152,24 @@ public class OFMessageDamper {
             return true;
         }
     }
+
+    /**
+     * Invalidates all the damper cache entries for the specified switch.
+     *
+     * @param sw switch connection to invalidate
+     */
+    public void invalidate(final IOFSwitch sw) {
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                Iterator<DamperEntry> it = cache.getCachedEntries().iterator();
+                while (it.hasNext()) {
+                    DamperEntry entry = it.next();
+                    if (entry.sw == sw) {
+                        it.remove();
+                    }
+                }
+            }
+        });
+   }
 }

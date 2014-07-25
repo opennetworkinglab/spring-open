@@ -17,6 +17,7 @@
 
 package net.floodlightcontroller.util;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
@@ -60,7 +61,7 @@ public class TimedCache<K> {
      * @return boolean
      */
     public boolean update(K key) {
-        Long curr = new Long(System.currentTimeMillis());
+        long curr = System.currentTimeMillis();
         Long prev = cache.putIfAbsent(key, curr);
 
         if (prev == null) {
@@ -74,5 +75,16 @@ public class TimedCache<K> {
         }
 
         return true;
+    }
+
+    /**
+     * Gets all the cached entries.
+     * <p/>
+     * Modification to the returned set will be reflected to the cache.
+     *
+     * @return cached entries
+     */
+    Set<K> getCachedEntries() {
+        return cache.keySet();
     }
 }

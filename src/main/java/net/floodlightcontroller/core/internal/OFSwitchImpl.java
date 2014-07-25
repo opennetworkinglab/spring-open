@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
@@ -135,7 +135,7 @@ public class OFSwitchImpl implements IOFSwitch {
             new ThreadLocal<Map<OFSwitchImpl, List<OFMessage>>>() {
                 @Override
                 protected Map<OFSwitchImpl, List<OFMessage>> initialValue() {
-                    return new HashMap<OFSwitchImpl, List<OFMessage>>();
+                    return new WeakHashMap<OFSwitchImpl, List<OFMessage>>();
                 }
             };
 

@@ -70,6 +70,8 @@ import org.openflow.protocol.factory.BasicFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.cache.CacheBuilder;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
@@ -299,8 +301,11 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
      * Main thread that reads messages from queues and sends them to switches.
      */
     private class FlowPusherThread extends Thread {
+        // Weak ConncurrentHashMap
         private Map<IOFSwitch, SwitchQueue> assignedQueues
-                = new ConcurrentHashMap<IOFSwitch, SwitchQueue>();
+                = CacheBuilder.newBuilder()
+                    .weakKeys()
+                    .<IOFSwitch, SwitchQueue>build().asMap();
 
         final Lock queuingLock = new ReentrantLock();
         final Condition messagePushed = queuingLock.newCondition();
@@ -610,6 +615,17 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
             }
             return true;
         }
+    }
+
+    /**
+     * Invalidate.
+     *
+     * @param sw switch
+     *
+     * @see OFMessageDamper#invalidate(IOFSwitch)
+     */
+    public void invalidate(IOFSwitch sw) {
+        messageDamper.invalidate(sw);
     }
 
     @Override

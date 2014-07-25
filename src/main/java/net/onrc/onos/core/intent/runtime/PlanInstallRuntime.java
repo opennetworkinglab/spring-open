@@ -1,11 +1,12 @@
 package net.onrc.onos.core.intent.runtime;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
@@ -50,7 +51,7 @@ public class PlanInstallRuntime {
      * TODO: This class should be wrapped into a more generic debugging framework when available.
      */
     private static class FlowModCount {
-        IOFSwitch sw;
+        WeakReference<IOFSwitch> sw;
         long modFlows = 0;
         long delFlows = 0;
         long errors = 0;
@@ -61,7 +62,7 @@ public class PlanInstallRuntime {
          * @param sw the switch for FlowMod statistics collection
          */
         FlowModCount(IOFSwitch sw) {
-            this.sw = sw;
+            this.sw = new WeakReference<>(sw);
         }
 
         /**
@@ -92,10 +93,12 @@ public class PlanInstallRuntime {
          */
         @Override
         public String toString() {
-            return "sw:" + sw.getStringId() + ": modify " + modFlows + " delete " + delFlows + " error " + errors;
+            final IOFSwitch swTemp = sw.get();
+            return "sw:" + ((swTemp == null) ? "disconnected" : swTemp.getStringId())
+                    + ": modify " + modFlows + " delete " + delFlows + " error " + errors;
         }
 
-        static Map<IOFSwitch, FlowModCount> map = new HashMap<>();
+        static Map<IOFSwitch, FlowModCount> map = new WeakHashMap<>();
 
         /**
          * This function is used for collecting statistics information. It should be called for
