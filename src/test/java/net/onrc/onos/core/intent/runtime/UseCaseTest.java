@@ -42,6 +42,7 @@ import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
 
 import com.codahale.metrics.MetricFilter;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +50,8 @@ import org.junit.runner.RunWith;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Temporary test cases for the ONS2014 demo.
@@ -58,6 +61,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PathCalcRuntimeModule.class)
 public class UseCaseTest {
+    private static final Logger log = LoggerFactory.getLogger(UseCaseTest.class);
+
     private Topology topology;
     private FloodlightModuleContext modContext;
     private IDatagridService datagridService;
@@ -138,8 +143,8 @@ public class UseCaseTest {
     private void showResult(PathIntentMap intents) {
         for (Intent intent : intents.getAllIntents()) {
             PathIntent pathIntent = (PathIntent) intent;
-            System.out.println("Path intent:" + pathIntent);
-            System.out.println("Parent intent: " + pathIntent.getParentIntent().toString());
+            log.debug("Path intent:" + pathIntent);
+            log.debug("Parent intent: " + pathIntent.getParentIntent().toString());
         }
     }
 
@@ -163,7 +168,7 @@ public class UseCaseTest {
 
         // show results
         showResult((PathIntentMap) runtime1.getPathIntents());
-        System.out.println(plan);
+        log.debug("{}", plan);
     }
 
     @Test
@@ -193,7 +198,7 @@ public class UseCaseTest {
 
         // show results
         showResult((PathIntentMap) runtime1.getPathIntents());
-        System.out.println(plan);
+        log.debug("{}", plan);
     }
 
     @Test
@@ -223,7 +228,7 @@ public class UseCaseTest {
 
         // show results
         showResult((PathIntentMap) runtime1.getPathIntents());
-        System.out.println(plan);
+        log.debug("{}", plan);
     }
 
     @Test
@@ -256,7 +261,7 @@ public class UseCaseTest {
 
         // show results step1
         showResult((PathIntentMap) runtime1.getPathIntents());
-        System.out.println(plan);
+        log.debug("{}", plan);
 
         // TODO this state changes should be triggered by notification of plan module
         IntentStateList states = new IntentStateList();
@@ -290,7 +295,7 @@ public class UseCaseTest {
                                             removedHostEvents);
 
         runtime1.topologyEvents(topologyEvents);
-        System.out.println("*** Link goes down. ***");
+        log.debug("*** Link goes down. ***");
 
         // send notification
         IntentStateList isl = new IntentStateList();
@@ -324,7 +329,7 @@ public class UseCaseTest {
                                             removedHostEvents);
 
         runtime1.topologyEvents(topologyEvents);
-        System.out.println("*** Link goes up. ***");
+        log.debug("*** Link goes up. ***");
 
         // send notification
         isl = new IntentStateList();
@@ -362,7 +367,7 @@ public class UseCaseTest {
 
         // show results
         showResult((PathIntentMap) runtime1.getPathIntents());
-        System.out.println(plan);
+        log.debug("{}", plan);
 
         // create remove operations
         opList.clear();
@@ -374,7 +379,7 @@ public class UseCaseTest {
 
         // show results
         showResult((PathIntentMap) runtime1.getPathIntents());
-        System.out.println(plan);
+        log.debug("{}", plan);
     }
 
 }
