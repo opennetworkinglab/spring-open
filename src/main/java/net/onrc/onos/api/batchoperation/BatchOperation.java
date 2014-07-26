@@ -39,7 +39,7 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     /**
      * Adds an add-operation.
      *
-     * @param intent Intent to be added.
+     * @param target IBatchOperationTarget to be added.
      * @return true if succeeded, false otherwise.
      */
     public boolean addAddOperation(T target) {
@@ -59,7 +59,7 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     /**
      * Adds a update-operation.
      *
-     * @param oldtargetId ID of the existing target to be overwritten.
+     * @param oldTargetId ID of the existing target to be overwritten.
      * @param newTarget The new target to be added.
      * @return true if succeeded, false otherwise.
      */
