@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * <ol>
  * <li> WebSocket Client opens a WebSocket connection to the corresponding
- *    @ServerEndpoint: an instance for this class is created, and method
- *    @OnOpen is called. </li>
+ *    {@literal @ServerEndpoint}: an instance for this class is created, and method
+ *    {@literal @OnOpen} is called. </li>
  * <li> If the client sends a text message: method @OnMessage for String
  *    argument is called. </li>
  * <li> If the client sends a binary message: method @OnMessage

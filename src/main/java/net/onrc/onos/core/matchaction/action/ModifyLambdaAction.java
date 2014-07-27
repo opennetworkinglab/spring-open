@@ -12,7 +12,7 @@ public class ModifyLambdaAction implements IAction {
     /**
      * Constructor.
      *
-     * @param dstPort Destination port number
+     * @param lambda lambda after modification
      */
     public ModifyLambdaAction(int lambda) {
         this.lambda = lambda;

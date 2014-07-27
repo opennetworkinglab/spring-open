@@ -60,7 +60,8 @@ public class TopologyEvent {
 
     /**
      * Check if all events contained are equal.
-     * @param obj.
+     *
+     * @param obj TopologyEvent to compare against
      */
     @Override
     public boolean equals(Object obj) {

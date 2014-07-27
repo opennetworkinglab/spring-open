@@ -246,7 +246,7 @@ public class OnosLldp extends LLDP {
     /**
      * Sets switch DPID in LLDP packet.
      *
-     * @param sw the switch dpid
+     * @param dpid the switch dpid
      */
     public void setSwitch(Long dpid) {
         final byte[] byteDpid = ByteBuffer.allocate(8).putLong(dpid)
@@ -259,7 +259,7 @@ public class OnosLldp extends LLDP {
     /**
      * Sets the port number in LLDP packet.
      *
-     * @param port the port number
+     * @param portNumber the port number
      */
     public void setPort(short portNumber) {
         this.setPortTLV(portNumber);
@@ -279,6 +279,7 @@ public class OnosLldp extends LLDP {
      *
      * @return the serialized packet
      */
+    @Override
     public byte[] serialize() {
         return super.serialize();
     }
