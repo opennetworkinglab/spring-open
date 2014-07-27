@@ -46,7 +46,7 @@
     <github.global.server>github</github.global.server>
      -->
     <hazelcast.version>3.2.3</hazelcast.version>
-    <metrics.version>3.0.1</metrics.version>
+    <metrics.version>3.0.2</metrics.version>
     <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
   </properties>
   <build>
