@@ -6,6 +6,7 @@ import net.onrc.onos.core.intent.runtime.IntentTestMocks;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.web.TopologyWebRoutable;
+import org.junit.After;
 
 /**
  * Test harness for Topology based REST API tests.  This class maintains the
@@ -53,10 +54,9 @@ public class TestRestTopology extends TestRest {
      * Remove anything that will interfere with the next test running correctly.
      * Shuts down the test REST web server and removes the mocks.
      */
-    @Override
-    public void tearDown() {
+    @After
+    public void tearDownMocks() {
         getMocks().tearDownIntentMocks();
-        super.tearDown();
     }
 
     /**

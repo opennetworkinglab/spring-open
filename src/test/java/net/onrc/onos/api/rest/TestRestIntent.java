@@ -8,6 +8,7 @@ import net.onrc.onos.core.intent.runtime.IntentStateList;
 import net.onrc.onos.core.intent.runtime.IntentTestMocks;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
+import org.junit.After;
 import org.restlet.resource.ClientResource;
 
 import java.util.Collection;
@@ -71,10 +72,9 @@ public class TestRestIntent extends TestRest {
      * Remove anything that will interfere with the next test running correctly.
      * Shuts down the test REST web server and removes the mocks.
      */
-    @Override
-    public void tearDown() {
+    @After
+    public void tearDownMocks() {
         getMocks().tearDownIntentMocks();
-        super.tearDown();
     }
 
     /**

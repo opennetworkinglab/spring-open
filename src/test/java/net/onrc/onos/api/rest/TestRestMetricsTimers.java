@@ -7,11 +7,7 @@ import net.onrc.onos.core.metrics.OnosMetrics;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.resource.ClientResource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,19 +21,7 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * Unit tests for REST APIs for Timer Metrics.
  */
-@RunWith(PowerMockRunner.class)
 public class TestRestMetricsTimers extends TestRestMetrics {
-
-    /**
-     * Create the web server and mocks required for
-     * all of the tests.
-     */
-    @Before
-    @SuppressWarnings("ununsed")
-    public void beforeTest() {
-        setRestPort(generateRandomPort());
-        setUp();
-    }
 
     //  Test data objects for Timers
 
@@ -58,8 +42,8 @@ public class TestRestMetricsTimers extends TestRestMetrics {
     private static final String TIMER2_NAME = "timer2";
     private static final String TIMER2_FULL_NAME =
             OnosMetrics.generateName(COMPONENT,
-                                     FEATURE,
-                                     TIMER2_NAME);
+                    FEATURE,
+                    TIMER2_NAME);
     private static final int TIMER2_COUNT = 10;
 
     private static final int RESERVOIR_SIZE = 100;
@@ -97,9 +81,9 @@ public class TestRestMetricsTimers extends TestRestMetrics {
                                    timer1);
 
         OnosMetrics.registerMetric(COMPONENT,
-                                   FEATURE,
-                                   TIMER2_NAME,
-                                   timer2);
+                FEATURE,
+                TIMER2_NAME,
+                timer2);
     }
 
     /**
@@ -132,16 +116,6 @@ public class TestRestMetricsTimers extends TestRestMetrics {
         assertThat((int) timerP999,
                 is(both(greaterThanOrEqualTo(timeValue)).
                         and(lessThan(timeValue + 5))));
-    }
-
-    /**
-     * Remove anything that will interfere with the next test running correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @After
-    @SuppressWarnings("unused")
-    public void afterTest() {
-        tearDown();
     }
 
     /**

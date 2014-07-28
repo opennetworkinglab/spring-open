@@ -3,9 +3,12 @@ package net.onrc.onos.api.rest;
 import com.codahale.metrics.MetricFilter;
 import net.floodlightcontroller.restserver.RestletRoutable;
 import net.onrc.onos.core.metrics.OnosMetrics;
+import net.onrc.onos.core.util.UnitTest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
 import org.restlet.resource.ClientResource;
 
 import java.util.LinkedList;
@@ -22,7 +25,7 @@ import java.util.Random;
  * See TestRestIntent as an example of an implementation which uses the
  * TestRest framework.
  */
-public class TestRest {
+public class TestRest extends UnitTest {
 
     private final List<RestletRoutable> restlets = new LinkedList<>();
     private TestRestApiServer restApiServer;
@@ -60,7 +63,9 @@ public class TestRest {
     /**
      * Set up the REST API web server and start it.
      */
+    @Before
     public void setUp() {
+        setRestPort(generateRandomPort());
         restApiServer = new TestRestApiServer(restPort);
         restApiServer.startServer(restlets);
     }
@@ -69,8 +74,8 @@ public class TestRest {
      * Remove anything that will interfere with the next test running correctly.
      * Shuts down the test REST web server.
      */
-
-    public void tearDown() {
+    @After
+    public void tearDownRest() {
         getRestApiServer().stopServer();
         OnosMetrics.removeMatching(MetricFilter.ALL);
     }

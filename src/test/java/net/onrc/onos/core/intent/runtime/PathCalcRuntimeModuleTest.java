@@ -18,7 +18,6 @@ import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
-import net.onrc.onos.core.metrics.OnosMetrics;
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.MockTopology;
@@ -28,7 +27,7 @@ import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
 
-import com.codahale.metrics.MetricFilter;
+import net.onrc.onos.core.util.UnitTest;
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
@@ -50,7 +49,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PathCalcRuntimeModule.class)
-public class PathCalcRuntimeModuleTest {
+public class PathCalcRuntimeModuleTest extends UnitTest {
     private static final Long LOCAL_PORT = 0xFFFEL;
 
     private IntentTestMocks mocks;
@@ -171,7 +170,6 @@ public class PathCalcRuntimeModuleTest {
     @After
     public void tearDown() {
         mocks.tearDownIntentMocks();
-        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     private static final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";

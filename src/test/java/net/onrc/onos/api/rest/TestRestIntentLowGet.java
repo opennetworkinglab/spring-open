@@ -9,9 +9,7 @@ import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -38,27 +36,6 @@ public class TestRestIntentLowGet extends TestRestIntent {
     private static final String IP_ADDRESS_1 = "127.0.0.1";
     private static final String IP_ADDRESS_2 = "127.0.0.2";
     private static final String IP_ADDRESS_3 = "127.0.0.3";
-
-    /**
-     * Create the web server, PathCalcRuntime, and mocks required for
-     * all of the tests.
-     */
-    @Before
-    public void beforeTest() {
-        setRestPort(generateRandomPort());
-        setUp();
-    }
-
-
-    /**
-     * Remove anything that will interfere with the next test running correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @After
-    public void afterTest() {
-        tearDown();
-    }
-
 
     /**
      * Make a set of Intents that can be used as test data.

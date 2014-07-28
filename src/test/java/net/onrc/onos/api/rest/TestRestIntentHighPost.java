@@ -3,8 +3,6 @@ package net.onrc.onos.api.rest;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -41,27 +39,6 @@ public class TestRestIntentHighPost extends TestRestIntent {
     "        \"matchSrcMac\": \"00:00:00:01:01:01\"" +
     "}" +
     "]";
-
-
-    /**
-     * Create the web server, PathCalcRuntime, and mocks required for
-     * all of the tests.
-     */
-    @Before
-    public void beforeTest() {
-        setRestPort(generateRandomPort());
-        setUp();
-    }
-
-
-    /**
-     * Remove anything that will interfere with the next test running correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @After
-    public void afterTest() {
-        tearDown();
-    }
 
     /**
      * Test that a POST operation to create a high level Intent

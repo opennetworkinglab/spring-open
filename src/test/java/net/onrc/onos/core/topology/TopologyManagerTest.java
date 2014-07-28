@@ -1,37 +1,39 @@
 package net.onrc.onos.core.topology;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.eq;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
-import net.onrc.onos.core.metrics.OnosMetrics;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.onrc.onos.core.util.TestUtils;
-
-import com.codahale.metrics.MetricFilter;
+import net.onrc.onos.core.util.UnitTest;
 import org.easymock.EasyMock;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.eq;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for the TopologyManager class in the Topology module.
@@ -39,7 +41,7 @@ import org.junit.Test;
  * Note that we do not test the eventHandler functions in the TopologyManager class.
  * DatagridService, DataStoreService, eventChannel, and controllerRegistryService are mocked out.
  */
-public class TopologyManagerTest {
+public class TopologyManagerTest extends UnitTest {
     private TopologyManager theTopologyManager;
     private final String eventChannelName = "onos.topology";
     private IEventChannel<byte[], TopologyEvent> eventChannel;
@@ -126,11 +128,6 @@ public class TopologyManagerTest {
 
         // replace data store with Mocked object
         TestUtils.setField(theTopologyManager, "datastore", dataStoreService);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     /**

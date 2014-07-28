@@ -1,12 +1,10 @@
 package net.onrc.onos.api.rest;
 
+import com.google.common.collect.ImmutableList;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -14,14 +12,16 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.data.Status;
 import org.restlet.resource.ClientResource;
 
-import com.google.common.collect.ImmutableList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static net.onrc.onos.api.rest.ClientResourceStatusMatcher.hasStatusOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * Tests for topology REST get operations.
@@ -29,28 +29,6 @@ import static org.hamcrest.Matchers.*;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PathCalcRuntimeModule.class)
 public class TestRestTopologyGet extends TestRestTopology {
-
-    /**
-     * Create the web server and mocks required for
-     * all of the tests.
-     */
-    @Before
-    @SuppressWarnings("ununsed")
-    public void beforeTest() {
-        setRestPort(generateRandomPort());
-        setUp();
-    }
-
-
-    /**
-     * Remove anything that will interfere with the next test running correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @After
-    @SuppressWarnings("unused")
-    public void afterTest() {
-        tearDown();
-    }
 
     /**
      * Check that the JSON array returned for the switches element matches

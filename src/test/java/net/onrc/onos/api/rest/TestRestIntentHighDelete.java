@@ -5,9 +5,7 @@ import net.onrc.onos.core.intent.IntentOperation;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -31,28 +29,6 @@ import static org.hamcrest.Matchers.notNullValue;
 public class TestRestIntentHighDelete extends TestRestIntent {
     private static final Long LOCAL_PORT = 0xFFFEL;
     private static final String BAD_SWITCH_INTENT_NAME = "No Such Switch Intent";
-
-
-    /**
-     * Create the web server, PathCalcRuntime, and mocks required for
-     * all of the tests.
-     */
-    @Before
-    public void beforeTest() {
-        setRestPort(generateRandomPort());
-        setUp();
-    }
-
-
-    /**
-     * Remove anything that will interfere with the next test running correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @After
-    public void afterTest() {
-        tearDown();
-    }
-
 
     /**
      * Make a set of Intents that can be used as test data.

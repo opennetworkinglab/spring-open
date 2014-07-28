@@ -28,16 +28,6 @@ public class TestRestMetrics extends TestRest {
     }
 
     /**
-     * Removes anything that will interfere with the next test running
-     * correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @Override
-    public void tearDown() {
-        super.tearDown();
-    }
-
-    /**
      * Fetches the base URL for Metrics REST APIs.
      *
      * @return base URL

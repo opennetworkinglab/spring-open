@@ -1,16 +1,12 @@
 package net.onrc.onos.api.rest;
 
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricFilter;
 import net.onrc.onos.core.metrics.OnosMetrics;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.resource.ClientResource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -21,8 +17,6 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * Unit tests for filtering REST APIs for Timer Metrics.
  */
-
-@RunWith(PowerMockRunner.class)
 public class TestRestMetricsFilters extends TestRestMetrics {
 
     /**
@@ -32,22 +26,10 @@ public class TestRestMetricsFilters extends TestRestMetrics {
     @Before
     @SuppressWarnings("ununsed")
     public void beforeTest() {
-        setRestPort(generateRandomPort());
-        setUp();
         //  Make some test data
         createMetrics();
     }
 
-    /**
-     * Remove anything that will interfere with the next test running correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @After
-    @SuppressWarnings("unused")
-    public void afterTest() {
-        destroyMetrics();
-        tearDown();
-    }
 
     //  Test data objects
     private static final OnosMetrics.MetricsComponent COMPONENT =
@@ -183,13 +165,6 @@ public class TestRestMetricsFilters extends TestRestMetrics {
                 FEATURE,
                 GAUGE3_NAME,
                 testGauge);
-    }
-
-    /**
-     * Removes the Metrics to clean up for the next test run.
-     */
-    private void destroyMetrics() {
-        OnosMetrics.removeMatching(MetricFilter.ALL);
     }
 
     /**

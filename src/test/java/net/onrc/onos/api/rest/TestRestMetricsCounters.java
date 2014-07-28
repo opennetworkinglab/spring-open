@@ -5,11 +5,7 @@ import net.onrc.onos.core.metrics.OnosMetrics;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.restlet.resource.ClientResource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,29 +16,7 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * Unit tests for REST APIs for Counter Metrics.
  */
-@RunWith(PowerMockRunner.class)
 public class TestRestMetricsCounters extends TestRestMetrics {
-
-    /**
-     * Create the web server and mocks required for
-     * all of the tests.
-     */
-    @Before
-    @SuppressWarnings("ununsed")
-    public void beforeTest() {
-        setRestPort(generateRandomPort());
-        setUp();
-    }
-
-    /**
-     * Remove anything that will interfere with the next test running correctly.
-     * Shuts down the test REST web server and removes the mocks.
-     */
-    @After
-    @SuppressWarnings("unused")
-    public void afterTest() {
-        tearDown();
-    }
 
     //  Test Counter data objects
     private static final OnosMetrics.MetricsComponent COMPONENT =
