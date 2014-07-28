@@ -18,7 +18,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * <p/>
  * Host event differ from other events.
  * Host Event represent add/remove of attachmentPoint.
- * Not add/remove of the DeviceObject itself.
+ * Not add/remove of the Host Object itself.
  * <p/>
  * Multiple attachmentPoints can be specified to batch events into 1 object.
  * Each should be treated as independent events.
@@ -146,16 +146,16 @@ public class HostEvent extends TopologyElement<HostEvent> {
     }
 
     // Assuming mac is unique cluster-wide
-    public static ByteBuffer getDeviceID(final byte[] mac) {
+    public static ByteBuffer getHostID(final byte[] mac) {
         return (ByteBuffer) ByteBuffer.allocate(2 + mac.length)
-                .putChar('D').put(mac).flip();
+                .putChar('H').put(mac).flip();
     }
 
     public byte[] getID() {
-        return getDeviceID(mac.toBytes()).array();
+        return getHostID(mac.toBytes()).array();
     }
 
     public ByteBuffer getIDasByteBuffer() {
-        return getDeviceID(mac.toBytes());
+        return getHostID(mac.toBytes());
     }
 }

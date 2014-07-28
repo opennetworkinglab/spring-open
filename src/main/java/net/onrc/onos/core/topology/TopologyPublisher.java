@@ -397,7 +397,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     public void controllerRoleChanged(Dpid dpid, Role role) {
         log.debug("Local switch controller mastership role changed: dpid = {} role = {}", dpid, role);
         MastershipEvent mastershipEvent =
-            new MastershipEvent(dpid, registryService.getControllerId(), role);
+            new MastershipEvent(dpid, registryService.getOnosInstanceId(),
+                                role);
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
@@ -414,7 +415,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         Role role = Role.SLAVE;         // TODO: Should be Role.UNKNOWN
 
         MastershipEvent mastershipEvent =
-            new MastershipEvent(dpid, registryService.getControllerId(), role);
+            new MastershipEvent(dpid, registryService.getOnosInstanceId(),
+                                role);
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.

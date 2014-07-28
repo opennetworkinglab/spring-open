@@ -68,6 +68,7 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
 import net.onrc.onos.core.registry.RegistryException;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -180,7 +181,7 @@ public class Controller implements IFloodlightProviderService {
     protected int workerThreads = 0;
     // The id for this controller node. Should be unique for each controller
     // node in a controller cluster.
-    protected String controllerId = "localhost";
+    private OnosInstanceId onosInstanceId = new OnosInstanceId("localhost");
 
     // The current role of the controller.
     // If the controller isn't configured to support roles, then this is null.
@@ -1648,8 +1649,8 @@ public class Controller implements IFloodlightProviderService {
     }
 
     @Override
-    public String getControllerId() {
-        return controllerId;
+    public OnosInstanceId getOnosInstanceId() {
+        return onosInstanceId;
     }
 
     // **************
@@ -1814,18 +1815,18 @@ public class Controller implements IFloodlightProviderService {
         log.debug("Number of worker threads set to {}", this.workerThreads);
         String controllerId = configParams.get("controllerid");
         if (controllerId != null) {
-            this.controllerId = controllerId;
+            this.onosInstanceId = new OnosInstanceId(controllerId);
         } else {
             //Try to get the hostname of the machine and use that for controller ID
             try {
                 String hostname = java.net.InetAddress.getLocalHost().getHostName();
-                this.controllerId = hostname;
+                this.onosInstanceId = new OnosInstanceId(hostname);
             } catch (UnknownHostException e) {
                 // Can't get hostname, we'll just use the default
             }
         }
 
-        log.debug("ControllerId set to {}", this.controllerId);
+        log.debug("ControllerId set to {}", this.onosInstanceId);
     }
 
     private void initVendorMessages() {
@@ -1880,7 +1881,7 @@ public class Controller implements IFloodlightProviderService {
                     LogMessageDoc.CHECK_CONTROLLER)
     public void startupComponents() {
         try {
-            registryService.registerController(controllerId);
+            registryService.registerController(onosInstanceId.toString());
         } catch (RegistryException e) {
             log.warn("Registry service error: {}", e.getMessage());
         }

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.junit.After;
 import org.junit.Before;
@@ -185,25 +186,26 @@ public class StandaloneRegistryTest {
     }
 
     /**
-     * Test if {@link StandaloneRegistry#getControllerId()} can return correct ID.
+     * Test if {@link StandaloneRegistry#getOnosInstanceId()} can return
+     * correct ID.
      *
      * @throws RegistryException
      */
     @Test
-    public void testGetControllerId() throws RegistryException {
+    public void testGetOnosInstanceId() throws RegistryException {
         String controllerIdToRegister = "test";
 
         // try before controller is registered
-        String controllerId = registry.getControllerId();
-        assertNull(controllerId);
+        OnosInstanceId onosInstanceId = registry.getOnosInstanceId();
+        assertNull(onosInstanceId);
 
         // register
         registry.registerController(controllerIdToRegister);
 
-        // call getControllerId and verify
-        controllerId = registry.getControllerId();
-        assertNotNull(controllerId);
-        assertEquals(controllerIdToRegister, controllerId);
+        // call getOnosInstanceId and verify
+        onosInstanceId = registry.getOnosInstanceId();
+        assertNotNull(onosInstanceId);
+        assertEquals(controllerIdToRegister, onosInstanceId.toString());
     }
 
     /**

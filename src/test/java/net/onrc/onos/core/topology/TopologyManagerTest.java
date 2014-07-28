@@ -22,6 +22,7 @@ import net.onrc.onos.core.datagrid.IEventChannelListener;
 import net.onrc.onos.core.metrics.OnosMetrics;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.onrc.onos.core.util.TestUtils;
@@ -277,7 +278,8 @@ public class TopologyManagerTest {
 
         // Generate a new Switch Mastership event
         Dpid dpid = new Dpid(100L);
-        String onosInstanceId = "ONOS-Test-Instance-ID";
+        OnosInstanceId onosInstanceId =
+            new OnosInstanceId("ONOS-Test-Instance-ID");
         Role role = Role.MASTER;
         MastershipEvent mastershipEvent =
             new MastershipEvent(dpid, onosInstanceId, role);
@@ -303,7 +305,8 @@ public class TopologyManagerTest {
 
         // Generate a new Switch Mastership event
         Dpid dpid = new Dpid(100L);
-        String onosInstanceId = "ONOS-Test-Instance-ID";
+        OnosInstanceId onosInstanceId =
+            new OnosInstanceId("ONOS-Test-Instance-ID");
         Role role = Role.MASTER;
         MastershipEvent mastershipEvent =
             new MastershipEvent(dpid, onosInstanceId, role);

@@ -23,6 +23,7 @@ import java.util.Map;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.api.registry.ILocalSwitchMastershipListener;
 import net.onrc.onos.core.packet.Ethernet;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFType;
@@ -116,9 +117,11 @@ public interface IFloodlightProviderService extends IFloodlightService {
     public Map<String, String> getControllerNodeIPs();
 
     /**
-     * Gets the ID of the controller
+     * Gets the unique ID used to identify this ONOS instance in the cluster.
+     *
+     * @return ONOS Instance ID.
      */
-    public String getControllerId();
+    public OnosInstanceId getOnosInstanceId();
 
     /**
      * Add a switch listener

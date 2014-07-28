@@ -15,6 +15,7 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.registry.web.RegistryWebRoutable;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.openflow.util.HexString;
@@ -32,7 +33,7 @@ public class StandaloneRegistry implements IFloodlightModule,
 
     private IRestApiService restApi;
 
-    private String registeredControllerId;
+    private OnosInstanceId onosInstanceId;
     private Map<String, ControlChangeCallback> switchCallbacks;
 
     private long blockTop;
@@ -46,7 +47,7 @@ public class StandaloneRegistry implements IFloodlightModule,
     @Override
     public void requestControl(long dpid, ControlChangeCallback cb)
             throws RegistryException {
-        if (registeredControllerId == null) {
+        if (onosInstanceId == null) {
             throw new IllegalStateException(
                     "Must register a controller before calling requestControl");
         }
@@ -83,32 +84,32 @@ public class StandaloneRegistry implements IFloodlightModule,
     }
 
     @Override
-    public String getControllerId() {
-        return registeredControllerId;
+    public OnosInstanceId getOnosInstanceId() {
+        return onosInstanceId;
     }
 
     @Override
     public void registerController(String controllerId)
             throws RegistryException {
-        if (registeredControllerId != null) {
+        if (onosInstanceId != null) {
             throw new RegistryException(
-                    "Controller already registered with id " + registeredControllerId);
+                    "Controller already registered with id " + onosInstanceId);
         }
-        registeredControllerId = controllerId;
+        onosInstanceId = new OnosInstanceId(controllerId);
     }
 
     @Override
     public Collection<String> getAllControllers() throws RegistryException {
-        //List<String> l = new ArrayList<String>();
-        //l.add(registeredControllerId);
-        //return l;
-        return Collections.singletonList(registeredControllerId);
+        if (onosInstanceId == null) {
+            return new ArrayList<String>();
+        }
+        return Collections.singletonList(onosInstanceId.toString());
     }
 
     @Override
     public String getControllerForSwitch(long dpid) throws RegistryException {
         return (switchCallbacks.get(HexString.toHexString(dpid)) == null)
-                ? null : registeredControllerId;
+            ? null : onosInstanceId.toString();
     }
 
     @Override
@@ -120,7 +121,7 @@ public class StandaloneRegistry implements IFloodlightModule,
             log.debug("Switch _{}", strSwitch);
             List<ControllerRegistryEntry> list =
                     new ArrayList<ControllerRegistryEntry>();
-            list.add(new ControllerRegistryEntry(registeredControllerId, 0));
+            list.add(new ControllerRegistryEntry(onosInstanceId.toString(), 0));
 
             switches.put(strSwitch, list);
         }

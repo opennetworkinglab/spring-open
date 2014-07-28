@@ -53,26 +53,26 @@ public class KVDevice extends KVObject {
     private TreeSet<byte[]> portIds;
 
     /**
-     * Generate a DeviceID from MAC address.
+     * Generate a HostID from MAC address.
      * <p/>
      * We're assuming MAC address can be an unique identifier for Host.
      *
      * @param mac MAC address
-     * @return DeviceID
+     * @return HostID
      */
-    public static byte[] getDeviceID(final byte[] mac) {
-        return HostEvent.getDeviceID(mac).array();
+    public static byte[] getHostID(final byte[] mac) {
+        return HostEvent.getHostID(mac).array();
     }
 
     /**
-     * Gets the MAC address from DeviceID.
+     * Gets the MAC address from HostID.
      *
-     * @param key DeviceID
+     * @param key HostID
      * @return MAC address
      */
     public static byte[] getMacFromKey(final byte[] key) {
         ByteBuffer keyBuf = ByteBuffer.wrap(key);
-        if (keyBuf.getChar() != 'D') {
+        if (keyBuf.getChar() != 'H') {
             throw new IllegalArgumentException("Invalid Host key");
         }
         byte[] mac = new byte[keyBuf.remaining()];
@@ -98,18 +98,18 @@ public class KVDevice extends KVObject {
     public KVDevice(final byte[] mac, final String namespace) {
         super(DataStoreClient.getClient()
                 .getTable(namespace + DEVICE_TABLE_SUFFIX),
-                getDeviceID(mac), namespace);
+                getHostID(mac), namespace);
 
         this.mac = mac.clone();
         this.portIds = new TreeSet<>(ByteArrayComparator.BYTEARRAY_COMPARATOR);
     }
 
     /**
-     * Gets an instance from DeviceID in default namespace.
+     * Gets an instance from HostID in default namespace.
      * <p/>
      * Note: You need to call `read()` to get the DB content.
      *
-     * @param key DeviceID
+     * @param key HostID
      * @return KVDevice instance
      */
     public static KVDevice createFromKey(final byte[] key) {
@@ -117,11 +117,11 @@ public class KVDevice extends KVObject {
     }
 
     /**
-     * Gets an instance from DeviceID in specified namespace.
+     * Gets an instance from HostID in specified namespace.
      * <p/>
      * Note: You need to call `read()` to get the DB content.
      *
-     * @param key DeviceID
+     * @param key HostID
      * @param namespace namespace to create this object in
      * @return KVDevice instance
      */
@@ -205,9 +205,9 @@ public class KVDevice extends KVObject {
     }
 
     /**
-     * Gets the DeviceID.
+     * Gets the HostID.
      *
-     * @return DeviceID
+     * @return HostID
      */
     public byte[] getId() {
         return getKey();

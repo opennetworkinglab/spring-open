@@ -44,6 +44,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.ListenerDispatcher;
 import net.onrc.onos.api.registry.ILocalSwitchMastershipListener;
 import net.onrc.onos.core.packet.Ethernet;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
@@ -269,8 +270,8 @@ public class MockFloodlightProvider implements IFloodlightModule, IFloodlightPro
     }
 
     @Override
-    public String getControllerId() {
-        return "localhost";
+    public OnosInstanceId getOnosInstanceId() {
+        return new OnosInstanceId("localhost");
     }
 
     @Override

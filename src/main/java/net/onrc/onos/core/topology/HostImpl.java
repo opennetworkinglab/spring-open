@@ -77,7 +77,7 @@ public class HostImpl extends TopologyObject implements Host {
      */
     @Override
     public String getType() {
-        // FIXME assuming device is always in packet layer for now.
+        // FIXME assuming Host is always in packet layer for now.
         return TopologyElement.TYPE_PACKET_LAYER;
     }
 

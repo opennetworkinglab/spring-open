@@ -7,6 +7,7 @@ import java.util.Objects;
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.onrc.onos.core.topology.web.serializers.MastershipEventSerializer;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.apache.commons.lang.Validate;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -22,7 +23,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class MastershipEvent extends TopologyElement<MastershipEvent> {
 
     private final Dpid dpid;
-    private final String onosInstanceId;
+    private final OnosInstanceId onosInstanceId;
     private final Role role;
 
     /**
@@ -42,7 +43,8 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      * @param onosInstanceId the ONOS Instance ID
      * @param role the ONOS instance role for the switch.
      */
-    public MastershipEvent(Dpid dpid, String onosInstanceId, Role role) {
+    public MastershipEvent(Dpid dpid, OnosInstanceId onosInstanceId,
+                           Role role) {
         Validate.notNull(dpid);
         Validate.notNull(onosInstanceId);
 
@@ -77,7 +79,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      *
      * @return the ONOS Instance ID.
      */
-    public String getOnosInstanceId() {
+    public OnosInstanceId getOnosInstanceId() {
         return onosInstanceId;
     }
 

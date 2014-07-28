@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 /**
  * A registry service that allows ONOS to register controllers and switches
@@ -81,11 +82,11 @@ public interface IControllerRegistryService extends IFloodlightService {
     public boolean isClusterLeader();
 
     /**
-     * Get the unique ID used to identify this controller in the cluster.
+     * Gets the unique ID used to identify this ONOS instance in the cluster.
      *
-     * @return controller ID.
+     * @return ONOS Instance ID.
      */
-    public String getControllerId();
+    public OnosInstanceId getOnosInstanceId();
 
     /**
      * Register a controller to the ONOS cluster. Must be called before

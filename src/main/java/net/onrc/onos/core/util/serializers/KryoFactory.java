@@ -56,6 +56,7 @@ import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.IPv6;
 import net.onrc.onos.core.util.IPv6Net;
 import net.onrc.onos.core.util.LinkTuple;
+import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.Switch;
 import net.onrc.onos.core.util.SwitchPort;
@@ -201,18 +202,19 @@ public class KryoFactory {
         kryo.register(LinkTuple.class);
 
         // New data model-related classes
+        kryo.register(AdminStatus.class);
+        kryo.register(ConcurrentHashMap.class);
+        kryo.register(ConfigState.class);
         kryo.register(HostEvent.class);
         kryo.register(LinkedList.class);
         kryo.register(LinkEvent.class);
         kryo.register(MastershipEvent.class);
+        kryo.register(OnosInstanceId.class);
         kryo.register(PortEvent.class);
         kryo.register(Role.class);
         kryo.register(SwitchEvent.class);
-        kryo.register(TopologyEvent.class);
         kryo.register(TopologyElement.class);
-        kryo.register(ConcurrentHashMap.class);
-        kryo.register(ConfigState.class);
-        kryo.register(AdminStatus.class);
+        kryo.register(TopologyEvent.class);
 
         // Intent-related classes
         kryo.register(Path.class);

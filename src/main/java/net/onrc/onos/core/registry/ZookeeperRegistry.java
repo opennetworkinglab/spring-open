@@ -22,6 +22,7 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.registry.web.RegistryWebRoutable;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.curator.RetryPolicy;
@@ -60,7 +61,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
 
     private static final Logger log = LoggerFactory.getLogger(ZookeeperRegistry.class);
 
-    private String controllerId;
+    private OnosInstanceId onosInstanceId;
 
     private IRestApiService restApi;
 
@@ -255,7 +256,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
             throws RegistryException {
         log.info("Requesting control for {}", HexString.toHexString(dpid));
 
-        if (controllerId == null) {
+        if (onosInstanceId == null) {
             throw new IllegalStateException("Must register a controller before"
                     + " calling requestControl");
         }
@@ -270,7 +271,8 @@ public class ZookeeperRegistry implements IFloodlightModule,
         String latchPath = SWITCH_LATCHES_PATH + "/" + dpidStr;
 
         LeaderLatch latch =
-                new LeaderLatch(curatorFrameworkClient, latchPath, controllerId);
+            new LeaderLatch(curatorFrameworkClient, latchPath,
+                            onosInstanceId.toString());
         SwitchLeaderListener listener = new SwitchLeaderListener(dpidStr);
         latch.addListener(listener);
 
@@ -348,8 +350,8 @@ public class ZookeeperRegistry implements IFloodlightModule,
     }
 
     @Override
-    public String getControllerId() {
-        return controllerId;
+    public OnosInstanceId getOnosInstanceId() {
+        return onosInstanceId;
     }
 
     @Override
@@ -369,18 +371,18 @@ public class ZookeeperRegistry implements IFloodlightModule,
 
     @Override
     public void registerController(String id) throws RegistryException {
-        if (controllerId != null) {
+        if (onosInstanceId != null) {
             throw new RegistryException(
-                    "Controller already registered with id " + controllerId);
+                    "Controller already registered with id " + onosInstanceId);
         }
 
-        controllerId = id;
+        onosInstanceId = new OnosInstanceId(id);
 
         try {
             ServiceInstance<ControllerService> thisInstance =
                     ServiceInstance.<ControllerService>builder()
                     .name(CONTROLLER_SERVICE_NAME)
-                    .payload(new ControllerService(controllerId))
+                    .payload(new ControllerService(onosInstanceId.toString()))
                     .build();
 
             serviceDiscovery.registerService(thisInstance);
@@ -646,12 +648,13 @@ public class ZookeeperRegistry implements IFloodlightModule,
         // NOTE: We have to do it here, because during the init stage
         // we don't know the Controller ID.
         //
-        if (controllerId == null) {
-            log.error("Error on startup: unknown ControllerId");
+        if (onosInstanceId == null) {
+            log.error("Error on startup: unknown ONOS Instance ID");
+            return;
         }
         clusterLeaderLatch = new LeaderLatch(curatorFrameworkClient,
                 CLUSTER_LEADER_PATH,
-                controllerId);
+                onosInstanceId.toString());
         clusterLeaderListener = new ClusterLeaderListener();
         clusterLeaderLatch.addListener(clusterLeaderListener);
         try {

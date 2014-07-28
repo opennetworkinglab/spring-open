@@ -9,6 +9,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.test.FloodlightTestCase;
 import net.onrc.onos.core.registry.StandaloneRegistryTest.LoggingCallback;
 import net.onrc.onos.core.registry.ZookeeperRegistry.SwitchLeaderListener;
+import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -115,25 +116,26 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     }
 
     /**
-     * Test if {@link ZookeeperRegistry#getControllerId()} correctly returns registered ID.
+     * Test if {@link ZookeeperRegistry#getOnosInstanceId()} correctly returns
+     * registered ID.
      *
      * @throws Exception
      */
     @Test
-    public void testGetControllerId() throws Exception {
+    public void testGetOnosInstanceId() throws Exception {
         String controllerIdToRegister = "controller1";
 
         // try before controller is registered
-        String controllerId = registry.getControllerId();
-        assertNull(controllerId);
+        OnosInstanceId onosInstanceId = registry.getOnosInstanceId();
+        assertNull(onosInstanceId);
 
         // register
         registry.registerController(controllerIdToRegister);
 
-        // call getControllerId and verify
-        controllerId = registry.getControllerId();
-        assertNotNull(controllerId);
-        assertEquals(controllerIdToRegister, controllerId);
+        // call getOnosInstanceId and verify
+        onosInstanceId = registry.getOnosInstanceId();
+        assertNotNull(onosInstanceId);
+        assertEquals(controllerIdToRegister, onosInstanceId.toString());
     }
 
     /**

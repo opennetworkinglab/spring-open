@@ -48,7 +48,7 @@ public class MastershipEventSerializer extends SerializerBase<MastershipEvent> {
         jsonGenerator.writeStringField("dpid",
                                        mastershipEvent.getDpid().toString());
         jsonGenerator.writeStringField("onosInstanceId",
-                                       mastershipEvent.getOnosInstanceId());
+                                       mastershipEvent.getOnosInstanceId().toString());
         jsonGenerator.writeStringField("role",
                                        mastershipEvent.getRole().name());
         jsonGenerator.writeObjectFieldStart("stringAttributes");
