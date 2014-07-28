@@ -846,5 +846,29 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>hz-cli</id>
+      <build>
+        <plugins>
+          <!-- mvn exec:java -P hz-cli to start Hazelcast CLI -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.2.1</version>
+            <configuration>
+              <mainClass>net.onrc.onos.core.datagrid.HazelcastCLI</mainClass>
+              <systemProperties>
+                <systemProperty>
+                  <key>hazelcast.logging.type</key>
+                  <value>slf4j</value>
+                </systemProperty>
+              </systemProperties>
+            </configuration>
+            <executions>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

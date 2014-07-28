@@ -13,6 +13,7 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.datagrid.web.DatagridWebRoutable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,8 +53,11 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
      * Load the Hazelcast Datagrid configuration file.
      *
      * @param configFilename the configuration filename.
+     * @return Hazelcast configuration
      */
-    public void loadHazelcastConfig(String configFilename) {
+    public static Config loadHazelcastConfig(String configFilename) {
+
+        Config hzConfig = null;
         /*
         System.setProperty("hazelcast.socket.receive.buffer.size", "32");
         System.setProperty("hazelcast.socket.send.buffer.size", "32");
@@ -62,29 +66,32 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
 
         // Init from configuration file
         try {
-            hazelcastConfig = new FileSystemXmlConfig(configFilename);
+            hzConfig = new FileSystemXmlConfig(configFilename);
         } catch (FileNotFoundException e) {
             log.error("Error opening Hazelcast XML configuration. File not found: " + configFilename, e);
 
             // Fallback mechanism to support running unit test without setup.
             log.error("Falling back to default Hazelcast XML {}", HAZELCAST_DEFAULT_XML);
             try {
-                hazelcastConfig = new FileSystemXmlConfig(HAZELCAST_DEFAULT_XML);
+                hzConfig = new FileSystemXmlConfig(HAZELCAST_DEFAULT_XML);
             } catch (FileNotFoundException e2) {
                 log.error("Error opening fall back Hazelcast XML configuration. "
                         + "File not found: " + HAZELCAST_DEFAULT_XML, e2);
                 // XXX probably should throw some exception to kill ONOS instead.
+                hzConfig = new Config();
             }
         }
 
         // set the name of Hazelcast instance in this JVM.
-        hazelcastConfig.setInstanceName(ONOS_HAZELCAST_INSTANCE);
+        hzConfig.setInstanceName(ONOS_HAZELCAST_INSTANCE);
 
         /*
         hazelcastConfig.setProperty(GroupProperties.PROP_IO_THREAD_COUNT, "1");
         hazelcastConfig.setProperty(GroupProperties.PROP_OPERATION_THREAD_COUNT, "1");
         hazelcastConfig.setProperty(GroupProperties.PROP_EVENT_THREAD_COUNT, "1");
         */
+
+        return hzConfig;
     }
 
     /**
@@ -160,7 +167,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
         // Get the configuration file name and configure the Datagrid
         Map<String, String> configMap = context.getConfigParams(this);
         String configFilename = configMap.get(HAZELCAST_CONFIG_FILE);
-        this.loadHazelcastConfig(configFilename);
+        hazelcastConfig = loadHazelcastConfig(configFilename);
     }
 
     /**
