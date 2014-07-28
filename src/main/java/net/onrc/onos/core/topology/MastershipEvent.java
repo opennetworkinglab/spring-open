@@ -117,7 +117,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      * ONOS Instance ID.
      *
      * @param obj another object to compare to this
-     * @returns true if equal, false otherwise false.
+     * @return true if equal, false otherwise false.
      */
     @Override
     public boolean equals(Object obj) {
