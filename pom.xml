@@ -238,7 +238,7 @@
         <executions>
           <execution>
             <id>build-classpath</id>
-            <phase>generate-sources</phase>
+            <phase>compile</phase>
             <goals>
               <goal>build-classpath</goal>
             </goals>
