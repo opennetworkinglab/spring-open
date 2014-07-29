@@ -541,11 +541,18 @@
       <groupId>org.restlet.jse</groupId>
       <artifactId>org.restlet.ext.slf4j</artifactId>
       <version>${restlet.version}</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.restlet.jse</groupId>
       <artifactId>org.restlet.ext.json</artifactId>
       <version>${restlet.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.restlet.jse</groupId>
+      <artifactId>org.restlet.lib.org.json</artifactId>
+      <version>2.0</version>
     </dependency>
     <dependency>
       <groupId>org.restlet.jse</groupId>
@@ -566,11 +573,13 @@
       <groupId>org.restlet.jse</groupId>
       <artifactId>org.restlet.ext.simple</artifactId>
       <version>${restlet.version}</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.simpleframework</groupId>
       <artifactId>simple</artifactId>
       <version>4.1.21</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -666,6 +675,11 @@
       <artifactId>metrics-json</artifactId>
       <version>${metrics.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.2.2</version>
+    </dependency>
     <!-- Floodlight's dependencies -->
     <dependency>
       <groupId>args4j</groupId>
@@ -679,9 +693,9 @@
     </dependency>
     <dependency>
       <!-- dependency to old version of netty? -->
-      <groupId>org.jboss.netty</groupId>
+      <groupId>io.netty</groupId>
       <artifactId>netty</artifactId>
-      <version>3.2.7.Final</version>
+      <version>3.7.0.Final</version>
     </dependency>
     <!-- Dependency for libraries used for testing -->
     <dependency>
