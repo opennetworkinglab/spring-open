@@ -695,7 +695,7 @@
       <!-- dependency to old version of netty? -->
       <groupId>io.netty</groupId>
       <artifactId>netty</artifactId>
-      <version>3.7.0.Final</version>
+      <version>3.9.2.Final</version>
     </dependency>
     <!-- Dependency for libraries used for testing -->
     <dependency>
