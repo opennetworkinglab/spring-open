@@ -1,19 +1,18 @@
-ONOS (Open Networking Operating System)
-=======================================
+ONOS
+====
 
 ONOS (Open Networking Operating System) is an experimental distributed
 SDN OS. Currently, it is under active development. ONOS was announced
 and demonstrated at ONS'13, '14.
 
-License
-=======
-Apache 2.0
 
+Getting Started with ONOS
+-------------------------
 
-Steps to download and setup a development Virtual Machine
----------------------------------------------------------
+Following URL has the instructions how to get started with ONOS, starting from 
+downloading the development VM:
 
-https://wiki.onlab.us:8443/display/onosdocs/Getting+Started+with+ONOS
+https://wiki.onlab.us/display/onosdocs/Getting+Started+with+ONOS
 
 Building ONOS
 -------------
@@ -21,8 +20,7 @@ Building ONOS
 1. Cleanly build ONOS
 
         $ cd ${ONOS_HOME}/
-        $ mvn clean
-        $ mvn compile
+        $ mvn clean compile
 
 External Dependencies
 ---------------------
@@ -84,8 +82,8 @@ To stop all the above
 If you need to use the REST APIs, follow the instruction for
 "Start ONOS REST API server" in next section.
 
-Running ONOS and required components one by one
------------------------------------------------
+Running ONOS components one by one
+----------------------------------
 You can manually start/stop individual ONOS components as follows:
 
 1. Start Zookeeper
@@ -149,9 +147,17 @@ To run only a subset of the unit tests, use the following commands:
 Comma and wildcards can be used to specify multiple test cases.
 See [maven-surefire-plugin website](http://maven.apache.org/surefire/maven-surefire-plugin/examples/single-test.html) for details.
 
+Running static analysis
+-----------------------
+ONOS utilizes several [static analysis tools](https://wiki.onlab.us/display/onosdocs/ONOS+Coding+Style#ONOSCodingStyle-Codestaticanalysistools) to detect programmatic and formatting errors.
+To run some of the analysis against the code, use the following commands:
 
-Developing ONOS in offline environment (Optional)
--------------------------------------------------
+        $ cd ${ONOS_HOME}
+        $ mvn clean verify -P error-prone
+
+
+Downloading dependencies (Optional)
+-----------------------------------
 
 Maven need the Internet connection to download required dependencies and plugins,
 when they're used for the first time.
@@ -162,3 +168,9 @@ so that required dependencies and plugins for frequently used maven target will 
 downloaded to your local environment.
 
         $ ./prep-for-offline.sh
+
+License
+-------
+Apache 2.0
+
+
