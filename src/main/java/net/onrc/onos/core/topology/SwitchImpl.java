@@ -11,7 +11,7 @@ import java.util.Set;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Handler to Switch object stored in In-memory Topology snapshot.
@@ -31,8 +31,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
      */
     SwitchImpl(TopologyInternal topology, Dpid dpid) {
         super(topology);
-        Validate.notNull(dpid);
-        this.id = dpid;
+        this.id = checkNotNull(dpid);
     }
 
     @Override

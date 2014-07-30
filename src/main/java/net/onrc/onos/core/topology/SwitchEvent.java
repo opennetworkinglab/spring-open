@@ -6,8 +6,8 @@ import net.onrc.onos.core.util.Dpid;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.apache.commons.lang.Validate;
 
 /**
  * Self-contained Switch Object.
@@ -34,8 +34,7 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
      * @param dpid Dpid to identify this switch
      */
     public SwitchEvent(Dpid dpid) {
-        Validate.notNull(dpid);
-        this.dpid = dpid;
+        this.dpid = checkNotNull(dpid);
     }
 
     /**

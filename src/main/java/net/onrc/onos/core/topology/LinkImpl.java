@@ -4,7 +4,7 @@ import java.util.Map;
 
 import net.onrc.onos.core.util.LinkTuple;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Handler to Link object stored in In-memory Topology snapshot.
@@ -23,8 +23,7 @@ public class LinkImpl extends TopologyObject implements Link {
      */
     LinkImpl(TopologyInternal topology, LinkTuple linkTuple) {
         super(topology);
-        Validate.notNull(linkTuple);
-        this.id = linkTuple;
+        this.id = checkNotNull(linkTuple);
     }
 
     @Override

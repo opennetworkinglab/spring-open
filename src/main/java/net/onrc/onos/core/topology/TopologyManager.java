@@ -273,11 +273,11 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             //
             for (EventEntry<TopologyEvent> event : events) {
                 TopologyEvent topologyEvent = event.eventData();
-                SwitchEvent switchEvent = topologyEvent.switchEvent;
-                PortEvent portEvent = topologyEvent.portEvent;
-                LinkEvent linkEvent = topologyEvent.linkEvent;
-                HostEvent hostEvent = topologyEvent.hostEvent;
-                MastershipEvent mastershipEvent = topologyEvent.mastershipEvent;
+                SwitchEvent switchEvent = topologyEvent.getSwitchEvent();
+                PortEvent portEvent = topologyEvent.getPortEvent();
+                LinkEvent linkEvent = topologyEvent.getLinkEvent();
+                HostEvent hostEvent = topologyEvent.getHostEvent();
+                MastershipEvent mastershipEvent = topologyEvent.getMastershipEvent();
 
                 //
                 // Extract the events
@@ -625,13 +625,17 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         if (datastore.addSwitch(switchEvent, portEvents)) {
             log.debug("Sending add switch: {}", switchEvent);
             // Send out notification
-            TopologyEvent topologyEvent = new TopologyEvent(switchEvent);
+            TopologyEvent topologyEvent =
+                new TopologyEvent(switchEvent,
+                                  registryService.getOnosInstanceId());
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
 
             // Send out notification for each port
             for (PortEvent portEvent : portEvents) {
                 log.debug("Sending add port: {}", portEvent);
-                topologyEvent = new TopologyEvent(portEvent);
+                topologyEvent =
+                    new TopologyEvent(portEvent,
+                                      registryService.getOnosInstanceId());
                 eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
             }
 
@@ -737,7 +741,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         if (datastore.addPort(portEvent)) {
             log.debug("Sending add port: {}", portEvent);
             // Send out notification
-            TopologyEvent topologyEvent = new TopologyEvent(portEvent);
+            TopologyEvent topologyEvent =
+                new TopologyEvent(portEvent,
+                                  registryService.getOnosInstanceId());
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
 
             // Store the new Port Event in the local cache
@@ -817,7 +823,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         if (datastore.addLink(linkEvent)) {
             log.debug("Sending add link: {}", linkEvent);
             // Send out notification
-            TopologyEvent topologyEvent = new TopologyEvent(linkEvent);
+            TopologyEvent topologyEvent =
+                new TopologyEvent(linkEvent,
+                                  registryService.getOnosInstanceId());
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
 
             // Store the new Link Event in the local cache
@@ -864,7 +872,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     public void putHostDiscoveryEvent(HostEvent hostEvent) {
         if (datastore.addHost(hostEvent)) {
             // Send out notification
-            TopologyEvent topologyEvent = new TopologyEvent(hostEvent);
+            TopologyEvent topologyEvent =
+                new TopologyEvent(hostEvent,
+                                  registryService.getOnosInstanceId());
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
             log.debug("Put the host info into the cache of the topology. mac {}", hostEvent.getMac());
 
@@ -921,7 +931,9 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @Override
     public void putSwitchMastershipEvent(MastershipEvent mastershipEvent) {
         // Send out notification
-        TopologyEvent topologyEvent = new TopologyEvent(mastershipEvent);
+        TopologyEvent topologyEvent =
+            new TopologyEvent(mastershipEvent,
+                              registryService.getOnosInstanceId());
         eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
     }
 
@@ -1363,8 +1375,15 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 continue;
             }
 
+            //
+            // TODO: Using the local ONOS Instance ID below is incorrect.
+            // Currently, this code is not used, and it might go away in the
+            // future.
+            //
             SwitchEvent switchEvent = new SwitchEvent(new Dpid(sw.getDpid()));
-            TopologyEvent topologyEvent = new TopologyEvent(switchEvent);
+            TopologyEvent topologyEvent =
+                new TopologyEvent(switchEvent,
+                                  registryService.getOnosInstanceId());
             EventEntry<TopologyEvent> eventEntry =
                     new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
                             topologyEvent);
@@ -1377,30 +1396,49 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 continue;
             }
 
-            PortEvent portEvent = new PortEvent(
-                    new Dpid(p.getDpid()),
-                    new PortNumber(p.getNumber().shortValue()));
-            TopologyEvent topologyEvent = new TopologyEvent(portEvent);
+            //
+            // TODO: Using the local ONOS Instance ID below is incorrect.
+            // Currently, this code is not used, and it might go away in the
+            // future.
+            //
+            PortEvent portEvent =
+                new PortEvent(new Dpid(p.getDpid()),
+                              new PortNumber(p.getNumber().shortValue()));
+            TopologyEvent topologyEvent =
+                new TopologyEvent(portEvent,
+                                  registryService.getOnosInstanceId());
             EventEntry<TopologyEvent> eventEntry =
                     new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
                             topologyEvent);
             collection.add(eventEntry);
         }
 
-         for (KVDevice d : KVDevice.getAllDevices()) {
-              HostEvent devEvent = new HostEvent(MACAddress.valueOf(d.getMac()));
-              for (byte[] portId : d.getAllPortIds()) {
-                  devEvent.addAttachmentPoint(
-                          new SwitchPort(KVPort.getDpidFromKey(portId),
-                                  KVPort.getNumberFromKey(portId)));
-              }
-         }
+        for (KVDevice d : KVDevice.getAllDevices()) {
+            //
+            // TODO: Using the local ONOS Instance ID below is incorrect.
+            // Currently, this code is not used, and it might go away in the
+            // future.
+            //
+            HostEvent devEvent = new HostEvent(MACAddress.valueOf(d.getMac()));
+            for (byte[] portId : d.getAllPortIds()) {
+                devEvent.addAttachmentPoint(
+                        new SwitchPort(KVPort.getDpidFromKey(portId),
+                        KVPort.getNumberFromKey(portId)));
+            }
+        }
 
         for (KVLink l : KVLink.getAllLinks()) {
+            //
+            // TODO: Using the local ONOS Instance ID below is incorrect.
+            // Currently, this code is not used, and it might go away in the
+            // future.
+            //
             LinkEvent linkEvent = new LinkEvent(
-                    new SwitchPort(l.getSrc().dpid, l.getSrc().number),
-                    new SwitchPort(l.getDst().dpid, l.getDst().number));
-            TopologyEvent topologyEvent = new TopologyEvent(linkEvent);
+                        new SwitchPort(l.getSrc().dpid, l.getSrc().number),
+                        new SwitchPort(l.getDst().dpid, l.getDst().number));
+            TopologyEvent topologyEvent =
+                new TopologyEvent(linkEvent,
+                                  registryService.getOnosInstanceId());
             EventEntry<TopologyEvent> eventEntry =
                     new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
                             topologyEvent);

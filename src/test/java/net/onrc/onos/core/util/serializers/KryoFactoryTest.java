@@ -46,6 +46,7 @@ public class KryoFactoryTest {
     private static final Dpid DPID_B = new Dpid(Long.MAX_VALUE);
     private static final PortNumber PORT_NO_A = new PortNumber((short) 42);
     private static final PortNumber PORT_NO_B = new PortNumber((short) 65534);
+    private static final String ONOS_INSTANCE_NAME = "ONOS-Instance-Test";
 
     private static final double SEC_IN_NANO = 1000 * 1000 * 1000.0;
 
@@ -172,7 +173,8 @@ public class KryoFactoryTest {
         // To be more strict, we should be checking serialized byte[].
         { // CHECKSTYLE IGNORE THIS LINE
             HostEvent obj = new HostEvent(MACAddress.valueOf(0x12345678));
-            obj.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+            obj.createStringAttribute(TopologyElement.TYPE,
+                                      TopologyElement.TYPE_PACKET_LAYER);
             obj.addAttachmentPoint(new SwitchPort(DPID_A, PORT_NO_A));
             // avoid using System.currentTimeMillis() var-int size may change
             obj.setLastSeenTime(392860800000L);
@@ -184,8 +186,10 @@ public class KryoFactoryTest {
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
-            LinkEvent obj = new LinkEvent(DPID_A, PORT_NO_A, DPID_B, PORT_NO_B);
-            obj.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+            LinkEvent obj = new LinkEvent(new SwitchPort(DPID_A, PORT_NO_A),
+                                          new SwitchPort(DPID_B, PORT_NO_B));
+            obj.createStringAttribute(TopologyElement.TYPE,
+                                      TopologyElement.TYPE_PACKET_LAYER);
             obj.freeze();
             Result result = benchType(obj, EqualityCheck.EQUALS);
             results.add(result);
@@ -195,7 +199,8 @@ public class KryoFactoryTest {
 
         { // CHECKSTYLE IGNORE THIS LINE
             PortEvent obj = new PortEvent(DPID_A, PORT_NO_A);
-            obj.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+            obj.createStringAttribute(TopologyElement.TYPE,
+                                      TopologyElement.TYPE_PACKET_LAYER);
             obj.freeze();
             Result result = benchType(obj, EqualityCheck.EQUALS);
             results.add(result);
@@ -205,7 +210,8 @@ public class KryoFactoryTest {
 
         { // CHECKSTYLE IGNORE THIS LINE
             SwitchEvent obj = new SwitchEvent(DPID_A);
-            obj.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+            obj.createStringAttribute(TopologyElement.TYPE,
+                                      TopologyElement.TYPE_PACKET_LAYER);
             obj.freeze();
             Result result = benchType(obj, EqualityCheck.EQUALS);
             results.add(result);
@@ -215,23 +221,27 @@ public class KryoFactoryTest {
 
         { // CHECKSTYLE IGNORE THIS LINE
             SwitchEvent evt = new SwitchEvent(DPID_A);
-            evt.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+            evt.createStringAttribute(TopologyElement.TYPE,
+                                      TopologyElement.TYPE_PACKET_LAYER);
             evt.freeze();
+            OnosInstanceId onosInstanceId =
+                new OnosInstanceId(ONOS_INSTANCE_NAME);
 
             // using the back door to access package-scoped constructor
             Constructor<TopologyEvent> swConst
-                = TopologyEvent.class.getDeclaredConstructor(SwitchEvent.class);
+                = TopologyEvent.class.getDeclaredConstructor(SwitchEvent.class,
+                        OnosInstanceId.class);
             swConst.setAccessible(true);
-            TopologyEvent obj = swConst.newInstance(evt);
+            TopologyEvent obj = swConst.newInstance(evt, onosInstanceId);
 
             Result result = benchType(obj, EqualityCheck.TO_STRING);
             results.add(result);
             // update me if serialized form is expected to change
-            assertEquals(27, result.size);
+            assertEquals(47, result.size);
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
-            OnosInstanceId id = new OnosInstanceId("Some_Instance_Name");
+            OnosInstanceId id = new OnosInstanceId(ONOS_INSTANCE_NAME);
 
             Result result = benchType(id, EqualityCheck.EQUALS);
             results.add(result);

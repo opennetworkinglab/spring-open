@@ -9,7 +9,7 @@ import net.onrc.onos.core.topology.web.serializers.MastershipEventSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
@@ -45,11 +45,8 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      */
     public MastershipEvent(Dpid dpid, OnosInstanceId onosInstanceId,
                            Role role) {
-        Validate.notNull(dpid);
-        Validate.notNull(onosInstanceId);
-
-        this.dpid = dpid;
-        this.onosInstanceId = onosInstanceId;
+        this.dpid = checkNotNull(dpid);
+        this.onosInstanceId = checkNotNull(onosInstanceId);
         this.role = role;
     }
 

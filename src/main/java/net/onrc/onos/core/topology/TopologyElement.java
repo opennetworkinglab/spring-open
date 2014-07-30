@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Base class for Topology Elements.
@@ -150,7 +150,7 @@ public class TopologyElement<T extends TopologyElement<T>>
         if (isFrozen) {
             throw new IllegalStateException("Tried to modify frozen object: " + this);
         }
-        Validate.notNull(value, "attribute value cannot be null");
+        checkNotNull(value, "attribute value cannot be null");
 
         return this.stringAttributes.putIfAbsent(attr, value) == null;
     }
@@ -160,7 +160,7 @@ public class TopologyElement<T extends TopologyElement<T>>
         if (isFrozen) {
             throw new IllegalStateException("Tried to modify frozen object: " + this);
         }
-        Validate.notNull(value, "attribute value cannot be null");
+        checkNotNull(value, "attribute value cannot be null");
 
         return this.stringAttributes.replace(attr, oldValue, value);
     }

@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
@@ -26,8 +26,7 @@ public class PortImpl extends TopologyObject implements Port {
      */
     PortImpl(TopologyInternal topology, SwitchPort switchPort) {
         super(topology);
-        Validate.notNull(switchPort);
-        this.id = switchPort;
+        this.id = checkNotNull(switchPort);
     }
 
     /**

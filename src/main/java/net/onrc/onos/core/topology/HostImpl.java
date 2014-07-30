@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.SwitchPort;
@@ -25,8 +25,7 @@ public class HostImpl extends TopologyObject implements Host {
      */
     HostImpl(TopologyInternal topology, MACAddress mac) {
         super(topology);
-        Validate.notNull(mac);
-        this.id = mac;
+        this.id = checkNotNull(mac);
     }
 
     @Override

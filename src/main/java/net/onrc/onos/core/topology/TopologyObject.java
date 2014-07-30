@@ -1,6 +1,6 @@
 package net.onrc.onos.core.topology;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
@@ -28,8 +28,7 @@ public abstract class TopologyObject implements ITopologyElement {
      * @param topology Topology instance this object belongs to
      */
     protected TopologyObject(TopologyInternal topology) {
-        Validate.notNull(topology);
-        this.topology = topology;
+        this.topology = checkNotNull(topology);
     }
 
     // TODO Add method to replace topology snapshot

@@ -50,6 +50,7 @@ public class TopologyManagerTest extends UnitTest {
     private IControllerRegistryService registryService;
     private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
     private Collection<TopologyEvent> allTopologyEvents;
+    private OnosInstanceId onosInstanceId = new OnosInstanceId("ONOS-Test-Instance-ID");
 
     @SuppressWarnings("unchecked")
     @Before
@@ -106,6 +107,8 @@ public class TopologyManagerTest extends UnitTest {
         expect(dataStoreService.removeLink(
                 anyObject(LinkEvent.class)))
                 .andReturn(true).anyTimes();
+
+        expect(registryService.getOnosInstanceId()).andReturn(onosInstanceId).anyTimes();
 
         replay(datagridService);
         replay(registryService);
@@ -275,11 +278,9 @@ public class TopologyManagerTest extends UnitTest {
 
         // Generate a new Switch Mastership event
         Dpid dpid = new Dpid(100L);
-        OnosInstanceId onosInstanceId =
-            new OnosInstanceId("ONOS-Test-Instance-ID");
         Role role = Role.MASTER;
         MastershipEvent mastershipEvent =
-            new MastershipEvent(dpid, onosInstanceId, role);
+            new MastershipEvent(dpid, this.onosInstanceId, role);
 
         // Call the topologyManager function for adding the event
         theTopologyManager.putSwitchMastershipEvent(mastershipEvent);
@@ -302,11 +303,9 @@ public class TopologyManagerTest extends UnitTest {
 
         // Generate a new Switch Mastership event
         Dpid dpid = new Dpid(100L);
-        OnosInstanceId onosInstanceId =
-            new OnosInstanceId("ONOS-Test-Instance-ID");
         Role role = Role.MASTER;
         MastershipEvent mastershipEvent =
-            new MastershipEvent(dpid, onosInstanceId, role);
+            new MastershipEvent(dpid, this.onosInstanceId, role);
 
         // Call the topologyManager function for removing the event
         theTopologyManager.removeSwitchMastershipEvent(mastershipEvent);
@@ -351,7 +350,8 @@ public class TopologyManagerTest extends UnitTest {
         theTopologyManager.putSwitchDiscoveryEvent(switchEvent2, portEvents2);
 
         // Create the link
-        LinkEvent linkEvent = new LinkEvent(sw1DPId, port1Id, sw2DPId, port2Id);
+        LinkEvent linkEvent = new LinkEvent(new SwitchPort(sw1DPId, port1Id),
+                                            new SwitchPort(sw2DPId, port2Id));
         theTopologyManager.putLinkDiscoveryEvent(linkEvent);
 
         // Verify the function calls
@@ -393,7 +393,9 @@ public class TopologyManagerTest extends UnitTest {
         theTopologyManager.putSwitchDiscoveryEvent(switchEvent2, portEvents2);
 
         // Remove the link
-        LinkEvent linkEventRemove = new LinkEvent(sw1DPId, port1Id, sw2DPId, port2Id);
+        LinkEvent linkEventRemove =
+            new LinkEvent(new SwitchPort(sw1DPId, port1Id),
+                          new SwitchPort(sw2DPId, port2Id));
         theTopologyManager.removeLinkDiscoveryEvent(linkEventRemove);
 
         // Verify the function calls

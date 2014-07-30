@@ -8,6 +8,7 @@ import java.util.HashSet;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -97,13 +98,13 @@ public class PathIntentMap extends IntentMap {
     /**
      * Retrieve all intents that use a particular link.
      *
-     * @param linkEvent the link to look up
+     * @param linkTuple the link tuple to look up
      * @return a collection of PathIntents that use the link
      */
-    public Collection<PathIntent> getIntentsByLink(LinkEvent linkEvent) {
+    public Collection<PathIntent> getIntentsByLink(LinkTuple linkTuple) {
         return getIntentsByPort(
-                linkEvent.getSrc().getDpid(),
-                linkEvent.getSrc().getPortNumber());
+                linkTuple.getSrc().getDpid(),
+                linkTuple.getSrc().getPortNumber());
     }
 
     /**
@@ -152,9 +153,8 @@ public class PathIntentMap extends IntentMap {
             return null;
         }
         Double bandwidth = link.getCapacity();
-        LinkEvent linkEvent = new LinkEvent(link);
         if (!bandwidth.isInfinite()) {
-            for (PathIntent intent : getIntentsByLink(linkEvent)) {
+            for (PathIntent intent : getIntentsByLink(link.getLinkTuple())) {
                 Double intentBandwidth = intent.getBandwidth();
                 if (intentBandwidth == null || intentBandwidth.isInfinite() || intentBandwidth.isNaN()) {
                     continue;

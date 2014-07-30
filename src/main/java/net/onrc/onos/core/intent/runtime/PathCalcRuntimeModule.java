@@ -870,7 +870,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
                    topologyEvents.getRemovedPortEvents().size() > 0) {
             p.log("begin_getIntentsByLink");
             for (LinkEvent linkEvent : topologyEvents.getRemovedLinkEvents()) {
-                affectedPaths.addAll(pathIntents.getIntentsByLink(linkEvent));
+                affectedPaths.addAll(pathIntents.getIntentsByLink(linkEvent.getLinkTuple()));
             }
             p.log("end_getIntentsByLink");
 

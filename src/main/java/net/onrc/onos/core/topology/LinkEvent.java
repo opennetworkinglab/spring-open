@@ -9,7 +9,7 @@ import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
@@ -42,9 +42,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      * @param id link tuple to identify this link
      */
     public LinkEvent(LinkTuple id) {
-        Validate.notNull(id);
-
-        this.id = id;
+        this.id = checkNotNull(id);
     }
 
     /**
@@ -71,19 +69,6 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
     public LinkEvent(Link link) {
         this(link.getLinkTuple());
         // FIXME losing attributes here
-    }
-
-    /**
-     * Creates the Link object.
-     *
-     * @param srcDpid source switch DPID
-     * @param srcPortNo source port number
-     * @param dstDpid destination switch DPID
-     * @param dstPortNo destination port number
-     */
-    public LinkEvent(Dpid srcDpid, PortNumber srcPortNo,
-                     Dpid dstDpid, PortNumber dstPortNo) {
-        this(new LinkTuple(srcDpid, srcPortNo, dstDpid, dstPortNo));
     }
 
     /**

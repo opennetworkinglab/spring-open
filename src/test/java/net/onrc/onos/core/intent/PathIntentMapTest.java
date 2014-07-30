@@ -190,16 +190,17 @@ public class PathIntentMapTest {
         intents.executeOperations(operations);
         assertEquals(2, intents.getAllIntents().size());
 
-        Collection<PathIntent> pathIntents = intents.getIntentsByLink(new LinkEvent(link12));
+        Collection<PathIntent> pathIntents =
+            intents.getIntentsByLink(link12.getLinkTuple());
         assertEquals(2, pathIntents.size());
         assertTrue(pathIntents.contains(intent1));
         assertTrue(pathIntents.contains(intent2));
 
-        pathIntents = intents.getIntentsByLink(new LinkEvent(link23));
+        pathIntents = intents.getIntentsByLink(link23.getLinkTuple());
         assertEquals(1, pathIntents.size());
         assertTrue(pathIntents.contains(intent1));
 
-        pathIntents = intents.getIntentsByLink(new LinkEvent(link24));
+        pathIntents = intents.getIntentsByLink(link24.getLinkTuple());
         assertEquals(1, pathIntents.size());
         assertTrue(pathIntents.contains(intent2));
     }

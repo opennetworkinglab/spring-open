@@ -11,6 +11,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.web.serializers.HostEventSerializer;
 import net.onrc.onos.core.util.SwitchPort;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
@@ -42,11 +43,13 @@ public class HostEvent extends TopologyElement<HostEvent> {
         mac = null;
     }
 
+    /**
+     * Creates the Host object.
+     *
+     * @param mac the MAC address to identify the host
+     */
     public HostEvent(MACAddress mac) {
-        if (mac == null) {
-            throw new IllegalArgumentException("Host mac cannot be null");
-        }
-        this.mac = mac;
+        this.mac = checkNotNull(mac);
         this.attachmentPoints = new LinkedList<>();
     }
 

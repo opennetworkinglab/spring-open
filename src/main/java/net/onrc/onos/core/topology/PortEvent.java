@@ -5,7 +5,7 @@ import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.apache.commons.lang.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.nio.ByteBuffer;
@@ -45,8 +45,7 @@ public class PortEvent extends TopologyElement<PortEvent> {
      * @param switchPort SwitchPort to identify this port
      */
     public PortEvent(SwitchPort switchPort) {
-        Validate.notNull(switchPort);
-        this.id = switchPort;
+        this.id = checkNotNull(switchPort);
     }
 
     /**
@@ -132,8 +131,8 @@ public class PortEvent extends TopologyElement<PortEvent> {
     public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
 
     public static ByteBuffer getPortID(Dpid dpid, PortNumber number) {
-        Validate.notNull(dpid);
-        Validate.notNull(number);
+        checkNotNull(dpid);
+        checkNotNull(number);
         return getPortID(dpid.value(), number.value());
     }
 
@@ -156,5 +155,4 @@ public class PortEvent extends TopologyElement<PortEvent> {
     public ByteBuffer getIDasByteBuffer() {
         return getPortID(getDpid(), getPortNumber());
     }
-
 }

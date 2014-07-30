@@ -33,7 +33,7 @@ public interface Host extends ITopologyElement {
     public Iterable<Port> getAttachmentPoints();
 
     /**
-     * Gest the Host last seen time.
+     * Gets the Host last seen time.
      * <p/>
      *
      * @return the Host last seen time. (UTC in ms)
