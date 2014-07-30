@@ -12,6 +12,14 @@ public final class OnosInstanceId {
     private final String id;
 
     /**
+     * Default constructor for serializer.
+     */
+    @Deprecated
+    protected OnosInstanceId() {
+        id = "(should never see this)";
+    }
+
+    /**
      * Constructor from a string value.
      *
      * @param id the value to use.

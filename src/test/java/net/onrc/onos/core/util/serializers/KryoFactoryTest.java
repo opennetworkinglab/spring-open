@@ -16,6 +16,7 @@ import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -227,6 +228,15 @@ public class KryoFactoryTest {
             results.add(result);
             // update me if serialized form is expected to change
             assertEquals(27, result.size);
+        }
+
+        { // CHECKSTYLE IGNORE THIS LINE
+            OnosInstanceId id = new OnosInstanceId("Some_Instance_Name");
+
+            Result result = benchType(id, EqualityCheck.EQUALS);
+            results.add(result);
+            // update me if serialized form is expected to change
+            assertEquals(21, result.size);
         }
 
         // TODO Add registered classes we still use.
