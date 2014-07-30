@@ -39,6 +39,26 @@ public final class PortNumber {
     }
 
     /**
+     * Creates the unsigned 16 bit port number.
+     *
+     * @param number unsigned 16 bit port number.
+     * @return PortNumber instance
+     */
+    public static PortNumber uint16(final short number) {
+        return new PortNumber(number);
+    }
+
+    /**
+     * Creates the unsigned 32 bit port number.
+     *
+     * @param number unsigned 32 bit port number.
+     * @return PortNumber instance
+     */
+    public static PortNumber uint32(final int number) {
+        return new PortNumber(number);
+    }
+
+    /**
      * Constructor from an int.
      *
      * @param value the value to use. (Value will not be validated in any way.)
@@ -95,8 +115,7 @@ public final class PortNumber {
      */
     @JsonProperty("value")
     public long value() {
-        // TODO Will require masking when we start storing 32bit port number.
-        return value;
+        return 0xffffffffL & value;
     }
 
     /**

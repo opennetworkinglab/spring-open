@@ -16,6 +16,30 @@ public class PortNumberTest {
     private static final PortNumber PORT_LOCAL = new PortNumber(0xfffe);
 
     /**
+     * Test method for {@link PortNumber#uint16(short)}.
+     */
+    @Test
+    public void testPortNumberUint16() {
+        final PortNumber ref = new PortNumber(PORT_NONE);
+        PortNumber p = PortNumber.uint16((short) 0xffff);
+
+        assertEquals(ref, p);
+        assertEquals(0xFFFFL, p.value());
+    }
+
+    /**
+     * Test method for {@link PortNumber#uint32(int)}.
+     */
+    @Test
+    public void testPortNumberUint32() {
+        final PortNumber ref = new PortNumber("FFFFFFFF", 16);
+        PortNumber p = PortNumber.uint32(0xFFFFFFFF);
+
+        assertEquals(ref, p);
+        assertEquals(0xFFFFFFFFL, p.value());
+    }
+
+    /**
      * Test method for {@link PortNumber#PortNumber(String)}.
      */
     @Test
