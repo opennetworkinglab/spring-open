@@ -35,8 +35,8 @@
     <cobertura-maven-plugin.version>2.6</cobertura-maven-plugin.version>
     <!-- Following 2 findbugs version needs to be updated in sync to match the
          findbugs version used in findbugs-plugin -->
-    <findbugs.version>2.0.3</findbugs.version>
-    <findbugs-plugin.version>2.5.4</findbugs-plugin.version>
+    <findbugs.version>3.0.0</findbugs.version>
+    <findbugs-plugin.version>3.0.0</findbugs-plugin.version>
     <findbugs.effort>Max</findbugs.effort>
     <findbugs.excludeFilterFile>conf/findbugs/exclude.xml</findbugs.excludeFilterFile>
     <checkstyle-plugin.version>2.12</checkstyle-plugin.version>
