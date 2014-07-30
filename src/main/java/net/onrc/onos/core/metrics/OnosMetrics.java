@@ -261,6 +261,7 @@ public final class OnosMetrics {
      * caller needs to allocate its own Metric, but still register it with the
      * system.
      *
+     * @param <T> Metric type
      * @param component component the Metric is defined in
      * @param feature feature the Metric is defined in
      * @param metricName local name of the metric
