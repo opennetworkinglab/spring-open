@@ -34,23 +34,6 @@ public class TestRestApiServer {
     private RestApplication restApplication;
     private Server server;
     private Component component;
-    private int port;
-
-    /**
-     * Hide the default constructor.
-     */
-    @SuppressWarnings("unused")
-    private TestRestApiServer() { }
-
-    /**
-     * Public constructor.  Given a port number, create a REST API server on
-     * that port.  The server is not running, it can be started using the
-     * startServer() method.
-     * @param serverPort port for the server to listen on.
-     */
-    public TestRestApiServer(final int serverPort) {
-        port = serverPort;
-    }
 
     /**
      * The restlet engine requires an Application as a container.
@@ -115,29 +98,31 @@ public class TestRestApiServer {
             return slashFilter;
         }
 
-        /**
-         * Run the Application on a given port.
-         *
-         * @param restPort port to listen on for inbounde requests
-         */
-        public void run(final int restPort) {
-            setStatusService(new StatusService() {
-                @Override
-                public Representation getRepresentation(Status status,
-                                                        Request request,
-                                                        Response response) {
-                    return new JacksonRepresentation<>(status);
-                }
-            });
 
-            // Start listening for REST requests
+        /**
+         * Run the Application on an open port.
+         *
+         */
+        public void run() {
+
             try {
+                setStatusService(new StatusService() {
+                    @Override
+                    public Representation getRepresentation(Status status,
+                                                            Request request,
+                                                            Response response) {
+                        return new JacksonRepresentation<>(status);
+                    }
+                });
+
+                // Start listening for REST requests
                 component = new Component();
-                server = component.getServers().add(Protocol.HTTP, restPort);
+                server = component.getServers().add(Protocol.HTTP, 0);
                 component.getDefaultHost().attach(this);
                 component.start();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                //  Web server did not start.
+                throw new IllegalStateException(e);
             }
         }
     }
@@ -153,7 +138,7 @@ public class TestRestApiServer {
         restlets = restletsUnderTest;
 
         restApplication = new RestApplication();
-        restApplication.run(port);
+        restApplication.run();
 
     }
 
@@ -185,5 +170,14 @@ public class TestRestApiServer {
      */
     public void addAttribute(final String name, final Object value) {
         restApplication.addAttribute(name, value);
+    }
+
+    /**
+     * Gets the port number being used by the REST web server.
+     *
+     * @return port number
+     */
+    public int getRestPort() {
+        return server.getActualPort();
     }
 }

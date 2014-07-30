@@ -13,7 +13,6 @@ import org.restlet.resource.ClientResource;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Base class for REST API tests.  This class exposes common code for setting
@@ -29,7 +28,6 @@ public class TestRest extends UnitTest {
 
     private final List<RestletRoutable> restlets = new LinkedList<>();
     private TestRestApiServer restApiServer;
-    private int restPort;
 
     /**
      * Add a restlet to the web server.  Tests call this to add the specific
@@ -40,15 +38,6 @@ public class TestRest extends UnitTest {
      */
     void addRestlet(final RestletRoutable newRestlet) {
         restlets.add(newRestlet);
-    }
-
-    /**
-     * Assign the TCP port for the web server.
-     *
-     * @param newPort port number the web server will use
-     */
-    void setRestPort(int newPort) {
-        restPort = newPort;
     }
 
     /**
@@ -65,8 +54,7 @@ public class TestRest extends UnitTest {
      */
     @Before
     public void setUp() {
-        setRestPort(generateRandomPort());
-        restApiServer = new TestRestApiServer(restPort);
+        restApiServer = new TestRestApiServer();
         restApiServer.startServer(restlets);
     }
 
@@ -86,22 +74,7 @@ public class TestRest extends UnitTest {
      * @return base URL
      */
     String getBaseRestUrl() {
-        return "http://localhost:" + Integer.toString(restPort) + "/wm/onos";
-    }
-
-    /**
-     * Generate a random port number for the REST API web server to use.  For
-     * now, a random port between 50000 and 55000 is selected
-     *
-     * @return a port number that the web server can use
-     */
-    int generateRandomPort() {
-        final int portStartRange = 50000;
-        final int portEndRange = 55000;
-
-        final Random random = new Random();
-
-        return portStartRange + (random.nextInt(portEndRange - portStartRange));
+        return "http://localhost:" + Integer.toString(restApiServer.getRestPort()) + "/wm/onos";
     }
 
     /**
