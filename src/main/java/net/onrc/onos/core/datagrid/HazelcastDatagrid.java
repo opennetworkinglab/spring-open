@@ -20,7 +20,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.FileSystemXmlConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.instance.GroupProperties;
 
 /**
  * A datagrid service that uses Hazelcast as a datagrid.
@@ -86,10 +85,6 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
         hazelcastConfig.setProperty(GroupProperties.PROP_OPERATION_THREAD_COUNT, "1");
         hazelcastConfig.setProperty(GroupProperties.PROP_EVENT_THREAD_COUNT, "1");
         */
-        //
-        hazelcastConfig.setProperty(GroupProperties.PROP_EVENT_QUEUE_CAPACITY, "4000000");
-        hazelcastConfig.setProperty(GroupProperties.PROP_SOCKET_RECEIVE_BUFFER_SIZE, "4096");
-        hazelcastConfig.setProperty(GroupProperties.PROP_SOCKET_SEND_BUFFER_SIZE, "4096");
     }
 
     /**

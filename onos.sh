@@ -139,6 +139,15 @@ JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
 
 JVM_OPTS="$JVM_OPTS -Dhazelcast.logging.type=slf4j -Dhazelcast.jmx=true -Dhazelcast.jmx.detailed=true"
 
+# TODO revisit HZ related magic numbers
+# HZ Default:1000000
+JVM_OPTS="$JVM_OPTS -Dhazelcast.event.queue.capacity=4000000"
+# HZ Default:32 (KB)
+JVM_OPTS="$JVM_OPTS -Dhazelcast.socket.receive.buffer.size=4096"
+# HZ Default:32 (KB)
+JVM_OPTS="$JVM_OPTS -Dhazelcast.socket.send.buffer.size=4096"
+
+
 # Uncomment to dump final JVM flags to stdout
 #JVM_OPTS="$JVM_OPTS -XX:+PrintFlagsFinal"
 
