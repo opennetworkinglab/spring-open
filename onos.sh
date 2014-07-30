@@ -137,7 +137,7 @@ JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT"
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.ssl=false"
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
 
-JVM_OPTS="$JVM_OPTS -Dhazelcast.logging.type=slf4j"
+JVM_OPTS="$JVM_OPTS -Dhazelcast.logging.type=slf4j -Dhazelcast.jmx=true -Dhazelcast.jmx.detailed=true"
 
 # Uncomment to dump final JVM flags to stdout
 #JVM_OPTS="$JVM_OPTS -XX:+PrintFlagsFinal"
