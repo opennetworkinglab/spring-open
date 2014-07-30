@@ -11,35 +11,40 @@ import java.util.Map;
 public final class RestErrorCatalog {
 
     /**
-     * Hide the default constructor of a utility class.
-     */
-    private RestErrorCatalog() { }
-
-    /**
      * Static list of known errors.  Someday this will be read in from an
      * external file.
      */
     private static final RestErrorCatalogEntry[] ERROR_LIST = {
-        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_NOT_FOUND,
+        new RestErrorCatalogEntry(RestErrorCode.INTENT_NOT_FOUND,
                       "Intent not found",
                       "An intent with the identifier {} was not found."),
-        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS,
+        new RestErrorCatalogEntry(RestErrorCode.INTENT_ALREADY_EXISTS,
                       "Intent already exists",
                       "An intent with the identifier {} could not be created " +
                       "because one already exists."),
-        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_NO_PATH,
+        new RestErrorCatalogEntry(RestErrorCode.INTENT_NO_PATH,
                       "No path found",
                       "No path found between {} and {}"),
-        new RestErrorCatalogEntry(RestErrorCodes.RestErrorCode.INTENT_INVALID,
+        new RestErrorCatalogEntry(RestErrorCode.INTENT_INVALID,
                       "Intent invalid",
                       "The intent provided is empty or invalid"),
     };
 
     /**
+     * Hide the default constructor of a utility class.
+     */
+    private RestErrorCatalog() { }
+
+    /**
      * Singleton implementation using the demand holder idiom.
      */
-    private static class RestErrorMapHolder {
+    private static final class RestErrorMapHolder {
         private static Map<Integer, RestErrorCatalogEntry> restErrorMap = initializeRestErrorMap();
+
+        /**
+         * Hide the default constructor.
+         */
+        private RestErrorMapHolder() {}
 
         /**
          * Load up the error map.
@@ -82,7 +87,7 @@ public final class RestErrorCatalog {
      * @return the REST error for the code if one exists, null if it does not
      *         exist.
      */
-    public static RestErrorCatalogEntry getRestError(final RestErrorCodes.RestErrorCode code) {
+    public static RestErrorCatalogEntry getRestError(final RestErrorCode code) {
         return getRestErrorMap().get(code.ordinal());
     }
 

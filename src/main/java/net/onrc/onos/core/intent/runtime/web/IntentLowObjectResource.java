@@ -1,7 +1,7 @@
 package net.onrc.onos.core.intent.runtime.web;
 
 import net.onrc.onos.api.rest.RestError;
-import net.onrc.onos.api.rest.RestErrorCodes;
+import net.onrc.onos.api.rest.RestErrorCode;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
@@ -45,7 +45,7 @@ public class IntentLowObjectResource extends ServerResource {
         } else {
             setStatus(Status.CLIENT_ERROR_NOT_FOUND);
             final RestError notFound =
-                    RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_NOT_FOUND,
+                    RestError.createRestError(RestErrorCode.INTENT_NOT_FOUND,
                                               applnIntentId);
             result = toRepresentation(notFound, null);
         }

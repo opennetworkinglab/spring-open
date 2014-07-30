@@ -8,7 +8,7 @@ package net.onrc.onos.api.rest;
  */
 public final class RestError {
 
-    private final RestErrorCodes.RestErrorCode code;
+    private final RestErrorCode code;
     private final String summary;
     private final String formattedDescription;
 
@@ -18,7 +18,7 @@ public final class RestError {
     private RestError() {
         // This is never called, but Java requires these initializations
         // because the members are final.
-        code = RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS;
+        code = RestErrorCode.INTENT_ALREADY_EXISTS;
         summary = "";
         formattedDescription = "";
     }
@@ -30,7 +30,7 @@ public final class RestError {
      * @param summary summary string for the new error
      * @param formattedDescription formatted full description of the error
      */
-    private RestError(final RestErrorCodes.RestErrorCode code,
+    private RestError(final RestErrorCode code,
                       final String summary,
                       final String formattedDescription) {
         this.code = code;
@@ -43,7 +43,7 @@ public final class RestError {
      *
      * @return error code
      */
-    public RestErrorCodes.RestErrorCode getCode() {
+    public RestErrorCode getCode() {
         return code;
     }
 
@@ -74,7 +74,7 @@ public final class RestError {
      *                   the description
      * @return new RestError representing this intance
      */
-    public static RestError createRestError(final RestErrorCodes.RestErrorCode code,
+    public static RestError createRestError(final RestErrorCode code,
                                             final Object... parameters) {
         final RestErrorCatalogEntry error = RestErrorCatalog.getRestError(code);
         final String formattedDescription =

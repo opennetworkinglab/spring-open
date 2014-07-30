@@ -7,7 +7,7 @@ import java.util.List;
 
 import net.onrc.onos.api.intent.ApplicationIntent;
 import net.onrc.onos.api.rest.RestError;
-import net.onrc.onos.api.rest.RestErrorCodes;
+import net.onrc.onos.api.rest.RestErrorCode;
 import net.onrc.onos.core.intent.Intent;
 import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
@@ -75,7 +75,7 @@ public class IntentHighResource extends ServerResource {
         if (addOperations == null) {
             setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             final RestError error =
-                    RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_INVALID);
+                    RestError.createRestError(RestErrorCode.INTENT_INVALID);
             return toRepresentation(error, null);
         }
 

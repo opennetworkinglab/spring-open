@@ -22,11 +22,11 @@ public class RestErrorCatalogEntryTest {
     @Test
     public void testRestErrorFormatting1Parameter() {
         final RestErrorCatalogEntry restErrorCatalogEntry =
-                RestErrorCatalog.getRestError(RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS);
+                RestErrorCatalog.getRestError(RestErrorCode.INTENT_ALREADY_EXISTS);
         assertThat(restErrorCatalogEntry, is(notNullValue()));
 
         final RestError formattedError =
-                RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_ALREADY_EXISTS,
+                RestError.createRestError(RestErrorCode.INTENT_ALREADY_EXISTS,
                                           "INTENT-ID");
         final String formattedErrorString =
                 formattedError.getFormattedDescription();
@@ -45,11 +45,11 @@ public class RestErrorCatalogEntryTest {
     @Test
     public void testRestErrorFormatting2Parameters() {
         final RestErrorCatalogEntry restErrorCatalogEntry =
-                RestErrorCatalog.getRestError(RestErrorCodes.RestErrorCode.INTENT_NO_PATH);
+                RestErrorCatalog.getRestError(RestErrorCode.INTENT_NO_PATH);
         assertThat(restErrorCatalogEntry, is(notNullValue()));
 
         final RestError formattedError =
-                RestError.createRestError(RestErrorCodes.RestErrorCode.INTENT_NO_PATH,
+                RestError.createRestError(RestErrorCode.INTENT_NO_PATH,
                                           "Switch1", "Switch2");
         final String formattedErrorString =
                 formattedError.getFormattedDescription();
@@ -75,14 +75,6 @@ public class RestErrorCatalogEntryTest {
     @Test
     public void assureThatErrorCatalogIsUtility() {
         assertThatClassIsUtility(RestErrorCatalog.class);
-    }
-
-    /**
-     * Make sure that the error codes is a utility class.
-     */
-    @Test
-    public void assureThatErrorCodesIsUtility() {
-        assertThatClassIsUtility(RestErrorCodes.class);
     }
 
     /**

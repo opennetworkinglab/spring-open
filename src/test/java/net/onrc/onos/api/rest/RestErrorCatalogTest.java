@@ -20,7 +20,7 @@ public class RestErrorCatalogTest {
      */
     @Test
     public void testNoDuplicatesInCatalog() {
-        final Set<RestErrorCodes.RestErrorCode> entriesSeen = new HashSet<>();
+        final Set<RestErrorCode> entriesSeen = new HashSet<>();
         final RestErrorCatalogEntry[] rawEntries = RestErrorCatalog.getCatalogEntries();
 
         for (final RestErrorCatalogEntry entry : rawEntries) {
@@ -40,7 +40,7 @@ public class RestErrorCatalogTest {
 
         final Map<Integer, RestErrorCatalogEntry> catalogEntryMap =
                 RestErrorCatalog.getRestErrorMap();
-        for (final RestErrorCodes.RestErrorCode code : RestErrorCodes.RestErrorCode.values()) {
+        for (final RestErrorCode code : RestErrorCode.values()) {
             //  There should be a RestErrorCatalogEntry for every code.
             assertThat(catalogEntryMap.keySet(), hasItem(code.ordinal()));
         }

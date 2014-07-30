@@ -12,7 +12,7 @@ package net.onrc.onos.api.rest;
 
 public final class RestErrorCatalogEntry {
 
-    private final RestErrorCodes.RestErrorCode code;
+    private final RestErrorCode code;
     private final String summary;
     private final String descriptionFormatString;
 
@@ -23,7 +23,7 @@ public final class RestErrorCatalogEntry {
      * @param newSummary short summary for the new error
      * @param newDescriptionFormatString formatable description for the new error
      */
-    public RestErrorCatalogEntry(final RestErrorCodes.RestErrorCode newCode,
+    public RestErrorCatalogEntry(final RestErrorCode newCode,
                                  final String newSummary,
                                  final String newDescriptionFormatString) {
         code = newCode;
@@ -45,7 +45,7 @@ public final class RestErrorCatalogEntry {
      *
      * @return unique code
      */
-    public RestErrorCodes.RestErrorCode getCode() {
+    public RestErrorCode getCode() {
         return code;
     }
 
