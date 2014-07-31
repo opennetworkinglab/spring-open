@@ -12,13 +12,13 @@ import java.util.List;
  *        MatchAction.
  */
 public class BatchOperation<T extends IBatchOperationTarget> {
-    private List<BatchOperationEntry> ops;
+    private List<BatchOperationEntry<T>> ops;
 
     /**
      * Constructor.
      */
     public BatchOperation() {
-        ops = new LinkedList<BatchOperationEntry>();
+        ops = new LinkedList<>();
     }
 
     /**
@@ -31,7 +31,7 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     /**
      * Returns the number of operations in this object.
      *
-     * @return the number of operations in this object.
+     * @return the number of operations in this object
      */
     public int size() {
         return ops.size();
@@ -40,50 +40,38 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     /**
      * Returns an iterator over the operations in this object.
      *
-     * @return an iterator over the operations in this object.
+     * @return an iterator over the operations in this object
      */
-    public Iterator<BatchOperationEntry> iterator() {
+    public Iterator<BatchOperationEntry<T>> iterator() {
         return ops.iterator();
     }
 
     /**
      * Returns the operations in this object.
      *
-     * @return the operations in this object.
+     * @return the operations in this object
      */
-    public List<BatchOperationEntry> getOperations() {
+    public List<BatchOperationEntry<T>> getOperations() {
         return Collections.unmodifiableList(ops);
     }
 
     /**
      * Adds an add-operation.
      *
-     * @param target IBatchOperationTarget object to be added.
-     * @return true if succeeded, false otherwise.
+     * @param target IBatchOperationTarget object to be added
+     * @return true if succeeded, false otherwise
      */
     public boolean addAddOperation(T target) {
-        return ops.add(new AddOperation(target));
+        return ops.add(new AddOperation<T>(target));
     }
 
     /**
      * Adds a remove-operation.
      *
-     * @param id ID of the target to be removed.
-     * @return true if succeeded, false otherwise.
+     * @param id ID of the target to be removed
+     * @return true if succeeded, false otherwise
      */
     public boolean addRemoveOperation(BatchOperationTargetId id) {
-        return ops.add(new RemoveOperation(id));
-    }
-
-    /**
-     * Adds an update-operation.
-     * <p>
-     * The existing entry having the same ID with the new target is overwritten.
-     *
-     * @param target The new target to be used for the update.
-     * @return true if succeeded, false otherwise.
-     */
-    public boolean addUpdateOperation(T target) {
-        return ops.add(new UpdateOperation(target));
+        return ops.add(new RemoveOperation<T>(id));
     }
 }

@@ -26,15 +26,6 @@ public interface IMatchActionService {
     boolean removeMatchAction(MatchActionId id);
 
     /**
-     * Replaces the existing match-action entry by specified match-action entry.
-     *
-     * @param matchAction MatchAction object which overwrites existing
-     *        match-action.
-     * @return true if succeeded, false otherwise.
-     */
-    boolean updateMatchAction(MatchAction matchAction);
-
-    /**
      * Gets the set of match-action entries.
      *
      * @return The set of match-action entries.

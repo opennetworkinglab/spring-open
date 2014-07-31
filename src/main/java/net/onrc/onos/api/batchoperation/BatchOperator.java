@@ -5,22 +5,17 @@ package net.onrc.onos.api.batchoperation;
  */
 public enum BatchOperator {
     /**
-     * Adds new intent.
+     * Adds new target object.
      */
     ADD,
 
     /**
-     * Removes existing intent specified by intent ID.
+     * Removes existing object.
      */
     REMOVE,
 
     /**
-     * Overwrites existing intent using new intent.
-     */
-    UPDATE,
-
-    /**
-     * Unknown type.
+     * Unknown operator type.
      */
     UNKNOWN,
 }

@@ -32,15 +32,6 @@ public class MatchActionModule implements IMatchActionService {
     }
 
     @Override
-    public boolean updateMatchAction(MatchAction matchAction) {
-        BatchOperation<MatchAction> phase = new BatchOperation<MatchAction>();
-        phase.addUpdateOperation(matchAction);
-        MatchActionPlan plan = new MatchActionPlan();
-        plan.addPhase(phase);
-        return executePlan(plan);
-    }
-
-    @Override
     public Collection<MatchAction> getMatchActions() {
         // TODO Auto-generated method stub
         return null;

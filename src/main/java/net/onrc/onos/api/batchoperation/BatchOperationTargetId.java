@@ -10,7 +10,7 @@ public abstract class BatchOperationTargetId {
     /**
      * Returns a string representation of the target object's ID.
      *
-     * @return a string representation of the target object's ID.
+     * @return a string representation of the target object's ID
      */
     @Override
     public abstract String toString();

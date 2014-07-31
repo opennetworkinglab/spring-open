@@ -20,78 +20,67 @@ public interface IFlowManagerService {
     /**
      * Adds IFlow object, calculates match-action plan and executes it.
      *
-     * @param flow IFlow object to be added.
-     * @return true if succeeded, false otherwise.
+     * @param flow IFlow object to be added
+     * @return true if succeeded, false otherwise
      */
     boolean addFlow(IFlow flow);
 
     /**
      * Removes IFlow object, calculates match-action plan and executes it.
      *
-     * @param id ID for IFlow object to be removed.
-     * @return true if succeeded, false otherwise.
+     * @param id ID for IFlow object to be removed
+     * @return true if succeeded, false otherwise
      */
     boolean removeFlow(FlowId id);
 
     /**
-     * Updates IFlow object, calculates match-action plan and executes it.
-     * <p>
-     * The IFlow object having the ID which is the same to the ID of the IFlow
-     * object specified by the parameter will be updated.
-     *
-     * @param flow new IFlow object for the update.
-     * @return true if succeeded, false otherwise.
-     */
-    boolean updateFlow(IFlow flow);
-
-    /**
      * Gets IFlow object.
      *
-     * @param id ID of IFlow object.
-     * @return IFlow object if found, null otherwise.
+     * @param id ID of IFlow object
+     * @return IFlow object if found, null otherwise
      */
     IFlow getFlow(FlowId id);
 
     /**
      * Gets All IFlow objects.
      *
-     * @return the collection of IFlow objects.
+     * @return the collection of IFlow objects
      */
     Collection<IFlow> getFlows();
 
     /**
      * Executes batch operation of IFlow object.
      *
-     * @param ops FlowOperations to be executed.
-     * @return true if succeeded, false otherwise.
+     * @param ops FlowOperations to be executed
+     * @return true if succeeded, false otherwise
      */
     boolean executeBatch(BatchOperation<IFlow> ops);
 
     /**
      * Sets a conflict detection policy.
      *
-     * @param policy ConflictDetectionPolicy object to be set.
+     * @param policy ConflictDetectionPolicy object to be set
      */
     void setConflictDetectionPolicy(ConflictDetectionPolicy policy);
 
     /**
      * Gets the conflict detection policy.
      *
-     * @return ConflictDetectionPolicy object being applied currently.
+     * @return ConflictDetectionPolicy object being applied currently
      */
     ConflictDetectionPolicy getConflictDetectionPolicy();
 
     /**
      * Adds event listener to this service.
      *
-     * @param listener EventListener to be added.
+     * @param listener EventListener to be added
      */
     void addEventListener(EventListener listener);
 
     /**
      * Removes event listener from this service.
      *
-     * @param listener EventListener to be removed.
+     * @param listener EventListener to be removed
      */
     void removeEventListener(EventListener listener);
 }

@@ -40,13 +40,6 @@ public class FlowManagerModule implements IFlowManagerService {
     }
 
     @Override
-    public boolean updateFlow(IFlow flow) {
-        BatchOperation<IFlow> ops = new BatchOperation<IFlow>();
-        ops.addUpdateOperation(flow);
-        return executeBatch(ops);
-    }
-
-    @Override
     public IFlow getFlow(FlowId id) {
         // TODO Auto-generated method stub
         return null;

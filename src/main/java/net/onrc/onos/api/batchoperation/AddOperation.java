@@ -3,15 +3,16 @@ package net.onrc.onos.api.batchoperation;
 /**
  * An add-operation entry of a batch operation.
  */
-public class AddOperation implements BatchOperationEntry {
-    private final IBatchOperationTarget target;
+public class AddOperation<T extends IBatchOperationTarget>
+        implements BatchOperationEntry<T> {
+    private final T target;
 
     /**
      * Creates a add-operation with specified target.
      *
-     * @param target The target object to be assigned to this add-operation.
+     * @param target the target object to be assigned to this add-operation
      */
-    public AddOperation(IBatchOperationTarget target) {
+    public AddOperation(T target) {
         this.target = target;
     }
 
@@ -23,9 +24,9 @@ public class AddOperation implements BatchOperationEntry {
     /**
      * Gets the target object which assigned to this add-operation.
      *
-     * @return The target object which assigned to this add-operation.
+     * @return the target object which assigned to this add-operation
      */
-    public IBatchOperationTarget getTarget() {
+    public T getTarget() {
         return target;
     }
 }

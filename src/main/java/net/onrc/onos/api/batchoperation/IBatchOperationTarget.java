@@ -7,7 +7,7 @@ public interface IBatchOperationTarget {
     /**
      * Gets ID of the object.
      *
-     * @return ID of the object.
+     * @return ID of the object
      */
     public BatchOperationTargetId getId();
 }
