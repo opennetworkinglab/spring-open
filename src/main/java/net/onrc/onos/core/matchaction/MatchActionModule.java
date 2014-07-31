@@ -34,7 +34,7 @@ public class MatchActionModule implements IMatchActionService {
     @Override
     public boolean updateMatchAction(MatchAction matchAction) {
         BatchOperation<MatchAction> phase = new BatchOperation<MatchAction>();
-        phase.addUpdateOperation(matchAction.getId(), matchAction);
+        phase.addUpdateOperation(matchAction);
         MatchActionPlan plan = new MatchActionPlan();
         plan.addPhase(phase);
         return executePlan(plan);

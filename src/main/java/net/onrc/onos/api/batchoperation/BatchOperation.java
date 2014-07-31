@@ -39,7 +39,7 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     /**
      * Adds an add-operation.
      *
-     * @param target IBatchOperationTarget to be added.
+     * @param target IBatchOperationTarget object to be added.
      * @return true if succeeded, false otherwise.
      */
     public boolean addAddOperation(T target) {
@@ -57,13 +57,14 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     }
 
     /**
-     * Adds a update-operation.
+     * Adds an update-operation.
+     * <p>
+     * The existing entry having the same ID with the new target is overwritten.
      *
-     * @param oldTargetId ID of the existing target to be overwritten.
-     * @param newTarget The new target to be added.
+     * @param target The new target to be used for the update.
      * @return true if succeeded, false otherwise.
      */
-    public boolean addUpdateOperation(BatchOperationTargetId oldTargetId, T newTarget) {
-        return ops.add(new UpdateOperation(oldTargetId, newTarget));
+    public boolean addUpdateOperation(T target) {
+        return ops.add(new UpdateOperation(target));
     }
 }

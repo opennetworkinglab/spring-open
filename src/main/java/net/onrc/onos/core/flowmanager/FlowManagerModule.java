@@ -42,7 +42,7 @@ public class FlowManagerModule implements IFlowManagerService {
     @Override
     public boolean updateFlow(IFlow flow) {
         BatchOperation<IFlow> ops = new BatchOperation<IFlow>();
-        ops.addUpdateOperation(flow.getId(), flow);
+        ops.addUpdateOperation(flow);
         return executeBatch(ops);
     }
 

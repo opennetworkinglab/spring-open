@@ -4,18 +4,15 @@ package net.onrc.onos.api.batchoperation;
  * An update-operation entry of a batch operation.
  */
 public class UpdateOperation implements BatchOperationEntry {
-    private final BatchOperationTargetId oldTargetId;
-    private final IBatchOperationTarget newTarget;
+    private final IBatchOperationTarget target;
 
     /**
-     * Creates a update-operation with specified targets.
+     * Creates an update-operation with specified targets.
      *
-     * @param oldTargetId The ID to be overwritten.
-     * @param newTarget The new target to be added.
+     * @param target The new target to be used for the update.
      */
-    public UpdateOperation(BatchOperationTargetId oldTargetId, IBatchOperationTarget newTarget) {
-        this.oldTargetId = oldTargetId;
-        this.newTarget = newTarget;
+    public UpdateOperation(IBatchOperationTarget target) {
+        this.target = target;
     }
 
     @Override
@@ -24,21 +21,12 @@ public class UpdateOperation implements BatchOperationEntry {
     }
 
     /**
-     * Gets the old target ID to be overwritten.
+     * Gets the new target object to be used for the update.
      *
-     * @return The old target ID to be overwritten
+     * @return The new target object to be used for the update.
      */
-    public BatchOperationTargetId getOldTargetId() {
-        return oldTargetId;
-    }
-
-    /**
-     * Gets the new target object to be added.
-     *
-     * @return The new target object to be added.
-     */
-    public IBatchOperationTarget getNewTarget() {
-        return newTarget;
+    public IBatchOperationTarget getTarget() {
+        return target;
     }
 
 }
