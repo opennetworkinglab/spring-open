@@ -20,6 +20,11 @@
 
   <network>
     <port auto-increment="true">__HC_PORT__</port>
+<!-- Examples to force using certain interface
+    <interfaces enabled="true">
+      <interface>192.168.200.*</interface>
+    </interfaces>
+-->
     <join>
 __HC_NETWORK__
       <aws enabled="false">

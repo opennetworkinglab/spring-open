@@ -14,6 +14,11 @@
 
   <network>
     <port auto-increment="true">5701</port>
+<!-- Examples to force using certain interface
+    <interfaces enabled="true">
+      <interface>192.168.200.*</interface>
+    </interfaces>
+-->
     <join>
 <multicast enabled="false" />
 <tcp-ip enabled="true">

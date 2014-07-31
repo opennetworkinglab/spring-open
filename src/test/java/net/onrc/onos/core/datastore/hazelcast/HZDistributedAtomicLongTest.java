@@ -18,8 +18,12 @@ import java.util.concurrent.Future;
 import net.onrc.onos.core.datastore.ObjectDoesntExistException;
 import net.onrc.onos.core.util.distributed.DistributedAtomicLong;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.hazelcast.core.HazelcastInstance;
 
 /**
  * Test cases for HZDistributedAtomicLong.
@@ -27,8 +31,9 @@ import org.junit.Test;
 public class HZDistributedAtomicLongTest {
 
     static final String TEST_COUNTER_NAME = "Counter" + UUID.randomUUID();
+    private static final int SEC_IN_NANO = 1000000000;
 
-    DistributedAtomicLong counter;
+    private DistributedAtomicLong counter;
 
     @Before
     public void setUp() throws Exception {
@@ -120,6 +125,12 @@ public class HZDistributedAtomicLongTest {
                                         System.getProperty("NUM_INCREMENTS",
                                                            "100")));
 
+    private static final int ROUNDS = Integer.parseInt(
+                            System.getProperty(
+                                    "HZDistributedAtomicLongTest.ROUNDS",
+                                      System.getProperty("ROUNDS",
+                                                         "100")));
+
     /**
      * Increment using multiple threads to test addition is atomic.
      */
@@ -174,4 +185,72 @@ public class HZDistributedAtomicLongTest {
         executor.shutdown();
     }
 
+
+    /**
+     * incrementAndGet throughput measurement.
+     */
+    @Test
+    public void incrementThroughput() throws InterruptedException {
+        // This test will run only if -Dbenchmark is set to something
+        // e.g., mvn test -Dtest=HZDistributedAtomicLongTest#incrementThroughput
+        //                -Dbenchmark -DNUM_INCREMENTS=1000 -DROUNDS=10
+        Assume.assumeNotNull(System.getProperty("benchmark"));
+
+        // Warmup
+        counter.set(0);
+        for (int i = 0; i < NUM_INCREMENTS; i++) {
+            counter.incrementAndGet();
+        }
+        counter.set(0);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) { // CHECKSTYLE IGNORE THIS LINE
+        }
+
+        HazelcastInstance hz = HZClient.getClient().getHZInstance();
+        final int clusterSize = hz.getCluster().getMembers().size();
+
+        System.out.println("Starting benchmark with cluster size: " + clusterSize);
+        DescriptiveStatistics stats = new DescriptiveStatistics();
+
+        // Measurements
+        // Throughput calculated from total time it took to inc NUM_INCREMENTS
+        // Repeating ROUNDS time to get average Throughput, etc.
+        for (int i = 0; i < ROUNDS; i++) {
+            long timeBegin = System.nanoTime();
+            for (int j = 0; j < NUM_INCREMENTS; j++) {
+                counter.incrementAndGet();
+            }
+            long timeEnd = System.nanoTime();
+            double throughput = (double) NUM_INCREMENTS * SEC_IN_NANO
+                                        / (timeEnd - timeBegin);
+            stats.addValue(throughput);
+            System.out.println("Increments: " + NUM_INCREMENTS
+                            + " IncrementThroughput(ops/s): " + throughput);
+        }
+
+        System.out.println();
+
+        System.out.println("incrementAndGet Throughput (ops/s) "
+                        + "[ " + NUM_INCREMENTS + " increments] "
+                        + "[ " + clusterSize + " HZnodes]");
+
+        System.out.println(stats.toString());
+        //DescriptiveStatistics:
+        //    n: 100
+        //    min: 1137.5270162666363
+        //    max: 4056.1369351829317
+        //    mean: 2727.695488835985
+        //    std dev: 704.2206793204389
+        //    median: 2729.6338956455156
+        //    skewness: -0.17084469855647005
+        //    kurtosis: -0.6018103898245659
+
+        // Wait for other instances stops incrementing, before exiting
+        long prev = counter.get();
+        while (prev != counter.get()) {
+            prev = counter.get();
+            Thread.sleep(1000);
+        }
+    }
 }
