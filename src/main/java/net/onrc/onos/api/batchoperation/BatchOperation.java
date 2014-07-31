@@ -1,5 +1,6 @@
 package net.onrc.onos.api.batchoperation;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,12 +29,30 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     }
 
     /**
+     * Returns the number of operations in this object.
+     *
+     * @return the number of operations in this object.
+     */
+    public int size() {
+        return ops.size();
+    }
+
+    /**
      * Returns an iterator over the operations in this object.
      *
      * @return an iterator over the operations in this object.
      */
     public Iterator<BatchOperationEntry> iterator() {
         return ops.iterator();
+    }
+
+    /**
+     * Returns the operations in this object.
+     *
+     * @return the operations in this object.
+     */
+    public List<BatchOperationEntry> getOperations() {
+        return Collections.unmodifiableList(ops);
     }
 
     /**
