@@ -20,6 +20,7 @@ import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
@@ -455,6 +456,7 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
                 hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
 
         //  Remove one of the links and check results
+        final List<MastershipEvent> emptyMastershipEvents = new LinkedList<>();
         final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
         final List<PortEvent> emptyPortEvents = new LinkedList<>();
         final List<HostEvent> emptyHostEvents = new LinkedList<>();
@@ -472,7 +474,9 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(emptySwitchEvents,
+        topologyEvents = new TopologyEvents(emptyMastershipEvents,
+                                            emptyMastershipEvents,
+                                            emptySwitchEvents,
                                             emptySwitchEvents,
                                             emptyPortEvents,
                                             emptyPortEvents,
@@ -690,6 +694,7 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
 
 
         //  Remove one of the links and check results
+        final List<MastershipEvent> emptyMastershipEvents = new LinkedList<>();
         final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
         final List<PortEvent> emptyPortEvents = new LinkedList<>();
         final List<HostEvent> emptyHostEvents = new LinkedList<>();
@@ -707,7 +712,9 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(emptySwitchEvents,
+        topologyEvents = new TopologyEvents(emptyMastershipEvents,
+                                            emptyMastershipEvents,
+                                            emptySwitchEvents,
                                             emptySwitchEvents,
                                             emptyPortEvents,
                                             emptyPortEvents,
@@ -759,7 +766,9 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
         addedLinkEvents.add(linkEvent1);
         addedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(emptySwitchEvents,
+        topologyEvents = new TopologyEvents(emptyMastershipEvents,
+                                            emptyMastershipEvents,
+                                            emptySwitchEvents,
                                             emptySwitchEvents,
                                             emptyPortEvents,
                                             emptyPortEvents,

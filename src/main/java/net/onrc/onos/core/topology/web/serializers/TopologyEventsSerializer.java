@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
 import net.onrc.onos.core.topology.TopologyEvents;
@@ -39,6 +40,20 @@ public class TopologyEventsSerializer extends SerializerBase<TopologyEvents> {
 
         // Start the object
         jsonGenerator.writeStartObject();
+
+        // Output the added switch mastership array
+        jsonGenerator.writeArrayFieldStart("addedSwitchMasterships");
+        for (final MastershipEvent mastershipEvent : topologyEvents.getAddedMastershipEvents()) {
+            jsonGenerator.writeObject(mastershipEvent);
+        }
+        jsonGenerator.writeEndArray();
+
+        // Output the removed switch mastership array
+        jsonGenerator.writeArrayFieldStart("removedSwitchMasterships");
+        for (final MastershipEvent mastershipEvent : topologyEvents.getRemovedMastershipEvents()) {
+            jsonGenerator.writeObject(mastershipEvent);
+        }
+        jsonGenerator.writeEndArray();
 
         // Output the added switches array
         jsonGenerator.writeArrayFieldStart("addedSwitches");

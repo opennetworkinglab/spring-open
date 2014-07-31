@@ -8,6 +8,20 @@ import java.util.Collection;
  */
 public interface TopologyDiscoveryInterface {
     /**
+     * Switch Mastership updated event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    public void putSwitchMastershipEvent(MastershipEvent mastershipEvent);
+
+    /**
+     * Switch Mastership removed event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    public void removeSwitchMastershipEvent(MastershipEvent mastershipEvent);
+
+    /**
      * Switch discovered event.
      *
      * @param switchEvent the switch event.
@@ -64,18 +78,4 @@ public interface TopologyDiscoveryInterface {
      * @param hostEvent the host event.
      */
     public void removeHostDiscoveryEvent(HostEvent hostEvent);
-
-    /**
-     * Switch Mastership updated event.
-     *
-     * @param mastershipEvent the mastership event.
-     */
-    public void putSwitchMastershipEvent(MastershipEvent mastershipEvent);
-
-    /**
-     * Switch Mastership removed event.
-     *
-     * @param mastershipEvent the mastership event.
-     */
-    public void removeSwitchMastershipEvent(MastershipEvent mastershipEvent);
 }

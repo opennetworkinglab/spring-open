@@ -15,10 +15,10 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * <p/>
  * (b) The processing order of the "removed" events should be:
  * removedHostEvents, removedLinkEvents, removedPortEvents,
- * removedSwitchEvents
+ * removedSwitchEvents, removedMastershipEvents
  * <p/>
  * (c) The processing order of the "added" events should be:
- * addedSwitchEvents, addedPortEvents, addedLinkEvents,
+ * addedMastershipEvents, addedSwitchEvents, addedPortEvents, addedLinkEvents,
  * addedHostEvents
  * <p/>
  * The above ordering guarantees that removing a port for example
@@ -30,6 +30,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = TopologyEventsSerializer.class)
 public final class TopologyEvents {
+    private final Collection<MastershipEvent> addedMastershipEvents;
+    private final Collection<MastershipEvent> removedMastershipEvents;
     private final Collection<SwitchEvent> addedSwitchEvents;
     private final Collection<SwitchEvent> removedSwitchEvents;
     private final Collection<PortEvent> addedPortEvents;
@@ -42,6 +44,8 @@ public final class TopologyEvents {
     /**
      * Constructor.
      *
+     * @param addedMastershipEvents the collection of added Mastership Events.
+     * @param removedMastershipEvents the collection of removed Mastership Events.
      * @param addedSwitchEvents the collection of added Switch Events.
      * @param removedSwitchEvents the collection of removed Switch Events.
      * @param addedPortEvents the collection of added Port Events.
@@ -52,7 +56,9 @@ public final class TopologyEvents {
      * @param removedHostEvents the collection of removed Host Events.
      */
     // CHECKSTYLE:OFF suppress the warning about too many parameters
-    public TopologyEvents(Collection<SwitchEvent> addedSwitchEvents,
+    public TopologyEvents(Collection<MastershipEvent> addedMastershipEvents,
+                          Collection<MastershipEvent> removedMastershipEvents,
+                          Collection<SwitchEvent> addedSwitchEvents,
                           Collection<SwitchEvent> removedSwitchEvents,
                           Collection<PortEvent> addedPortEvents,
                           Collection<PortEvent> removedPortEvents,
@@ -61,6 +67,10 @@ public final class TopologyEvents {
                           Collection<HostEvent> addedHostEvents,
                           Collection<HostEvent> removedHostEvents) {
         // CHECKSTYLE:ON
+        this.addedMastershipEvents =
+            Collections.unmodifiableCollection(addedMastershipEvents);
+        this.removedMastershipEvents =
+            Collections.unmodifiableCollection(removedMastershipEvents);
         this.addedSwitchEvents =
             Collections.unmodifiableCollection(addedSwitchEvents);
         this.removedSwitchEvents =
@@ -77,6 +87,24 @@ public final class TopologyEvents {
             Collections.unmodifiableCollection(addedHostEvents);
         this.removedHostEvents =
             Collections.unmodifiableCollection(removedHostEvents);
+    }
+
+    /**
+     * Gets the collection of added Mastership Events.
+     *
+     * @return the collection of added Mastership Events.
+     */
+    public Collection<MastershipEvent> getAddedMastershipEvents() {
+        return addedMastershipEvents;
+    }
+
+    /**
+     * Gets the collection of removed Mastership Events.
+     *
+     * @return the collection of removed Mastership Events.
+     */
+    public Collection<MastershipEvent> getRemovedMastershipEvents() {
+        return removedMastershipEvents;
     }
 
     /**

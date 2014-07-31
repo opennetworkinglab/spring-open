@@ -33,6 +33,7 @@ import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
@@ -230,6 +231,8 @@ public class UseCaseTest extends UnitTest {
 
     @Test
     public void rerouteShortestPaths() throws FloodlightModuleException {
+        List<MastershipEvent> addedMastershipEvents = new LinkedList<>();
+        List<MastershipEvent> removedMastershipEvents = new LinkedList<>();
         List<SwitchEvent> addedSwitchEvents = new LinkedList<>();
         List<SwitchEvent> removedSwitchEvents = new LinkedList<>();
         List<PortEvent> addedPortEvents = new LinkedList<>();
@@ -281,7 +284,9 @@ public class UseCaseTest extends UnitTest {
         removedLinkEvents.add(linkEvent1);
         removedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(addedSwitchEvents,
+        topologyEvents = new TopologyEvents(addedMastershipEvents,
+                                            removedMastershipEvents,
+                                            addedSwitchEvents,
                                             removedSwitchEvents,
                                             addedPortEvents,
                                             removedPortEvents,
@@ -314,7 +319,9 @@ public class UseCaseTest extends UnitTest {
         addedLinkEvents.add(linkEvent1);
         addedLinkEvents.add(linkEvent2);
 
-        topologyEvents = new TopologyEvents(addedSwitchEvents,
+        topologyEvents = new TopologyEvents(addedMastershipEvents,
+                                            removedMastershipEvents,
+                                            addedSwitchEvents,
                                             removedSwitchEvents,
                                             addedPortEvents,
                                             removedPortEvents,
