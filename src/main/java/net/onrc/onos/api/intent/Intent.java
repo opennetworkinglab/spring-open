@@ -42,7 +42,6 @@ public abstract class Intent implements IBatchOperationTarget {
      *
      * @return ID for this Intent object.
      */
-    @Override
     public IntentId getId() {
         return id;
     }

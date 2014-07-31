@@ -1,6 +1,6 @@
 package net.onrc.onos.api.intent;
 
-import net.onrc.onos.api.batchoperation.BatchOperationTargetId;
+import net.onrc.onos.api.batchoperation.IBatchOperationTarget;
 
 /**
  * The class representing intent's ID.
@@ -9,7 +9,7 @@ import net.onrc.onos.api.batchoperation.BatchOperationTargetId;
  * This class is immutable.
  * </p>
  */
-public final class IntentId extends BatchOperationTargetId {
+public final class IntentId implements IBatchOperationTarget {
     private final long id;
 
     /**

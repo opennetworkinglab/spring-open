@@ -17,7 +17,6 @@ public interface IFlow extends IBatchOperationTarget {
      *
      * @return ID for this object.
      */
-    @Override
     public FlowId getId();
 
     /**

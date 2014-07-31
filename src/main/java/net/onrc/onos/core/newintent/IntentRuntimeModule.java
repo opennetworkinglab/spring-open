@@ -3,11 +3,11 @@ package net.onrc.onos.core.newintent;
 import java.util.Collection;
 import java.util.EventListener;
 
-import net.onrc.onos.api.batchoperation.BatchOperation;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.IFlow;
 import net.onrc.onos.api.intent.IIntentRuntimeService;
 import net.onrc.onos.api.intent.Intent;
+import net.onrc.onos.api.intent.IntentBatchOperation;
 import net.onrc.onos.api.intent.IntentId;
 import net.onrc.onos.api.intent.IntentInstaller;
 import net.onrc.onos.api.intent.IntentResolver;
@@ -46,7 +46,7 @@ public class IntentRuntimeModule implements IIntentRuntimeService {
     }
 
     @Override
-    public boolean executeBatch(BatchOperation<Intent> ops) {
+    public boolean executeBatch(IntentBatchOperation ops) {
         // TODO Auto-generated method stub
         // - gets flow operations using compile() method for each Intent object.
         // - allocates resources

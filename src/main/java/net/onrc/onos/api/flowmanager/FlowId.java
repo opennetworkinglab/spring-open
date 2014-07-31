@@ -1,11 +1,11 @@
 package net.onrc.onos.api.flowmanager;
 
-import net.onrc.onos.api.batchoperation.BatchOperationTargetId;
+import net.onrc.onos.api.batchoperation.IBatchOperationTarget;
 
 /**
  * Represents ID for IFlow objects.
  */
-public class FlowId extends BatchOperationTargetId {
+public class FlowId implements IBatchOperationTarget {
     private final String value;
 
     /**

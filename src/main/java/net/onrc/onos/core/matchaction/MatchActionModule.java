@@ -3,7 +3,6 @@ package net.onrc.onos.core.matchaction;
 import java.util.Collection;
 import java.util.EventListener;
 
-import net.onrc.onos.api.batchoperation.BatchOperation;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 
 /**
@@ -15,7 +14,7 @@ public class MatchActionModule implements IMatchActionService {
 
     @Override
     public boolean addMatchAction(MatchAction matchAction) {
-        BatchOperation<MatchAction> phase = new BatchOperation<MatchAction>();
+        MatchActionPhase phase = new MatchActionPhase();
         phase.addAddOperation(matchAction);
         MatchActionPlan plan = new MatchActionPlan();
         plan.addPhase(phase);
@@ -24,7 +23,7 @@ public class MatchActionModule implements IMatchActionService {
 
     @Override
     public boolean removeMatchAction(MatchActionId id) {
-        BatchOperation<MatchAction> phase = new BatchOperation<MatchAction>();
+        MatchActionPhase phase = new MatchActionPhase();
         phase.addRemoveOperation(id);
         MatchActionPlan plan = new MatchActionPlan();
         plan.addPhase(phase);

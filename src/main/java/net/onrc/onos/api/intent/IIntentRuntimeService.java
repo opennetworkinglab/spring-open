@@ -3,7 +3,6 @@ package net.onrc.onos.api.intent;
 import java.util.Collection;
 import java.util.EventListener;
 
-import net.onrc.onos.api.batchoperation.BatchOperation;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.IFlow;
 
@@ -63,7 +62,7 @@ public interface IIntentRuntimeService {
      * @param ops BatchOperations to be executed.
      * @return true if succeeded, false otherwise.
      */
-    boolean executeBatch(BatchOperation<Intent> ops);
+    boolean executeBatch(IntentBatchOperation ops);
 
     /**
      * Adds an IntentResolver associated with a given intent type.

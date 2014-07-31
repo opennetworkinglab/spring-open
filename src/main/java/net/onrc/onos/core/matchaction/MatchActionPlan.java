@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.onrc.onos.api.batchoperation.BatchOperation;
-
 /**
  * A match-action plan to be executed on the match-action module.
  * <p>
@@ -13,13 +11,13 @@ import net.onrc.onos.api.batchoperation.BatchOperation;
  * match-actions.
  */
 public class MatchActionPlan {
-    List<BatchOperation<MatchAction>> phases;
+    List<MatchActionPhase> phases;
 
     /**
      * Constructor.
      */
     public MatchActionPlan() {
-        phases = new LinkedList<BatchOperation<MatchAction>>();
+        phases = new LinkedList<>();
     }
 
     /**
@@ -28,7 +26,7 @@ public class MatchActionPlan {
      * @param phase The batch operation of match-actions to be added to the
      *        plan.
      */
-    public void addPhase(BatchOperation<MatchAction> phase) {
+    public void addPhase(MatchActionPhase phase) {
         phases.add(phase);
     }
 
@@ -37,7 +35,7 @@ public class MatchActionPlan {
      *
      * @return The list of phases, batch operations of match-actions.
      */
-    public List<BatchOperation<MatchAction>> getPhases() {
+    public List<MatchActionPhase> getPhases() {
         return Collections.unmodifiableList(phases);
     }
 }

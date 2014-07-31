@@ -3,8 +3,6 @@ package net.onrc.onos.api.flowmanager;
 import java.util.Collection;
 import java.util.EventListener;
 
-import net.onrc.onos.api.batchoperation.BatchOperation;
-
 /**
  * An interface class for flow manager. The role of the flow manager is to
  * manage a set of Match-Action entries based on the specified IFlow objects.
@@ -51,10 +49,10 @@ public interface IFlowManagerService {
     /**
      * Executes batch operation of IFlow object.
      *
-     * @param ops FlowOperations to be executed
+     * @param ops flow operations to be executed
      * @return true if succeeded, false otherwise
      */
-    boolean executeBatch(BatchOperation<IFlow> ops);
+    boolean executeBatch(FlowBatchOperation ops);
 
     /**
      * Sets a conflict detection policy.

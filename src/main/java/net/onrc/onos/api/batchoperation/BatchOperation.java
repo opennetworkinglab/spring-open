@@ -1,18 +1,18 @@
 package net.onrc.onos.api.batchoperation;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * A list of BatchOperationEntry.
  *
- * @param <T> IBatchOperationTarget. This should be Intent, IFlow, or
- *        MatchAction.
+ * @param <T> the enum of operators <br>
+ *        This enum must be defined in each sub-classes.
+ *
  */
-public class BatchOperation<T extends IBatchOperationTarget> {
-    private List<BatchOperationEntry<T>> ops;
+public abstract class BatchOperation<T extends BatchOperationEntry<?, ?>> {
+    private List<T> ops;
 
     /**
      * Constructor.
@@ -38,40 +38,21 @@ public class BatchOperation<T extends IBatchOperationTarget> {
     }
 
     /**
-     * Returns an iterator over the operations in this object.
-     *
-     * @return an iterator over the operations in this object
-     */
-    public Iterator<BatchOperationEntry<T>> iterator() {
-        return ops.iterator();
-    }
-
-    /**
      * Returns the operations in this object.
      *
      * @return the operations in this object
      */
-    public List<BatchOperationEntry<T>> getOperations() {
+    public List<T> getOperations() {
         return Collections.unmodifiableList(ops);
     }
 
     /**
-     * Adds an add-operation.
+     * Adds an operation.
      *
-     * @param target IBatchOperationTarget object to be added
-     * @return true if succeeded, false otherwise
+     * @param entry the operation to be added
+     * @return this object if succeeded, null otherwise
      */
-    public boolean addAddOperation(T target) {
-        return ops.add(new AddOperation<T>(target));
-    }
-
-    /**
-     * Adds a remove-operation.
-     *
-     * @param id ID of the target to be removed
-     * @return true if succeeded, false otherwise
-     */
-    public boolean addRemoveOperation(BatchOperationTargetId id) {
-        return ops.add(new RemoveOperation<T>(id));
+    public BatchOperation<T> addOperation(T entry) {
+        return ops.add(entry) ? this : null;
     }
 }
