@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -166,6 +167,40 @@ public final class TopologyEvent {
      */
     public OnosInstanceId getOnosInstanceId() {
         return onosInstanceId;
+    }
+
+    /**
+     * Gets the event origin DPID.
+     *
+     * @return the event origin DPID.
+     */
+    public Dpid getOriginDpid() {
+        if (mastershipEvent != null) {
+            return mastershipEvent.getOriginDpid();
+        }
+        if (switchEvent != null) {
+            return switchEvent.getOriginDpid();
+        }
+        if (portEvent != null) {
+            return portEvent.getOriginDpid();
+        }
+        if (linkEvent != null) {
+            return linkEvent.getOriginDpid();
+        }
+        if (hostEvent != null) {
+            return hostEvent.getOriginDpid();
+        }
+        return null;
+    }
+
+    /**
+     * Tests whether the event origin DPID equals the specified DPID.
+     *
+     * @param dpid the DPID to compare against.
+     * @return true if the event origin Dpid equals the specified DPID.
+     */
+    public boolean equalsOriginDpid(Dpid dpid) {
+        return dpid.equals(getOriginDpid());
     }
 
     /**

@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.web.serializers.HostEventSerializer;
+import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.SwitchPort;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -106,6 +107,19 @@ public class HostEvent extends TopologyElement<HostEvent> {
             throw new IllegalStateException("Tried to modify frozen instance: " + this);
         }
         this.lastSeenTime = lastSeenTime;
+    }
+
+    /**
+     * Gets the event origin DPID.
+     *
+     * @return the event origin DPID.
+     */
+    public Dpid getOriginDpid() {
+        // TODO: Eventually, we should return a collection of Dpid values
+        for (SwitchPort sp : attachmentPoints) {
+            return sp.getDpid();
+        }
+        return null;
     }
 
     @Override

@@ -122,6 +122,15 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
         this.capacity = capacity;
     }
 
+    /**
+     * Gets the event origin DPID.
+     *
+     * @return the event origin DPID.
+     */
+    public Dpid getOriginDpid() {
+        return this.id.getDst().getDpid();
+    }
+
     @Override
     public String toString() {
         return "[LinkEvent " + getSrc() + "->" + getDst() + "]";

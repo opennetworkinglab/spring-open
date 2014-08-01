@@ -56,6 +56,15 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
         return dpid;
     }
 
+    /**
+     * Gets the event origin DPID.
+     *
+     * @return the event origin DPID.
+     */
+    public Dpid getOriginDpid() {
+        return this.dpid;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

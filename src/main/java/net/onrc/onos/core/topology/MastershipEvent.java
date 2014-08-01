@@ -89,6 +89,15 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
         return role;
     }
 
+    /**
+     * Gets the event origin DPID.
+     *
+     * @return the event origin DPID.
+     */
+    public Dpid getOriginDpid() {
+        return this.dpid;
+    }
+
     @Override
     public String toString() {
         return "[MastershipEvent " + getDpid() + "@" + getOnosInstanceId() +

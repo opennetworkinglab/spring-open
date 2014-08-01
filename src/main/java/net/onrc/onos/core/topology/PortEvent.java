@@ -95,6 +95,15 @@ public class PortEvent extends TopologyElement<PortEvent> {
         return id.getPortNumber();
     }
 
+    /**
+     * Gets the event origin DPID.
+     *
+     * @return the event origin DPID.
+     */
+    public Dpid getOriginDpid() {
+        return this.id.getDpid();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
