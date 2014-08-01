@@ -104,7 +104,9 @@ JVM_DEBUG_PORT=${JVM_DEBUG_PORT:-22007}
 # Set JVM options
 JVM_OPTS="${JVM_OPTS:-}"
 JVM_OPTS="$JVM_OPTS -server -d64"
-#JVM_OPTS="$JVM_OPTS -XX:+TieredCompilation -XX:InitialCodeCacheSize=512m -XX:ReservedCodeCacheSize=512m"
+
+# TODO Revisit appropriate CodeCache size
+JVM_OPTS="$JVM_OPTS -XX:+TieredCompilation -XX:InitialCodeCacheSize=512m -XX:ReservedCodeCacheSize=512m"
 
 # Uncomment or specify appropriate value as JVM_OPTS environment variables.
 #JVM_OPTS="$JVM_OPTS -Xmx4g -Xms4g -Xmn800m"
@@ -113,16 +115,24 @@ JVM_OPTS="$JVM_OPTS -server -d64"
 
 #JVM_OPTS="$JVM_OPTS -XX:+UseParallelGC"
 JVM_OPTS="$JVM_OPTS -XX:+UseConcMarkSweepGC"
+#JVM_OPTS="$JVM_OPTS -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+# Note: shoult NOT specify -Xmn when using G1GC
+#  http://www.oracle.com/webfolder/technetwork/tutorials/obe/java/G1GettingStarted/index.html
+
 JVM_OPTS="$JVM_OPTS -XX:+AggressiveOpts"
 
-# We may want to remove UseFastAccessorMethods option: http://bugs.java.com/view_bug.do?bug_id=6385687
+# TODO We may want to remove UseFastAccessorMethods option: http://bugs.java.com/view_bug.do?bug_id=6385687
 JVM_OPTS="$JVM_OPTS -XX:+UseFastAccessorMethods"
 
+# TODO revisit these derived from floodlight
 JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=8192"
 JVM_OPTS="$JVM_OPTS -XX:FreqInlineSize=8192"
 JVM_OPTS="$JVM_OPTS -XX:CompileThreshold=1500"
 
+# FIXME Specify appropriate cmd to handle fatal crash
+#  http://www.oracle.com/technetwork/java/javase/clopts-139448.html#gbmum
 JVM_OPTS="$JVM_OPTS -XX:OnError=crash-logger" ;# For dumping core
+#JVM_OPTS="$JVM_OPTS -XX:+ShowMessageBoxOnError"
 
 # This option tells the VM to generate a heap dump when memory allocation cannot be satisfied.
 # http://www.oracle.com/technetwork/java/javase/clopts-139448.html#gbzrr
@@ -130,8 +140,6 @@ JVM_OPTS="$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${ONOS_HOME
 
 # Workaround for Thread Priority http://tech.stolsvik.com/2010/01/linux-java-thread-priorities-workaround.html
 JVM_OPTS="$JVM_OPTS -XX:+UseThreadPriorities -XX:ThreadPriorityPolicy=42"
-
-JVM_OPTS="$JVM_OPTS -XX:+UseCompressedOops"
 
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT"
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.ssl=false"
@@ -148,8 +156,26 @@ JVM_OPTS="$JVM_OPTS -Dhazelcast.socket.receive.buffer.size=4096"
 JVM_OPTS="$JVM_OPTS -Dhazelcast.socket.send.buffer.size=4096"
 
 
-# Uncomment to dump final JVM flags to stdout
-#JVM_OPTS="$JVM_OPTS -XX:+PrintFlagsFinal"
+if [ "${ONOS_DEBUG}" == "true" ]; then
+  # Compilation diagnosis
+  JVM_OPTS="$JVM_OPTS -XX:+UnlockDiagnosticVMOptions"
+  JVM_OPTS="$JVM_OPTS -XX:+LogCompilation"
+  JVM_OPTS="$JVM_OPTS -XX:LogFile=${LOGDIR}/compilation.${ONOS_HOST_NAME}.log"
+
+  # GC diagnosis
+  JVM_OPTS="$JVM_OPTS -verbose:gc"
+  JVM_OPTS="$JVM_OPTS -verbose:sizes"
+  JVM_OPTS="$JVM_OPTS -Xloggc:${LOGDIR}/gc.${ONOS_HOST_NAME}.log"
+  JVM_OPTS="$JVM_OPTS -XX:GCLogFileSize=1G"
+  JVM_OPTS="$JVM_OPTS -XX:+PrintGCDetails"
+  JVM_OPTS="$JVM_OPTS -XX:+PrintGCTimeStamps"
+  JVM_OPTS="$JVM_OPTS -XX:+PrintGCDateStamps"
+  JVM_OPTS="$JVM_OPTS -XX:+PrintTenuringDistribution"
+  JVM_OPTS="$JVM_OPTS -XX:+PrintCMSInitiationStatistics"
+fi
+
+# dump final JVM flags to stdout
+JVM_OPTS="$JVM_OPTS -XX:+PrintFlagsFinal"
 
 # Set ONOS core main class
 MAIN_CLASS="net.onrc.onos.core.main.Main"
@@ -988,7 +1014,7 @@ function start-onos {
   fi
 
   # check for jvm debug flag
-  if [ "${ONOS_DEBUG}" = "true" ]; then
+  if [ "${ONOS_DEBUG}" == "true" ]; then
     JVM_OPTS="${JVM_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${JVM_DEBUG_PORT}"
   fi
 
