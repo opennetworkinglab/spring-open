@@ -38,8 +38,10 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for the TopologyManager class in the Topology module.
  * These test cases only check the sanity of functions in the TopologyManager.
- * Note that we do not test the eventHandler functions in the TopologyManager class.
- * DatagridService, DataStoreService, eventChannel, and controllerRegistryService are mocked out.
+ * Note that we do not test the eventHandler functions in the TopologyManager
+ * class.
+ * DatagridService, DataStoreService, eventChannel, and
+ * controllerRegistryService are mocked out.
  */
 public class TopologyManagerTest extends UnitTest {
     private TopologyManager theTopologyManager;
@@ -50,7 +52,8 @@ public class TopologyManagerTest extends UnitTest {
     private IControllerRegistryService registryService;
     private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
     private Collection<TopologyEvent> allTopologyEvents;
-    private OnosInstanceId onosInstanceId = new OnosInstanceId("ONOS-Test-Instance-ID");
+    private OnosInstanceId onosInstanceId =
+        new OnosInstanceId("ONOS-Test-Instance-ID");
 
     @SuppressWarnings("unchecked")
     @Before
@@ -120,147 +123,18 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     private void setupTopologyManager() {
-        // Create a topologyManager object for testing
+        // Create a TopologyManager object for testing
         topologyListeners = new CopyOnWriteArrayList<>();
-        theTopologyManager = new TopologyManager(registryService, topologyListeners);
+        theTopologyManager = new TopologyManager(registryService,
+                                                 topologyListeners);
 
-        // replace EventHandler to avoid thread from starting
+        // Replace the eventHandler to prevent the thread from starting
         TestUtils.setField(theTopologyManager, "eventHandler",
             EasyMock.createNiceMock(TopologyManager.EventHandler.class));
         theTopologyManager.startup(datagridService);
 
-        // replace data store with Mocked object
+        // Replace the data store with a mocked object
         TestUtils.setField(theTopologyManager, "datastore", dataStoreService);
-    }
-
-    /**
-     * Test the Switch discovered and Port discovered functions.
-     */
-    @Test
-    public void testPutSwitchAndPortDiscoveryEvent() {
-        // Mock the eventChannel functions first
-        eventChannel.addEntry(anyObject(byte[].class),
-                anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(3, 3); // (1 switch + 1 port), 1 port
-        replay(eventChannel);
-
-        setupTopologyManager();
-
-        // mockSwitch has one port
-        Dpid swDPId = new Dpid(100L);
-        PortNumber portId = new PortNumber((short) 1);
-
-        // Generate a new switch event along with a port event
-        SwitchEvent switchEvent = new SwitchEvent(swDPId);
-
-        Collection<PortEvent> portEvents = new ArrayList<PortEvent>();
-        portEvents.add(new PortEvent(swDPId, portId));
-
-        // Call the topologyManager function for adding a switch
-        theTopologyManager.putSwitchDiscoveryEvent(switchEvent, portEvents);
-
-        for (PortEvent portEvent : portEvents) {
-            // Call the topologyManager function for adding a port
-            theTopologyManager.putPortDiscoveryEvent(portEvent);
-        }
-
-        // Verify the function calls
-        verify(eventChannel);
-
-    }
-
-    /**
-     * Test the switch and port removed functions.
-     */
-    @Test
-    public void testRemoveSwitchAndPortDiscoveryEvent() {
-        // Mock the eventChannel functions first
-        eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(2, 2); //1 switch, 1 port
-        replay(eventChannel);
-
-        setupTopologyManager();
-
-        Dpid swDPId = new Dpid(100L);
-        PortNumber portId = new PortNumber((short) 1);
-
-        // Generate a port event
-        Collection<PortEvent> portEvents = new ArrayList<PortEvent>();
-        portEvents.add(new PortEvent(swDPId, portId));
-
-        // Call the topologyManager function for removing a port
-        for (PortEvent portEvent : portEvents) {
-            theTopologyManager.removePortDiscoveryEvent(portEvent);
-        }
-
-        // Call the topologyManager function for removing a switch
-        SwitchEvent switchEvent = new SwitchEvent(swDPId);
-        theTopologyManager.removeSwitchDiscoveryEvent(switchEvent);
-
-        // Verify the function calls
-        verify(eventChannel);
-
-    }
-
-    /**
-     * Test the device discovered function.
-     */
-    @Test
-    public void testPutDeviceDiscoveryEvent() {
-        // Mock the eventChannel functions first
-        eventChannel.addEntry(anyObject(byte[].class),
-                anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(1, 1); // 1 device
-        replay(eventChannel);
-
-        setupTopologyManager();
-
-        long swDPId = 100L;
-        long portId = 1L;
-
-        // Generate a new device event
-        MACAddress devMac = MACAddress.valueOf("00:AA:11:BB:33:CC");
-        SwitchPort sp = new SwitchPort(swDPId, portId);
-        List<SwitchPort> spLists = new ArrayList<SwitchPort>();
-        spLists.add(sp);
-        HostEvent hostEvent = new HostEvent(devMac);
-        hostEvent.setAttachmentPoints(spLists);
-
-        // Call the topologyManager function for adding a device
-        theTopologyManager.putHostDiscoveryEvent(hostEvent);
-
-        // Verify the function calls
-        verify(eventChannel);
-    }
-
-    /**
-     * Test the device removed function.
-     */
-    @Test
-    public void testRemoveDeviceDiscoveryEvent() {
-        // Mock the eventChannel functions first
-        eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(1, 1); // 1 device
-        replay(eventChannel);
-
-        setupTopologyManager();
-
-        long swDPId = 100L;
-        long portId = 1L;
-
-        // Generate a new device event
-        MACAddress devMac = MACAddress.valueOf("00:AA:11:BB:33:CC");
-        SwitchPort sp = new SwitchPort(swDPId, portId);
-        List<SwitchPort> spLists = new ArrayList<SwitchPort>();
-        spLists.add(sp);
-        HostEvent hostEvent = new HostEvent(devMac);
-        hostEvent.setAttachmentPoints(spLists);
-
-        // Call the topologyManager function for removing a device
-        theTopologyManager.removeHostDiscoveryEvent(hostEvent);
-
-        // Verify the function calls
-        verify(eventChannel);
     }
 
     /**
@@ -270,8 +144,8 @@ public class TopologyManagerTest extends UnitTest {
     public void testPutSwitchMastershipEvent() {
         // Mock the eventChannel functions first
         eventChannel.addEntry(anyObject(byte[].class),
-                anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(1, 1); // 1 event
+                              anyObject(TopologyEvent.class));
+        EasyMock.expectLastCall().times(1, 1);          // 1 event
         replay(eventChannel);
 
         setupTopologyManager();
@@ -296,7 +170,7 @@ public class TopologyManagerTest extends UnitTest {
     public void testRemoveSwitchMastershipEvent() {
         // Mock the eventChannel functions first
         eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(1, 1); // 1 event
+        EasyMock.expectLastCall().times(1, 1);          // 1 event
         replay(eventChannel);
 
         setupTopologyManager();
@@ -315,43 +189,113 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
+     * Test the Switch discovered and Port discovered functions.
+     */
+    @Test
+    public void testPutSwitchAndPortDiscoveryEvent() {
+        // Mock the eventChannel functions first
+        eventChannel.addEntry(anyObject(byte[].class),
+                              anyObject(TopologyEvent.class));
+        EasyMock.expectLastCall().times(3, 3);  // (1 switch + 1 port), 1 port
+        replay(eventChannel);
+
+        setupTopologyManager();
+
+        // mockSwitch has one port
+        Dpid swDpid = new Dpid(100L);
+        PortNumber portNumber = PortNumber.uint32(1);
+
+        // Generate a new Switch Event along with a Port Event
+        SwitchEvent switchEvent = new SwitchEvent(swDpid);
+
+        Collection<PortEvent> portEvents = new ArrayList<PortEvent>();
+        portEvents.add(new PortEvent(swDpid, portNumber));
+
+        // Call the topologyManager function for adding a switch
+        theTopologyManager.putSwitchDiscoveryEvent(switchEvent, portEvents);
+
+        for (PortEvent portEvent : portEvents) {
+            // Call the topologyManager function for adding a port
+            theTopologyManager.putPortDiscoveryEvent(portEvent);
+        }
+
+        // Verify the function calls
+        verify(eventChannel);
+
+    }
+
+    /**
+     * Test the switch and port removed functions.
+     */
+    @Test
+    public void testRemoveSwitchAndPortDiscoveryEvent() {
+        // Mock the eventChannel functions first
+        eventChannel.removeEntry(anyObject(byte[].class));
+        EasyMock.expectLastCall().times(2, 2);          // 1 switch, 1 port
+        replay(eventChannel);
+
+        setupTopologyManager();
+
+        Dpid swDpid = new Dpid(100L);
+        PortNumber portNumber = PortNumber.uint32(1);
+
+        // Generate a Port Event
+        Collection<PortEvent> portEvents = new ArrayList<PortEvent>();
+        portEvents.add(new PortEvent(swDpid, portNumber));
+
+        // Call the topologyManager function for removing a port
+        for (PortEvent portEvent : portEvents) {
+            theTopologyManager.removePortDiscoveryEvent(portEvent);
+        }
+
+        // Call the topologyManager function for removing a switch
+        SwitchEvent switchEvent = new SwitchEvent(swDpid);
+        theTopologyManager.removeSwitchDiscoveryEvent(switchEvent);
+
+        // Verify the function calls
+        verify(eventChannel);
+
+    }
+
+    /**
      * Test the link discovered function.
      */
     @Test
     public void testPutLinkDiscoveryEvent() {
         // Mock the eventChannel functions first
         eventChannel.addEntry(anyObject(byte[].class),
-                anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(5, 5); // (2 switch + 2 port + 1 link)
+                              anyObject(TopologyEvent.class));
+        EasyMock.expectLastCall().times(5, 5);  // (2 switch + 2 port + 1 link)
         replay(eventChannel);
 
         setupTopologyManager();
 
         // Assign the switch and port IDs
-        Dpid sw1DPId = new Dpid(100L);
-        PortNumber port1Id = new PortNumber((short) 1);
-        Dpid sw2DPId = new Dpid(200L);
-        PortNumber port2Id = new PortNumber((short) 2);
+        Dpid swDpid1 = new Dpid(100L);
+        PortNumber portNumber1 = PortNumber.uint32(1);
+        Dpid swDpid2 = new Dpid(200L);
+        PortNumber portNumber2 = PortNumber.uint32(2);
 
         // Generate the switch and port events
-        SwitchEvent switchEvent1 = new SwitchEvent(sw1DPId);
+        SwitchEvent switchEvent1 = new SwitchEvent(swDpid1);
         Collection<PortEvent> portEvents1 = new ArrayList<PortEvent>();
-        portEvents1.add(new PortEvent(sw1DPId, port1Id));
+        portEvents1.add(new PortEvent(swDpid1, portNumber1));
 
         // Call the topologyManager function for adding a switch
         theTopologyManager.putSwitchDiscoveryEvent(switchEvent1, portEvents1);
 
-        // Generate the switch and port events
-        SwitchEvent switchEvent2 = new SwitchEvent(sw2DPId);
+        // Generate the Switch and Port Events
+        SwitchEvent switchEvent2 = new SwitchEvent(swDpid2);
         Collection<PortEvent> portEvents2 = new ArrayList<PortEvent>();
-        portEvents2.add(new PortEvent(sw2DPId, port2Id));
+        portEvents2.add(new PortEvent(swDpid2, portNumber2));
 
         // Call the topologyManager function for adding a switch
         theTopologyManager.putSwitchDiscoveryEvent(switchEvent2, portEvents2);
 
-        // Create the link
-        LinkEvent linkEvent = new LinkEvent(new SwitchPort(sw1DPId, port1Id),
-                                            new SwitchPort(sw2DPId, port2Id));
+        // Create the Link Event
+        LinkEvent linkEvent =
+            new LinkEvent(new SwitchPort(swDpid1, portNumber1),
+                          new SwitchPort(swDpid2, portNumber2));
         theTopologyManager.putLinkDiscoveryEvent(linkEvent);
 
         // Verify the function calls
@@ -365,38 +309,99 @@ public class TopologyManagerTest extends UnitTest {
     public void testRemoveLinkDiscoveryEvent() {
         // Mock the eventChannel functions first
         eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(1, 1); // (1 link)
+        EasyMock.expectLastCall().times(1, 1);          // (1 link)
         replay(eventChannel);
 
         setupTopologyManager();
 
         // Assign the switch and port IDs
-        Dpid sw1DPId = new Dpid(100L);
-        PortNumber port1Id = new PortNumber((short) 1);
-        Dpid sw2DPId = new Dpid(200L);
-        PortNumber port2Id = new PortNumber((short) 2);
+        Dpid swDpid1 = new Dpid(100L);
+        PortNumber portNumber1 = PortNumber.uint32(1);
+        Dpid swDpid2 = new Dpid(200L);
+        PortNumber portNumber2 = PortNumber.uint32(2);
 
-        // Generate the switch and port events
-        SwitchEvent switchEvent1 = new SwitchEvent(sw1DPId);
+        // Generate the Switch and Port Events
+        SwitchEvent switchEvent1 = new SwitchEvent(swDpid1);
         Collection<PortEvent> portEvents1 = new ArrayList<PortEvent>();
-        portEvents1.add(new PortEvent(sw1DPId, port1Id));
+        portEvents1.add(new PortEvent(swDpid1, portNumber1));
 
         // Call the topologyManager function for adding a switch
         theTopologyManager.putSwitchDiscoveryEvent(switchEvent1, portEvents1);
 
-        // Generate the switch and port events
-        SwitchEvent switchEvent2 = new SwitchEvent(sw2DPId);
+        // Generate the Switch and port Events
+        SwitchEvent switchEvent2 = new SwitchEvent(swDpid2);
         Collection<PortEvent> portEvents2 = new ArrayList<PortEvent>();
-        portEvents2.add(new PortEvent(sw2DPId, port2Id));
+        portEvents2.add(new PortEvent(swDpid2, portNumber2));
 
         // Call the topologyManager function for adding a switch
         theTopologyManager.putSwitchDiscoveryEvent(switchEvent2, portEvents2);
 
         // Remove the link
         LinkEvent linkEventRemove =
-            new LinkEvent(new SwitchPort(sw1DPId, port1Id),
-                          new SwitchPort(sw2DPId, port2Id));
+            new LinkEvent(new SwitchPort(swDpid1, portNumber1),
+                          new SwitchPort(swDpid2, portNumber2));
         theTopologyManager.removeLinkDiscoveryEvent(linkEventRemove);
+
+        // Verify the function calls
+        verify(eventChannel);
+    }
+
+    /**
+     * Test the host discovered function.
+     */
+    @Test
+    public void testPutHostDiscoveryEvent() {
+        // Mock the eventChannel functions first
+        eventChannel.addEntry(anyObject(byte[].class),
+                              anyObject(TopologyEvent.class));
+        EasyMock.expectLastCall().times(1, 1);          // 1 host
+        replay(eventChannel);
+
+        setupTopologyManager();
+
+        Dpid swDpid = new Dpid(100L);
+        PortNumber portNumber = PortNumber.uint32(1);
+
+        // Generate a new Host Event
+        MACAddress hostMac = MACAddress.valueOf("00:AA:11:BB:33:CC");
+        SwitchPort sp = new SwitchPort(swDpid, portNumber);
+        List<SwitchPort> spLists = new ArrayList<SwitchPort>();
+        spLists.add(sp);
+        HostEvent hostEvent = new HostEvent(hostMac);
+        hostEvent.setAttachmentPoints(spLists);
+
+        // Call the topologyManager function for adding a host
+        theTopologyManager.putHostDiscoveryEvent(hostEvent);
+
+        // Verify the function calls
+        verify(eventChannel);
+    }
+
+    /**
+     * Test the host removed function.
+     */
+    @Test
+    public void testRemoveHostDiscoveryEvent() {
+        // Mock the eventChannel functions first
+        eventChannel.removeEntry(anyObject(byte[].class));
+        EasyMock.expectLastCall().times(1, 1);          // 1 host
+        replay(eventChannel);
+
+        setupTopologyManager();
+
+        Dpid swDpid = new Dpid(100L);
+        PortNumber portNumber = PortNumber.uint32(1);
+
+        // Generate a new Host Event
+        MACAddress hostMac = MACAddress.valueOf("00:AA:11:BB:33:CC");
+        SwitchPort sp = new SwitchPort(swDpid, portNumber);
+        List<SwitchPort> spLists = new ArrayList<SwitchPort>();
+        spLists.add(sp);
+        HostEvent hostEvent = new HostEvent(hostMac);
+        hostEvent.setAttachmentPoints(spLists);
+
+        // Call the topologyManager function for removing a host
+        theTopologyManager.removeHostDiscoveryEvent(hostEvent);
 
         // Verify the function calls
         verify(eventChannel);
@@ -413,16 +418,18 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        // check events to be fired
+        // Check the events to be fired
         List<SwitchEvent> apiAddedSwitchEvents
             = TestUtils.getField(theTopologyManager, "apiAddedSwitchEvents");
         assertThat(apiAddedSwitchEvents, hasItem(sw));
@@ -439,27 +446,30 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumber = new PortNumber((short) 2);
+        final PortNumber portNumber = PortNumber.uint32(2);
         PortEvent port = new PortEvent(dpid, portNumber);
         port.createStringAttribute("fuzz", "buzz");
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, port);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, port);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portId = new SwitchPort(dpid, portNumber);
-        PortEvent portInTopo = topology.getPortEvent(portId);
+        final SwitchPort switchPort = new SwitchPort(dpid, portNumber);
+        PortEvent portInTopo = topology.getPortEvent(switchPort);
         assertEquals(port, portInTopo);
         assertTrue(portInTopo.isFrozen());
         assertEquals("buzz", portInTopo.getStringAttribute("fuzz"));
 
-        // check events to be fired
+        // Check the events to be fired
         List<PortEvent> apiAddedPortEvents
             = TestUtils.getField(theTopologyManager, "apiAddedPortEvents");
         assertThat(apiAddedPortEvents, hasItem(port));
@@ -476,34 +486,37 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumber = new PortNumber((short) 2);
+        final PortNumber portNumber = PortNumber.uint32(2);
         PortEvent port = new PortEvent(dpid, portNumber);
         port.createStringAttribute("fuzz", "buzz");
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, port);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, port);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portId = new SwitchPort(dpid, portNumber);
-        PortEvent portInTopo = topology.getPortEvent(portId);
+        final SwitchPort switchPort = new SwitchPort(dpid, portNumber);
+        PortEvent portInTopo = topology.getPortEvent(switchPort);
         assertEquals(port, portInTopo);
         assertTrue(portInTopo.isFrozen());
         assertEquals("buzz", portInTopo.getStringAttribute("fuzz"));
 
-        // remove in proper order
+        // Remove in proper order
         TestUtils.callMethod(theTopologyManager, "removePort",
                             PortEvent.class, new PortEvent(port));
         TestUtils.callMethod(theTopologyManager, "removeSwitch",
                             SwitchEvent.class, new SwitchEvent(sw));
 
 
-        // check events to be fired
+        // Check the events to be fired
         List<PortEvent> apiRemovedPortEvents
             = TestUtils.getField(theTopologyManager, "apiRemovedPortEvents");
         assertThat(apiRemovedPortEvents, hasItem(port));
@@ -516,42 +529,45 @@ public class TopologyManagerTest extends UnitTest {
      * Test to confirm topology replica transformation.
      */
     @Test
-    public void testRemoveSwitch() {
+    public void testRemoveSwitchWithoutPortRemoval() {
         setupTopologyManager();
 
         final Dpid dpid = new Dpid(1);
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumber = new PortNumber((short) 2);
+        final PortNumber portNumber = PortNumber.uint32(2);
         PortEvent port = new PortEvent(dpid, portNumber);
         port.createStringAttribute("fuzz", "buzz");
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, port);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, port);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portId = new SwitchPort(dpid, portNumber);
-        PortEvent portInTopo = topology.getPortEvent(portId);
+        final SwitchPort switchPort = new SwitchPort(dpid, portNumber);
+        PortEvent portInTopo = topology.getPortEvent(switchPort);
         assertEquals(port, portInTopo);
         assertTrue(portInTopo.isFrozen());
         assertEquals("buzz", portInTopo.getStringAttribute("fuzz"));
 
-        // remove in in-proper order
+        // Remove in in-proper order
 //        TestUtils.callMethod(theTopologyManager, "removePort",
 //                            PortEvent.class, new PortEvent(port));
         TestUtils.callMethod(theTopologyManager, "removeSwitch",
                             SwitchEvent.class, new SwitchEvent(sw));
 
 
-        // check events to be fired
-        // outcome should be the same as #testRemovePortThenSwitch
+        // Check the events to be fired
+        // The outcome should be the same as #testRemovePortThenSwitch
         List<PortEvent> apiRemovedPortEvents
             = TestUtils.getField(theTopologyManager, "apiRemovedPortEvents");
         assertThat(apiRemovedPortEvents, hasItem(port));
@@ -571,42 +587,50 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumberA = new PortNumber((short) 2);
+        final PortNumber portNumberA = PortNumber.uint32(2);
         PortEvent portA = new PortEvent(dpid, portNumberA);
         portA.createStringAttribute("fuzz", "buzz");
 
-        final PortNumber portNumberB = new PortNumber((short) 3);
+        final PortNumber portNumberB = PortNumber.uint32(3);
         PortEvent portB = new PortEvent(dpid, portNumberB);
         portB.createStringAttribute("fizz", "buz");
 
-        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(),
+                                        portB.getSwitchPort());
         linkA.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
-        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(),
+                                        portA.getSwitchPort());
         linkB.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkB);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
-        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        final SwitchPort switchPortA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(switchPortA);
         assertEquals(portA, portAInTopo);
         assertTrue(portAInTopo.isFrozen());
         assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
 
-        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
-        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        final SwitchPort switchPortB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(switchPortB);
         assertEquals(portB, portBInTopo);
         assertTrue(portBInTopo.isFrozen());
         assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
@@ -614,14 +638,16 @@ public class TopologyManagerTest extends UnitTest {
         LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
         assertEquals(linkA, linkAInTopo);
         assertTrue(linkAInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkAInTopo.getType());
 
         LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
         assertEquals(linkB, linkBInTopo);
         assertTrue(linkBInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkBInTopo.getType());
 
-        // check events to be fired
+        // Check the events to be fired
         List<LinkEvent> apiAddedLinkEvents
             = TestUtils.getField(theTopologyManager, "apiAddedLinkEvents");
         assertThat(apiAddedLinkEvents, containsInAnyOrder(linkA, linkB));
@@ -638,15 +664,15 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumberA = new PortNumber((short) 2);
+        final PortNumber portNumberA = PortNumber.uint32(2);
         PortEvent portA = new PortEvent(dpid, portNumberA);
         portA.createStringAttribute("fuzz", "buzz");
 
-        final PortNumber portNumberB = new PortNumber((short) 3);
+        final PortNumber portNumberB = PortNumber.uint32(3);
         PortEvent portB = new PortEvent(dpid, portNumberB);
         portB.createStringAttribute("fizz", "buz");
 
-        final PortNumber portNumberC = new PortNumber((short) 4);
+        final PortNumber portNumberC = PortNumber.uint32(4);
         PortEvent portC = new PortEvent(dpid, portNumberC);
         portC.createStringAttribute("fizz", "buz");
 
@@ -664,38 +690,49 @@ public class TopologyManagerTest extends UnitTest {
         hostB.setLastSeenTime(timestampB);
 
 
-        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(),
+                                        portB.getSwitchPort());
         linkA.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
-        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(),
+                                        portA.getSwitchPort());
         linkB.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portC);
-        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostA);
-        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostB);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portC);
+        TestUtils.callMethod(theTopologyManager, "addHost",
+                             HostEvent.class, hostA);
+        TestUtils.callMethod(theTopologyManager, "addHost",
+                             HostEvent.class, hostB);
 
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkB);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
-        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        final SwitchPort switchPortA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(switchPortA);
         assertEquals(portA, portAInTopo);
         assertTrue(portAInTopo.isFrozen());
         assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
 
-        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
-        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        final SwitchPort switchPortB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(switchPortB);
         assertEquals(portB, portBInTopo);
         assertTrue(portBInTopo.isFrozen());
         assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
@@ -713,14 +750,16 @@ public class TopologyManagerTest extends UnitTest {
         LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
         assertEquals(linkA, linkAInTopo);
         assertTrue(linkAInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkAInTopo.getType());
 
         LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
         assertEquals(linkB, linkBInTopo);
         assertTrue(linkBInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkBInTopo.getType());
 
-        // check events to be fired
+        // Check the events to be fired
         List<HostEvent> apiAddedHostEvents
             = TestUtils.getField(theTopologyManager, "apiAddedHostEvents");
         assertThat(apiAddedHostEvents, hasItem(hostBrev));
@@ -744,42 +783,50 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumberA = new PortNumber((short) 2);
+        final PortNumber portNumberA = PortNumber.uint32(2);
         PortEvent portA = new PortEvent(dpid, portNumberA);
         portA.createStringAttribute("fuzz", "buzz");
 
-        final PortNumber portNumberB = new PortNumber((short) 3);
+        final PortNumber portNumberB = PortNumber.uint32(3);
         PortEvent portB = new PortEvent(dpid, portNumberB);
         portB.createStringAttribute("fizz", "buz");
 
-        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(),
+                                        portB.getSwitchPort());
         linkA.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
-        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(),
+                                        portA.getSwitchPort());
         linkB.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkB);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
-        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        final SwitchPort switchPortA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(switchPortA);
         assertEquals(portA, portAInTopo);
         assertTrue(portAInTopo.isFrozen());
         assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
 
-        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
-        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        final SwitchPort switchPortB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(switchPortB);
         assertEquals(portB, portBInTopo);
         assertTrue(portBInTopo.isFrozen());
         assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
@@ -787,26 +834,29 @@ public class TopologyManagerTest extends UnitTest {
         LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
         assertEquals(linkA, linkAInTopo);
         assertTrue(linkAInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkAInTopo.getType());
 
 
         LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
         assertEquals(linkB, linkBInTopo);
         assertTrue(linkBInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkBInTopo.getType());
 
-        // check events to be fired
+        // Check the events to be fired
         // FIXME if link flapped (linkA in this scenario),
         //  linkA appears in both removed and added is this expected behavior?
         List<LinkEvent> apiAddedLinkEvents
             = TestUtils.getField(theTopologyManager, "apiAddedLinkEvents");
         assertThat(apiAddedLinkEvents, containsInAnyOrder(linkA, linkB));
 
-        // clear event before removing Link
+        // Clear the events before removing the link
         apiAddedLinkEvents.clear();
 
-        // remove link
-        TestUtils.callMethod(theTopologyManager, "removeLink", LinkEvent.class, new LinkEvent(linkA));
+        // Remove the link
+        TestUtils.callMethod(theTopologyManager, "removeLink",
+                             LinkEvent.class, new LinkEvent(linkA));
 
         LinkEvent linkANotInTopo = topology.getLinkEvent(linkA.getLinkTuple());
         assertNull(linkANotInTopo);
@@ -827,31 +877,39 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumberA = new PortNumber((short) 2);
+        final PortNumber portNumberA = PortNumber.uint32(2);
         PortEvent portA = new PortEvent(dpid, portNumberA);
         portA.createStringAttribute("fuzz", "buzz");
 
-        final PortNumber portNumberB = new PortNumber((short) 3);
+        final PortNumber portNumberB = PortNumber.uint32(3);
         PortEvent portB = new PortEvent(dpid, portNumberB);
         portB.createStringAttribute("fizz", "buz");
 
-        final PortNumber portNumberC = new PortNumber((short) 4);
+        final PortNumber portNumberC = PortNumber.uint32(4);
         PortEvent portC = new PortEvent(dpid, portNumberC);
         portC.createStringAttribute("fizz", "buz");
 
-        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(), portB.getSwitchPort());
+        LinkEvent linkA = new LinkEvent(portA.getSwitchPort(),
+                                        portB.getSwitchPort());
         linkA.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
-        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(), portA.getSwitchPort());
+        LinkEvent linkB = new LinkEvent(portB.getSwitchPort(),
+                                        portA.getSwitchPort());
         linkB.createStringAttribute(TopologyElement.TYPE,
                                     TopologyElement.TYPE_OPTICAL_LAYER);
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portC);
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkA);
-        TestUtils.callMethod(theTopologyManager, "addLink", LinkEvent.class, linkB);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portC);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkA);
+        TestUtils.callMethod(theTopologyManager, "addLink",
+                             LinkEvent.class, linkB);
 
         // Add hostA attached to a port which already has a link
         final MACAddress macA = MACAddress.valueOf(666L);
@@ -860,7 +918,8 @@ public class TopologyManagerTest extends UnitTest {
         final long timestampA = 392893200L;
         hostA.setLastSeenTime(timestampA);
 
-        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostA);
+        TestUtils.callMethod(theTopologyManager, "addHost",
+                             HostEvent.class, hostA);
 
         // Add hostB attached to multiple ports,
         // some of them which already has a link
@@ -871,23 +930,25 @@ public class TopologyManagerTest extends UnitTest {
         final long timestampB = 392893201L;
         hostB.setLastSeenTime(timestampB);
 
-        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostB);
+        TestUtils.callMethod(theTopologyManager, "addHost",
+                             HostEvent.class, hostB);
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
-        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        final SwitchPort switchPortA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(switchPortA);
         assertEquals(portA, portAInTopo);
         assertTrue(portAInTopo.isFrozen());
         assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
 
-        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
-        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        final SwitchPort switchPortB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(switchPortB);
         assertEquals(portB, portBInTopo);
         assertTrue(portBInTopo.isFrozen());
         assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
@@ -905,14 +966,16 @@ public class TopologyManagerTest extends UnitTest {
         LinkEvent linkAInTopo = topology.getLinkEvent(linkA.getLinkTuple());
         assertEquals(linkA, linkAInTopo);
         assertTrue(linkAInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkAInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkAInTopo.getType());
 
         LinkEvent linkBInTopo = topology.getLinkEvent(linkB.getLinkTuple());
         assertEquals(linkB, linkBInTopo);
         assertTrue(linkBInTopo.isFrozen());
-        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER, linkBInTopo.getType());
+        assertEquals(TopologyElement.TYPE_OPTICAL_LAYER,
+                     linkBInTopo.getType());
 
-        // check events to be fired
+        // Check the events to be fired
         // hostB should be added with reduced attachment points
         List<HostEvent> apiAddedHostEvents
             = TestUtils.getField(theTopologyManager, "apiAddedHostEvents");
@@ -939,22 +1002,26 @@ public class TopologyManagerTest extends UnitTest {
         SwitchEvent sw = new SwitchEvent(dpid);
         sw.createStringAttribute("foo", "bar");
 
-        final PortNumber portNumberA = new PortNumber((short) 2);
+        final PortNumber portNumberA = PortNumber.uint32(2);
         PortEvent portA = new PortEvent(dpid, portNumberA);
         portA.createStringAttribute("fuzz", "buzz");
 
-        final PortNumber portNumberB = new PortNumber((short) 3);
+        final PortNumber portNumberB = PortNumber.uint32(3);
         PortEvent portB = new PortEvent(dpid, portNumberB);
         portB.createStringAttribute("fizz", "buz");
 
-        final PortNumber portNumberC = new PortNumber((short) 4);
+        final PortNumber portNumberC = PortNumber.uint32(4);
         PortEvent portC = new PortEvent(dpid, portNumberC);
         portC.createStringAttribute("fizz", "buz");
 
-        TestUtils.callMethod(theTopologyManager, "addSwitch", SwitchEvent.class, sw);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portA);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portB);
-        TestUtils.callMethod(theTopologyManager, "addPort", PortEvent.class, portC);
+        TestUtils.callMethod(theTopologyManager, "addSwitch",
+                             SwitchEvent.class, sw);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portA);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portB);
+        TestUtils.callMethod(theTopologyManager, "addPort",
+                             PortEvent.class, portC);
 
         // Add hostA attached to a port which already has a link
         final MACAddress macA = MACAddress.valueOf(666L);
@@ -963,40 +1030,43 @@ public class TopologyManagerTest extends UnitTest {
         final long timestampA = 392893200L;
         hostA.setLastSeenTime(timestampA);
 
-        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostA);
+        TestUtils.callMethod(theTopologyManager, "addHost",
+                             HostEvent.class, hostA);
 
 
-        // check topology structure
-        TopologyInternal topology = (TopologyInternal) theTopologyManager.getTopology();
+        // Check the topology structure
+        TopologyInternal topology =
+            (TopologyInternal) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(dpid);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
         assertEquals("bar", swInTopo.getStringAttribute("foo"));
 
-        final SwitchPort portIdA = new SwitchPort(dpid, portNumberA);
-        PortEvent portAInTopo = topology.getPortEvent(portIdA);
+        final SwitchPort switchPortA = new SwitchPort(dpid, portNumberA);
+        PortEvent portAInTopo = topology.getPortEvent(switchPortA);
         assertEquals(portA, portAInTopo);
         assertTrue(portAInTopo.isFrozen());
         assertEquals("buzz", portAInTopo.getStringAttribute("fuzz"));
 
-        final SwitchPort portIdB = new SwitchPort(dpid, portNumberB);
-        PortEvent portBInTopo = topology.getPortEvent(portIdB);
+        final SwitchPort switchPortB = new SwitchPort(dpid, portNumberB);
+        PortEvent portBInTopo = topology.getPortEvent(switchPortB);
         assertEquals(portB, portBInTopo);
         assertTrue(portBInTopo.isFrozen());
         assertEquals("buz", portBInTopo.getStringAttribute("fizz"));
 
         // hostA expected to be there
         assertEquals(hostA, topology.getHostEvent(macA));
-        assertEquals(timestampA, topology.getHostEvent(macA).getLastSeenTime());
+        assertEquals(timestampA,
+                     topology.getHostEvent(macA).getLastSeenTime());
 
-        // check events to be fired
+        // Check the events to be fired
         // hostA should be added
         List<HostEvent> apiAddedHostEvents
             = TestUtils.getField(theTopologyManager, "apiAddedHostEvents");
         assertThat(apiAddedHostEvents, hasItem(hostA));
 
 
-        // clear event before moving host
+        // Clear the events before moving the host
         apiAddedHostEvents.clear();
 
         HostEvent hostAmoved = new HostEvent(macA);
@@ -1004,10 +1074,12 @@ public class TopologyManagerTest extends UnitTest {
         final long timestampAmoved = 392893201L;
         hostAmoved.setLastSeenTime(timestampAmoved);
 
-        TestUtils.callMethod(theTopologyManager, "addHost", HostEvent.class, hostAmoved);
+        TestUtils.callMethod(theTopologyManager, "addHost",
+                             HostEvent.class, hostAmoved);
 
         assertEquals(hostAmoved, topology.getHostEvent(macA));
-        assertEquals(timestampAmoved, topology.getHostEvent(macA).getLastSeenTime());
+        assertEquals(timestampAmoved,
+                     topology.getHostEvent(macA).getLastSeenTime());
 
         // hostA expected to be there with new attachment point
         apiAddedHostEvents

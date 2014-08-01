@@ -8,7 +8,7 @@ import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * A mock class of Topology.
- * This class should be used only by test codes.
+ * This class should be used only by test code.
  */
 public class MockTopology extends TopologyImpl {
     // TODO this class doesn't seem like it should extend TopologyImpl. It
@@ -34,11 +34,14 @@ public class MockTopology extends TopologyImpl {
         return this.getPort(port.getSwitchPort());
     }
 
-    public void addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
+    public void addBidirectionalLinks(Long srcDpid, Long srcPortNo,
+                                      Long dstDpid, Long dstPortNo) {
         addBidirectionalLinks(srcDpid, srcPortNo, dstDpid, dstPortNo, null);
     }
 
-    public void addBidirectionalLinks(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo, Double capacity) {
+    public void addBidirectionalLinks(Long srcDpid, Long srcPortNo,
+                                      Long dstDpid, Long dstPortNo,
+                                      Double capacity) {
         LinkEvent[] links = new LinkEvent[2];
         final SwitchPort src = new SwitchPort(srcDpid, srcPortNo);
         final SwitchPort dst = new SwitchPort(dstDpid, dstPortNo);
@@ -54,7 +57,7 @@ public class MockTopology extends TopologyImpl {
     }
 
     /**
-     * create sample topology of 4 switches and 5 bidirectional links.
+     * Creates a sample topology of 4 switches and 5 bidirectional links.
      * <pre>
      * [1] --- [2]
      *  |    /  |
@@ -91,7 +94,7 @@ public class MockTopology extends TopologyImpl {
     }
 
     /**
-     * create sample topology of 4 switches and 5 bidirectional links.
+     * Creates a sample topology of 4 switches and 5 bidirectional links.
      * <pre>
      *
      *
@@ -143,7 +146,8 @@ public class MockTopology extends TopologyImpl {
         addBidirectionalLinks(2L, 24L, 4L, 42L, 1000.0);
     }
 
-    public void removeLink(Long srcDpid, Long srcPortNo, Long dstDpid, Long dstPortNo) {
+    public void removeLink(Long srcDpid, Long srcPortNo, Long dstDpid,
+                           Long dstPortNo) {
         this.removeLink(new Dpid(srcDpid),
                            new PortNumber(srcPortNo.shortValue()),
                            new Dpid(dstDpid),
@@ -151,7 +155,7 @@ public class MockTopology extends TopologyImpl {
     }
 
     public void removeLink(Dpid srcDpid, PortNumber srcPortNo,
-            Dpid dstDpid, PortNumber dstPortNo) {
+                           Dpid dstDpid, PortNumber dstPortNo) {
         this.removeLink(srcDpid, srcPortNo, dstDpid, dstPortNo,
                 TopologyElement.TYPE_PACKET_LAYER);
     }
