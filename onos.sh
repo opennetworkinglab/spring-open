@@ -24,6 +24,7 @@
 ONOS_HOME=${ONOS_HOME:-$(cd `dirname $0`; pwd)}
 ONOS_CONF_DIR=${ONOS_CONF_DIR:-${ONOS_HOME}/conf}
 ONOS_CONF=${ONOS_CONF:-${ONOS_CONF_DIR}/onos_node.`hostname`.conf}
+ONOS_DUMP_DIR=${ONOS_DUMP_DIR:-${ONOS_HOME}}
 
 source ${ONOS_HOME}/scripts/common/utils.sh
 
@@ -136,7 +137,7 @@ JVM_OPTS="$JVM_OPTS -XX:OnError=crash-logger" ;# For dumping core
 
 # This option tells the VM to generate a heap dump when memory allocation cannot be satisfied.
 # http://www.oracle.com/technetwork/java/javase/clopts-139448.html#gbzrr
-JVM_OPTS="$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${ONOS_HOME}"
+JVM_OPTS="$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${ONOS_DUMP_DIR}"
 
 # Workaround for Thread Priority http://tech.stolsvik.com/2010/01/linux-java-thread-priorities-workaround.html
 JVM_OPTS="$JVM_OPTS -XX:+UseThreadPriorities -XX:ThreadPriorityPolicy=42"
