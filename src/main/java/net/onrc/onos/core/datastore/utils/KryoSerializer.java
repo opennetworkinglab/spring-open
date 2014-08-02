@@ -1,5 +1,7 @@
 package net.onrc.onos.core.datastore.utils;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 import net.onrc.onos.core.datastore.DataStoreClient;
 
 import com.esotericsoftware.kryo.io.Input;
@@ -8,11 +10,17 @@ import com.esotericsoftware.kryo.io.Output;
 /**
  * {@link Serializer} implementation using Kryo.
  */
+@ThreadSafe
 public final class KryoSerializer
             implements Serializer {
 
     private final ThreadLocalKryo kryo;
 
+    /**
+     * Thread safe Serializer implementation using Kryo.
+     *
+     * @param expectedTypes list of classes expected to be serialized
+     */
     public KryoSerializer(Class<?>... expectedTypes) {
         kryo = new ThreadLocalKryo(expectedTypes);
     }

@@ -10,6 +10,14 @@ import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
  */
 public interface IKVClient {
 
+    /**
+     * Gets a table for name {@code tableName}.
+     *
+     * Table will be created, if it does not exist.
+     *
+     * @param tableName name of the table
+     * @return {@link IKVTable} for {@code tableName}
+     */
     public IKVTable getTable(final String tableName);
 
     /**
@@ -113,22 +121,54 @@ public interface IKVClient {
     public Iterable<IKVEntry> getAllEntries(IKVTableID tableId);
 
     /**
+     * Creates a {@code IMultiEntryOperation}.
+     *
      * @return IMultiOpEntry for this operation
      * @see #create(IKVTableID, byte[], byte[])
      */
     public IMultiEntryOperation createOp(IKVTableID tableId, byte[] key, byte[] value);
 
+    /**
+     * Creates a {@code IMultiEntryOperation}.
+     *
+     * @return IMultiOpEntry for this operation
+     * @see #forceCreate(IKVTableID, byte[], byte[])
+     */
     public IMultiEntryOperation forceCreateOp(IKVTableID tableId, byte[] key,
                                               byte[] value);
 
+    /**
+     * Creates a {@code IMultiEntryOperation}.
+     *
+     * @return IMultiOpEntry for this operation
+     * @see #read(IKVTableID, byte[])
+     */
     public IMultiEntryOperation readOp(IKVTableID tableId, byte[] key);
 
+    /**
+     * Creates a {@code IMultiEntryOperation}.
+     *
+     * @return IMultiOpEntry for this operation
+     * @see #update(IKVTableID, byte[], byte[], long)
+     */
     public IMultiEntryOperation updateOp(IKVTableID tableId, byte[] key, byte[] value,
                                          long version);
 
+    /**
+     * Creates a {@code IMultiEntryOperation}.
+     *
+     * @return IMultiOpEntry for this operation
+     * @see #delete(IKVTableID, byte[], long)
+     */
     public IMultiEntryOperation deleteOp(IKVTableID tableId, byte[] key, byte[] value,
                                          long version);
 
+    /**
+     * Creates a {@code IMultiEntryOperation}.
+     *
+     * @return IMultiOpEntry for this operation
+     * @see #forceDelete(IKVTableID, byte[])
+     */
     public IMultiEntryOperation forceDeleteOp(IKVTableID tableId, byte[] key);
 
     /**
@@ -209,6 +249,8 @@ public interface IKVClient {
     /**
      * Version number which represents that the object does not exist, or has
      * never been read the DB before.
+     *
+     * @return Version number which represents that the object does not exist
      */
     public long getVersionNonexistant();
 
