@@ -116,6 +116,7 @@
         <!-- See http://checkstyle.sf.net/config_javadoc.html -->
         <module name="JavadocMethod">
             <property name="severity" value="warning"/>
+            <property name="allowUndeclaredRTE" value="true"/>
         </module>
         <module name="JavadocType">
             <property name="severity" value="warning"/>
