@@ -84,7 +84,12 @@ public final class TestUtils {
         try {
             @SuppressWarnings("unchecked")
             Class<T> clazz = (Class<T>) subject.getClass();
-            Method method = clazz.getDeclaredMethod(methodName, paramTypes);
+            final Method method;
+            if (paramTypes == null || paramTypes.length == 0) {
+                method = clazz.getDeclaredMethod(methodName);
+            } else {
+                method = clazz.getDeclaredMethod(methodName, paramTypes);
+            }
             method.setAccessible(true);
 
             @SuppressWarnings("unchecked")

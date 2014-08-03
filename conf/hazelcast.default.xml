@@ -29,6 +29,9 @@
         <data-serializable-factories>
             <data-serializable-factory factory-id="1">net.onrc.onos.core.datastore.hazelcast.VersionedValueSerializableFactory</data-serializable-factory>
         </data-serializable-factories>
+        <serializers>
+          <serializer type-class="net.onrc.onos.core.util.distributed.sharedlog.internal.LogValue">net.onrc.onos.core.util.distributed.sharedlog.hazelcast.LogValueSerializer</serializer>
+        </serializers>
     </serialization>
 
   <!-- Configuration of maps used as a data store. -->
@@ -39,6 +42,38 @@
     <!-- must be false for strong consistency -->
     <read-backup-data>false</read-backup-data>
     <!-- near cache must not be used -->
+  </map>
+
+  <!-- Configuration of maps used as a log store. -->
+  <map name="logmap://*">
+    <!-- must use 'sync' backup to imitate other data store -->
+    <backup-count>3</backup-count>
+    <async-backup-count>0</async-backup-count>
+    <!-- can be true, since log map value is basically immutable -->
+    <read-backup-data>true</read-backup-data>
+    <!-- near cache can be enabled -->
+    <near-cache>
+      <!-- TODO revisit random params -->
+      <max-size>5000</max-size>
+      <time-to-live-seconds>300</time-to-live-seconds>
+      <eviction-policy>LRU</eviction-policy>
+    </near-cache>
+  </map>
+
+  <!-- Configuration of maps used as a snap shot store. -->
+  <map name="ssmap://*">
+    <!-- must use 'sync' backup to imitate other data store -->
+    <backup-count>3</backup-count>
+    <async-backup-count>0</async-backup-count>
+    <!-- can be true, since snap shot map value is basically immutable -->
+    <read-backup-data>true</read-backup-data>
+    <!-- near cache can be enabled -->
+    <near-cache>
+      <!-- TODO revisit random params -->
+      <max-size>10</max-size>
+      <time-to-live-seconds>300</time-to-live-seconds>
+      <eviction-policy>LRU</eviction-policy>
+    </near-cache>
   </map>
 
   <map name="*">

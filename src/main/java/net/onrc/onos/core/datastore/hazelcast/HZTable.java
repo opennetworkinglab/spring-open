@@ -17,6 +17,7 @@ import net.onrc.onos.core.datastore.ObjectDoesntExistException;
 import net.onrc.onos.core.datastore.ObjectExistsException;
 import net.onrc.onos.core.datastore.WrongVersionException;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
+import net.onrc.onos.core.util.serializers.HazelcastSerializationConstants;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
@@ -117,12 +118,12 @@ public class HZTable implements IKVTable, IKVTableID {
 
         @Override
         public int getFactoryId() {
-            return VersionedValueSerializableFactory.FACTORY_ID;
+            return HazelcastSerializationConstants.VERSIONED_VALUE_SERIALIZABLE_FACTORY_ID;
         }
 
         @Override
         public int getId() {
-            return VersionedValueSerializableFactory.VERSIONED_VALUE_ID;
+            return HazelcastSerializationConstants.VERSIONED_VALUE_TYPE_ID;
         }
 
         @Override

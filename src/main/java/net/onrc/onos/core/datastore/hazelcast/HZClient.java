@@ -18,6 +18,7 @@ import net.onrc.onos.core.datastore.WrongVersionException;
 import net.onrc.onos.core.datastore.hazelcast.HZTable.VersionedValue;
 import net.onrc.onos.core.datastore.internal.IModifiableMultiEntryOperation;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
+import net.onrc.onos.core.util.serializers.HazelcastSerializationConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,7 +187,7 @@ public final class HZClient implements IKVClient {
         // This method is no longer required, if equibalent to the following
         // is defined in hazelcast.xml
         config.addDataSerializableFactoryClass(
-                VersionedValueSerializableFactory.FACTORY_ID,
+                HazelcastSerializationConstants.VERSIONED_VALUE_SERIALIZABLE_FACTORY_ID,
                 VersionedValueSerializableFactory.class);
     }
 
