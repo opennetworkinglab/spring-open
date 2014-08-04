@@ -99,6 +99,11 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
             }
             // For each switch check if a controller exists in controller registry
             for (Switch sw : switches) {
+                // FIXME How to handle case where Switch has never been
+                // registered to ZK
+                if (sw.getConfigState() == ConfigState.CONFIGURED) {
+                    continue;
+                }
                 try {
                     String controller =
                             registryService.getControllerForSwitch(sw.getDpid().value());
