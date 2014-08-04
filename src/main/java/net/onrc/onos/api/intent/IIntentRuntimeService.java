@@ -5,6 +5,7 @@ import java.util.EventListener;
 
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.Flow;
+import net.onrc.onos.api.flowmanager.FlowId;
 
 /**
  * An interface class for the Intent-Runtime Service. The role of the
@@ -128,7 +129,7 @@ public interface IIntentRuntimeService {
      * @param flowId ID of the target IFlow object.
      * @return Intent which manages the specified IFlow object, null otherwise.
      */
-    Intent getIntentByFlow(String flowId);
+    Intent getIntentByFlow(FlowId flowId);
 
     /**
      * Sets a conflict detection policy.

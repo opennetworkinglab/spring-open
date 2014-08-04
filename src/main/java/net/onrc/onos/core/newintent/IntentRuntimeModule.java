@@ -5,6 +5,7 @@ import java.util.EventListener;
 
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.Flow;
+import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.intent.IIntentRuntimeService;
 import net.onrc.onos.api.intent.Intent;
 import net.onrc.onos.api.intent.IntentBatchOperation;
@@ -84,7 +85,7 @@ public class IntentRuntimeModule implements IIntentRuntimeService {
     }
 
     @Override
-    public Intent getIntentByFlow(String flowId) {
+    public Intent getIntentByFlow(FlowId flowId) {
         // TODO Auto-generated method stub
         return null;
     }
