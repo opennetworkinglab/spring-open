@@ -107,9 +107,11 @@ public class PointToPointIntent extends Intent {
     /**
      * Compares the specified object with this intent for equality.
      *
+     * <p>
      * Note: Comparison of idleTimeout value is done in micro-second precision.
      * Then the value less than a micro second is truncated. In addition, the comparison
      * is done between long values. It causes overflow if the idleTimeout is large.
+     * </p>
      *
      * @param obj the object to be compared with this intent for equality.
      * @return true if the specified object is equal to this intent.

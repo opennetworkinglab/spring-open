@@ -5,8 +5,10 @@ import java.util.List;
 /**
  * An interface to translate an intent to lower level intents.
  *
+ * <p>
  * IntentResolvers are registered to {@link IIntentRuntimeService} to handle translations of intents
  * (we call it intent resolution).
+ * </p>
  *
  * @param <T> the type of intent this resolver translates
  */

@@ -15,7 +15,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * The class represents multiple sources, single destination tree like connectivity.
  *
+ * <p>
  * This class is intended to be used for the SDN-IP application.
+ * </p>
  */
 public class MultiPointToSinglePointIntent extends Intent {
     private final ImmutableList<SwitchPort> ingressPorts;

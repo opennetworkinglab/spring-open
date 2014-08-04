@@ -5,7 +5,9 @@ import net.onrc.onos.api.batchoperation.BatchOperationTargetId;
 /**
  * The class representing intent's ID.
  *
+ * <p>
  * This class is immutable.
+ * </p>
  */
 public final class IntentId extends BatchOperationTargetId {
     private final long id;
@@ -13,7 +15,9 @@ public final class IntentId extends BatchOperationTargetId {
     /**
      * Constructs the ID corresponding to a given long value.
      *
+     * <p>
      * In the future, this constructor will not be exposed to avoid misuses.
+     * </p>
      *
      * @param id the underlay value of this ID.
      */

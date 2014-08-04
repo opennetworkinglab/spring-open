@@ -21,7 +21,9 @@ public interface IIntentRuntimeService {
     /**
      * Installs the specified intent synchronously.
      *
+     * <p>
      * This method blocks until the installation succeeds or fails.
+     * </p>
      *
      * @param intent the intent to be installed.
      * @return true if the intent is successfully installed. Otherwise, false.
@@ -31,7 +33,9 @@ public interface IIntentRuntimeService {
     /**
      * Removes the specified intent synchronously.
      *
+     * <p>
      * This method blocks until the removal succeeds or fails.
+     * </p>
      *
      * @param id the ID of the intent to be uninstalled.
      * @return true if the intent is successfully uninstalled. Otherwise, false.
@@ -81,9 +85,11 @@ public interface IIntentRuntimeService {
     /**
      * Adds an IntentInstaller associated with a given intent type.
      *
+     * <p>
      * If there is an Intent instance of the specified Intent type in the runtime,
      * the specified IntentInstaller doesn't replace the existing installer.
      * Otherwise, the existing installer is replaced with the specified installer.
+     * </p>
      *
      * @param type the class instance of the intent type.
      * @param installer the installer of the given intent type.
@@ -96,9 +102,11 @@ public interface IIntentRuntimeService {
     /**
      * Removes the IntentInstaller associated with a given intent type.
      *
+     * <p>
      * If there is an Intent instance of the specified Intent type in the runtime,
      * the specified IntentInstaller is not removed. Otherwise, the existing
      * IntentInstaller is removed from the runtime.
+     * </p>
      *
      * @param type the class instance of the intent type.
      * @param <T> the type of the intent.

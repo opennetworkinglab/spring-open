@@ -7,17 +7,23 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * The base class of an intent type.
-
+ *
+ * <p>
  * This class is sub-classed to provide other intent types like shortest path
  * connectivity and bandwidth constrained shortest path connectivity.
-
+ * </p>
+ *
+ * <p>
  * The reasoning behind "intent" is that the applications can provide some
  * abstract representation of how traffic should flow be handled by the
  * networking, allowing the network OS to compile, reserve and optimize the
  * data-plane to satisfy those constraints.
+ * </p>
  *
+ * <p>
  * It is assumed that any kinds of intents are immutable.
  * Developers that will define a new intent type should ensure its immutability.
+ * </p>
  */
 public abstract class Intent implements IBatchOperationTarget {
     private final IntentId id;
