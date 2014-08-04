@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentMap;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
@@ -27,7 +29,8 @@ import com.hazelcast.core.HazelcastInstance;
  * The relevant data is stored in the Hazelcast datagrid and shared as
  * appropriate in a multi-node cluster.
  */
-public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
+public class HazelcastDatagrid implements IFloodlightModule, IDatagridService,
+        ISharedCollectionsService {
     static final Logger log = LoggerFactory.getLogger(HazelcastDatagrid.class);
 
     /**
@@ -119,6 +122,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
         Collection<Class<? extends IFloodlightService>> l =
                 new ArrayList<Class<? extends IFloodlightService>>();
         l.add(IDatagridService.class);
+        l.add(ISharedCollectionsService.class);
         return l;
     }
 
@@ -135,6 +139,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
                 new HashMap<Class<? extends IFloodlightService>,
                         IFloodlightService>();
         m.put(IDatagridService.class, this);
+        m.put(ISharedCollectionsService.class, this);
         return m;
     }
 
@@ -306,4 +311,31 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService {
             }
         }
     }
+
+    /**
+     * Create an shared, concurrent map.
+     *
+     * @param mapName the shared map name.
+     * @param typeK the type of the Key in the map.
+     * @param typeV the type of the Value in the map.
+     * @return the shared map for the channel name.
+     */
+    @Override
+    public <K, V> ConcurrentMap<K, V> getConcurrentMap(String mapName, Class<K> typeK,
+            Class<V> typeV) {
+        return hazelcastInstance.getMap(mapName);
+    }
+
+    /**
+     * Create an shared, blocking queue.
+     *
+     * @param queueName the shared queue name.
+     * @param typeT the type of the queue.
+     * @return the shared queue for the queue name.
+     */
+    @Override
+    public <T> BlockingQueue<T> getBlockingQueue(String queueName, Class<T> typeT) {
+        return hazelcastInstance.getQueue(queueName);
+    }
+
 }
