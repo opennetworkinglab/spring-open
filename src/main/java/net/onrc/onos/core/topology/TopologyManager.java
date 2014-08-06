@@ -513,7 +513,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @Override
     public void removeSwitchMastershipEvent(MastershipEvent mastershipEvent) {
         // Send out notification
-        eventChannel.removeEntry(mastershipEvent.getID());
+        TopologyEvent topologyEvent =
+            new TopologyEvent(mastershipEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.removeEntry(topologyEvent.getID());
     }
 
     /**
@@ -587,6 +590,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      */
     @Override
     public void removeSwitchDiscoveryEvent(SwitchEvent switchEvent) {
+        TopologyEvent topologyEvent;
+
         // Get the old Port Events
         Map<ByteBuffer, PortEvent> oldPortEvents =
                 discoveredAddedPortEvents.get(switchEvent.getDpid());
@@ -597,7 +602,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         if (datastore.deactivateSwitch(switchEvent, oldPortEvents.values())) {
             log.debug("Sending remove switch: {}", switchEvent);
             // Send out notification
-            eventChannel.removeEntry(switchEvent.getID());
+            topologyEvent =
+                new TopologyEvent(switchEvent,
+                                  registryService.getOnosInstanceId());
+            eventChannel.removeEntry(topologyEvent.getID());
 
             //
             // Send out notification for each port.
@@ -608,7 +616,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             //
             for (PortEvent portEvent : oldPortEvents.values()) {
                 log.debug("Sending remove port:", portEvent);
-                eventChannel.removeEntry(portEvent.getID());
+                topologyEvent =
+                    new TopologyEvent(portEvent,
+                                      registryService.getOnosInstanceId());
+                eventChannel.removeEntry(topologyEvent.getID());
             }
             discoveredAddedPortEvents.remove(switchEvent.getDpid());
 
@@ -672,7 +683,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         if (datastore.deactivatePort(portEvent)) {
             log.debug("Sending remove port: {}", portEvent);
             // Send out notification
-            eventChannel.removeEntry(portEvent.getID());
+            TopologyEvent topologyEvent =
+                new TopologyEvent(portEvent,
+                                  registryService.getOnosInstanceId());
+            eventChannel.removeEntry(topologyEvent.getID());
 
             // Cleanup the Port Event from the local cache
             Map<ByteBuffer, PortEvent> oldPortEvents =
@@ -754,7 +768,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         if (datastore.removeLink(linkEvent)) {
             log.debug("Sending remove link: {}", linkEvent);
             // Send out notification
-            eventChannel.removeEntry(linkEvent.getID());
+            TopologyEvent topologyEvent =
+                new TopologyEvent(linkEvent,
+                                  registryService.getOnosInstanceId());
+            eventChannel.removeEntry(topologyEvent.getID());
 
             // Cleanup the Link Event from the local cache
             Map<ByteBuffer, LinkEvent> oldLinkEvents =
@@ -806,7 +823,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     public void removeHostDiscoveryEvent(HostEvent hostEvent) {
         if (datastore.removeHost(hostEvent)) {
             // Send out notification
-            eventChannel.removeEntry(hostEvent.getID());
+            TopologyEvent topologyEvent =
+                new TopologyEvent(hostEvent,
+                                  registryService.getOnosInstanceId());
+            eventChannel.removeEntry(topologyEvent.getID());
             log.debug("Remove the host info into the cache of the topology. mac {}", hostEvent.getMac());
 
             // Cleanup the Host Event from the local cache

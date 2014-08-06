@@ -95,7 +95,7 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
 
     @Override
     public String toString() {
-        return "[SwitchEvent 0x" + Long.toHexString(dpid.value()) + "]";
+        return "[SwitchEvent " + dpid + "]";
     }
 
     public static final int SWITCHID_BYTES = 2 + 8;

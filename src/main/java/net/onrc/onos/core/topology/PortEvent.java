@@ -134,7 +134,7 @@ public class PortEvent extends TopologyElement<PortEvent> {
 
     @Override
     public String toString() {
-        return "[PortEvent 0x" + getDpid() + "@" + getPortNumber() + "]";
+        return "[PortEvent " + getDpid() + "@" + getPortNumber() + "]";
     }
 
     public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
