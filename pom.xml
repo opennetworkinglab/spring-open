@@ -702,7 +702,7 @@
     <dependency>
       <groupId>org.projectfloodlight</groupId>
       <artifactId>openflowj</artifactId>
-      <version>0.3.4-SNAPSHOT</version>
+      <version>0.3.8-SNAPSHOT</version>
     </dependency>
     <!-- Floodlight's dependencies -->
     <dependency>

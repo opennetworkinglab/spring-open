@@ -13,7 +13,7 @@ import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.match.Match.Builder;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.EthType;
-import org.projectfloodlight.openflow.types.IPv4AddressWithMask;
+import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFPort;
 
@@ -150,13 +150,13 @@ public class Match {
         }
         if (srcIp != ShortestPathIntent.EMPTYIPADDRESS) {
             matchBuilder.setExact(MatchField.ETH_TYPE, EthType.IPv4)
-                    .setMasked(MatchField.IPV4_SRC,
-                            IPv4AddressWithMask.of(srcIp, IPV4_PREFIX_LEN));
+            .setMasked(MatchField.IPV4_SRC,
+                    IPv4Address.of(srcIp).withMaskOfLength(IPV4_PREFIX_LEN));
         }
         if (dstIp != ShortestPathIntent.EMPTYIPADDRESS) {
             matchBuilder.setExact(MatchField.ETH_TYPE, EthType.IPv4)
-                    .setMasked(MatchField.IPV4_DST,
-                            IPv4AddressWithMask.of(dstIp, IPV4_PREFIX_LEN));
+            .setMasked(MatchField.IPV4_DST,
+                    IPv4Address.of(dstIp).withMaskOfLength(IPV4_PREFIX_LEN));
         }
         matchBuilder.setExact(MatchField.IN_PORT, OFPort.of((int) srcPort));
 
