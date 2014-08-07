@@ -70,9 +70,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     private TopologyDatastore datastore;
     private final TopologyImpl topology = new TopologyImpl();
     private final IControllerRegistryService registryService;
-    private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
     private Kryo kryo = KryoFactory.newKryoObject();
     private TopologyEventPreprocessor eventPreprocessor;
+    private CopyOnWriteArrayList<ITopologyListener> topologyListeners =
+        new CopyOnWriteArrayList<>();
 
     //
     // Metrics
@@ -120,12 +121,13 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     //     driver module, since the invariant may be different on optical, etc.
     //
     // What happens on leadership change?
-    //  - Probably should: remove from discovered.. Maps, but not send DELETE events
-    //     XXX Switch/Port can be rediscovered by new leader, but Link, Host?
+    //  - Probably should: remove from discovered.. Maps, but not send DELETE
+    //    events
+    //    XXX Switch/Port can be rediscovered by new leader, but Link, Host?
     //  - Current: There is no way to recognize leadership change?
     //      ZookeeperRegistry.requestControl(long, ControlChangeCallback)
-    //      is the only way to register listener, and it allows only 1 listener,
-    //      which is already used by Controller class.
+    //      is the only way to register listener, and it allows only one
+    //      listener, which is already used by Controller class.
     //
     // FIXME Replace with concurrent variant.
     //   #removeSwitchDiscoveryEvent(SwitchEvent) runs in different thread.
@@ -136,6 +138,13 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             new HashMap<>();
     private Map<Dpid, Map<ByteBuffer, HostEvent>> discoveredAddedHostEvents =
             new HashMap<>();
+
+    //
+    // Local state for keeping the last ADD Mastership Event entries.
+    // TODO: In the future, we might have to keep this state somewhere else.
+    //
+    private Map<ByteBuffer, MastershipEvent> lastAddMastershipEvents =
+        new HashMap<>();
 
     //
     // Local state for keeping track of the application event notifications
@@ -160,13 +169,10 @@ public class TopologyManager implements TopologyDiscoveryInterface {
      * Constructor.
      *
      * @param registryService the Registry Service to use.
-     * @param topologyListeners the collection of topology listeners to use.
      */
-    public TopologyManager(IControllerRegistryService registryService,
-                           CopyOnWriteArrayList<ITopologyListener> topologyListeners) {
+    public TopologyManager(IControllerRegistryService registryService) {
         datastore = new TopologyDatastore();
         this.registryService = registryService;
-        this.topologyListeners = topologyListeners;
         this.eventPreprocessor =
             new TopologyEventPreprocessor(registryService);
     }
@@ -207,8 +213,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
 
             for (TopologyEvent topologyEvent : allTopologyEvents) {
                 EventEntry<TopologyEvent> eventEntry =
-                        new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                topologyEvent);
+                    new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
+                                                  topologyEvent);
                 events.add(eventEntry);
             }
             processEvents(events);
@@ -388,6 +394,25 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 byte[].class,
                 TopologyEvent.class);
         eventHandler.start();
+    }
+
+    /**
+     * Registers a listener for topology events.
+     *
+     * @param listener the listener to register
+     */
+    void registerTopologyListener(ITopologyListener listener) {
+        topologyListeners.addIfAbsent(listener);
+    }
+
+    /**
+     * Deregisters a listener for topology events. The listener will no longer
+     * receive topology events after this call.
+     *
+     * @param listener the listener to deregister
+     */
+    void deregisterTopologyListener(ITopologyListener listener) {
+        topologyListeners.remove(listener);
     }
 
     /**
@@ -796,7 +821,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 new TopologyEvent(hostEvent,
                                   registryService.getOnosInstanceId());
             eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
-            log.debug("Put the host info into the cache of the topology. mac {}", hostEvent.getMac());
+            log.debug("Put the host info into the cache of the topology. mac {}",
+                      hostEvent.getMac());
 
             // Store the new Host Event in the local cache
             // TODO: The implementation below is probably wrong
@@ -827,7 +853,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                 new TopologyEvent(hostEvent,
                                   registryService.getOnosInstanceId());
             eventChannel.removeEntry(topologyEvent.getID());
-            log.debug("Remove the host info into the cache of the topology. mac {}", hostEvent.getMac());
+            log.debug("Remove the host info into the cache of the topology. mac {}",
+                      hostEvent.getMac());
 
             // Cleanup the Host Event from the local cache
             // TODO: The implementation below is probably wrong
@@ -855,6 +882,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @GuardedBy("topology.writeLock")
     private boolean addMastershipEvent(MastershipEvent mastershipEvent) {
         log.debug("Added Mastership event {}", mastershipEvent);
+        lastAddMastershipEvents.put(mastershipEvent.getIDasByteBuffer(),
+                                    mastershipEvent);
         apiAddedMastershipEvents.add(mastershipEvent);
         return true;
     }
@@ -867,6 +896,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
     @GuardedBy("topology.writeLock")
     private void removeMastershipEvent(MastershipEvent mastershipEvent) {
         log.debug("Removed Mastership event {}", mastershipEvent);
+        lastAddMastershipEvents.remove(mastershipEvent.getIDasByteBuffer());
         apiRemovedMastershipEvents.add(mastershipEvent);
     }
 
@@ -1078,7 +1108,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
                     log.error("Host {} on Port {} should have been removed prior to adding Link {}",
                             host, port, linkEvent);
 
-                    HostEvent hostEvent = topology.getHostEvent(host.getMacAddress());
+                    HostEvent hostEvent =
+                        topology.getHostEvent(host.getMacAddress());
                     hostsToUpdate.add(hostEvent);
                 }
             }
@@ -1149,7 +1180,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
 
             Link linkIn = dstPort.getIncomingLink(linkEvent.getType());
             if (linkIn == null) {
-                log.warn("Link {} already removed on destination Port", linkEvent);
+                log.warn("Link {} already removed on destination Port",
+                         linkEvent);
             }
             Link linkOut = srcPort.getOutgoingLink(linkEvent.getType());
             if (linkOut == null) {
@@ -1194,7 +1226,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
             // Attached Ports must exist
             Port port = topology.getPort(swp.getDpid(), swp.getPortNumber());
             if (port == null) {
-                log.debug("{} reordered because port {} was not there", hostEvent, swp);
+                log.debug("{} reordered because port {} was not there",
+                          hostEvent, swp);
                 // Reordered event
                 return false; // should not continue if re-applying later
             }
@@ -1219,7 +1252,8 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         if (attachmentFound) {
             if (modifiedHostEvent.getAttachmentPoints().isEmpty()) {
                 log.warn("No valid attachment point left. Ignoring."
-                        + "original: {}, modified: {}", hostEvent, modifiedHostEvent);
+                        + "original: {}, modified: {}",
+                         hostEvent, modifiedHostEvent);
                 // TODO Should we call #removeHost to trigger remove event?
                 //      only if this call is update.
                 return false;

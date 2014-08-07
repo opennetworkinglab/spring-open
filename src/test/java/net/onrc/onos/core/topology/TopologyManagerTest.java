@@ -60,7 +60,6 @@ public class TopologyManagerTest extends UnitTest {
     private IDatagridService datagridService;
     private TopologyDatastore dataStoreService;
     private IControllerRegistryService registryService;
-    private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
     private Collection<TopologyEvent> allTopologyEvents;
     private static final OnosInstanceId ONOS_INSTANCE_ID_1 =
         new OnosInstanceId("ONOS-Instance-ID-1");
@@ -170,9 +169,7 @@ public class TopologyManagerTest extends UnitTest {
      */
     private void setupTopologyManager() {
         // Create a TopologyManager object for testing
-        topologyListeners = new CopyOnWriteArrayList<>();
-        theTopologyManager = new TopologyManager(registryService,
-                                                 topologyListeners);
+        theTopologyManager = new TopologyManager(registryService);
 
         // Replace the eventHandler to prevent the thread from starting
         TestUtils.setField(theTopologyManager, "eventHandler",
@@ -188,10 +185,9 @@ public class TopologyManagerTest extends UnitTest {
      */
     private void setupTopologyManagerWithEventHandler() {
         // Create a TopologyManager object for testing
-        topologyListeners = new CopyOnWriteArrayList<>();
-        topologyListeners.add(theTopologyListener);
-        theTopologyManager = new TopologyManager(registryService,
-                                                 topologyListeners);
+        theTopologyManager = new TopologyManager(registryService);
+        theTopologyManager.registerTopologyListener(theTopologyListener);
+
         // Allocate the Event Handler, so we can have direct access to it
         theEventHandler = theTopologyManager.new EventHandler();
         TestUtils.setField(theTopologyManager, "eventHandler",

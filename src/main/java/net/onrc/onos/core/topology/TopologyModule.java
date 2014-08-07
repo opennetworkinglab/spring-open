@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
@@ -23,9 +22,6 @@ public class TopologyModule implements IFloodlightModule, ITopologyService {
     private TopologyManager topologyManager;
     private IDatagridService datagridService;
     private IControllerRegistryService registryService;
-
-    private CopyOnWriteArrayList<ITopologyListener> topologyListeners;
-
     private IRestApiService restApi;
 
     @Override
@@ -61,9 +57,7 @@ public class TopologyModule implements IFloodlightModule, ITopologyService {
         restApi = context.getServiceImpl(IRestApiService.class);
         datagridService = context.getServiceImpl(IDatagridService.class);
         registryService = context.getServiceImpl(IControllerRegistryService.class);
-
-        topologyListeners = new CopyOnWriteArrayList<>();
-        topologyManager = new TopologyManager(registryService, topologyListeners);
+        topologyManager = new TopologyManager(registryService);
     }
 
     @Override
@@ -84,12 +78,11 @@ public class TopologyModule implements IFloodlightModule, ITopologyService {
 
     @Override
     public void registerTopologyListener(ITopologyListener listener) {
-        topologyListeners.addIfAbsent(listener);
+        topologyManager.registerTopologyListener(listener);
     }
 
     @Override
     public void deregisterTopologyListener(ITopologyListener listener) {
-        topologyListeners.remove(listener);
+        topologyManager.deregisterTopologyListener(listener);
     }
-
 }
