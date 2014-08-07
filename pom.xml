@@ -662,9 +662,9 @@
       <version>2.4.1</version>
     </dependency>
     <dependency>
-      <!-- findbugs suppression annotation -->
+      <!-- findbugs suppression annotation and @GuardedBy, etc. -->
       <groupId>com.google.code.findbugs</groupId>
-      <artifactId>findbugs</artifactId>
+      <artifactId>annotations</artifactId>
       <version>${findbugs.version}</version>
     </dependency>
     <dependency>
