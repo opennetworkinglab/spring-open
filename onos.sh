@@ -95,8 +95,10 @@ ONOS_LOG="${LOGDIR}/${LOGBASE}.log"
 ONOS_LOG_ROLLING_PATTERN="${LOGDIR}/${LOGBASE}.%i.log.gz"
 ONOS_STDOUT_LOG="${LOGDIR}/${LOGBASE}.stdout"
 ONOS_STDERR_LOG="${LOGDIR}/${LOGBASE}.stderr"
+ONOS_COMPILATION_LOG="${LOGDIR}/compilation.${ONOS_HOST_NAME}.log"
+ONOS_GC_LOG="${LOGDIR}/gc.${ONOS_HOST_NAME}.log"
 PCAP_LOG="${LOGDIR}/${LOGBASE}.pcap"
-LOGS="$ONOS_LOG $ONOS_STDOUT_LOG $ONOS_STDERR_LOG $PCAP_LOG"
+LOGS="$ONOS_LOG $ONOS_STDOUT_LOG $ONOS_STDERR_LOG $ONOS_COMPILATION_LOG $ONOS_GC_LOG $PCAP_LOG"
 
 ONOS_PROPS=${ONOS_PROPS:-${ONOS_CONF_DIR}/onos.properties}
 JMX_PORT=${JMX_PORT:-7189}
@@ -161,12 +163,12 @@ if [ "${ONOS_DEBUG}" == "true" ]; then
   # Compilation diagnosis
   JVM_OPTS="$JVM_OPTS -XX:+UnlockDiagnosticVMOptions"
   JVM_OPTS="$JVM_OPTS -XX:+LogCompilation"
-  JVM_OPTS="$JVM_OPTS -XX:LogFile=${LOGDIR}/compilation.${ONOS_HOST_NAME}.log"
+  JVM_OPTS="$JVM_OPTS -XX:LogFile=${ONOS_COMPILATION_LOG}"
 
   # GC diagnosis
   JVM_OPTS="$JVM_OPTS -verbose:gc"
   JVM_OPTS="$JVM_OPTS -verbose:sizes"
-  JVM_OPTS="$JVM_OPTS -Xloggc:${LOGDIR}/gc.${ONOS_HOST_NAME}.log"
+  JVM_OPTS="$JVM_OPTS -Xloggc:${ONOS_GC_LOG}"
   JVM_OPTS="$JVM_OPTS -XX:GCLogFileSize=1G"
   JVM_OPTS="$JVM_OPTS -XX:+PrintGCDetails"
   JVM_OPTS="$JVM_OPTS -XX:+PrintGCTimeStamps"
@@ -240,6 +242,41 @@ function rotate-log {
       fi
     done
     mv ${basename}${append} ${basename}.1${append}
+  fi
+}
+
+# pack-rotate-log [packname] "[log-filenames]" [max rotations]
+# Note: [packname] and all the log-files specified by [log-filenames]
+#       must reside in same dir
+# Example:
+#  pack="/foo/bar/testlogs"
+#  logfiles="/foo/bar/test1.log /foo/bar/test*.log"
+#  pack-rotate-log $pack "$logfiles" 5
+#   => testlogs.tar.bz2 (contain test1.log test2.log ...)
+#      testlogs.tar.bz2 -> testlogs.1.tar.bz2
+#      testlogs.1.tar.bz2 -> testlogs.2.tar.bz2
+#      ...
+function pack-rotate-log {
+  local packname=$1
+  local logfiles=$2
+  local nr_max=${3:-10}
+  local suffix=".tar.bz2"
+
+  # rotate
+  for i in `seq $(expr $nr_max - 1) -1 1`; do
+    if [ -f ${packname}.${i}${suffix} ]; then
+      mv -f -- ${packname}.${i}${suffix} ${packname}.`expr $i + 1`${suffix}
+    fi
+  done
+  if [ -f ${packname}${suffix} ]; then
+    mv -- ${packname}${suffix} ${packname}.1${suffix}
+  fi
+
+  # pack
+  local existing_logfiles=$( ls -1 $logfiles | xargs basename 2>/dev/null )
+  if [ ! -z "${existing_logfiles}" ]; then
+    tar cjf ${packname}${suffix} -C `dirname ${packname}` -- ${existing_logfiles}
+    rm -- `dirname ${packname}`/${existing_logfiles}
   fi
 }
 
@@ -486,7 +523,7 @@ function create-confs {
 function zk {
   case "$1" in
     start)
-      start-zk
+      check-and-start-zk
       ;;
     stop)
       stop-zk
@@ -518,16 +555,24 @@ function load-zk-cfg {
 function start-zk {
   echo -n "Starting ZooKeeper ... "
   
+  # CONSOLE output dir
   export ZOO_LOG_DIR=${ZK_LOG_DIR}
   mkdir -p ${ZK_LOG_DIR}
   
   load-zk-cfg
 
+  # level,appender
+  export ZOO_LOG4J_PROP="INFO,ROLLINGFILE"
+  # ROLLINGFILE : ${zookeeper.log.dir}/${zookeeper.log.file}
+  local server_jvm="-Dzookeeper.log.dir=${LOGDIR} -Dzookeeper.log.file=zk.${ONOS_HOST_NAME}.log"
+
+  pack-rotate-log "${LOGDIR}/zk.${ONOS_HOST_NAME}" "${LOGDIR}/zk.${ONOS_HOST_NAME}.log*"
+
   # log4j.properties is read from classpath if not found in CWD.
   # Using the ZooKeeper supplied default in ZooKeeper conf dir.
   # TODO: To explicitly specify our customized log4j config file:
   #  export SERVER_JVMFLAGS="-Dlog4j.configuration=${ZK_LOG4J}"
-  env CLASSPATH="${ZK_HOME}/conf:${CLASSPATH}" ${ZK_HOME}/bin/zkServer.sh start
+  env CLASSPATH="${ZK_HOME}/conf:${CLASSPATH}" SERVER_JVMFLAGS="${server_jvm}" ${ZK_HOME}/bin/zkServer.sh start
 }
 
 function stop-zk {
@@ -558,6 +603,8 @@ function check-and-start-zk {
   local zk_status=$?
   if [ "$zk_status" -ne 0 ]; then
     start-zk
+  else
+    echo "ZooKeeper already running"
   fi
 }
 
