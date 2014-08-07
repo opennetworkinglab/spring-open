@@ -258,7 +258,7 @@ class ONOS( Controller ):
         start = time.time()
         self.setVarsLocal( id )
         self.stopONOS( id )
-        self.cmd( 'onos.sh core startnokill' )
+        self.cmd( 'onos.sh core unchecked-start' )
         # onos.sh waits for ONOS startup
         elapsed = time.time() - start
         info( '* ONOS %s started in %.2f seconds\n' % ( id, elapsed ) )

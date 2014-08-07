@@ -737,11 +737,7 @@ function rc-server-addr {
 
 function rc-coord {
   case "$1" in
-    start)
-      stop-coord
-      start-coord
-      ;;
-    startifdown)
+    start*) # <- start, startifdown
       local n=`pgrep -f obj.${RAMCLOUD_BRANCH}/coordinator | wc -l`
       if [ $n == 0 ]; then
         start-coord
@@ -755,6 +751,10 @@ function rc-coord {
     deldb)
       stop-backend
       del-coord-info
+      ;;
+    re*)   # <- restart
+      stop-coord
+      start-coord
       ;;
     stat*) # <- status
       local n=`pgrep -f obj.${RAMCLOUD_BRANCH}/coordinator | wc -l`
@@ -867,11 +867,7 @@ function stop-coord {
 ### Functions related to RAMCloud server
 function rc-server {
   case "$1" in
-    start)
-      stop-server
-      start-server
-      ;;
-    startifdown)
+    start*) # <- start, startifdown
       local n=`pgrep -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server | wc -l`
       if [ $n == 0 ]; then
         start-server
@@ -885,6 +881,10 @@ function rc-server {
     deldb)
       stop-server
       del-server-backup
+      ;;
+    re*)   # <- restart
+      stop-server
+      start-server
       ;;
     stat*) # <- status
       n=`pgrep -f ${RAMCLOUD_HOME}/obj.${RAMCLOUD_BRANCH}/server | wc -l`
@@ -981,14 +981,7 @@ function onos {
   JAVA_CP="${JAVA_CP}:${ONOS_HOME}/target/classes"
 
   case "$1" in
-    start)
-      stop-onos
-      start-onos
-      ;;
-    startnokill)
-      start-onos
-      ;;
-    startifdown)
+    start*) # <- start, startnokill, startifdown
       n=`jps -l | grep "${MAIN_CLASS}" | wc -l`
       if [ $n == 0 ]; then
         start-onos
@@ -996,8 +989,15 @@ function onos {
         echo "$n instance of onos running"
       fi
       ;;
+    unchecked-start)
+      start-onos
+      ;;
     stop)
       stop-onos
+      ;;
+    re*)   # <- restart
+      stop-onos
+      start-onos
       ;;
     stat*) # <- status
       n=`jps -l | grep "${MAIN_CLASS}" | wc -l`
