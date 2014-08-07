@@ -249,30 +249,30 @@ public final class TopologyEvent {
         //
         // Get the Event string
         //
-        do {
+        stringLabel: {
             if (mastershipEvent != null) {
                 eventStr = mastershipEvent.toString();
-                break;
+                break stringLabel;
             }
             if (switchEvent != null) {
                 eventStr = switchEvent.toString();
-                break;
+                break stringLabel;
             }
             if (portEvent != null) {
                 eventStr = portEvent.toString();
-                break;
+                break stringLabel;
             }
             if (linkEvent != null) {
                 eventStr = linkEvent.toString();
-                break;
+                break stringLabel;
             }
             if (hostEvent != null) {
                 eventStr = hostEvent.toString();
-                break;
+                break stringLabel;
             }
             // No event found
             return "[Empty TopologyEvent]";
-        } while (false);
+        }
 
         return "[TopologyEvent " + eventStr + " from " +
             onosInstanceId.toString() + "]";
@@ -298,36 +298,37 @@ public final class TopologyEvent {
         //
         // Get the Event ID
         //
-        do {
+        idLabel: {
             if (mastershipEvent != null) {
                 eventId = mastershipEvent.getIDasByteBuffer();
-                break;
+                break idLabel;
             }
             if (switchEvent != null) {
                 eventId = switchEvent.getIDasByteBuffer();
-                break;
+                break idLabel;
             }
             if (portEvent != null) {
                 eventId = portEvent.getIDasByteBuffer();
-                break;
+                break idLabel;
             }
             if (linkEvent != null) {
                 eventId = linkEvent.getIDasByteBuffer();
-                break;
+                break idLabel;
             }
             if (hostEvent != null) {
                 eventId = hostEvent.getIDasByteBuffer();
-                break;
+                break idLabel;
             }
             // No event found
             throw new IllegalStateException("Invalid TopologyEvent ID");
-        } while (false);
+        }
 
         //
         // Prepare the ONOS Instance ID. The '@' separator is needed to avoid
         // potential key collisions.
         //
-        byte[] onosId = ("@" + onosInstanceId.toString()).getBytes(StandardCharsets.UTF_8);
+        byte[] onosId =
+            ("@" + onosInstanceId.toString()).getBytes(StandardCharsets.UTF_8);
 
         // Concatenate the IDs
         ByteBuffer buf =
