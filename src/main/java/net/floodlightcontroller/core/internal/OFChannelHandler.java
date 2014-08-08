@@ -421,11 +421,11 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             }
 
             if (pendingRole == role) {
+                requestPending = false; // we got what we were waiting for
                 log.debug("Received role reply message from {} that matched "
                         + "expected role-reply {} with expectations {}",
                         new Object[] {getSwitchInfoString(), role, expectation});
                 counters.roleReplyReceived.updateCounterWithFlush();
-                //setSwitchRole(role, RoleRecvStatus.RECEIVED_REPLY); dont want to set state here
                 if (expectation == RoleRecvStatus.MATCHED_CURRENT_ROLE ||
                         expectation == RoleRecvStatus.MATCHED_SET_ROLE) {
                     return expectation;
@@ -435,9 +435,16 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             }
 
             // if xids match but role's don't, perhaps its a query (OF1.3)
-            if (expectation == RoleRecvStatus.REPLY_QUERY)
+            if (expectation == RoleRecvStatus.REPLY_QUERY) {
+                requestPending = false; // again we got what we were waiting for
                 return expectation;
+            }
 
+            // It is not clear what this role-reply was about, since it is not
+            // a query and it did not match the pendingRole. But since the xid's
+            // matched, we state that we received what we were waiting for, and
+            // let the caller handle it
+            requestPending = false;
             return RoleRecvStatus.OTHER_EXPECTATION;
         }
 
@@ -467,6 +474,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                 return RoleRecvStatus.OTHER_EXPECTATION;
             }
             // it is an error related to a currently pending role request message
+            requestPending = false; // we got a response, even though it is an error
             if (error.getErrType() == OFErrorType.BAD_REQUEST) {
                 counters.roleReplyErrorUnsupported.updateCounterWithFlush();
                 log.error("Received a error msg {} from sw {} in state {} for "
@@ -513,10 +521,13 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Check if a pending role request has timed out.
+         *
+         * @throws SwitchStateException
          */
-        void checkTimeout() {
-            if (!requestPending)
+        void checkTimeout() throws SwitchStateException {
+            if (!requestPending) {
                 return;
+            }
             synchronized(this) {
                 if (!requestPending)
                     return;
@@ -524,8 +535,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                 if (now - roleSubmitTime > roleTimeoutMs) {
                     // timeout triggered.
                     counters.roleReplyTimeout.updateCounterWithFlush();
-                    //setSwitchRole(pendingRole, RoleRecvStatus.NO_REPLY);
-                    // XXX S come back to this
+                    state.handleTimedOutRoleReply(OFChannelHandler.this, pendingRole);
                 }
             }
         }
@@ -1823,6 +1833,25 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         void handleUnsentRoleMessage(OFChannelHandler h, Role role,
 			RoleRecvStatus expectation) throws IOException {
 		// do nothing in most states
+        }
+
+        /**
+         * Handles role request messages that have timed out.
+         * <p>
+         * Role request messages that don't get role-replies (or errors related
+         * to the request) time out after DEFAULT_ROLE_TIMEOUT_MS secs, at which
+         * time the controller state-machine disconnects the switch
+         *
+         * @param h the channel handler for this switch
+         * @param pendingRole the role for which no reply was received
+         * @throws SwitchStateException
+         */
+        public void handleTimedOutRoleReply(OFChannelHandler h,
+                Role pendingRole) throws SwitchStateException {
+            String msg = String.format("Switch: [%s] State: [%s] did not "
+                    + "reply to role-msg for pending role %s. Disconnecting ...",
+                    h.getSwitchInfoString(), this.toString(), pendingRole);
+            throw new SwitchStateException(msg);
         }
     }
 
