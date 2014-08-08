@@ -17,13 +17,6 @@
 
 package net.floodlightcontroller.core.web;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.openflow.protocol.statistics.OFStatisticsType;
-import org.restlet.resource.Get;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Return switch statistics information for specific switches
@@ -31,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * @author readams
  */
 public class SwitchStatisticsResource extends SwitchResourceBase {
-    protected final static Logger log =
+    /*protected final static Logger log =
             LoggerFactory.getLogger(SwitchStatisticsResource.class);
 
     @Get("json")
@@ -60,5 +53,5 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
 
         result.put(switchId, values);
         return result;
-    }
+    }*/
 }

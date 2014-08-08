@@ -62,13 +62,6 @@ import org.apache.commons.configuration.ConfigurationRuntimeException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.openflow.protocol.OFFlowMod;
-import org.openflow.protocol.OFMatch;
-import org.openflow.protocol.OFPacketOut;
-import org.openflow.protocol.OFPort;
-import org.openflow.protocol.action.OFAction;
-import org.openflow.protocol.action.OFActionOutput;
-import org.openflow.util.HexString;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,7 +153,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     // private Multimap<Prefix, PushedFlowMod> pushedFlows;
     private Multimap<Prefix, FlowId> pushedFlowIds;
 
-    private FlowCache flowCache;
+    // XXX FlowCache has been removed
+    //private FlowCache flowCache;
 
     // TODO: Fix for the new Topology Network Graph
     // private volatile Topology topology = null;
@@ -305,7 +299,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         // pushedFlows = HashMultimap.<Prefix, PushedFlowMod>create();
         pushedFlowIds = HashMultimap.create();
 
-        flowCache = new FlowCache(floodlightProvider);
+        //flowCache = new FlowCache(floodlightProvider);
 
         bgpUpdatesExecutor = Executors.newSingleThreadExecutor(
                 new ThreadFactoryBuilder().setNameFormat("bgp-updates-%d").build());
@@ -1162,8 +1156,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         }
     }
 
-    // TODO wait the priority module of the flow Manager
-    private void setupArpFlows() {
+    // XXX OpenFlow message classes have been removed
+    /*private void setupArpFlows() {
         OFMatch match = new OFMatch();
         match.setDataLayerType(Ethernet.TYPE_ARP);
         match.setWildcards(match.getWildcards() & ~OFMatch.OFPFW_DL_TYPE);
@@ -1191,7 +1185,6 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         }
     }
 
-    // TODO need update, waiting for the priority feature from flow Manager
     private void setupDefaultDropFlows() {
         OFFlowMod fm = new OFFlowMod();
         fm.setMatch(new OFMatch());
@@ -1247,7 +1240,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         for (String strdpid : switches) {
             flowCache.write(HexString.toLong(strdpid), flowModList);
         }
-    }
+    }*/
 
     private void beginRouting() {
         log.debug("Topology is now ready, beginning routing function");
@@ -1469,7 +1462,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             sw.clearAllFlowMods();
         }
 
-        flowCache.switchConnected(sw);
+        //flowCache.switchConnected(sw);
     }
 
     @Override

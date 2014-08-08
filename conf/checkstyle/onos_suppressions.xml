@@ -13,7 +13,6 @@
     <!-- Suppressions for ONOS -->
     <suppress files="edu.stanford.ramcloud.*" checks="[_a-zA-Z0-9]*"/>
     <suppress files="net.floodlightcontroller.*" checks="[_a-zA-Z0-9]*"/>
-    <suppress files="org.openflow.*" checks="[_a-zA-Z0-9]*"/>
     <suppress files="net.onrc.onos.core.datastore.serializers.*" checks="[_a-zA-Z0-9]*"/>
 
     <!-- BigSwitch packet code is designed to use parameter names that override

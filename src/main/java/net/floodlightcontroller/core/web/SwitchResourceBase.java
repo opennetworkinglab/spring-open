@@ -17,30 +17,7 @@
 
 package net.floodlightcontroller.core.web;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.IOFSwitch;
-import net.floodlightcontroller.core.annotations.LogMessageDoc;
-
-import org.openflow.protocol.OFFeaturesReply;
-import org.openflow.protocol.OFMatch;
-import org.openflow.protocol.OFPort;
-import org.openflow.protocol.OFStatisticsRequest;
-import org.openflow.protocol.statistics.OFAggregateStatisticsRequest;
-import org.openflow.protocol.statistics.OFFlowStatisticsRequest;
-import org.openflow.protocol.statistics.OFPortStatisticsRequest;
-import org.openflow.protocol.statistics.OFQueueStatisticsRequest;
-import org.openflow.protocol.statistics.OFStatistics;
-import org.openflow.protocol.statistics.OFStatisticsType;
-import org.openflow.util.HexString;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for server resources related to switches
@@ -49,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class SwitchResourceBase extends ServerResource {
-    protected final static Logger log = LoggerFactory.getLogger(SwitchResourceBase.class);
+    /*protected final static Logger log = LoggerFactory.getLogger(SwitchResourceBase.class);
 
     public enum REQUESTTYPE {
         OFSTATS,
@@ -118,12 +95,12 @@ public class SwitchResourceBase extends ServerResource {
             }
             req.setLengthU(requestLength);
             // XXX S fix when we fix stats
-            /*try {
+            try {
                 future = sw.getStatistics(req);
                 values = future.get(10, TimeUnit.SECONDS);
             } catch (Exception e) {
                 log.error("Failure retrieving statistics from switch " + sw, e);
-            }*/
+            }
         }
         return values;
     }
@@ -141,13 +118,13 @@ public class SwitchResourceBase extends ServerResource {
         Future<OFFeaturesReply> future;
         OFFeaturesReply featuresReply = null;
         if (sw != null) {
-		// XXX S fix when we fix stats
-            /*try {
+        	// XXX S fix when we fix stats
+            try {
                 future = sw.getFeaturesReplyFromSwitch();
                 featuresReply = future.get(10, TimeUnit.SECONDS);
             } catch (Exception e) {
                 log.error("Failure getting features reply from switch" + sw, e);
-            }*/
+            }
         }
 
         return featuresReply;
@@ -155,6 +132,6 @@ public class SwitchResourceBase extends ServerResource {
 
     protected OFFeaturesReply getSwitchFeaturesReply(String switchId) {
         return getSwitchFeaturesReply(HexString.toLong(switchId));
-    }
+    }*/
 
 }

@@ -2,8 +2,8 @@ package net.onrc.onos.core.flowprogrammer.web;
 
 import net.floodlightcontroller.core.IOFSwitch;
 
-import org.openflow.util.HexString;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
+import org.projectfloodlight.openflow.util.HexString;
 import org.restlet.resource.Get;
 
 /**

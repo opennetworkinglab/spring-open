@@ -18,7 +18,7 @@ import net.onrc.onos.core.registry.web.RegistryWebRoutable;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

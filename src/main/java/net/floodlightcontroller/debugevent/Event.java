@@ -6,13 +6,14 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.floodlightcontroller.debugevent.IDebugEventService.EventColumn;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.openflow.protocol.OFFlowMod;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.protocol.OFFlowModFlags;
+import org.projectfloodlight.openflow.util.HexString;
 
 public class Event {
     long timestamp;
@@ -117,19 +118,20 @@ public class Event {
                         retMap.put(ec.name(), net.onrc.onos.core.packet.IPv4.fromIPv4Address((Integer) obj));
                         break;
                     case FLOW_MOD_FLAGS:
-                        int flags = (Integer)obj;
+                        @SuppressWarnings("unchecked")
+                        Set<OFFlowModFlags> flags = (Set<OFFlowModFlags>) obj;
                         StringBuilder builder = new StringBuilder();
-                        if (flags == 0) {
+                        if (flags.isEmpty()) {
                             builder.append("None");
                         }
                         else {
-                            if ((flags & OFFlowMod.OFPFF_SEND_FLOW_REM) != 0) {
+                            if (flags.contains(OFFlowModFlags.SEND_FLOW_REM)) {
                                 builder.append("SEND_FLOW_REM ");
                             }
-                            if ((flags & OFFlowMod.OFPFF_CHECK_OVERLAP) != 0) {
+                            if (flags.contains(OFFlowModFlags.CHECK_OVERLAP)) {
                                 builder.append("CHECK_OVERLAP ");
                             }
-                            if ((flags & OFFlowMod.OFPFF_EMERG) != 0) {
+                            if (flags.contains(OFFlowModFlags.EMERG)) {
                                 builder.append("EMERG ");
                             }
                         }

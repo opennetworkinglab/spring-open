@@ -167,7 +167,7 @@
           <charset>UTF-8</charset>
           <locale>en</locale>
           <author>false</author>
-          <excludePackageNames>net.floodlightcontroller.*:org.openflow.*:net.onrc.onos.core.datastore.serializers</excludePackageNames>
+          <excludePackageNames>net.floodlightcontroller.*:net.onrc.onos.core.datastore.serializers</excludePackageNames>
         </configuration>
       </plugin>
 <!-- Remove me when we're sure that system test no longer need JaCoCo
@@ -272,7 +272,6 @@
             </ignores>
             <excludes>
               <exclude>edu/stanford/ramcloud/**/*.class</exclude>
-              <exclude>org/openflow/**/*.class</exclude>
               <exclude>net/floodlightcontroller/**/web/**/*.class</exclude>
             </excludes>
           </instrumentation>
@@ -321,7 +320,6 @@
             <exclude>**/datastore/serializers/**</exclude>
             <exclude>**/edu/stanford/**</exclude>
             <exclude>**/net/floodlightcontroller/**</exclude>
-            <exclude>**/org/openflow/**</exclude>
           </excludes>
           <rulesets>
             <ruleset>${basedir}/conf/pmd/onos_ruleset.xml</ruleset>
@@ -477,7 +475,6 @@
             <exclude>**/datastore/serializers/**</exclude>
             <exclude>**/edu/stanford/**</exclude>
             <exclude>**/net/floodlightcontroller/**</exclude>
-            <exclude>**/org/openflow/**</exclude>
           </excludes>
           <rulesets>
             <ruleset>${basedir}/conf/pmd/onos_ruleset.xml</ruleset>

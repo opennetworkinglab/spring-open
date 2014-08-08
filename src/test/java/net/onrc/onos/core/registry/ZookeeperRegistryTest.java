@@ -35,10 +35,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.openflow.util.HexString;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.projectfloodlight.openflow.util.HexString;
 
 /**
  * Unit test for {@link ZookeeperRegistry}.

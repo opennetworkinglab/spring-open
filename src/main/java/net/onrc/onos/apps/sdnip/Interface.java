@@ -8,7 +8,7 @@ import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 import com.google.common.net.InetAddresses;
 

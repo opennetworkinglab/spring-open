@@ -8,7 +8,7 @@ import net.onrc.onos.core.util.serializers.MACAddressSerializer;
 
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 /**
  * The class representing MAC address.

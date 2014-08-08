@@ -17,21 +17,6 @@
 
 package net.floodlightcontroller.core.web;
 
-import java.lang.Thread.State;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import net.floodlightcontroller.core.IFloodlightProviderService;
-
-import org.openflow.protocol.OFFeaturesReply;
-import org.openflow.protocol.statistics.OFStatistics;
-import org.openflow.protocol.statistics.OFStatisticsType;
-import org.openflow.util.HexString;
-import org.restlet.resource.Get;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Return switch statistics information for all switches
@@ -39,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * @author readams
  */
 public class AllSwitchStatisticsResource extends SwitchResourceBase {
-    protected final static Logger log =
+    /*protected final static Logger log =
             LoggerFactory.getLogger(AllSwitchStatisticsResource.class);
 
     @Get("json")
@@ -93,7 +78,7 @@ public class AllSwitchStatisticsResource extends SwitchResourceBase {
 
         // Join all the threads after the timeout. Set a hard timeout
         // of 12 seconds for the threads to finish. If the thread has not
-        // finished the switch has not replied yet and therefore we won't 
+        // finished the switch has not replied yet and therefore we won't
         // add the switch's stats to the reply.
         for (int iSleepCycles = 0; iSleepCycles < 12; iSleepCycles++) {
             for (GetConcurrentStatsThread curThread : activeThreads) {
@@ -164,5 +149,5 @@ public class AllSwitchStatisticsResource extends SwitchResourceBase {
                 featuresReply = getSwitchFeaturesReply(switchId);
             }
         }
-    }
+    }*/
 }

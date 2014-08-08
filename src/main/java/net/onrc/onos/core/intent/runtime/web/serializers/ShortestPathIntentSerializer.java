@@ -1,15 +1,17 @@
 package net.onrc.onos.core.intent.runtime.web.serializers;
 
 
-import com.google.common.net.InetAddresses;
+import java.io.IOException;
+
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.intent.ShortestPathIntent;
+
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
-import java.io.IOException;
+import com.google.common.net.InetAddresses;
 
 /**
  * JSON serializer for ShortestPathIntents.

@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 // CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**

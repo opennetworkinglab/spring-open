@@ -6,7 +6,7 @@ import java.util.List;
 import net.floodlightcontroller.util.MACAddress;
 
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 /**
  * Contains the configuration data for SDN-IP that has been read from a

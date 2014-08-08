@@ -5,7 +5,7 @@ import net.floodlightcontroller.core.web.serializers.UShortSerializer;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 /**
  * A NodePortTuple is similar to a SwitchPortTuple

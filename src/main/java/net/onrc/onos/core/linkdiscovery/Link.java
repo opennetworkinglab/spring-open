@@ -22,7 +22,7 @@ import net.floodlightcontroller.core.web.serializers.UShortSerializer;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 public final class Link {
     private final long src;

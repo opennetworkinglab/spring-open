@@ -13,7 +13,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.sdnip.Interface;
 
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 public class DefaultConfiguration implements IConfigInfoService, IFloodlightModule {
 

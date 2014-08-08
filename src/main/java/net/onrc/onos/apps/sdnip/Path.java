@@ -1,8 +1,6 @@
 package net.onrc.onos.apps.sdnip;
 
 import java.net.InetAddress;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * A {@link Path} represents paths within a network that forward traffic from
@@ -35,7 +33,8 @@ public class Path {
     private final InetAddress dstIpAddress;
     private int numUsers; // initialized to 0
 
-    private List<PushedFlowMod> flowMods; // initialized to null
+    // XXX PushedFlowMod has been removed
+    //private List<PushedFlowMod> flowMods; // initialized to null
     private boolean permanent; // initialized to false
 
     /**
@@ -97,9 +96,10 @@ public class Path {
      *
      * @return the list of {@link PushedFlowMod}s
      */
-    public List<PushedFlowMod> getFlowMods() {
+    // XXX PushedFlowMod has been removed
+    /*public List<PushedFlowMod> getFlowMods() {
         return Collections.unmodifiableList(flowMods);
-    }
+    }*/
 
     /**
      * Sets the list of flow mods that were installed to realize this path in
@@ -107,9 +107,10 @@ public class Path {
      *
      * @param flowMods the list of {@link PushedFlowMod}s
      */
-    public void setFlowMods(List<PushedFlowMod> flowMods) {
+    // XXX PushedFlowMod has been removed
+    /*public void setFlowMods(List<PushedFlowMod> flowMods) {
         this.flowMods = flowMods;
-    }
+    }*/
 
     /**
      * Signifies whether the path is permanent and shouldn't be deleted when

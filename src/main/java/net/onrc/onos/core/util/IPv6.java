@@ -5,7 +5,7 @@ import net.onrc.onos.core.util.serializers.IPv6Serializer;
 
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 /**
  * The class representing an IPv6 address.

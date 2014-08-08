@@ -13,7 +13,7 @@ import net.onrc.onos.core.util.FlowEntryAction.ActionSetVlanPriority;
 import net.onrc.onos.core.util.FlowEntryAction.ActionStripVlan;
 
 import org.junit.Test;
-import org.openflow.protocol.OFPort;
+import org.projectfloodlight.openflow.types.OFPort;
 
 public class FlowEntryActionTest {
 
@@ -56,7 +56,7 @@ public class FlowEntryActionTest {
         act.setActionOutputToController((short) 0);
 
         FlowEntryAction actCopy = new FlowEntryAction();
-        actCopy.setActionOutput(new PortNumber(OFPort.OFPP_CONTROLLER.getValue()));
+        actCopy.setActionOutput(new PortNumber(OFPort.CONTROLLER.getShortPortNumber()));
 
         FlowEntryAction actCopy2 = new FlowEntryAction(act.toString());
 

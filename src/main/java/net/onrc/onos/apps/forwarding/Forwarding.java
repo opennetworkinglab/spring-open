@@ -40,7 +40,7 @@ import net.onrc.onos.core.util.FlowPath;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,9 +1,7 @@
 package net.onrc.onos.core.flowprogrammer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -11,16 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import net.floodlightcontroller.core.IOFSwitch;
-import net.onrc.onos.core.util.FlowEntryId;
 
-import org.openflow.protocol.OFFlowMod;
-import org.openflow.protocol.OFMatch;
-import org.openflow.protocol.OFPort;
-import org.openflow.protocol.OFStatisticsRequest;
-import org.openflow.protocol.statistics.OFFlowStatisticsReply;
-import org.openflow.protocol.statistics.OFFlowStatisticsRequest;
-import org.openflow.protocol.statistics.OFStatistics;
-import org.openflow.protocol.statistics.OFStatisticsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,7 +182,7 @@ public class FlowSynchronizer implements IFlowSyncService {
          */
         private Set<FlowEntryWrapper> getFlowEntriesFromSwitch() {
 
-            int lengthU = 0;
+            /*int lengthU = 0;
             OFMatch match = new OFMatch();
             match.setWildcards(OFMatch.OFPFW_ALL);
 
@@ -209,7 +198,7 @@ public class FlowSynchronizer implements IFlowSyncService {
             req.setStatisticType(OFStatisticsType.FLOW);
             req.setStatistics(stats);
             lengthU += req.getLengthU();
-            req.setLengthU(lengthU);
+            req.setLengthU(lengthU);*/
 
             //List<OFStatistics> entries = null;
             // XXX S when we fix stats, we fix this
@@ -245,10 +234,10 @@ public class FlowSynchronizer implements IFlowSyncService {
      * by FlowEntryId (from GraphDB) or OFFlowStatisticsReply (from switch).
      */
     static class FlowEntryWrapper {
-        FlowEntryId flowEntryId;
+        //FlowEntryId flowEntryId;
         // TODO: fix when FlowSynchronizer is refactored
         // IFlowEntry iFlowEntry;
-        OFFlowStatisticsReply statisticsReply;
+        //OFFlowStatisticsReply statisticsReply;
 
 
         // TODO: fix when FlowSynchronizer is refactored
@@ -259,10 +248,10 @@ public class FlowSynchronizer implements IFlowSyncService {
     }
          */
 
-        public FlowEntryWrapper(OFFlowStatisticsReply entry) {
+        /*public FlowEntryWrapper(OFFlowStatisticsReply entry) {
             flowEntryId = new FlowEntryId(entry.getCookie());
             statisticsReply = entry;
-        }
+        }*/
 
         /**
          * Install this FlowEntry to a switch via FlowPusher.
@@ -272,13 +261,13 @@ public class FlowSynchronizer implements IFlowSyncService {
         double dbTime, extractTime, pushTime;
 
         public void addToSwitch(IOFSwitch sw) {
-            if (statisticsReply != null) {
+            /*if (statisticsReply != null) {
                 log.error("Error adding existing flow entry {} to sw {}",
                         statisticsReply.getCookie(), sw.getId());
                 return;
             }
 
-            double startDB = System.nanoTime();
+            double startDB = System.nanoTime();*/
             // Get the Flow Entry state from the Network Graph
             // TODO: fix when FlowSynchronizer is refactored
             /*
@@ -293,7 +282,7 @@ public class FlowSynchronizer implements IFlowSyncService {
             }
         }
              */
-            dbTime = System.nanoTime() - startDB;
+            //dbTime = System.nanoTime() - startDB;
 
             //
             // TODO: The old FlowDatabaseOperation class is gone, so the code
@@ -321,7 +310,7 @@ public class FlowSynchronizer implements IFlowSyncService {
          * @param sw Switch from which flow will be removed.
          */
         public void removeFromSwitch(IOFSwitch sw) {
-            if (statisticsReply == null) {
+            /*if (statisticsReply == null) {
                 log.error("Error removing non-existent flow entry {} from sw {}",
                         flowEntryId, sw.getId());
                 return;
@@ -334,7 +323,7 @@ public class FlowSynchronizer implements IFlowSyncService {
             fm.setLengthU(OFFlowMod.MINIMUM_LENGTH);
             fm.setMatch(statisticsReply.getMatch());
             fm.setPriority(statisticsReply.getPriority());
-            fm.setOutPort(OFPort.OFPP_NONE);
+            fm.setOutPort(OFPort.OFPP_NONE);*/
 
             // XXX BOC commented out pending FlowSync refactor
             //pusher.add(sw, fm, MsgPriority.HIGH);
@@ -345,7 +334,8 @@ public class FlowSynchronizer implements IFlowSyncService {
          */
         @Override
         public int hashCode() {
-            return flowEntryId.hashCode();
+            //return flowEntryId.hashCode();
+            return 0;
         }
 
         /**
@@ -358,16 +348,18 @@ public class FlowSynchronizer implements IFlowSyncService {
         @Override
         public boolean equals(Object obj) {
             if (obj != null && obj.getClass() == this.getClass()) {
-                FlowEntryWrapper entry = (FlowEntryWrapper) obj;
+                //FlowEntryWrapper entry = (FlowEntryWrapper) obj;
                 // TODO: we need to actually compare the match + actions
-                return this.flowEntryId.equals(entry.flowEntryId);
+                //return this.flowEntryId.equals(entry.flowEntryId);
+                return true;
             }
             return false;
         }
 
         @Override
         public String toString() {
-            return flowEntryId.toString();
+            //return flowEntryId.toString();
+            return "";
         }
     }
 }

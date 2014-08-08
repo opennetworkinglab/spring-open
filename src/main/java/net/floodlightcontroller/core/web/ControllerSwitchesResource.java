@@ -24,7 +24,7 @@ import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.util.FilterIterator;
 
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 import org.restlet.data.Form;
 import org.restlet.data.Status;
 import org.restlet.resource.Get;

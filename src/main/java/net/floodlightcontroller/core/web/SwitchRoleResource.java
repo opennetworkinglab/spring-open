@@ -5,7 +5,7 @@ import java.util.HashMap;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;

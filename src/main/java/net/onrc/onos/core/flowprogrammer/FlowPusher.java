@@ -24,7 +24,6 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.floodlightcontroller.util.OFMessageDamper;
 import net.onrc.onos.core.intent.FlowEntry;
 import net.onrc.onos.core.util.Pair;
 
@@ -54,13 +53,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public final class FlowPusher implements IFlowPusherService, IOFMessageListener {
     private static final Logger log = LoggerFactory.getLogger(FlowPusher.class);
     protected static final int DEFAULT_NUMBER_THREAD = 1;
-
-    // TODO: Values copied from elsewhere (class LearningSwitch).
-    // The local copy should go away!
-    //
-    protected static final int OFMESSAGE_DAMPER_CAPACITY = 10000; // TODO: find
-                                                                  // sweet spot
-    protected static final int OFMESSAGE_DAMPER_TIMEOUT = 250; // ms
 
     // Number of messages sent to switch at once
     protected static final int MAX_MESSAGE_SEND = 100;
@@ -251,7 +243,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
     }
 
     private FloodlightModuleContext context = null;
-    private OFMessageDamper messageDamper = null;
     private IThreadPoolService threadPool = null;
     private IFloodlightProviderService floodlightProvider = null;
     protected Map<OFVersion, OFFactory> ofFactoryMap = null;
@@ -346,8 +337,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
 
                     OFMessage msg = queueEntry.getOFMessage();
                     try {
-                        // TODO BOC do we need to use the message damper?
-                        // messageDamper.write(sw, msg, context);
                         sw.write(msg, null);
                         if (log.isTraceEnabled()) {
                             log.trace("Pusher sends message to switch {}: {}", sw.getStringId(), msg);
@@ -415,22 +404,11 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         this.floodlightProvider = context
                 .getServiceImpl(IFloodlightProviderService.class);
         this.threadPool = context.getServiceImpl(IThreadPoolService.class);
-        this.messageDamper = null;
 
         ofFactoryMap = new HashMap<>();
         ofFactoryMap.put(OFVersion.OF_10, floodlightProvider.getOFMessageFactory_10());
         ofFactoryMap.put(OFVersion.OF_13, floodlightProvider.getOFMessageFactory_13());
         floodlightProvider.addOFMessageListener(OFType.BARRIER_REPLY, this);
-
-        // TODO BOC message damper may not be needed...
-        // if (damper != null) {
-        // messageDamper = damper;
-        // } else {
-        // use default values
-        /*messageDamper = new OFMessageDamper(OFMESSAGE_DAMPER_CAPACITY,
-                EnumSet.of(OFType.FLOW_MOD),
-                OFMESSAGE_DAMPER_TIMEOUT);*/
-        // }
     }
 
     /**
@@ -582,16 +560,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
             }
             return true;
         }
-    }
-
-    /**
-     * Invalidate.
-     * <p>
-     * @param sw switch
-     * @see OFMessageDamper#invalidate(IOFSwitch)
-     */
-    public void invalidate(IOFSwitch sw) {
-        // messageDamper.invalidate(sw); currently a null ptr - commenting out
     }
 
     @Override

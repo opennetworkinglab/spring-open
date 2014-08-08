@@ -24,7 +24,7 @@ import java.util.Map;
 
 import net.floodlightcontroller.util.MACAddress;
 
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.util.HexString;
 
 // CHECKSTYLE IGNORE WriteTag FOR NEXT 2 LINES
 /**

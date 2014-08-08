@@ -15,7 +15,4 @@
      <Match>
        <Class name="~.*net\.floodlightcontroller\..*"/>
      </Match>
-     <Match>
-       <Class name="~.*org\.openflow\..*"/>
-     </Match>
 </FindBugsFilter>
