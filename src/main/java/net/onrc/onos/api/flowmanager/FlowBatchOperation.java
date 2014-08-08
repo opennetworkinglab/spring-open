@@ -29,9 +29,9 @@ public class FlowBatchOperation extends
      * @param flow the flow to be added
      * @return the FlowBatchOperation object if succeeded, null otherwise
      */
-    public FlowBatchOperation addAddFlowOperation(IFlow flow) {
+    public FlowBatchOperation addAddFlowOperation(Flow flow) {
         return (null == super.addOperation(
-                new BatchOperationEntry<Operator, IFlow>(Operator.ADD, flow)))
+                new BatchOperationEntry<Operator, Flow>(Operator.ADD, flow)))
                 ? null : this;
     }
 

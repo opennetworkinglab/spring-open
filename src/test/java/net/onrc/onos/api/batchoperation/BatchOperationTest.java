@@ -52,7 +52,7 @@ public class BatchOperationTest {
 
         BatchOperationEntry<Operator, ?> entry = list.get(0);
         assertEquals(Operator.STRING, entry.getOperator());
-        IBatchOperationTarget target = entry.getTarget();
+        BatchOperationTarget target = entry.getTarget();
         assertTrue(target instanceof StringTarget);
         assertEquals("target1", ((StringTarget) target).getString());
 

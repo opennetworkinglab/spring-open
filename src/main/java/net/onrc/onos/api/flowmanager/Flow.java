@@ -1,6 +1,6 @@
 package net.onrc.onos.api.flowmanager;
 
-import net.onrc.onos.api.batchoperation.IBatchOperationTarget;
+import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 import net.onrc.onos.core.matchaction.MatchActionPlan;
 import net.onrc.onos.core.matchaction.match.IMatch;
 
@@ -11,7 +11,7 @@ import net.onrc.onos.core.matchaction.match.IMatch;
  * The flow objects (eg. path, tree, disjoint-paths, etc.) must implement this
  * interface.
  */
-public interface IFlow extends IBatchOperationTarget {
+public interface Flow extends BatchOperationTarget {
     /**
      * Gets ID for this flow object.
      *

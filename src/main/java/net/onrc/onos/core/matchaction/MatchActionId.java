@@ -1,8 +1,8 @@
 package net.onrc.onos.core.matchaction;
 
-import net.onrc.onos.api.batchoperation.IBatchOperationTarget;
+import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 
-public class MatchActionId implements IBatchOperationTarget {
+public class MatchActionId implements BatchOperationTarget {
     private final String value;
 
     public MatchActionId(String id) {

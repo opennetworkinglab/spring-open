@@ -8,7 +8,7 @@ public class TestBatchOperation extends
         INTEGER,
     }
 
-    public static class StringTarget implements IBatchOperationTarget {
+    public static class StringTarget implements BatchOperationTarget {
         private String string;
 
         public StringTarget(String string) {
@@ -20,7 +20,7 @@ public class TestBatchOperation extends
         }
     }
 
-    public static class IntegerTarget implements IBatchOperationTarget {
+    public static class IntegerTarget implements BatchOperationTarget {
         private Integer integer;
 
         public IntegerTarget(Integer integer) {

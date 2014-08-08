@@ -1,7 +1,7 @@
 package net.onrc.onos.api.intent;
 
 import com.google.common.base.Objects;
-import net.onrc.onos.api.batchoperation.IBatchOperationTarget;
+import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Developers that will define a new intent type should ensure its immutability.
  * </p>
  */
-public abstract class Intent implements IBatchOperationTarget {
+public abstract class Intent implements BatchOperationTarget {
     private final IntentId id;
 
     /**

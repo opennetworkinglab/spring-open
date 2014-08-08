@@ -13,7 +13,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * An IFlow object expressing the point-to-multipoints tree flow for the packet
  * layer.
  */
-public class SingleSrcTreeFlow implements IFlow {
+public class SingleSrcTreeFlow implements Flow {
     protected final FlowId id;
     protected PacketMatch match;
     protected SwitchPort ingressPort;

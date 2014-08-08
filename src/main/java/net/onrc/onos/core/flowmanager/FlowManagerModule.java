@@ -6,8 +6,8 @@ import java.util.EventListener;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
 import net.onrc.onos.api.flowmanager.FlowId;
-import net.onrc.onos.api.flowmanager.IFlow;
-import net.onrc.onos.api.flowmanager.IFlowManagerService;
+import net.onrc.onos.api.flowmanager.Flow;
+import net.onrc.onos.api.flowmanager.FlowManagerService;
 
 /**
  * Manages a set of IFlow objects, computes and maintains a set of Match-Action
@@ -15,7 +15,7 @@ import net.onrc.onos.api.flowmanager.IFlowManagerService;
  * <p>
  * TODO: Make all methods thread-safe
  */
-public class FlowManagerModule implements IFlowManagerService {
+public class FlowManagerModule implements FlowManagerService {
     private ConflictDetectionPolicy conflictDetectionPolicy;
 
     /**
@@ -26,7 +26,7 @@ public class FlowManagerModule implements IFlowManagerService {
     }
 
     @Override
-    public boolean addFlow(IFlow flow) {
+    public boolean addFlow(Flow flow) {
         FlowBatchOperation ops = new FlowBatchOperation();
         ops.addAddFlowOperation(flow);
         return executeBatch(ops);
@@ -40,13 +40,13 @@ public class FlowManagerModule implements IFlowManagerService {
     }
 
     @Override
-    public IFlow getFlow(FlowId id) {
+    public Flow getFlow(FlowId id) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Collection<IFlow> getFlows() {
+    public Collection<Flow> getFlows() {
         // TODO Auto-generated method stub
         return null;
     }

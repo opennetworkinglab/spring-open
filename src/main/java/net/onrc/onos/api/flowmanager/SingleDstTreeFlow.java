@@ -17,7 +17,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * NOTE: This class might generate the MatchActionPlan which includes the MAC
  * address modifications or other the label-switching-like schemes.
  */
-public class SingleDstTreeFlow implements IFlow {
+public class SingleDstTreeFlow implements Flow {
     protected final FlowId id;
     protected PacketMatch match;
     protected Set<SwitchPort> ingressPorts;

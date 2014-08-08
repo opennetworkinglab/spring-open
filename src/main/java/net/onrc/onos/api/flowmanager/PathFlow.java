@@ -13,7 +13,7 @@ import net.onrc.onos.core.util.PortNumber;
  * TODO: Think this: Should this class be an abstract class? Is it enough to
  * have only the PacketPathFlow and OpticalPathFlow classes?
  */
-public class PathFlow implements IFlow {
+public class PathFlow implements Flow {
     protected final FlowId id;
     protected IMatch match;
     protected PortNumber ingressPort;

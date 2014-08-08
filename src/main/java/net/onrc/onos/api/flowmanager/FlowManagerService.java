@@ -14,14 +14,14 @@ import java.util.EventListener;
  * <p>
  * TODO: add more getter with filter for IFlow objects.
  */
-public interface IFlowManagerService {
+public interface FlowManagerService {
     /**
      * Adds IFlow object, calculates match-action plan and executes it.
      *
      * @param flow IFlow object to be added
      * @return true if succeeded, false otherwise
      */
-    boolean addFlow(IFlow flow);
+    boolean addFlow(Flow flow);
 
     /**
      * Removes IFlow object, calculates match-action plan and executes it.
@@ -37,14 +37,14 @@ public interface IFlowManagerService {
      * @param id ID of IFlow object
      * @return IFlow object if found, null otherwise
      */
-    IFlow getFlow(FlowId id);
+    Flow getFlow(FlowId id);
 
     /**
      * Gets All IFlow objects.
      *
      * @return the collection of IFlow objects
      */
-    Collection<IFlow> getFlows();
+    Collection<Flow> getFlows();
 
     /**
      * Executes batch operation of IFlow object.

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.api.batchoperation.IBatchOperationTarget;
+import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 import net.onrc.onos.core.matchaction.action.IAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.IMatch;
@@ -17,7 +17,7 @@ import net.onrc.onos.core.util.SwitchPort;
 /**
  * A filter and actions for traffic.
  */
-public class MatchAction implements IBatchOperationTarget {
+public class MatchAction implements BatchOperationTarget {
     protected final MatchActionId id;
     protected SwitchPort port;
     protected List<IMatch> matches;
