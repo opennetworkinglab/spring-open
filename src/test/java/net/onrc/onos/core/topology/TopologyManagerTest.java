@@ -145,14 +145,10 @@ public class TopologyManagerTest extends UnitTest {
 
         // Setup the Registry Service
         expect(registryService.getOnosInstanceId()).andReturn(ONOS_INSTANCE_ID_1).anyTimes();
-        try {
-            expect(registryService.getControllerForSwitch(DPID_1.value())).
-                andReturn(ONOS_INSTANCE_ID_1.toString()).anyTimes();
-            expect(registryService.getControllerForSwitch(DPID_2.value())).
-                andReturn(ONOS_INSTANCE_ID_2.toString()).anyTimes();
-        } catch (RegistryException ex) {
-            throw new IllegalStateException(ex);
-        }
+        expect(registryService.getControllerForSwitch(DPID_1.value()))
+            .andReturn(ONOS_INSTANCE_ID_1.toString()).anyTimes();
+        expect(registryService.getControllerForSwitch(DPID_2.value()))
+            .andReturn(ONOS_INSTANCE_ID_2.toString()).anyTimes();
 
         allTopologyEvents = new CopyOnWriteArrayList<>();
         expect(eventChannel.getAllEntries())
@@ -186,7 +182,7 @@ public class TopologyManagerTest extends UnitTest {
     private void setupTopologyManagerWithEventHandler() {
         // Create a TopologyManager object for testing
         theTopologyManager = new TopologyManager(registryService);
-        theTopologyManager.registerTopologyListener(theTopologyListener);
+        theTopologyManager.addListener(theTopologyListener, true);
 
         // Allocate the Event Handler, so we can have direct access to it
         theEventHandler = theTopologyManager.new EventHandler();
@@ -1432,9 +1428,12 @@ public class TopologyManagerTest extends UnitTest {
      *   instances are processed - both events should be delivered.
      * - Finally, a REMOVE Switch Event is received from the first ONOS
      *   instance - no event should be delivered.
+     *
+     * @throws RegistryException
      */
     @Test
-    public void testProcessSwitchMastershipSwitchover() {
+    public void testProcessSwitchMastershipSwitchover()
+                        throws RegistryException {
         TopologyEvents topologyEvents;
         List<EventEntry<TopologyEvent>> events = new LinkedList<>();
         EventEntry<TopologyEvent> eventEntry;
@@ -1484,12 +1483,8 @@ public class TopologyManagerTest extends UnitTest {
         // Master.
         //
         reset(registryService);
-        try {
-            expect(registryService.getControllerForSwitch(DPID_1.value())).
-                andReturn(ONOS_INSTANCE_ID_2.toString()).anyTimes();
-        } catch (RegistryException ex) {
-            throw new IllegalStateException(ex);
-        }
+        expect(registryService.getControllerForSwitch(DPID_1.value()))
+            .andReturn(ONOS_INSTANCE_ID_2.toString()).anyTimes();
         replay(registryService);
 
         // Prepare the Mastership Event from the second ONOS instance

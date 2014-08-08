@@ -40,6 +40,20 @@ public final class TopologyEvent {
     }
 
     /**
+     * Constructor for creating an empty (NO-OP) Topology Event.
+     *
+     * @param onosInstanceId the ONOS Instance ID that originates the event.
+     */
+    protected TopologyEvent(OnosInstanceId onosInstanceId) {
+        mastershipEvent = null;
+        switchEvent = null;
+        portEvent = null;
+        linkEvent = null;
+        hostEvent = null;
+        this.onosInstanceId = checkNotNull(onosInstanceId);
+    }
+
+    /**
      * Constructor for given Switch Mastership event.
      *
      * @param mastershipEvent the Switch Mastership event to use.
@@ -270,8 +284,13 @@ public final class TopologyEvent {
                 eventStr = hostEvent.toString();
                 break stringLabel;
             }
+            // Test whether this is NO-OP event
+            if (onosInstanceId != null) {
+                eventStr = "NO-OP";
+                break stringLabel;
+            }
             // No event found
-            return "[Empty TopologyEvent]";
+            return "[Unknown TopologyEvent]";
         }
 
         return "[TopologyEvent " + eventStr + " from " +
@@ -317,6 +336,12 @@ public final class TopologyEvent {
             }
             if (hostEvent != null) {
                 eventId = hostEvent.getIDasByteBuffer();
+                break idLabel;
+            }
+            // Test whether this is NO-OP event
+            if (onosInstanceId != null) {
+                String id = "NO-OP";
+                eventId = ByteBuffer.wrap(id.getBytes(StandardCharsets.UTF_8));
                 break idLabel;
             }
             // No event found

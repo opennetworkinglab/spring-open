@@ -106,7 +106,8 @@ public class UseCaseTest extends UnitTest {
                 .andReturn(restApi).once();
 
         expect(topologyService.getTopology()).andReturn(mockTopology).anyTimes();
-        topologyService.registerTopologyListener(anyObject(ITopologyListener.class));
+        topologyService.addListener(anyObject(ITopologyListener.class),
+                                    eq(false));
         expectLastCall();
 
         expect(datagridService.createChannel("onos.pathintent", Long.class, IntentOperationList.class))

@@ -77,12 +77,13 @@ public class TopologyModule implements IFloodlightModule, ITopologyService {
     }
 
     @Override
-    public void registerTopologyListener(ITopologyListener listener) {
-        topologyManager.registerTopologyListener(listener);
+    public void addListener(ITopologyListener listener,
+                            boolean startFromSnapshot) {
+        topologyManager.addListener(listener, startFromSnapshot);
     }
 
     @Override
-    public void deregisterTopologyListener(ITopologyListener listener) {
-        topologyManager.deregisterTopologyListener(listener);
+    public void removeListener(ITopologyListener listener) {
+        topologyManager.removeListener(listener);
     }
 }

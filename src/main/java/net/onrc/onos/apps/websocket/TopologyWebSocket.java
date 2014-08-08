@@ -2,7 +2,6 @@ package net.onrc.onos.apps.websocket;
 
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.topology.TopologyEvents;
 
 import java.io.IOException;
@@ -65,7 +64,7 @@ public class TopologyWebSocket extends Thread implements ITopologyListener {
      */
     private void shutdown() {
         ITopologyService topologyService = WebSocketManager.topologyService;
-        topologyService.deregisterTopologyListener(this);
+        topologyService.removeListener(this);
         this.isOpen = false;            // Stop the thread
     }
 
@@ -124,34 +123,8 @@ public class TopologyWebSocket extends Thread implements ITopologyListener {
         // Initialization and Topology Service registration
         //
         this.socketSession = session;
-        ObjectMapper mapper = new ObjectMapper();
-        String topologyJson = null;
         ITopologyService topologyService = WebSocketManager.topologyService;
-        topologyService.registerTopologyListener(this);
-
-        //
-        // Get the initial topology and encode it in JSON
-        //
-        Topology topology = topologyService.getTopology();
-        topology.acquireReadLock();
-        try {
-            topologyJson = mapper.writeValueAsString(topology);
-        } catch (IOException e) {
-            log.debug("Exception encoding topology as JSON: ", e);
-        } finally {
-            topology.releaseReadLock();
-        }
-
-        //
-        // Send the initial topology
-        //
-        if (topologyJson != null) {
-            try {
-                session.getBasicRemote().sendText(topologyJson);
-            } catch (IOException e) {
-                log.debug("Exception sending TopologyWebSocket topology: ", e);
-            }
-        }
+        topologyService.addListener(this, true);
 
         // Start the thread
         start();

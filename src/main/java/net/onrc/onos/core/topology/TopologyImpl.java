@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -364,12 +365,26 @@ public class TopologyImpl implements Topology, TopologyInternal {
     }
 
     @Override
+    public Collection<SwitchEvent> getAllSwitchEvents() {
+        return Collections.unmodifiableCollection(switches.values());
+    }
+
+    @Override
     public PortEvent getPortEvent(final SwitchPort port) {
         ConcurrentMap<PortNumber, PortEvent> portMap = this.ports.get(port.getDpid());
         if (portMap != null) {
             return portMap.get(port.getPortNumber());
         }
         return null;
+    }
+
+    @Override
+    public Collection<PortEvent> getAllPortEvents() {
+        List<PortEvent> events = new LinkedList<>();
+        for (ConcurrentMap<PortNumber, PortEvent> cm : ports.values()) {
+            events.addAll(cm.values());
+        }
+        return Collections.unmodifiableCollection(events);
     }
 
     @Override
@@ -411,8 +426,22 @@ public class TopologyImpl implements Topology, TopologyInternal {
     }
 
     @Override
+    public Collection<LinkEvent> getAllLinkEvents() {
+        List<LinkEvent> events = new LinkedList<>();
+        for (ConcurrentMap<String, LinkEvent> cm : outgoingLinks.values()) {
+            events.addAll(cm.values());
+        }
+        return Collections.unmodifiableCollection(events);
+    }
+
+    @Override
     public HostEvent getHostEvent(final MACAddress mac) {
         return this.mac2Host.get(mac);
+    }
+
+    @Override
+    public Collection<HostEvent> getAllHostEvents() {
+        return Collections.unmodifiableCollection(mac2Host.values());
     }
 
     /**

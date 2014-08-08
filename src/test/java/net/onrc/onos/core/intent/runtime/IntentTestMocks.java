@@ -88,8 +88,8 @@ public class IntentTestMocks {
 
             expect(topologyService.getTopology()).andReturn(topology)
                     .anyTimes();
-            topologyService.registerTopologyListener(
-                    anyObject(ITopologyListener.class));
+            topologyService.addListener(
+                    anyObject(ITopologyListener.class), eq(false));
             expectLastCall();
 
             expect(datagridService.createChannel("onos.pathintent",

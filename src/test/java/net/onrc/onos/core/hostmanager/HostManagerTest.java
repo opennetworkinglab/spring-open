@@ -86,7 +86,7 @@ public class HostManagerTest extends FloodlightTestCase {
         controllerRegistryService = createMock(IControllerRegistryService.class);
         eventChannel = createMock(IEventChannel.class);
         expect(networkGraphService.getTopology()).andReturn(topology).anyTimes();
-        networkGraphService.registerTopologyListener(anyObject(ITopologyListener.class));
+        networkGraphService.addListener(anyObject(ITopologyListener.class), eq(false));
         expectLastCall();
 
         expect(datagridService.createChannel("onos.host", Long.class, Host.class))

@@ -14,19 +14,22 @@ public interface ITopologyService extends IFloodlightService {
     public Topology getTopology();
 
     /**
-     * Registers a listener for topology events.
+     * Adds a listener for topology events.
      *
-     * @param listener the listener to register
+     * @param listener the listener to add.
+     * @param startFromSnapshot if true, and if the topology is not
+     * empty, the first event should be a snapshot of the current topology.
      */
-    public void registerTopologyListener(ITopologyListener listener);
+    public void addListener(ITopologyListener listener,
+                            boolean startFromSnapshot);
 
     /**
-     * Deregisters a listener for topology events. The listener will no longer
+     * Removes a listener for topology events. The listener will no longer
      * receive topology events after this call.
      *
-     * @param listener the listener to deregister
+     * @param listener the listener to remove.
      */
-    public void deregisterTopologyListener(ITopologyListener listener);
+    public void removeListener(ITopologyListener listener);
 
     /**
      * Allows a module to get a reference to the southbound interface to

@@ -217,6 +217,11 @@ public class TopologyEventPreprocessor {
         for (EventEntry<TopologyEvent> event : events) {
             List<EventEntry<TopologyEvent>> postponedEvents = null;
 
+            // Ignore NO-OP events
+            if (event.isNoop()) {
+                continue;
+            }
+
             TopologyEvent topologyEvent = event.eventData();
             OnosInstanceId onosInstanceId = topologyEvent.getOnosInstanceId();
 

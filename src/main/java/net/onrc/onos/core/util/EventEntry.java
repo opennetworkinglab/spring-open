@@ -8,12 +8,13 @@ public class EventEntry<T> {
      * The event types.
      */
     public enum Type {
-        ENTRY_ADD,            // Add or update an entry
-        ENTRY_REMOVE            // Remove an entry
+        ENTRY_ADD,              // Add or update an entry
+        ENTRY_REMOVE,           // Remove an entry
+        ENTRY_NOOP              // NO-OP event (No Operation)
     }
 
-    private Type eventType;    // The event type
-    private T eventData;    // The relevant event data entry
+    private Type eventType;     // The event type
+    private T eventData;        // The relevant event data entry
 
     /**
      * Constructor for a given event type and event-related data entry.
@@ -27,7 +28,22 @@ public class EventEntry<T> {
     }
 
     /**
-     * Test whether the event type is ENTRY_ADD.
+     * Creates a NO-OP event.
+     * <p/>
+     * This is a factory method that can be called without an object:
+     * <p/>
+     * <code>
+     *   EventEntry<TopologyEvent> eventEntry = EventEntry.makeNoop();
+     * </code>
+     *
+     * @return a NO-OP event.
+     */
+    public static <T> EventEntry<T> makeNoop() {
+        return new EventEntry<T>(Type.ENTRY_NOOP, null);
+    }
+
+    /**
+     * Tests whether the event type is ENTRY_ADD.
      *
      * @return true if the event type is ENTRY_ADD, otherwise false.
      */
@@ -36,7 +52,7 @@ public class EventEntry<T> {
     }
 
     /**
-     * Test whether the event type is ENTRY_REMOVE.
+     * Tests whether the event type is ENTRY_REMOVE.
      *
      * @return true if the event type is ENTRY_REMOVE, otherwise false.
      */
@@ -45,7 +61,16 @@ public class EventEntry<T> {
     }
 
     /**
-     * Get the event type.
+     * Tests whether the event type is ENTRY_NOOP.
+     *
+     * @return true if the event type is ENTRY_NOOP, otherwise false.
+     */
+    public boolean isNoop() {
+        return (this.eventType == Type.ENTRY_NOOP);
+    }
+
+    /**
+     * Gets the event type.
      *
      * @return the event type.
      */
@@ -54,7 +79,7 @@ public class EventEntry<T> {
     }
 
     /**
-     * Get the event-related data entry.
+     * Gets the event-related data entry.
      *
      * @return the event-related data entry.
      */

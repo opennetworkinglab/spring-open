@@ -42,10 +42,11 @@ public final class TopologyEvents {
     private final Collection<HostEvent> removedHostEvents;
 
     /**
-     * Constructor.
+     * Constructor for added and removed events.
      *
      * @param addedMastershipEvents the collection of added Mastership Events.
-     * @param removedMastershipEvents the collection of removed Mastership Events.
+     * @param removedMastershipEvents the collection of removed Mastership
+     *        Events.
      * @param addedSwitchEvents the collection of added Switch Events.
      * @param removedSwitchEvents the collection of removed Switch Events.
      * @param addedPortEvents the collection of added Port Events.
@@ -87,6 +88,37 @@ public final class TopologyEvents {
             Collections.unmodifiableCollection(addedHostEvents);
         this.removedHostEvents =
             Collections.unmodifiableCollection(removedHostEvents);
+    }
+
+    /**
+     * Constructor for added events only.
+     *
+     * @param addedMastershipEvents the collection of added Mastership Events.
+     * @param addedSwitchEvents the collection of added Switch Events.
+     * @param addedPortEvents the collection of added Port Events.
+     * @param addedLinkEvents the collection of added Link Events.
+     * @param addedHostEvents the collection of added Host Events.
+     */
+    public TopologyEvents(Collection<MastershipEvent> addedMastershipEvents,
+                          Collection<SwitchEvent> addedSwitchEvents,
+                          Collection<PortEvent> addedPortEvents,
+                          Collection<LinkEvent> addedLinkEvents,
+                          Collection<HostEvent> addedHostEvents) {
+        this.addedMastershipEvents =
+            Collections.unmodifiableCollection(addedMastershipEvents);
+        this.removedMastershipEvents = Collections.emptyList();
+        this.addedSwitchEvents =
+            Collections.unmodifiableCollection(addedSwitchEvents);
+        this.removedSwitchEvents = Collections.emptyList();
+        this.addedPortEvents =
+            Collections.unmodifiableCollection(addedPortEvents);
+        this.removedPortEvents = Collections.emptyList();
+        this.addedLinkEvents =
+            Collections.unmodifiableCollection(addedLinkEvents);
+        this.removedLinkEvents = Collections.emptyList();
+        this.addedHostEvents =
+            Collections.unmodifiableCollection(addedHostEvents);
+        this.removedHostEvents = Collections.emptyList();
     }
 
     /**
