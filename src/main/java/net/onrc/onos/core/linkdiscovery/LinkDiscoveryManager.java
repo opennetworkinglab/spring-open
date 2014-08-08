@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,6 +37,7 @@ import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.IOFSwitch.PortChangeType;
 import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.IUpdate;
 import net.floodlightcontroller.core.annotations.LogMessageCategory;
@@ -57,35 +57,37 @@ import net.onrc.onos.core.packet.OnosLldp;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFPacketIn;
-import org.openflow.protocol.OFPacketOut;
-import org.openflow.protocol.OFPhysicalPort;
-import org.openflow.protocol.OFPhysicalPort.OFPortConfig;
-import org.openflow.protocol.OFPhysicalPort.OFPortState;
-import org.openflow.protocol.OFPort;
-import org.openflow.protocol.OFPortStatus;
-import org.openflow.protocol.OFPortStatus.OFPortReason;
-import org.openflow.protocol.OFType;
-import org.openflow.protocol.action.OFAction;
-import org.openflow.protocol.action.OFActionOutput;
-import org.openflow.protocol.action.OFActionType;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFPacketIn;
+import org.projectfloodlight.openflow.protocol.OFPacketOut;
+import org.projectfloodlight.openflow.protocol.OFPortConfig;
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFPortReason;
+import org.projectfloodlight.openflow.protocol.OFPortState;
+import org.projectfloodlight.openflow.protocol.OFPortStatus;
+import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.types.OFBufferId;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Discovers links between OpenFlow switches.
- * <p/>
- * Discovery is performed by sending probes (LLDP packets) over the links in
- * the data plane. The LinkDiscoveryManager sends probes periodically on all
- * ports on all connected switches. The probes contain the sending switch's
- * DPID and outgoing port number. LLDP packets that are received (via an
- * OpenFlow packet-in) indicate there is a link between the receiving port and
- * the sending port, which was encoded in the LLDP. When the
- * LinkDiscoveryManager observes a new link, a Link object is created and an
- * event is fired for any event listeners.
- * <p/>
+ * <p>
+ * Discovery is performed by sending probes (LLDP packets) over the links in the
+ * data plane. The LinkDiscoveryManager sends probes periodically on all ports
+ * on all connected switches. The probes contain the sending switch's DPID and
+ * outgoing port number. LLDP packets that are received (via an OpenFlow
+ * packet-in) indicate there is a link between the receiving port and the
+ * sending port, which was encoded in the LLDP. When the LinkDiscoveryManager
+ * observes a new link, a Link object is created and an event is fired for any
+ * event listeners.
+ * </p>
  * Links are removed for one of three reasons:
  * <ul>
  * <li>A probe has not been received on the link for an interval (the timeout
@@ -104,6 +106,9 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
 
     private static final Logger log =
             LoggerFactory.getLogger(LinkDiscoveryManager.class);
+    // TODO Remove these factories.
+    protected OFFactory factory13 = OFFactories.getFactory(OFVersion.OF_13);
+    protected OFFactory factory10 = OFFactories.getFactory(OFVersion.OF_10);
 
     private IFloodlightProviderService controller;
 
@@ -121,13 +126,16 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     // Link discovery task details.
     private SingletonTask discoveryTask;
     private static final int DISCOVERY_TASK_INTERVAL = 1;
-    private static final int LINK_TIMEOUT = 35; // original 35 secs, aggressive 5 secs
-    private static final int LLDP_TO_ALL_INTERVAL = 15; //original 15 seconds, aggressive 2 secs.
+    private static final int LINK_TIMEOUT = 35; // original 35 secs, aggressive
+                                                // 5 secs
+    private static final int LLDP_TO_ALL_INTERVAL = 15; // original 15 seconds,
+                                                        // aggressive 2 secs.
     private long lldpClock = 0;
     // This value is intentionally kept higher than LLDP_TO_ALL_INTERVAL.
     // If we want to identify link failures faster, we could decrease this
     // value to a small number, say 1 or 2 sec.
-    private static final int LLDP_TO_KNOWN_INTERVAL = 20; // LLDP frequency for known links
+    private static final int LLDP_TO_KNOWN_INTERVAL = 20; // LLDP frequency for
+                                                          // known links
 
     private ReentrantReadWriteLock lock;
 
@@ -149,8 +157,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     /**
      * Listeners are called in the order they were added to the the list.
      */
-    private final List<ILinkDiscoveryListener> linkDiscoveryListeners
-            = new CopyOnWriteArrayList<>();
+    private final List<ILinkDiscoveryListener> linkDiscoveryListeners =
+            new CopyOnWriteArrayList<>();
 
     /**
      * List of ports through which LLDPs are not sent.
@@ -230,8 +238,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         discover(npt);
     }
 
-    private boolean isLinkDiscoverySuppressed(long sw, short portNumber) {
-        return this.suppressLinkDiscovery.contains(new NodePortTuple(sw, portNumber));
+    private boolean isLinkDiscoverySuppressed(long sw, short p) {
+        return this.suppressLinkDiscovery.contains(new NodePortTuple(sw, p));
     }
 
     private void discoverLinks() {
@@ -239,7 +247,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         // time out known links.
         timeOutLinks();
 
-        //increment LLDP clock
+        // increment LLDP clock
         lldpClock = (lldpClock + 1) % LLDP_TO_ALL_INTERVAL;
 
         if (lldpClock == 0) {
@@ -271,8 +279,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     }
 
     /**
-     * Send link discovery message out of a given switch port.
-     * The discovery message is a standard LLDP containing ONOS-specific TLVs.
+     * Send link discovery message out of a given switch port. The discovery
+     * message is a standard LLDP containing ONOS-specific TLVs.
      *
      * @param sw the switch to send on
      * @param port the port to send out
@@ -284,18 +292,18 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                     "to the switch.",
             recommendation = LogMessageDoc.CHECK_SWITCH)
     protected void sendDiscoveryMessage(long sw, short port,
-                                        boolean isReverse) {
+            boolean isReverse) {
 
         IOFSwitch iofSwitch = floodlightProvider.getSwitches().get(sw);
         if (iofSwitch == null) {
             return;
         }
 
-        if (port == OFPort.OFPP_LOCAL.getValue()) {
+        if (port == OFPort.LOCAL.getShortPortNumber()) {
             return;
         }
 
-        OFPhysicalPort ofpPort = iofSwitch.getPort(port);
+        OFPortDesc ofpPort = iofSwitch.getPort(port);
 
         if (ofpPort == null) {
             if (log.isTraceEnabled()) {
@@ -314,7 +322,9 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                     sw, port);
         }
 
-        OFPacketOut po = createLLDPPacketOut(sw, ofpPort, isReverse);
+        OFFactory factory = (iofSwitch.getOFVersion() == OFVersion.OF_10)
+                ? factory10 : factory13;
+        OFPacketOut po = createLLDPPacketOut(sw, ofpPort, isReverse, factory);
 
         try {
             iofSwitch.write(po, null);
@@ -332,10 +342,11 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
      * @param dpid the dpid of the outgoing switch
      * @param port the outgoing port
      * @param isReverse whether this is a reverse LLDP or not
+     * @param factory the factory to use to create the message
      * @return Packet_out message with LLDP data
      */
     private OFPacketOut createLLDPPacketOut(long dpid,
-            final OFPhysicalPort port, boolean isReverse) {
+            final OFPortDesc port, boolean isReverse, OFFactory factory) {
         // Set up packets
         // TODO optimize by not creating new packets each time
         OnosLldp lldpPacket = new OnosLldp();
@@ -346,29 +357,25 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         ethPacket.setPayload(lldpPacket);
         ethPacket.setPad(true);
 
-        final OFPacketOut packetOut = (OFPacketOut) floodlightProvider.getOFMessageFactory()
-                .getMessage(OFType.PACKET_OUT);
-        packetOut.setBufferId(OFPacketOut.BUFFER_ID_NONE);
-
-        final List<OFAction> actionsList = new LinkedList<OFAction>();
-        final OFActionOutput out = (OFActionOutput) floodlightProvider.getOFMessageFactory()
-                .getAction(OFActionType.OUTPUT);
-        out.setPort(port.getPortNumber());
-        actionsList.add(out);
-        packetOut.setActions(actionsList);
-        final short alen = (short) OFActionOutput.MINIMUM_LENGTH;
-
         lldpPacket.setSwitch(dpid);
-        lldpPacket.setPort(port.getPortNumber());
+        lldpPacket.setPort(port.getPortNo().getShortPortNumber());
         lldpPacket.setReverse(isReverse);
-        ethPacket.setSourceMACAddress(port.getHardwareAddress());
-
+        ethPacket.setSourceMACAddress(port.getHwAddr().getBytes());
         final byte[] lldp = ethPacket.serialize();
-        packetOut.setActionsLength(alen);
-        packetOut.setPacketData(lldp);
-        packetOut
-                .setLength((short) (OFPacketOut.MINIMUM_LENGTH + alen + lldp.length));
-        return packetOut;
+
+        List<OFAction> actions = new ArrayList<OFAction>();
+        actions.add(factory.actions()
+                .buildOutput()
+                .setPort(OFPort.ofShort(port.getPortNo().getShortPortNumber()))
+                .build());
+        OFPacketOut po = factory.buildPacketOut()
+                .setData(lldp)
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setInPort(OFPort.CONTROLLER)
+                .setActions(actions)
+                .build();
+
+        return po;
     }
 
     /**
@@ -383,12 +390,14 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
             if (sw.getEnabledPorts() == null) {
                 continue;
             }
-            for (OFPhysicalPort ofp : sw.getEnabledPorts()) {
-                if (isLinkDiscoverySuppressed(sw.getId(), ofp.getPortNumber())) {
+            for (OFPortDesc ofp : sw.getEnabledPorts()) {
+                if (isLinkDiscoverySuppressed(sw.getId(),
+                        ofp.getPortNo().getShortPortNumber())) {
                     continue;
                 }
 
-                sendDiscoveryMessage(sw.getId(), ofp.getPortNumber(), false);
+                sendDiscoveryMessage(sw.getId(),
+                        ofp.getPortNo().getShortPortNumber(), false);
             }
         }
     }
@@ -401,31 +410,31 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
         switch (msg.getType()) {
-            case PACKET_IN:
-                if (msg instanceof OFPacketIn) {
-                    return this.handlePacketIn(sw.getId(), (OFPacketIn) msg,
-                                               cntx);
-                }
-                break;
-            case PORT_STATUS:
-                if (msg instanceof OFPortStatus) {
-                    return this.handlePortStatus(sw, (OFPortStatus) msg);
-                }
-                break;
-            default:
-                break;
+        case PACKET_IN:
+            if (msg instanceof OFPacketIn) {
+                return this.handlePacketIn(sw.getId(), (OFPacketIn) msg,
+                        cntx);
+            }
+            break;
+        case PORT_STATUS:
+            if (msg instanceof OFPortStatus) {
+                return this.handlePortStatus(sw, (OFPortStatus) msg);
+            }
+            break;
+        default:
+            break;
         }
         return Command.CONTINUE;
     }
 
-    protected Command handleLldp(LLDP lldp, long sw, OFPacketIn pi) {
+    protected Command handleLldp(LLDP lldp, long sw, OFPacketIn pi, short inport) {
         // If LLDP is suppressed on this port, ignore received packet as well
-        IOFSwitch iofSwitch = floodlightProvider.getSwitches().get(sw);
+        IOFSwitch iofSwitch = floodlightProvider.getSwitch(sw);
         if (iofSwitch == null) {
             return Command.STOP;
         }
 
-        if (isLinkDiscoverySuppressed(sw, pi.getInPort())) {
+        if (isLinkDiscoverySuppressed(sw, inport)) {
             return Command.STOP;
         }
 
@@ -435,7 +444,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         }
 
         // Verify this LLDP packet matches what we're looking for
-        byte[] packetData = pi.getPacketData();
+        byte[] packetData = pi.getData();
         if (!OnosLldp.isOnosLldp(packetData)) {
             log.trace("Dropping LLDP that wasn't sent by ONOS");
             return Command.STOP;
@@ -444,10 +453,10 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         SwitchPort switchPort = OnosLldp.extractSwitchPort(packetData);
         long remoteDpid = switchPort.dpid().value();
         short remotePort = switchPort.port().shortValue();
-        IOFSwitch remoteSwitch = floodlightProvider.getSwitches().get(switchPort.dpid().value());
+        IOFSwitch remoteSwitch = floodlightProvider.getSwitches().get(
+                switchPort.dpid().value());
 
-
-        OFPhysicalPort physicalPort = null;
+        OFPortDesc physicalPort = null;
         if (remoteSwitch != null) {
             physicalPort = remoteSwitch.getPort(remotePort);
             if (!remoteSwitch.portEnabled(remotePort)) {
@@ -466,20 +475,24 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                 return Command.STOP;
             }
         }
-        if (!iofSwitch.portEnabled(pi.getInPort())) {
+        if (!iofSwitch.portEnabled(inport)) {
             if (log.isTraceEnabled()) {
                 log.trace("Ignoring link with disabled dest port: " +
-                        "switch {} port {}", sw, pi.getInPort());
+                        "switch {} port {}", sw, inport);
             }
             return Command.STOP;
         }
 
-        int srcPortState = (physicalPort != null) ? physicalPort.getState() : 0;
-        physicalPort = iofSwitch.getPort(pi.getInPort());
-        int dstPortState = (physicalPort != null) ? physicalPort.getState() : 0;
+        // TODO It probably should be empty Set instead of null. Confirm and fix.
+        Set<OFPortState> srcPortState = (physicalPort != null)
+                ? physicalPort.getState() : null;
+        physicalPort = iofSwitch.getPort(inport);
+        Set<OFPortState> dstPortState = (physicalPort != null)
+                ? physicalPort.getState() : null;
 
-        // Store the time of update to this link, and push it out to routingEngine
-        Link lt = new Link(remoteDpid, remotePort, iofSwitch.getId(), pi.getInPort());
+        // Store the time of update to this link, and push it out to
+        // routingEngine
+        Link lt = new Link(remoteDpid, remotePort, iofSwitch.getId(), inport);
 
         LinkInfo linkInfo = new LinkInfo(System.currentTimeMillis(),
                 System.currentTimeMillis(), srcPortState, dstPortState);
@@ -499,8 +512,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
             LinkInfo reverseInfo = links.get(reverseLink);
             if (reverseInfo == null) {
                 // the reverse link does not exist.
-                if (newLinkInfo.getFirstSeenTime() >
-                        System.currentTimeMillis() - LINK_TIMEOUT) {
+                if (newLinkInfo.getFirstSeenTime() > System.currentTimeMillis()
+                        - LINK_TIMEOUT) {
                     this.sendDiscoveryMessage(lt.getDst(), lt.getDstPort(), true);
                 }
             }
@@ -511,13 +524,15 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     }
 
     protected Command handlePacketIn(long sw, OFPacketIn pi,
-                                     FloodlightContext cntx) {
+            FloodlightContext cntx) {
         Ethernet eth =
                 IFloodlightProviderService.bcStore.get(cntx,
                         IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+        short inport = (short) cntx.getStorage()
+                .get(IFloodlightProviderService.CONTEXT_PI_INPORT);
 
         if (eth.getEtherType() == Ethernet.TYPE_LLDP) {
-            return handleLldp((LLDP) eth.getPayload(), sw, pi);
+            return handleLldp((LLDP) eth.getPayload(), sw, pi, inport);
         } else if (eth.getEtherType() < 1500) {
             long destMac = eth.getDestinationMAC().toLong();
             if ((destMac & LINK_LOCAL_MASK) == LINK_LOCAL_VALUE) {
@@ -557,6 +572,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
             // If this is the first time we've seen the link, add the Link
             // object to the data structures/indexes as well
             if (existingInfo == null) {
+                log.trace("Creating new Link: {}", lt);
                 // index it by switch source
                 if (!switchLinks.containsKey(lt.getSrc())) {
                     switchLinks.put(lt.getSrc(), new HashSet<Link>());
@@ -639,8 +655,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     }
 
     /**
-     * Handles an OFPortStatus message from a switch. We will add or
-     * delete LinkTupes as well re-compute the topology if needed.
+     * Handles an OFPortStatus message from a switch. We will add or delete
+     * LinkTupes as well re-compute the topology if needed.
      *
      * @param sw The dpid of the switch that sent the port status message
      * @param ps The OFPortStatus message
@@ -657,14 +673,14 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         if (log.isTraceEnabled()) {
             log.trace("handlePortStatus: Switch {} port #{} reason {}; " +
                     "config is {} state is {}",
-                    new Object[]{sw.getStringId(),
-                            ps.getDesc().getPortNumber(),
+                    new Object[] {sw.getStringId(),
+                            ps.getDesc().getPortNo(),
                             ps.getReason(),
                             ps.getDesc().getConfig(),
                             ps.getDesc().getState()});
         }
 
-        short port = ps.getDesc().getPortNumber();
+        short port = ps.getDesc().getPortNo().getShortPortNumber();
         NodePortTuple npt = new NodePortTuple(sw.getId(), port);
         boolean linkDeleted = false;
         boolean linkInfoChanged = false;
@@ -673,14 +689,12 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         try {
             // if ps is a delete, or a modify where the port is down or
             // configured down
-            if ((byte) OFPortReason.OFPPR_DELETE.ordinal() == ps.getReason() ||
-                    ((byte) OFPortReason.OFPPR_MODIFY.ordinal() ==
-                            ps.getReason() && !portEnabled(ps.getDesc()))) {
-
+            if (OFPortReason.DELETE == ps.getReason() ||
+                    (OFPortReason.MODIFY == ps.getReason() &&
+                    !portEnabled(ps.getDesc()))) {
                 deleteLinksOnPort(npt);
                 linkDeleted = true;
-            } else if (ps.getReason() ==
-                    (byte) OFPortReason.OFPPR_MODIFY.ordinal()) {
+            } else if (ps.getReason() == OFPortReason.MODIFY) {
                 // If ps is a port modification and the port state has changed
                 // that affects links in the topology
 
@@ -691,18 +705,22 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                         LinkInfo newLinkInfo = null;
 
                         if (lt.isSrcPort(npt) &&
-                                linkInfo.getSrcPortState() != ps.getDesc().getState()) {
-                            // If this port status is for the src port and the port
-                            // state has changed, create a new link info with the new state
+                                !linkInfo.getSrcPortState().equals(
+                                        ps.getDesc().getState())) {
+                            // If this port status is for the src port and the
+                            // port state has changed, create a new link info
+                            // with the new state
 
                             newLinkInfo = new LinkInfo(linkInfo.getFirstSeenTime(),
                                     linkInfo.getLastProbeReceivedTime(),
                                     ps.getDesc().getState(),
                                     linkInfo.getDstPortState());
                         } else if (lt.isDstPort(npt) &&
-                                linkInfo.getDstPortState() != ps.getDesc().getState()) {
-                            // If this port status is for the dst port and the port
-                            // state has changed, create a new link info with the new state
+                                !linkInfo.getDstPortState().equals(
+                                        ps.getDesc().getState())) {
+                            // If this port status is for the dst port and the
+                            // port state has changed, create a new link info
+                            // with the new state
 
                             newLinkInfo = new LinkInfo(linkInfo.getFirstSeenTime(),
                                     linkInfo.getLastProbeReceivedTime(),
@@ -718,13 +736,12 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                 }
             }
 
-
             if (!linkDeleted && !linkInfoChanged) {
                 if (log.isTraceEnabled()) {
                     log.trace("handlePortStatus: Switch {} port #{} reason {};" +
                             " no links to update/remove",
-                            new Object[]{HexString.toHexString(sw.getId()),
-                                    ps.getDesc().getPortNumber(),
+                            new Object[] {HexString.toHexString(sw.getId()),
+                                    ps.getDesc().getPortNo(),
                                     ps.getReason()});
                 }
             }
@@ -745,32 +762,37 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     }
 
     /**
-     * Process a new port.
-     * If link discovery is disabled on the port, then do nothing.
-     * Otherwise, send LLDP message.
+     * Process a new port. If link discovery is disabled on the port, then do
+     * nothing. Otherwise, send LLDP message.
      *
      * @param sw the dpid of the switch the port is on
      * @param p the number of the port
      */
-    private void processNewPort(long sw, short p) {
-        if (isLinkDiscoverySuppressed(sw, p)) {
+    private void processNewPort(long sw, int p) {
+        if (isLinkDiscoverySuppressed(sw, (short) p)) {
             // Do nothing as link discovery is suppressed.
             return;
         } else {
-            discover(sw, p);
+            discover(sw, (short) p);
         }
     }
 
     /**
-     * We send out LLDP messages when a switch is added to discover the topology.
+     * We send out LLDP messages when a switch is added to discover the
+     * topology.
      *
-     * @param sw The IOFSwitch that connected to the controller
+     * @param swId the datapath Id of the new switch
      */
     @Override
-    public void addedSwitch(IOFSwitch sw) {
+    public void switchActivatedMaster(long swId) {
+        IOFSwitch sw = floodlightProvider.getSwitch(swId);
+        if (sw == null) {
+            log.warn("Added switch not available {} ", swId);
+            return;
+        }
         if (sw.getEnabledPorts() != null) {
-            for (Short p : sw.getEnabledPortNumbers()) {
-                processNewPort(sw.getId(), p);
+            for (Integer p : sw.getEnabledPortNumbers()) {
+                processNewPort(swId, p);
             }
         }
     }
@@ -778,23 +800,27 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     /**
      * When a switch disconnects we remove any links from our map and notify.
      *
-     * @param iofSwitch the switch that was removed
+     * @param swId the datapath Id of the switch that was removed
      */
     @Override
-    public void removedSwitch(IOFSwitch iofSwitch) {
+    public void switchDisconnected(long swId) {
+        IOFSwitch sw = floodlightProvider.getSwitch(swId);
+        if (sw == null) {
+            log.warn("Removed switch not available {} ", swId);
+            return;
+        }
         // Update event history
-        long sw = iofSwitch.getId();
 
         List<Link> eraseList = new ArrayList<Link>();
         lock.writeLock().lock();
         try {
-            if (switchLinks.containsKey(sw)) {
+            if (switchLinks.containsKey(swId)) {
                 if (log.isTraceEnabled()) {
                     log.trace("Handle switchRemoved. Switch {}; removing links {}",
-                            HexString.toHexString(sw), switchLinks.get(sw));
+                            HexString.toHexString(swId), switchLinks.get(swId));
                 }
                 // add all tuples with an endpoint on this switch to erase list
-                eraseList.addAll(switchLinks.get(sw));
+                eraseList.addAll(switchLinks.get(swId));
                 deleteLinks(eraseList);
             }
         } finally {
@@ -802,14 +828,34 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         }
     }
 
+    @Override
+    public void switchActivatedEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchMasterToEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchEqualToMaster(long swId) {
+        // for now treat as switchActivatedMaster
+        switchActivatedMaster(swId);
+    }
+
     /*
-     * We don't react the port changed notifications here. we listen for
+     * We don't react to port changed notifications here. we listen for
      * OFPortStatus messages directly. Might consider using this notifier
      * instead
      */
     @Override
-    public void switchPortChanged(Long switchId) {
-        // no-op
+    public void switchPortChanged(long swId, OFPortDesc port,
+            PortChangeType changeType) {
+        // TODO Auto-generated method stub
+
     }
 
     /**
@@ -823,7 +869,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
             if (log.isTraceEnabled()) {
                 log.trace("handlePortStatus: Switch {} port #{} " +
                         "removing links {}",
-                        new Object[]{HexString.toHexString(npt.getNodeId()),
+                        new Object[] {HexString.toHexString(npt.getNodeId()),
                                 npt.getPortId(),
                                 this.portLinks.get(npt)});
             }
@@ -833,8 +879,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     }
 
     /**
-     * Iterates through the list of links and deletes if the
-     * last discovery message reception time exceeds timeout values.
+     * Iterates through the list of links and deletes if the last discovery
+     * message reception time exceeds timeout values.
      */
     protected void timeOutLinks() {
         List<Link> eraseList = new ArrayList<Link>();
@@ -850,7 +896,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                 LinkInfo info = entry.getValue();
 
                 if ((info.getLastProbeReceivedTime() + (1000L * LINK_TIMEOUT)
-                        < curTime)) {
+                < curTime)) {
                     eraseList.add(entry.getKey());
                 }
             }
@@ -861,14 +907,14 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         }
     }
 
-    private boolean portEnabled(OFPhysicalPort port) {
+    private boolean portEnabled(OFPortDesc port) {
         if (port == null) {
             return false;
         }
-        if ((OFPortConfig.OFPPC_PORT_DOWN.getValue() & port.getConfig()) > 0) {
+        if (port.getConfig().contains(OFPortConfig.PORT_DOWN)) {
             return false;
         }
-        if ((OFPortState.OFPPS_LINK_DOWN.getValue() & port.getState()) > 0) {
+        if (port.getState().contains(OFPortState.LINK_DOWN)) {
             return false;
         }
         return true;
@@ -955,7 +1001,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     @LogMessageDocs({
             @LogMessageDoc(level = "ERROR",
                     message = "No storage source found.",
-                    explanation = "Storage source was not initialized; cannot initialize " +
+                    explanation = "Storage source was not initialized; cannot initialize "
+                            +
                             "link discovery.",
                     recommendation = LogMessageDoc.REPORT_CONTROLLER_BUG),
             @LogMessageDoc(level = "ERROR",
@@ -966,7 +1013,8 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                     recommendation = LogMessageDoc.REPORT_CONTROLLER_BUG),
             @LogMessageDoc(level = "ERROR",
                     message = "No storage source found.",
-                    explanation = "Storage source was not initialized; cannot initialize " +
+                    explanation = "Storage source was not initialized; cannot initialize "
+                            +
                             "link discovery.",
                     recommendation = LogMessageDoc.REPORT_CONTROLLER_BUG),
             @LogMessageDoc(level = "ERROR",

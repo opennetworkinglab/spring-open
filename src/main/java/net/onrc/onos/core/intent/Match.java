@@ -1,6 +1,5 @@
 package net.onrc.onos.core.intent;
 
-
 import java.util.Objects;
 
 import net.floodlightcontroller.util.MACAddress;
@@ -9,6 +8,14 @@ import net.onrc.onos.core.util.FlowEntryMatch;
 import net.onrc.onos.core.util.IPv4;
 import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.PortNumber;
+
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.match.Match.Builder;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.types.EthType;
+import org.projectfloodlight.openflow.types.IPv4AddressWithMask;
+import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.types.OFPort;
 
 /**
  * A class to represent the OpenFlow match.
@@ -41,8 +48,10 @@ public class Match {
      * @param dstMac destination Ethernet MAC address
      */
     public Match(long sw, long srcPort,
-                 MACAddress srcMac, MACAddress dstMac) {
-        this(sw, srcPort, srcMac, dstMac, ShortestPathIntent.EMPTYIPADDRESS, ShortestPathIntent.EMPTYIPADDRESS);
+            MACAddress srcMac, MACAddress dstMac) {
+        this(sw, srcPort, srcMac, dstMac,
+                ShortestPathIntent.EMPTYIPADDRESS,
+                ShortestPathIntent.EMPTYIPADDRESS);
     }
 
     /**
@@ -56,7 +65,7 @@ public class Match {
      * @param dstIp destination IP address
      */
     public Match(long sw, long srcPort, MACAddress srcMac, MACAddress dstMac,
-                 int srcIp, int dstIp) {
+            int srcIp, int dstIp) {
 
         this.sw = sw;
         this.srcPort = srcPort;
@@ -75,7 +84,7 @@ public class Match {
     public boolean equals(Object obj) {
         if (obj instanceof Match) {
             Match other = (Match) obj;
-            //TODO: we might consider excluding sw from this comparison
+            // TODO: we might consider excluding sw from this comparison
             if (this.sw != other.sw) {
                 return false;
             }
@@ -130,6 +139,30 @@ public class Match {
         return match;
     }
 
+    public Builder getOFMatchBuilder(OFFactory factory) {
+        Builder matchBuilder = factory.buildMatch();
+
+        if (srcMac != null) {
+            matchBuilder.setExact(MatchField.ETH_SRC, MacAddress.of(srcMac.toLong()));
+        }
+        if (dstMac != null) {
+            matchBuilder.setExact(MatchField.ETH_DST, MacAddress.of(dstMac.toLong()));
+        }
+        if (srcIp != ShortestPathIntent.EMPTYIPADDRESS) {
+            matchBuilder.setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                    .setMasked(MatchField.IPV4_SRC,
+                            IPv4AddressWithMask.of(srcIp, IPV4_PREFIX_LEN));
+        }
+        if (dstIp != ShortestPathIntent.EMPTYIPADDRESS) {
+            matchBuilder.setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                    .setMasked(MatchField.IPV4_DST,
+                            IPv4AddressWithMask.of(dstIp, IPV4_PREFIX_LEN));
+        }
+        matchBuilder.setExact(MatchField.IN_PORT, OFPort.of((int) srcPort));
+
+        return matchBuilder;
+    }
+
     /**
      * Returns a String representation of this Match.
      *
@@ -137,7 +170,9 @@ public class Match {
      */
     @Override
     public String toString() {
-        return "Sw:" + sw + " (" + srcPort + "," + srcMac + "," + dstMac + "," + srcIp + "," + dstIp + ")";
+        return "Sw:" + sw + " (" + srcPort + ","
+                + srcMac + "," + dstMac + ","
+                + srcIp + "," + dstIp + ")";
     }
 
     /**
@@ -147,8 +182,8 @@ public class Match {
      */
     @Override
     public int hashCode() {
-        //TODO: we might consider excluding sw from the hash function
-        //      to make it easier to compare matches between switches
-        return  Objects.hash(sw, srcPort, srcMac, dstMac, srcIp, dstIp);
+        // TODO: we might consider excluding sw from the hash function
+        // to make it easier to compare matches between switches
+        return Objects.hash(sw, srcPort, srcMac, dstMac, srcIp, dstIp);
     }
 }

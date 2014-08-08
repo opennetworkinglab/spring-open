@@ -24,7 +24,8 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
-import org.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+
 
 /**
  * Encode an openflow message for output into a ChannelBuffer, for use in a
@@ -42,12 +43,13 @@ public class OFMessageEncoder extends OneToOneEncoder {
 
         @SuppressWarnings("unchecked")
         List<OFMessage> msglist = (List<OFMessage>) msg;
+        /* XXX S can't get length of OFMessage in loxigen's openflowj??
         int size = 0;
         for (OFMessage ofm : msglist) {
             size += ofm.getLengthU();
-        }
+        }*/
 
-        ChannelBuffer buf = ChannelBuffers.buffer(size);
+        ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
 
         for (OFMessage ofm : msglist) {
             ofm.writeTo(buf);

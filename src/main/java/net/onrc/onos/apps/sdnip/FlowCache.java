@@ -1,6 +1,5 @@
 package net.onrc.onos.apps.sdnip;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,7 +13,6 @@ import net.floodlightcontroller.core.IOFSwitch;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPort;
-import org.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,19 +25,19 @@ public class FlowCache {
 
     private final Comparator<OFFlowMod> cookieComparator =
             new Comparator<OFFlowMod>() {
-        @Override
-        public int compare(OFFlowMod fm1, OFFlowMod fm2) {
-            long difference = fm2.getCookie() - fm1.getCookie();
+                @Override
+                public int compare(OFFlowMod fm1, OFFlowMod fm2) {
+                    long difference = fm2.getCookie() - fm1.getCookie();
 
-            if (difference > 0) {
-                return 1;
-            } else if (difference < 0) {
-                return -1;
-            } else {
-                return 0;
-            }
-        }
-    };
+                    if (difference > 0) {
+                        return 1;
+                    } else if (difference < 0) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }
+            };
 
     public FlowCache(IFloodlightProviderService floodlightProvider) {
         this.floodlightProvider = floodlightProvider;
@@ -83,11 +81,12 @@ public class FlowCache {
             List<OFMessage> msgList = new ArrayList<OFMessage>(clones.size());
             msgList.addAll(clones);
 
-            try {
+            // XXX S commenting out the old message writes
+            /*try {
                 sw.write(msgList, null);
             } catch (IOException e) {
                 log.error("Error writing to switch", e);
-            }
+            }*/
         }
     }
 
@@ -124,11 +123,12 @@ public class FlowCache {
             List<OFMessage> msgList = new ArrayList<OFMessage>(flowMods.size());
             msgList.addAll(flowMods);
 
-            try {
-                sw.write(msgList, null);
+            // XXX S commenting out old message writes
+            /*try {
+            sw.write(msgList, null);
             } catch (IOException e) {
                 log.error("Error writing to switch", e);
-            }
+            }*/
         }
     }
 
@@ -147,12 +147,14 @@ public class FlowCache {
             List<OFMessage> messages = new ArrayList<OFMessage>(flowMods.size());
             messages.addAll(flowMods);
 
-            try {
-                sw.write(messages, null);
-            } catch (IOException e) {
-                log.error("Failure writing flow mods to switch {}",
-                        HexString.toHexString(sw.getId()));
-            }
+            // XXX S commenting out old message writes
+            /*            try {
+                        sw.write(messages, null);
+                        } catch (IOException e) {
+                            log.error("Failure writing flow mods to switch {}",
+                                    HexString.toHexString(sw.getId()));
+                        }
+            */
         }
     }
 

@@ -18,12 +18,12 @@ package net.floodlightcontroller.core.internal;
 
 import java.util.concurrent.TimeUnit;
 
+import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFType;
+
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-
-import org.openflow.protocol.OFFeaturesReply;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFType;
 
 /**
  * A concrete implementation that handles asynchronously receiving

@@ -28,8 +28,8 @@ public class LinksResource extends ServerResource {
                 Link link = e.getKey();
                 LinkInfo info = e.getValue();
                 LinkWithType lwt = new LinkWithType(link,
-                        info.getSrcPortState(),
-                        info.getDstPortState(),
+                        info.getSrcPortStateInteger(),
+                        info.getDstPortStateInteger(),
                         info.getLinkType());
                 returnLinkSet.add(lwt);
             }

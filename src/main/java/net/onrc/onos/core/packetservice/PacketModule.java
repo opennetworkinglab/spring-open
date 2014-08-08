@@ -30,14 +30,14 @@ import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFPacketIn;
-import org.openflow.protocol.OFPacketOut;
-import org.openflow.protocol.OFPhysicalPort;
-import org.openflow.protocol.OFPort;
-import org.openflow.protocol.OFType;
-import org.openflow.protocol.action.OFAction;
-import org.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFPacketIn;
+import org.projectfloodlight.openflow.protocol.OFPacketOut;
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.types.OFPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 public class PacketModule implements IOFMessageListener, IPacketService,
-                                     IFloodlightModule {
+        IFloodlightModule {
     private static final Logger log = LoggerFactory.getLogger(PacketModule.class);
 
     private final CopyOnWriteArrayList<IPacketListener> listeners;
@@ -54,9 +54,9 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     private Topology topology;
     private IDatagridService datagrid;
     private IFlowPusherService flowPusher;
+    private OFFactory factory;
 
-    private IEventChannel<Long, PacketOutNotification>
-            packetOutEventChannel;
+    private IEventChannel<Long, PacketOutNotification> packetOutEventChannel;
 
     private static final String PACKET_OUT_CHANNEL_NAME =
             "onos.packet_out";
@@ -71,8 +71,9 @@ public class PacketModule implements IOFMessageListener, IPacketService,
         public void entryAdded(PacketOutNotification value) {
             Multimap<Long, Short> localPorts = HashMultimap.create();
             for (IOFSwitch sw : floodlightProvider.getSwitches().values()) {
-                for (OFPhysicalPort port : sw.getEnabledPorts()) {
-                    localPorts.put(sw.getId(), port.getPortNumber());
+                for (OFPortDesc port : sw.getEnabledPorts()) {
+                    // XXX S fix this to int
+                    localPorts.put(sw.getId(), port.getPortNo().getShortPortNumber());
                 }
             }
             Multimap<Long, Short> outPorts = value.calculateOutPorts(
@@ -104,7 +105,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     public void sendPacket(Ethernet eth, SwitchPort switchPort) {
         SinglePacketOutNotification notification =
                 new SinglePacketOutNotification(eth.serialize(), 0,
-                switchPort.dpid().value(), switchPort.port().shortValue());
+                        switchPort.dpid().value(), switchPort.port().shortValue());
 
         // TODO We shouldn't care what the destination MAC is
         long dstMac = eth.getDestinationMAC().toLong();
@@ -127,7 +128,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     public void broadcastPacketOutEdge(Ethernet eth, SwitchPort inSwitchPort) {
         BroadcastPacketOutNotification notification =
                 new BroadcastPacketOutNotification(eth.serialize(), 0,
-                inSwitchPort.dpid().value(), inSwitchPort.port().shortValue());
+                        inSwitchPort.dpid().value(), inSwitchPort.port().shortValue());
 
         long dstMac = eth.getDestinationMAC().toLong();
         packetOutEventChannel.addTransientEntry(dstMac, notification);
@@ -140,7 +141,6 @@ public class PacketModule implements IOFMessageListener, IPacketService,
 
     @Override
     public boolean isCallbackOrderingPrereq(OFType type, String name) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -156,18 +156,19 @@ public class PacketModule implements IOFMessageListener, IPacketService,
             return Command.CONTINUE;
         }
 
-        OFPacketIn pi = (OFPacketIn) msg;
-
         Ethernet eth = IFloodlightProviderService.bcStore.
                 get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+        short inport = (short) cntx.getStorage()
+                .get(IFloodlightProviderService.CONTEXT_PI_INPORT);
 
         Switch topologySwitch;
         Port inPort;
-        final Dpid dpid = new Dpid(sw.getId());
-        topology.acquireReadLock();
         try {
+            topology.acquireReadLock();
+            Dpid dpid = new Dpid(sw.getId());
+            PortNumber p = new PortNumber(inport);
             topologySwitch = topology.getSwitch(dpid);
-            inPort = topology.getPort(dpid, new PortNumber(pi.getInPort()));
+            inPort = topology.getPort(dpid, p);
         } finally {
             topology.releaseReadLock();
         }
@@ -194,9 +195,9 @@ public class PacketModule implements IOFMessageListener, IPacketService,
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService>
-    getServiceImpls() {
-        Map<Class<? extends IFloodlightService>, IFloodlightService>
-        serviceImpls = new HashMap<>();
+            getServiceImpls() {
+
+        Map<Class<? extends IFloodlightService>, IFloodlightService> serviceImpls = new HashMap<>();
         serviceImpls.put(IPacketService.class, this);
         return serviceImpls;
     }
@@ -220,12 +221,12 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                 .getTopology();
         datagrid = context.getServiceImpl(IDatagridService.class);
         flowPusher = context.getServiceImpl(IFlowPusherService.class);
+        factory = floodlightProvider.getOFMessageFactory_10();
     }
 
     @Override
     public void startUp(FloodlightModuleContext context) {
         floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
-
         packetOutEventChannel = datagrid.addListener(PACKET_OUT_CHANNEL_NAME,
                 packetOutEventHandler,
                 Long.class,
@@ -235,31 +236,25 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     private void sendPacketToSwitches(Multimap<Long, Short> outPorts,
             byte[] packetData) {
         for (Long dpid : outPorts.keySet()) {
-            OFPacketOut po = new OFPacketOut();
-            po.setInPort(OFPort.OFPP_NONE)
-              .setBufferId(OFPacketOut.BUFFER_ID_NONE)
-              .setPacketData(packetData);
-
-            List<OFAction> actions = new ArrayList<OFAction>();
-            for (Short port : outPorts.get(dpid)) {
-                actions.add(new OFActionOutput(port));
-            }
-
-            po.setActions(actions);
-            short actionsLength = (short)
-                    (actions.size() * OFActionOutput.MINIMUM_LENGTH);
-            po.setActionsLength(actionsLength);
-            po.setLengthU(OFPacketOut.MINIMUM_LENGTH + actionsLength
-                    + packetData.length);
-
             IOFSwitch sw = floodlightProvider.getSwitches().get(dpid);
 
             if (sw == null) {
-                log.warn("Switch not found when sending packet");
-                return;
+                log.warn("Switch {} not found when sending packet", dpid);
+                continue;
             }
+
+            List<OFAction> actions = new ArrayList<>();
+            for (Short port : outPorts.get(dpid)) {
+                actions.add(factory.actions().output(OFPort.of(port), Short.MAX_VALUE));
+            }
+
+            OFPacketOut po = factory.buildPacketOut()
+                    .setData(packetData)
+                    .setActions(actions)
+                    .build();
 
             flowPusher.add(sw, po);
         }
     }
+
 }

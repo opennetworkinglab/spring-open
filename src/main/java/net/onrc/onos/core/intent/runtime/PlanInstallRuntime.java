@@ -16,14 +16,15 @@ import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.FlowEntry;
 import net.onrc.onos.core.util.Pair;
 
-import org.openflow.protocol.OFBarrierReply;
+import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is responsible for installing plans (lists of sets of FlowEntries) into local switches.
- * In this context, a local switch is a switch for which this ONOS instance is the master.
- * It also is responsible for sending barrier messages between sets.
+ * This class is responsible for installing plans (lists of sets of FlowEntries)
+ * into local switches. In this context, a local switch is a switch for which
+ * this ONOS instance is the master. It also is responsible for sending barrier
+ * messages between sets.
  */
 
 public class PlanInstallRuntime {
@@ -39,16 +40,18 @@ public class PlanInstallRuntime {
      * @param pusher the FlowPusherService to use for FlowEntry installation
      */
     public PlanInstallRuntime(IFloodlightProviderService provider,
-                              IFlowPusherService pusher) {
+            IFlowPusherService pusher) {
         this.provider = provider;
         this.pusher = pusher;
     }
 
     /**
-     * This class is a temporary class for collecting FlowMod installation information. It is
-     * largely used for debugging purposes, and it should not be depended on for other purposes.
+     * This class is a temporary class for collecting FlowMod installation
+     * information. It is largely used for debugging purposes, and it should not
+     * be depended on for other purposes.
      * <p>
-     * TODO: This class should be wrapped into a more generic debugging framework when available.
+     * TODO: This class should be wrapped into a more generic debugging
+     * framework when available.
      */
     private static class FlowModCount {
         WeakReference<IOFSwitch> sw;
@@ -72,17 +75,17 @@ public class PlanInstallRuntime {
          */
         void addFlowEntry(FlowEntry entry) {
             switch (entry.getOperator()) {
-                case ADD:
-                    modFlows++;
-                    break;
-                case ERROR:
-                    errors++;
-                    break;
-                case REMOVE:
-                    delFlows++;
-                    break;
-                default:
-                    break;
+            case ADD:
+                modFlows++;
+                break;
+            case ERROR:
+                errors++;
+                break;
+            case REMOVE:
+                delFlows++;
+                break;
+            default:
+                break;
             }
         }
 
@@ -101,13 +104,15 @@ public class PlanInstallRuntime {
         static Map<IOFSwitch, FlowModCount> map = new WeakHashMap<>();
 
         /**
-         * This function is used for collecting statistics information. It should be called for
-         * every FlowEntry that is pushed to the switch for accurate statistics.
+         * This function is used for collecting statistics information. It
+         * should be called for every FlowEntry that is pushed to the switch for
+         * accurate statistics.
          * <p>
-         * This class maintains a map of Switches and FlowModCount collection objects, which
-         * are used for collection.
+         * This class maintains a map of Switches and FlowModCount collection
+         * objects, which are used for collection.
          * <p>
-         * TODO: This should be refactored to use a more generic mechanism when available.
+         * TODO: This should be refactored to use a more generic mechanism when
+         * available.
          *
          * @param sw the switch that entry is being pushed to
          * @param entry the FlowEntry being pushed
@@ -122,7 +127,8 @@ public class PlanInstallRuntime {
         }
 
         /**
-         * Reset the statistics collection. It should be called when required for debugging.
+         * Reset the statistics collection. It should be called when required
+         * for debugging.
          */
         static void startCount() {
             map.clear();
@@ -148,11 +154,11 @@ public class PlanInstallRuntime {
     /**
      * This function should be called to install the FlowEntries in the plan.
      * <p>
-     * Each set of FlowEntries can be installed together, but all entries should be installed
-     * proceeded to the next set.
+     * Each set of FlowEntries can be installed together, but all entries should
+     * be installed proceeded to the next set.
      * <p>
-     * TODO: This method lack coordination between the other ONOS instances before proceeded
-     * with the next set of entries
+     * TODO: This method lack coordination between the other ONOS instances
+     * before proceeded with the next set of entries
      *
      * @param plan list of set of FlowEntries for installation on local switches
      * @return true (we assume installation is successful)
@@ -164,7 +170,7 @@ public class PlanInstallRuntime {
         log.debug("IOFSwitches: {}", switches);
         FlowModCount.startCount();
         for (Set<FlowEntry> phase : plan) {
-            Set<Pair<IOFSwitch, net.onrc.onos.core.util.FlowEntry>> entries = new HashSet<>();
+            Set<Pair<IOFSwitch, FlowEntry>> entries = new HashSet<>();
             Set<IOFSwitch> modifiedSwitches = new HashSet<>();
 
             long step1 = System.nanoTime();
@@ -176,7 +182,7 @@ public class PlanInstallRuntime {
                     log.debug("Skipping flow entry: {}", entry);
                     continue;
                 }
-                entries.add(new Pair<>(sw, entry.getFlowEntry()));
+                entries.add(new Pair<>(sw, entry));
                 modifiedSwitches.add(sw);
                 FlowModCount.countFlowEntry(sw, entry);
             }

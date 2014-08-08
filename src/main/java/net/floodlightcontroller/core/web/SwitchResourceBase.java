@@ -117,12 +117,13 @@ public class SwitchResourceBase extends ServerResource {
                 // pass - nothing todo besides set the type above
             }
             req.setLengthU(requestLength);
-            try {
+            // XXX S fix when we fix stats
+            /*try {
                 future = sw.getStatistics(req);
                 values = future.get(10, TimeUnit.SECONDS);
             } catch (Exception e) {
                 log.error("Failure retrieving statistics from switch " + sw, e);
-            }
+            }*/
         }
         return values;
     }
@@ -140,12 +141,13 @@ public class SwitchResourceBase extends ServerResource {
         Future<OFFeaturesReply> future;
         OFFeaturesReply featuresReply = null;
         if (sw != null) {
-            try {
+		// XXX S fix when we fix stats
+            /*try {
                 future = sw.getFeaturesReplyFromSwitch();
                 featuresReply = future.get(10, TimeUnit.SECONDS);
             } catch (Exception e) {
                 log.error("Failure getting features reply from switch" + sw, e);
-            }
+            }*/
         }
 
         return featuresReply;

@@ -1,32 +1,80 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.core.module;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.floodlightcontroller.core.test.MockFloodlightProvider;
-import net.floodlightcontroller.core.test.MockThreadPoolService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.floodlightcontroller.core.module.FloodlightModuleLoader;
+import net.floodlightcontroller.core.module.IFloodlightModule;
+import net.floodlightcontroller.core.test.MockFloodlightProvider;
+import net.floodlightcontroller.core.test.MockThreadPoolService;
+import net.onrc.onos.apps.websocket.WebSocketModule;
+import net.onrc.onos.core.datagrid.HazelcastDatagrid;
+import net.onrc.onos.core.flowprogrammer.FlowProgrammer;
+import net.onrc.onos.core.intent.runtime.PathCalcRuntimeModule;
+import net.onrc.onos.core.intent.runtime.PlanInstallModule;
+import net.onrc.onos.core.metrics.OnosMetricsModule;
+import net.onrc.onos.core.registry.ZookeeperRegistry;
+import net.onrc.onos.core.topology.TopologyPublisher;
+
 public class FloodlightTestModuleLoader extends FloodlightModuleLoader {
-    protected final static Logger log = LoggerFactory.getLogger(FloodlightTestModuleLoader.class);
+    protected static Logger log = LoggerFactory.getLogger(FloodlightTestModuleLoader.class);
 
     // List of default modules to use unless specified otherwise
-    public static final Class<? extends IFloodlightModule> DEFAULT_FLOODLIGHT_PRPOVIDER =
+    public static final Class<? extends IFloodlightModule> DEFAULT_HZ_DATAGRID =
+            HazelcastDatagrid.class;
+    public static final Class<? extends IFloodlightModule> DEFAULT_FLOODLIGHT_PROVIDER =
             MockFloodlightProvider.class;
+    public static final Class<? extends IFloodlightModule> DEFAULT_TOPOLOGY_PUBLISHER =
+            TopologyPublisher.class;
     public static final Class<? extends IFloodlightModule> DEFAULT_THREADPOOL =
             MockThreadPoolService.class;
-
+    public static final Class<? extends IFloodlightModule> DEFAULT_FLOW_PROGRAMMER =
+            FlowProgrammer.class;
+    public static final Class<? extends IFloodlightModule> DEFAULT_PATHCALC_RUNTIME =
+            PathCalcRuntimeModule.class;
+    public static final Class<? extends IFloodlightModule> DEFAULT_PLAN_INSTALL =
+            PlanInstallModule.class;
+    public static final Class<? extends IFloodlightModule> DEFAULT_ZOOKEEPER_REGISTRY =
+            ZookeeperRegistry.class;
+    public static final Class<? extends IFloodlightModule> DEFAULT_METRICS_MODULE =
+            OnosMetricsModule.class;
+    public static final Class<? extends IFloodlightModule> DEFAULT_WEBSOCKET_MODULE =
+            WebSocketModule.class;
 
     protected static final Collection<Class<? extends IFloodlightModule>> DEFAULT_MODULE_LIST;
 
     static {
         DEFAULT_MODULE_LIST = new ArrayList<Class<? extends IFloodlightModule>>();
-        DEFAULT_MODULE_LIST.add(DEFAULT_FLOODLIGHT_PRPOVIDER);
+        DEFAULT_MODULE_LIST.add(DEFAULT_HZ_DATAGRID);
+        DEFAULT_MODULE_LIST.add(DEFAULT_FLOODLIGHT_PROVIDER);
+        DEFAULT_MODULE_LIST.add(DEFAULT_FLOW_PROGRAMMER);
+        DEFAULT_MODULE_LIST.add(DEFAULT_TOPOLOGY_PUBLISHER);
+        DEFAULT_MODULE_LIST.add(DEFAULT_PATHCALC_RUNTIME);
         DEFAULT_MODULE_LIST.add(DEFAULT_THREADPOOL);
-
+        DEFAULT_MODULE_LIST.add(DEFAULT_PLAN_INSTALL);
+        DEFAULT_MODULE_LIST.add(DEFAULT_ZOOKEEPER_REGISTRY);
+        DEFAULT_MODULE_LIST.add(DEFAULT_METRICS_MODULE);
+        DEFAULT_MODULE_LIST.add(DEFAULT_WEBSOCKET_MODULE);
     }
 
     protected IFloodlightModuleContext fmc;
@@ -35,7 +83,6 @@ public class FloodlightTestModuleLoader extends FloodlightModuleLoader {
      * Adds default modules to the list of modules to load. This is done
      * in order to avoid the module loader throwing errors about duplicate
      * modules and neither one is specified by the user.
-     *
      * @param userModules The list of user specified modules to add to.
      */
     protected void addDefaultModules(Collection<Class<? extends IFloodlightModule>> userModules) {
@@ -70,14 +117,14 @@ public class FloodlightTestModuleLoader extends FloodlightModuleLoader {
                 // the default module from the list.
                 boolean shouldBreak = false;
                 Iterator<Class<? extends IFloodlightService>> userModServsIter
-                        = userModServs.iterator();
+                    = userModServs.iterator();
                 while (userModServsIter.hasNext()) {
                     Class<? extends IFloodlightService> userModServIntf = userModServsIter.next();
                     Iterator<Class<? extends IFloodlightService>> dmModsServsIter
-                            = dmModServs.iterator();
+                        = dmModServs.iterator();
                     while (dmModsServsIter.hasNext()) {
                         Class<? extends IFloodlightService> dmModServIntf
-                                = dmModsServsIter.next();
+                            = dmModsServsIter.next();
 
                         if (dmModServIntf.getCanonicalName().equals(
                                 userModServIntf.getCanonicalName())) {
@@ -103,29 +150,23 @@ public class FloodlightTestModuleLoader extends FloodlightModuleLoader {
 
     /**
      * Sets up all modules and their dependencies.
-     *
-     * @param modules        The list of modules that the user wants to load.
+     * @param modules The list of modules that the user wants to load.
      * @param mockedServices The list of services that will be mocked. Any
-     *                       module that provides this service will not be loaded.
+     * module that provides this service will not be loaded.
      */
     public void setupModules(Collection<Class<? extends IFloodlightModule>> modules,
-                             Collection<IFloodlightService> mockedServices) {
+            Collection<IFloodlightService> mockedServices) throws FloodlightModuleException {
         addDefaultModules(modules);
         Collection<String> modulesAsString = new ArrayList<String>();
         for (Class<? extends IFloodlightModule> m : modules) {
             modulesAsString.add(m.getCanonicalName());
         }
 
-        try {
-            fmc = loadModulesFromList(modulesAsString, null, mockedServices);
-        } catch (FloodlightModuleException e) {
-            log.error(e.getMessage());
-        }
+        fmc = loadModulesFromList(modulesAsString, null, mockedServices);
     }
 
     /**
      * Gets the inited/started instance of a module from the context.
-     *
      * @param ifl The name if the module to get, i.e. "LearningSwitch.class".
      * @return The inited/started instance of the module.
      */
@@ -141,7 +182,6 @@ public class FloodlightTestModuleLoader extends FloodlightModuleLoader {
 
     /**
      * Gets an inited/started instance of a service from the context.
-     *
      * @param ifs The name of the service to get, i.e. "ITopologyService.class".
      * @return The inited/started instance of the service from teh context.
      */
@@ -152,8 +192,8 @@ public class FloodlightTestModuleLoader extends FloodlightModuleLoader {
             if (mServs == null) continue;
             for (Class<? extends IFloodlightService> mServClass : mServs) {
                 if (mServClass.getCanonicalName().equals(ifs.getCanonicalName())) {
-                    assert (m instanceof IFloodlightService);
-                    return (IFloodlightService) m;
+                    assert(m instanceof IFloodlightService);
+                    return (IFloodlightService)m;
                 }
             }
         }

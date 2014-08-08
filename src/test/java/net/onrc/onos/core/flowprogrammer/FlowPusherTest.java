@@ -1,6 +1,6 @@
 package net.onrc.onos.core.flowprogrammer;
 
-import static org.junit.Assert.assertEquals;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -16,41 +16,40 @@ import java.util.concurrent.TimeUnit;
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.floodlightcontroller.util.OFMessageDamper;
-import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.FlowEntry;
-import net.onrc.onos.core.util.FlowEntryActions;
-import net.onrc.onos.core.util.FlowEntryErrorState;
-import net.onrc.onos.core.util.FlowEntryId;
-import net.onrc.onos.core.util.FlowEntryMatch;
-import net.onrc.onos.core.util.FlowEntryUserState;
-import net.onrc.onos.core.util.FlowId;
+import net.onrc.onos.core.intent.FlowEntry;
+import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.util.IntegrationTest;
-import net.onrc.onos.core.util.PortNumber;
 
 import org.easymock.EasyMock;
-import org.easymock.IAnswer;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.openflow.protocol.OFBarrierRequest;
-import org.openflow.protocol.OFFlowMod;
-import org.openflow.protocol.OFMatch;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFType;
-import org.openflow.protocol.action.OFAction;
-import org.openflow.protocol.factory.BasicFactory;
+import org.projectfloodlight.openflow.protocol.OFBarrierReply;
+import org.projectfloodlight.openflow.protocol.OFBarrierRequest;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFFlowModify;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.match.Match;
+import org.projectfloodlight.openflow.types.OFBufferId;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.U64;
+
 
 @Category(IntegrationTest.class)
 public class FlowPusherTest {
     private FlowPusher pusher;
     private FloodlightContext context;
     private FloodlightModuleContext modContext;
-    private BasicFactory factory;
-    private OFMessageDamper damper;
     private IFloodlightProviderService flProviderService;
     private IThreadPoolService threadPoolService;
+
+    private OFFactory factory10 = OFFactories.getFactory(OFVersion.OF_10);
 
     /**
      * Test single OFMessage is correctly sent to single switch via MessageDamper.
@@ -60,18 +59,20 @@ public class FlowPusherTest {
         beginInitMock();
 
         OFMessage msg = EasyMock.createMock(OFMessage.class);
-        EasyMock.expect(msg.getXid()).andReturn(1).anyTimes();
-        EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
+        EasyMock.expect(msg.getXid()).andReturn((long) 1).anyTimes();
+        //EasyMock.expect(msg.()).andReturn((short) 100).anyTimes();
         EasyMock.replay(msg);
 
         IOFSwitch sw = createConnectedSwitchMock(1, false);
-        EasyMock.replay(sw);
+
+
 
         try {
-            EasyMock.expect(damper.write(EasyMock.eq(sw), EasyMock.eq(msg), EasyMock.eq(context)))
-                    .andReturn(true).once();
+            sw.write(EasyMock.eq(msg), EasyMock.eq((FloodlightContext) null));
+            EasyMock.expectLastCall().once();
+            EasyMock.replay(sw);
         } catch (IOException e1) {
-            fail("Failed in OFMessageDamper#write()");
+            fail("Failed in IOFSwitch#write()");
         }
 
         endInitMock();
@@ -104,25 +105,24 @@ public class FlowPusherTest {
         beginInitMock();
 
         IOFSwitch sw = createConnectedSwitchMock(1, false);
-        EasyMock.replay(sw);
+
 
         List<OFMessage> messages = new ArrayList<OFMessage>();
 
         for (int i = 0; i < numMsg; ++i) {
             OFMessage msg = EasyMock.createMock(OFMessage.class);
-            EasyMock.expect(msg.getXid()).andReturn(i).anyTimes();
-            EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
+            EasyMock.expect(msg.getXid()).andReturn((long) i).anyTimes();
             EasyMock.replay(msg);
             messages.add(msg);
 
             try {
-                EasyMock.expect(damper.write(EasyMock.eq(sw), EasyMock.eq(msg), EasyMock.eq(context)))
-                        .andReturn(true).once();
+                sw.write(EasyMock.eq(msg), EasyMock.eq((FloodlightContext) null));
+                EasyMock.expectLastCall().once();
             } catch (IOException e1) {
-                fail("Failed in OFMessageDamper#write()");
+                fail("Failed in IOFSwitch#write()");
             }
         }
-
+        EasyMock.replay(sw);
         endInitMock();
         initPusher(1);
 
@@ -160,25 +160,24 @@ public class FlowPusherTest {
         Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
         for (int i = 0; i < numSwitch; ++i) {
             IOFSwitch sw = createConnectedSwitchMock(i, false);
-            EasyMock.replay(sw);
 
             List<OFMessage> messages = new ArrayList<OFMessage>();
 
             for (int j = 0; j < numMsg; ++j) {
                 OFMessage msg = EasyMock.createMock(OFMessage.class);
-                EasyMock.expect(msg.getXid()).andReturn(j).anyTimes();
-                EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
+                EasyMock.expect(msg.getXid()).andReturn((long) j).anyTimes();
                 EasyMock.replay(msg);
                 messages.add(msg);
 
                 try {
-                    EasyMock.expect(damper.write(EasyMock.eq(sw), EasyMock.eq(msg), EasyMock.eq(context)))
-                            .andReturn(true).once();
+                    sw.write(EasyMock.eq(msg), EasyMock.eq((FloodlightContext) null));
+                    EasyMock.expectLastCall().once();
                 } catch (IOException e1) {
-                    fail("Failed in OFMessageDamper#write()");
+                    fail("Failed in IOFWrite#write()");
                 }
             }
             swMap.put(sw, messages);
+            EasyMock.replay(sw);
         }
 
         endInitMock();
@@ -223,30 +222,30 @@ public class FlowPusherTest {
         Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
         for (int i = 0; i < numThreads; ++i) {
             IOFSwitch sw = createConnectedSwitchMock(i, false);
-            EasyMock.replay(sw);
+            //EasyMock.replay(sw);
 
             List<OFMessage> messages = new ArrayList<OFMessage>();
 
             for (int j = 0; j < numMsg; ++j) {
                 OFMessage msg = EasyMock.createMock(OFMessage.class);
-                EasyMock.expect(msg.getXid()).andReturn(j).anyTimes();
-                EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
+                EasyMock.expect(msg.getXid()).andReturn((long) j).anyTimes();
+
                 EasyMock.replay(msg);
                 messages.add(msg);
 
                 try {
-                    EasyMock.expect(damper.write(EasyMock.eq(sw), EasyMock.eq(msg), EasyMock.eq(context)))
-                            .andReturn(true).once();
+                    sw.write(EasyMock.eq(msg), EasyMock.eq((FloodlightContext) null));
+                    EasyMock.expectLastCall().once();
                 } catch (IOException e1) {
-                    fail("Failed in OFMessageDamper#write()");
+                    fail("Failed in IOFWrite#write()");
                 }
             }
             swMap.put(sw, messages);
+            EasyMock.replay(sw);
         }
 
         endInitMock();
         initPusher(numThreads);
-
         for (IOFSwitch sw : swMap.keySet()) {
             for (OFMessage msg : swMap.get(sw)) {
                 boolean addResult = pusher.add(sw, msg);
@@ -292,41 +291,34 @@ public class FlowPusherTest {
         beginInitMock();
 
         IOFSwitch sw = createConnectedSwitchMock(1, true);
-        EasyMock.replay(sw);
+        EasyMock.expect(sw.getOFVersion()).andReturn(OFVersion.OF_10).once();
+
 
         List<OFMessage> messages = new ArrayList<OFMessage>();
 
         for (int i = 0; i < numMsg; ++i) {
             OFMessage msg = EasyMock.createMock(OFMessage.class);
-            EasyMock.expect(msg.getXid()).andReturn(1).anyTimes();
-            EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
-            EasyMock.expect(msg.getLengthU()).andReturn(100).anyTimes();
+            EasyMock.expect(msg.getXid()).andReturn((long) 1).anyTimes();
             EasyMock.replay(msg);
             messages.add(msg);
 
             try {
-                EasyMock.expect(damper.write(EasyMock.eq(sw), EasyMock.eq(msg), EasyMock.eq(context)))
-                        .andReturn(true).once();
-            } catch (IOException e) {
-                fail("Failed in OFMessageDamper#write()");
+                sw.write(EasyMock.eq(msg), EasyMock.eq((FloodlightContext) null));
+                EasyMock.expectLastCall().once();
+            } catch (IOException e1) {
+                fail("Failed in IOFWrite#write()");
             }
         }
 
         try {
-            EasyMock.expect(damper.write(EasyMock.eq(sw), (OFMessage) EasyMock.anyObject(), EasyMock.eq(context)))
-                    .andAnswer(new IAnswer<Boolean>() {
-                        @Override
-                        public Boolean answer() throws Throwable {
-                            OFMessage msg = (OFMessage) EasyMock.getCurrentArguments()[1];
-                            if (msg.getType() == OFType.BARRIER_REQUEST) {
-                                barrierTime = System.currentTimeMillis();
-                            }
-                            return true;
-                        }
-                    }).once();
+            sw.write(EasyMock.anyObject(OFBarrierRequest.class), EasyMock.eq((FloodlightContext) null));
+            EasyMock.expectLastCall().once();
+            barrierTime = System.currentTimeMillis();
         } catch (IOException e1) {
-            fail("Failed in OFMessageDamper#write()");
+            fail("Failed in IOFWrite#write()");
         }
+
+        EasyMock.replay(sw);
 
         endInitMock();
         initPusher(1);
@@ -370,19 +362,19 @@ public class FlowPusherTest {
         beginInitMock();
 
         IOFSwitch sw = createConnectedSwitchMock(1, true);
-        EasyMock.replay(sw);
+        EasyMock.expect(sw.getOFVersion()).andReturn(OFVersion.OF_10).once();
 
         try {
-            EasyMock.expect(damper.write(EasyMock.eq(sw), (OFMessage) EasyMock.anyObject(), EasyMock.eq(context)))
-                    .andReturn(true).once();
+            sw.write((OFMessage) EasyMock.anyObject(), EasyMock.eq((FloodlightContext) null));
+            EasyMock.expectLastCall().once();
         } catch (IOException e1) {
-            fail("Failed in OFMessageDamper#write()");
+            fail("Failed in IOFWrite#write()");
         }
-
+        EasyMock.replay(sw);
         endInitMock();
         initPusher(1);
 
-        OFBarrierReplyFuture future = pusher.barrierAsync(sw);
+        OFMessageFuture<OFBarrierReply> future = pusher.barrierAsync(sw);
 
         assertNotNull(future);
 
@@ -397,7 +389,7 @@ public class FlowPusherTest {
         pusher.stop();
     }
 
-    static final int XID_TO_VERIFY = 100;
+    static final long XID_TO_VERIFY = 100;
     static final long DPID_TO_VERIFY = 10;
 
     /**
@@ -407,7 +399,8 @@ public class FlowPusherTest {
     @Test
     public void testAddFlow() {
         // instantiate required objects
-        FlowEntry flowEntry1 = new FlowEntry();
+        FlowEntry flowEntry1 = new FlowEntry(DPID_TO_VERIFY, 1, 11, null, null, 0, 0, Operator.ADD);
+        /*
         flowEntry1.setDpid(new Dpid(DPID_TO_VERIFY));
         flowEntry1.setFlowId(new FlowId(1));
         flowEntry1.setInPort(new PortNumber((short) 1));
@@ -417,46 +410,42 @@ public class FlowPusherTest {
         flowEntry1.setFlowEntryActions(new FlowEntryActions());
         flowEntry1.setFlowEntryErrorState(new FlowEntryErrorState());
         flowEntry1.setFlowEntryUserState(FlowEntryUserState.FE_USER_ADD);
+        */
 
         beginInitMock();
 
-        OFFlowMod msg = EasyMock.createMock(OFFlowMod.class);
-        EasyMock.expect(msg.setIdleTimeout(EasyMock.anyShort())).andReturn(msg);
-        EasyMock.expect(msg.setHardTimeout(EasyMock.anyShort())).andReturn(msg);
-        EasyMock.expect(msg.setPriority(EasyMock.anyShort())).andReturn(msg);
-        EasyMock.expect(msg.setBufferId(EasyMock.anyInt())).andReturn(msg);
-        EasyMock.expect(msg.setCookie(EasyMock.anyLong())).andReturn(msg);
-        EasyMock.expect(msg.setCommand(EasyMock.anyShort())).andReturn(msg);
-        EasyMock.expect(msg.setMatch(EasyMock.anyObject(OFMatch.class))).andReturn(msg);
-        EasyMock.expect(msg.setActions((List<OFAction>) EasyMock.anyObject())).andReturn(msg);
-        EasyMock.expect(msg.setLengthU(EasyMock.anyShort())).andReturn(msg);
-        EasyMock.expect(msg.setOutPort(EasyMock.anyShort())).andReturn(msg).atLeastOnce();
-        EasyMock.expect(msg.getXid()).andReturn(XID_TO_VERIFY).anyTimes();
-        EasyMock.expect(msg.getType()).andReturn(OFType.FLOW_MOD).anyTimes();
-        EasyMock.expect(msg.getLength()).andReturn((short) 100).anyTimes();
-        EasyMock.replay(msg);
+        OFFlowModify fm = EasyMock.createMock(OFFlowModify.class);
 
-        EasyMock.expect(factory.getMessage(EasyMock.eq(OFType.FLOW_MOD))).andReturn(msg);
+        OFFlowModify.Builder bld = EasyMock.createMock(OFFlowModify.Builder.class);
+
+        EasyMock.expect(bld.setIdleTimeout(EasyMock.anyInt())).andReturn(bld);
+        EasyMock.expect(bld.setHardTimeout(EasyMock.anyInt())).andReturn(bld);
+        EasyMock.expect(bld.setPriority(EasyMock.anyShort())).andReturn(bld);
+        EasyMock.expect(bld.setBufferId(OFBufferId.NO_BUFFER)).andReturn(bld);
+        EasyMock.expect(bld.setCookie(U64.of(EasyMock.anyLong()))).andReturn(bld);
+        EasyMock.expect(bld.setMatch(EasyMock.anyObject(Match.class))).andReturn(bld);
+        EasyMock.expect(bld.setActions((List<OFAction>) EasyMock.anyObject())).andReturn(bld);
+        EasyMock.expect(bld.setOutPort(OFPort.of(EasyMock.anyInt()))).andReturn(bld).atLeastOnce();
+        EasyMock.expect(bld.build()).andReturn(fm);
+
+        EasyMock.expect(fm.getXid()).andReturn(XID_TO_VERIFY).anyTimes();
+        EasyMock.expect(fm.getType()).andReturn(OFType.FLOW_MOD).anyTimes();
+
+
+
 
         IOFSwitch sw = createConnectedSwitchMock(DPID_TO_VERIFY, false);
         EasyMock.expect(sw.getStringId()).andReturn("1").anyTimes();
+        EasyMock.expect(sw.getOFVersion()).andReturn(OFVersion.OF_10).once();
 
         try {
-            EasyMock.expect(damper.write(EasyMock.eq(sw), EasyMock.anyObject(OFMessage.class), EasyMock.eq(context)))
-                    .andAnswer(new IAnswer<Boolean>() {
-                        @Override
-                        public Boolean answer() throws Throwable {
-                            OFMessage msg = (OFMessage) EasyMock.getCurrentArguments()[1];
-                            if (msg.getType() == OFType.FLOW_MOD) {
-                                assertEquals(msg.getXid(), XID_TO_VERIFY);
-                            }
-                            return true;
-                        }
-                    }).atLeastOnce();
+            sw.write(EasyMock.anyObject(OFMessage.class), EasyMock.eq((FloodlightContext) null));
+            EasyMock.expectLastCall().once();
         } catch (IOException e1) {
-            fail("Failed in OFMessageDamper#write()");
+            fail("Failed in IOFWrite#write()");
         }
 
+        EasyMock.replay(bld, fm);
         EasyMock.replay(sw);
 
         endInitMock();
@@ -479,17 +468,20 @@ public class FlowPusherTest {
     private void beginInitMock() {
         context = EasyMock.createMock(FloodlightContext.class);
         modContext = EasyMock.createMock(FloodlightModuleContext.class);
-        factory = EasyMock.createMock(BasicFactory.class);
-        damper = EasyMock.createMock(OFMessageDamper.class);
+        // AAS: I don't think we should mock factories... the rabbit whole is too deep.
+        //factory10 = EasyMock.createMock(OFFactories.getFactory(OFVersion.OF_10).getClass());
         flProviderService = EasyMock.createMock(IFloodlightProviderService.class);
         threadPoolService = EasyMock.createMock(IThreadPoolService.class);
+        EasyMock.expect(flProviderService.getOFMessageFactory_10()).andReturn(factory10).anyTimes();
+        EasyMock.expect(flProviderService.getOFMessageFactory_13()).andReturn(null).anyTimes();
 
         EasyMock.expect(modContext.getServiceImpl(EasyMock.eq(IThreadPoolService.class)))
                 .andReturn(threadPoolService).once();
         EasyMock.expect(modContext.getServiceImpl(EasyMock.eq(IFloodlightProviderService.class)))
                 .andReturn(flProviderService).once();
+        // AAS: FlowPusher doesn't call the following anymore.
         flProviderService.addOFMessageListener(EasyMock.eq(OFType.BARRIER_REPLY),
-                (FlowPusher) EasyMock.anyObject());
+                EasyMock.anyObject(FlowPusher.class));
         EasyMock.expectLastCall().once();
 
         ScheduledExecutorService executor = EasyMock.createMock(ScheduledExecutorService.class);
@@ -502,8 +494,7 @@ public class FlowPusherTest {
     private void endInitMock() {
         EasyMock.replay(threadPoolService);
         EasyMock.replay(flProviderService);
-        EasyMock.replay(damper);
-        EasyMock.replay(factory);
+        //EasyMock.replay(factory10);
         EasyMock.replay(modContext);
         EasyMock.replay(context);
     }
@@ -511,15 +502,14 @@ public class FlowPusherTest {
     private void verifyAll() {
         EasyMock.verify(threadPoolService);
         EasyMock.verify(flProviderService);
-        EasyMock.verify(damper);
-        EasyMock.verify(factory);
+        //EasyMock.verify(factory10);
         EasyMock.verify(modContext);
         EasyMock.verify(context);
     }
 
     private void initPusher(int numThread) {
         pusher = new FlowPusher(numThread);
-        pusher.init(context, modContext, factory, damper);
+        pusher.init(modContext);
         pusher.start();
     }
 
@@ -528,7 +518,7 @@ public class FlowPusherTest {
         EasyMock.expect(sw.isConnected()).andReturn(true).anyTimes();
         EasyMock.expect(sw.getId()).andReturn(dpid).anyTimes();
         sw.flush();
-        EasyMock.expectLastCall().atLeastOnce();
+        EasyMock.expectLastCall().anyTimes();
         if (useBarrier) {
             prepareBarrier(sw);
         }
@@ -537,14 +527,14 @@ public class FlowPusherTest {
     }
 
     private void prepareBarrier(IOFSwitch sw) {
+        OFBarrierRequest.Builder bld = EasyMock.createMock(factory10.buildBarrierRequest().getClass());
+        EasyMock.expect(bld.setXid(EasyMock.anyInt())).andReturn(bld);
+        EasyMock.expect(bld.getXid()).andReturn((long) 1).anyTimes();
+        EasyMock.expect(bld.getType()).andReturn(OFType.BARRIER_REQUEST).anyTimes();
+
         OFBarrierRequest req = EasyMock.createMock(OFBarrierRequest.class);
-        req.setXid(EasyMock.anyInt());
-        EasyMock.expectLastCall().once();
-        EasyMock.expect(req.getXid()).andReturn(1).anyTimes();
-        EasyMock.expect(req.getType()).andReturn(OFType.BARRIER_REQUEST).anyTimes();
-        EasyMock.expect(req.getLength()).andReturn((short) 100).anyTimes();
-        EasyMock.replay(req);
-        EasyMock.expect(factory.getMessage(EasyMock.eq(OFType.BARRIER_REQUEST))).andReturn(req).anyTimes();
+        EasyMock.expect(bld.build()).andReturn(req).anyTimes();
+        EasyMock.replay(bld);
         EasyMock.expect(sw.getNextTransactionId()).andReturn(1);
     }
 

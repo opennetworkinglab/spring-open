@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.IOFSwitch.PortChangeType;
 import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
@@ -16,19 +17,20 @@ import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.flowprogrammer.web.FlowProgrammerWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * FlowProgrammer is a module responsible to maintain flows installed to switches.
- * FlowProgrammer consists of FlowPusher and FlowSynchronizer.
- * FlowPusher manages the rate of installation, and FlowSynchronizer synchronizes
- * flows between GraphDB and switches.
- * FlowProgrammer also watch the event of addition/deletion of switches to
- * start/stop synchronization. When a switch is added to network, FlowProgrammer
- * immediately kicks synchronization to keep switch's flow table latest state.
- * Adversely, when a switch is removed from network, FlowProgrammer immediately
- * stops synchronization.
+ * FlowProgrammer is a module responsible to maintain flows installed to
+ * switches. FlowProgrammer consists of FlowPusher and FlowSynchronizer.
+ * FlowPusher manages the rate of installation, and FlowSynchronizer
+ * synchronizes flows between GraphDB and switches. FlowProgrammer also watch
+ * the event of addition/deletion of switches to start/stop synchronization.
+ * When a switch is added to network, FlowProgrammer immediately kicks
+ * synchronization to keep switch's flow table latest state. Adversely, when a
+ * switch is removed from network, FlowProgrammer immediately stops
+ * synchronization.
  */
 public class FlowProgrammer implements IFloodlightModule,
         IOFSwitchListener {
@@ -57,7 +59,7 @@ public class FlowProgrammer implements IFloodlightModule,
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         registryService = context.getServiceImpl(IControllerRegistryService.class);
         restApi = context.getServiceImpl(IRestApiService.class);
-        pusher.init(null, context, floodlightProvider.getOFMessageFactory(), null);
+        pusher.init(context);
         if (ENABLE_FLOW_SYNC) {
             synchronizer.init(pusher);
         }
@@ -83,8 +85,7 @@ public class FlowProgrammer implements IFloodlightModule,
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
-        Map<Class<? extends IFloodlightService>,
-                IFloodlightService> m =
+        Map<Class<? extends IFloodlightService>, IFloodlightService> m =
                 new HashMap<Class<? extends IFloodlightService>,
                         IFloodlightService>();
         m.put(IFlowPusherService.class, pusher);
@@ -103,25 +104,56 @@ public class FlowProgrammer implements IFloodlightModule,
         return l;
     }
 
+    // ***********************
+    // IOFSwitchListener
+    // ***********************
+
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
         return "FlowProgrammer";
     }
 
     @Override
-    public void addedSwitch(IOFSwitch sw) {
-        log.debug("Switch added: {}", sw.getId());
+    public void switchActivatedMaster(long swId) {
+        IOFSwitch sw = floodlightProvider.getSwitch(swId);
+        if (sw == null) {
+            log.warn("Added switch not available {} ", swId);
+            return;
+        }
+        log.debug("Switch added: {}", swId);
 
         if (ENABLE_FLOW_SYNC) {
-            if (registryService.hasControl(sw.getId())) {
+            if (registryService.hasControl(swId)) {
                 synchronizer.synchronize(sw);
             }
         }
     }
 
     @Override
-    public void removedSwitch(IOFSwitch sw) {
+    public void switchActivatedEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchMasterToEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchEqualToMaster(long swId) {
+        // for now treat as switchActivatedMaster
+        switchActivatedMaster(swId);
+    }
+
+    @Override
+    public void switchDisconnected(long swId) {
+        IOFSwitch sw = floodlightProvider.getSwitch(swId);
+        if (sw == null) {
+            log.warn("Removed switch not available {} ", swId);
+            return;
+        }
         log.debug("Switch removed: {}", sw.getId());
 
         if (ENABLE_FLOW_SYNC) {
@@ -132,7 +164,7 @@ public class FlowProgrammer implements IFloodlightModule,
     }
 
     @Override
-    public void switchPortChanged(Long switchId) {
+    public void switchPortChanged(long swId, OFPortDesc port, PortChangeType pct) {
         // TODO Auto-generated method stub
     }
 

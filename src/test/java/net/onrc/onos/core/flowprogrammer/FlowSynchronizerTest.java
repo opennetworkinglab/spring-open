@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -13,7 +14,7 @@ import java.util.concurrent.Future;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService.MsgPriority;
 import net.onrc.onos.core.flowprogrammer.IFlowSyncService.SyncResult;
-import net.onrc.onos.core.util.FlowEntry;
+import net.onrc.onos.core.intent.FlowEntry;
 
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
@@ -22,15 +23,20 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.openflow.protocol.OFFlowMod;
-import org.openflow.protocol.OFMatch;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFStatisticsRequest;
-import org.openflow.protocol.OFType;
-import org.openflow.protocol.statistics.OFFlowStatisticsReply;
-import org.openflow.protocol.statistics.OFStatistics;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
+import org.projectfloodlight.openflow.protocol.OFFlowModCommand;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsEntry;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsReply;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsRequest;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFStatsReply;
+import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.types.U64;
 
 // Test should be fixed to fit RAMCloud basis
 @Ignore
@@ -42,8 +48,15 @@ public class FlowSynchronizerTest {
     private List<Long> idAdded;
     private List<Long> idRemoved;
 
+    /*
+     * OF1.0 Factory for now. Change when we move to
+     * OF 1.3.
+     */
+    private static OFFactory factory10;
+
     @Before
     public void setUp() throws Exception {
+        factory10 = OFFactories.getFactory(OFVersion.OF_10);
         idAdded = new ArrayList<Long>();
         idRemoved = new ArrayList<Long>();
 
@@ -58,8 +71,8 @@ public class FlowSynchronizerTest {
                 OFMessage msg = (OFMessage) EasyMock.getCurrentArguments()[1];
                 if (msg.getType().equals(OFType.FLOW_MOD)) {
                     OFFlowMod fm = (OFFlowMod) msg;
-                    if (fm.getCommand() == OFFlowMod.OFPFC_DELETE_STRICT) {
-                        idRemoved.add(fm.getCookie());
+                    if (fm.getCommand() == OFFlowModCommand.DELETE_STRICT) {
+                        idRemoved.add(fm.getCookie().getValue());
                     }
                 }
                 return null;
@@ -71,7 +84,7 @@ public class FlowSynchronizerTest {
             @Override
             public Object answer() throws Throwable {
                 FlowEntry flow = (FlowEntry) EasyMock.getCurrentArguments()[1];
-                idAdded.add(flow.flowEntryId().value());
+                idAdded.add(flow.getFlowEntryId());
                 return null;
             }
         }).anyTimes();
@@ -206,13 +219,13 @@ public class FlowSynchronizerTest {
         IOFSwitch sw = EasyMock.createMock(IOFSwitch.class);
         EasyMock.expect(sw.getId()).andReturn((long) 1).anyTimes();
 
-        List<OFStatistics> stats = new ArrayList<OFStatistics>();
+        List<OFStatsReply> stats = new ArrayList<OFStatsReply>();
         for (long cookie : cookieList) {
             stats.add(createReply(cookie));
         }
 
         @SuppressWarnings("unchecked")
-        Future<List<OFStatistics>> future = EasyMock.createMock(Future.class);
+        Future<List<OFStatsReply>> future = EasyMock.createMock(Future.class);
         try {
             EasyMock.expect(future.get()).andReturn(stats).once();
         } catch (InterruptedException e1) {
@@ -223,7 +236,7 @@ public class FlowSynchronizerTest {
         EasyMock.replay(future);
 
         try {
-            EasyMock.expect(sw.getStatistics(EasyMock.anyObject(OFStatisticsRequest.class)))
+            EasyMock.expect(sw.getStatistics(EasyMock.anyObject(OFFlowStatsRequest.class)))
                     .andReturn(future).once();
         } catch (IOException e) {
             fail("Failed in IOFSwitch#getStatistics()");
@@ -239,13 +252,14 @@ public class FlowSynchronizerTest {
      * @param cookie Cookie value, which indicates ID of FlowEntry installed to switch.
      * @return Created object.
      */
-    private OFFlowStatisticsReply createReply(long cookie) {
-        OFFlowStatisticsReply stat = new OFFlowStatisticsReply();
-        OFMatch match = new OFMatch();
-
-        stat.setCookie(cookie);
-        stat.setMatch(match);
-        stat.setPriority((short) 1);
+    private OFFlowStatsReply createReply(long cookie) {
+        OFFlowStatsEntry entry = factory10.buildFlowStatsEntry()
+                .setCookie(U64.of(cookie))
+                .setPriority(1)
+                .setMatch(factory10.buildMatch().build())
+                .build();
+        OFFlowStatsReply stat = factory10.buildFlowStatsReply()
+                .setEntries(Collections.singletonList(entry)).build();
 
         return stat;
     }

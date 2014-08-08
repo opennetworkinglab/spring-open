@@ -1,5 +1,5 @@
 [gerrit]
-host=gerrit.onos.onlab.us
+host=gerrit.onlab.us
 port=29418
 project=ONOS.git
 defaultremote=origin

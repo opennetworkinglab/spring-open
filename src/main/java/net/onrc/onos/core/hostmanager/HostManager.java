@@ -30,15 +30,15 @@ import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFPacketIn;
-import org.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFPacketIn;
+import org.projectfloodlight.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HostManager implements IFloodlightModule,
-        IOFMessageListener,
-        IHostService {
+IOFMessageListener,
+IHostService {
 
     private static final Logger log = LoggerFactory.getLogger(HostManager.class);
     private static final long HOST_CLEANING_INITIAL_DELAY = 30;
@@ -106,8 +106,10 @@ public class HostManager implements IFloodlightModule,
 
             Ethernet eth = IFloodlightProviderService.bcStore.
                     get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+            short inport = (short) cntx.getStorage()
+                    .get(IFloodlightProviderService.CONTEXT_PI_INPORT);
 
-            return processPacketIn(sw, pi, eth);
+            return processPacketIn(sw, pi, eth, inport);
         }
 
         return Command.CONTINUE;
@@ -116,13 +118,14 @@ public class HostManager implements IFloodlightModule,
     // This "protected" modifier is for unit test.
     // The above "receive" method couldn't be tested
     // because of IFloodlightProviderService static final field.
-    protected Command processPacketIn(IOFSwitch sw, OFPacketIn pi, Ethernet eth) {
+    protected Command processPacketIn(IOFSwitch sw, OFPacketIn pi, Ethernet eth,
+            short inport) {
         if (log.isTraceEnabled()) {
             log.trace("Receive PACKET_IN swId {}, portId {}", sw.getId(), pi.getInPort());
         }
 
         final Dpid dpid = new Dpid(sw.getId());
-        final PortNumber portNum = new PortNumber(pi.getInPort());
+        final PortNumber portNum = new PortNumber(inport);
 
         Host srcHost =
                 getSourceHostFromPacket(eth, dpid.value(), portNum.value());
@@ -140,8 +143,8 @@ public class HostManager implements IFloodlightModule,
             if (topology.getOutgoingLink(dpid, portNum) != null ||
                     topology.getIncomingLink(dpid, portNum) != null) {
                 log.debug("Not adding host {} as " +
-                    "there is a link on the port: dpid {} port {}",
-                    srcHost.getMacAddress(), dpid, portNum);
+                        "there is a link on the port: dpid {} port {}",
+                        srcHost.getMacAddress(), dpid, portNum);
                 return Command.CONTINUE;
             }
         } finally {

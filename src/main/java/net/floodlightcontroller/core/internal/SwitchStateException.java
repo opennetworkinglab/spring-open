@@ -18,6 +18,13 @@
 package net.floodlightcontroller.core.internal;
 
 /**
+ * This exception indicates an error or unexpected message during
+ * message handling. E.g., if an OFMessage is received that is illegal or
+ * unexpected given the current handshake state.
+ *
+ * We don't allow wrapping other exception in a switch state exception. We
+ * only log the SwitchStateExceptions message so the causing exceptions
+ * stack trace is generally not available.
  *
  */
 public class SwitchStateException extends Exception {

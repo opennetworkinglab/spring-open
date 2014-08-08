@@ -73,5 +73,5 @@ public interface IFloodlightModule {
      * @param context
      */
 
-    void startUp(FloodlightModuleContext context);
+    void startUp(FloodlightModuleContext context)throws FloodlightModuleException;
 }

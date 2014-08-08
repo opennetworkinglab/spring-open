@@ -8,18 +8,18 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 /**
- * A registry service that allows ONOS to register controllers and switches
- * in a way that is global to the entire ONOS cluster. The registry is the
- * arbiter for allowing controllers to control switches.
+ * A registry service that allows ONOS to register controllers and switches in a
+ * way that is global to the entire ONOS cluster. The registry is the arbiter
+ * for allowing controllers to control switches.
  * <p/>
  * The OVS/OF1.{2,3} fault tolerance model is a switch connects to multiple
- * controllers, and the controllers send role requests to determine what their
- * role is in controlling the switch.
+ * controllers, and the controllers send role requests to tell the switch their
+ * role in controlling the switch.
  * <p/>
  * The ONOS fault tolerance model allows only a single controller to have
  * control of a switch (MASTER role) at once. Controllers therefore need a
- * mechanism that enables them to decide who should control a each switch.
- * The registry service provides this mechanism.
+ * mechanism that enables them to decide who should control a each switch. The
+ * registry service provides this mechanism.
  */
 public interface IControllerRegistryService extends IFloodlightService {
 
@@ -29,43 +29,41 @@ public interface IControllerRegistryService extends IFloodlightService {
     public interface ControlChangeCallback {
         /**
          * Called whenever the control changes from the point of view of the
-         * registry. The callee can check whether they have control or not
-         * using the hasControl parameter.
+         * registry. The callee can check whether they have control or not using
+         * the hasControl parameter.
          *
-         * @param dpid       The switch that control has changed for
+         * @param dpid The switch that control has changed for
          * @param hasControl Whether the listener now has control or not
          */
         void controlChanged(long dpid, boolean hasControl);
     }
 
     /**
-     * Request for control of a switch. This method does not block. When
-     * control for a switch changes, the controlChanged method on the
-     * callback object will be called. This happens any time the control
-     * changes while the request is still active (until releaseControl is
-     * called)
+     * Request for control of a switch. This method does not block. When control
+     * for a switch changes, the controlChanged method on the callback object
+     * will be called. This happens any time the control changes while the
+     * request is still active (until releaseControl is called)
      *
      * @param dpid Switch to request control for
-     * @param cb   Callback that will be used to notify caller of control
-     *             changes
+     * @param cb Callback that will be used to notify caller of control changes
      * @throws RegistryException Errors contacting the registry service
      */
     public void requestControl(long dpid, ControlChangeCallback cb)
             throws RegistryException;
 
     /**
-     * Stop trying to take control of a switch. This removes the entry
-     * for this controller requesting this switch in the registry.
-     * If the controller had control when this is called, another controller
-     * will now gain control of the switch. This call doesn't block.
+     * Stop trying to take control of a switch. This removes the entry for this
+     * controller requesting this switch in the registry. If the controller had
+     * control when this is called, another controller will now gain control of
+     * the switch. This call doesn't block.
      *
      * @param dpid Switch to release control of
      */
     public void releaseControl(long dpid);
 
     /**
-     * Check whether the controller has control of the switch
-     * This call doesn't block.
+     * Check whether the controller has control of the switch This call doesn't
+     * block.
      *
      * @param dpid Switch to check control of
      * @return true if controller has control of the switch.
@@ -73,11 +71,11 @@ public interface IControllerRegistryService extends IFloodlightService {
     public boolean hasControl(long dpid);
 
     /**
-     * Check whether this instance is the leader for the cluster.
-     * This call doesn't block.
+     * Check whether this instance is the leader for the cluster. This call
+     * doesn't block.
      *
-     * @return true if the instance is the leader for the cluster,
-     * otherwise false.
+     * @return true if the instance is the leader for the cluster, otherwise
+     *         false.
      */
     public boolean isClusterLeader();
 
@@ -89,13 +87,13 @@ public interface IControllerRegistryService extends IFloodlightService {
     public OnosInstanceId getOnosInstanceId();
 
     /**
-     * Register a controller to the ONOS cluster. Must be called before
-     * the registry can be used to take control of any switches.
+     * Register a controller to the ONOS cluster. Must be called before the
+     * registry can be used to take control of any switches.
      *
-     * @param controllerId A unique string ID identifying this controller
-     *                     in the cluster
+     * @param controllerId A unique string ID identifying this controller in the
+     *        cluster
      * @throws RegistryException for errors connecting to registry service,
-     *                           controllerId already registered
+     *         controllerId already registered
      */
     public void registerController(String controllerId)
             throws RegistryException;
@@ -109,9 +107,9 @@ public interface IControllerRegistryService extends IFloodlightService {
     public Collection<String> getAllControllers() throws RegistryException;
 
     /**
-     * Get all switches in the cluster, along with which controller is
-     * in control of them (if any) and any other controllers that have
-     * requested control.
+     * Get all switches in the cluster, along with which controller is in
+     * control of them (if any) and any other controllers that have requested
+     * control.
      *
      * @return Map of all switches.
      */
@@ -148,7 +146,6 @@ public interface IControllerRegistryService extends IFloodlightService {
      * @return Id Block.
      */
     public IdBlock allocateUniqueIdBlock(long range);
-
 
     /**
      * Get a globally unique ID.

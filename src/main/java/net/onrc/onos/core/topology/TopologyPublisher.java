@@ -9,20 +9,20 @@ import java.util.concurrent.TimeUnit;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.IOFSwitch.PortChangeType;
+import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.onrc.onos.api.registry.ILocalSwitchMastershipListener;
 import net.onrc.onos.core.hostmanager.Host;
 import net.onrc.onos.core.hostmanager.IHostListener;
 import net.onrc.onos.core.hostmanager.IHostService;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryListener;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.linkdiscovery.Link;
-import net.onrc.onos.core.main.IOFSwitchPortListener;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
 import net.onrc.onos.core.registry.RegistryException;
@@ -30,8 +30,8 @@ import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.openflow.protocol.OFPhysicalPort;
-import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,12 +40,10 @@ import org.slf4j.LoggerFactory;
  * discovery modules. These events are reformatted and relayed to the in-memory
  * topology instance.
  */
-public class TopologyPublisher implements /*IOFSwitchListener,*/
-        IOFSwitchPortListener,
+public class TopologyPublisher implements IOFSwitchListener,
         ILinkDiscoveryListener,
         IFloodlightModule,
-        IHostListener,
-        ILocalSwitchMastershipListener {
+        IHostListener {
     private static final Logger log =
             LoggerFactory.getLogger(TopologyPublisher.class);
 
@@ -65,8 +63,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     private SingletonTask cleanupTask;
 
     /**
-     * Cleanup old switches from the topology. Old switches are those
-     * which have no controller in the registry.
+     * Cleanup old switches from the topology. Old switches are those which have
+     * no controller in the registry.
      */
     private class SwitchCleanup implements ControlChangeCallback, Runnable {
         @Override
@@ -97,7 +95,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
             if (log.isTraceEnabled()) {
                 log.trace("Checking for inactive switches");
             }
-            // For each switch check if a controller exists in controller registry
+            // For each switch check if a controller exists in controller
+            // registry
             for (Switch sw : switches) {
                 // FIXME How to handle case where Switch has never been
                 // registered to ZK
@@ -120,10 +119,10 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
         /**
          * Second half of the switch cleanup operation. If the registry grants
-         * control of a switch, we can be sure no other instance is writing
-         * this switch to the topology, so we can remove it now.
-         *
-         * @param dpid       the dpid of the switch we requested control for
+         * control of a switch, we can be sure no other instance is writing this
+         * switch to the topology, so we can remove it now.
+         * <p>
+         * @param dpid the dpid of the switch we requested control for
          * @param hasControl whether we got control or not
          */
         @Override
@@ -150,7 +149,7 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         linkEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET_LAYER);
+                TopologyElement.TYPE_PACKET_LAYER);
         linkEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                 ConfigState.NOT_CONFIGURED.toString());
         linkEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
@@ -177,51 +176,173 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         linkEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET_LAYER);
+                TopologyElement.TYPE_PACKET_LAYER);
         linkEvent.freeze();
 
         if (!registryService.hasControl(link.getDst())) {
             // Don't process or send a link event if we're not master for the
             // destination switch
-            log.debug("Not the master for dst switch {}. Suppressed link remove event {}.",
+            log.debug(
+                    "Not the master for dst switch {}. Suppressed link remove event {}.",
                     link.getDst(), linkEvent);
             return;
         }
         topologyDiscoveryInterface.removeLinkDiscoveryEvent(linkEvent);
     }
 
+    /* *****************
+     * IOFSwitchListener
+     * *****************/
+
     @Override
-    public void switchPortAdded(Long switchId, OFPhysicalPort port) {
+    public void switchActivatedMaster(long swId) {
+        IOFSwitch sw = floodlightProvider.getSwitch(swId);
+        final Dpid dpid = new Dpid(swId);
+        if (sw == null) {
+            log.warn("Added switch not available {} ", dpid);
+            return;
+        }
+
+        controllerRoleChanged(dpid, Role.MASTER);
+
+        SwitchEvent switchEvent = new SwitchEvent(dpid);
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        switchEvent.createStringAttribute(TopologyElement.TYPE,
+                TopologyElement.TYPE_PACKET_LAYER);
+        switchEvent.createStringAttribute("ConnectedSince",
+                sw.getConnectedSince().toString());
+        switchEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.NOT_CONFIGURED.toString());
+        switchEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+                AdminStatus.ACTIVE.toString());
+        switchEvent.freeze();
+        // TODO Not very robust
+        if (!registryService.hasControl(swId)) {
+            log.debug("Not the master for switch {}. Suppressed switch add event {}.",
+                    dpid, switchEvent);
+            return;
+        }
+        List<PortEvent> portEvents = new ArrayList<PortEvent>();
+        for (OFPortDesc port : sw.getPorts()) {
+            PortEvent portEvent = new PortEvent(dpid,
+                    new PortNumber(port.getPortNo().getShortPortNumber()));
+            // FIXME should be merging, with existing attrs, etc..
+            // TODO define attr name as constant somewhere.
+            // TODO populate appropriate attributes.
+            portEvent.createStringAttribute("name", port.getName());
+            portEvent.createStringAttribute(TopologyElement.TYPE,
+                    TopologyElement.TYPE_PACKET_LAYER);
+            portEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                    ConfigState.NOT_CONFIGURED.toString());
+            portEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+                    AdminStatus.ACTIVE.toString());
+
+            portEvent.freeze();
+            portEvents.add(portEvent);
+        }
+        topologyDiscoveryInterface.putSwitchDiscoveryEvent(switchEvent, portEvents);
+
+        for (OFPortDesc port : sw.getPorts()) {
+            // Allow links to be discovered on this port now that it's
+            // in the database
+            linkDiscovery.enableDiscoveryOnPort(sw.getId(),
+                    port.getPortNo().getShortPortNumber());
+        }
+    }
+
+    @Override
+    public void switchActivatedEqual(long swId) {
+        final Dpid dpid = new Dpid(swId);
+        controllerRoleChanged(dpid, Role.EQUAL);
+    }
+
+    @Override
+    public void switchMasterToEqual(long swId) {
+        final Dpid dpid = new Dpid(swId);
+        controllerRoleChanged(dpid, Role.EQUAL);
+    }
+
+    @Override
+    public void switchEqualToMaster(long swId) {
+        // for now treat as switchActivatedMaster
+        switchActivatedMaster(swId);
+    }
+
+    @Override
+    public void switchDisconnected(long swId) {
+        final Dpid dpid = new Dpid(swId);
+
+        log.debug("Local switch disconnected: dpid = {} role = {}", dpid);
+
+        Role role = Role.SLAVE; // TODO: Should be Role.UNKNOWN
+
+        MastershipEvent mastershipEvent =
+                new MastershipEvent(dpid, registryService.getOnosInstanceId(),
+                        role);
+        // FIXME should be merging, with existing attrs, etc..
+        // TODO define attr name as constant somewhere.
+        // TODO populate appropriate attributes.
+        mastershipEvent.createStringAttribute(TopologyElement.TYPE,
+                TopologyElement.TYPE_ALL_LAYERS);
+        mastershipEvent.freeze();
+        topologyDiscoveryInterface.removeSwitchMastershipEvent(mastershipEvent);
+    }
+
+    @Override
+    public void switchPortChanged(long swId, OFPortDesc port,
+            PortChangeType changeType) {
+        switch (changeType) {
+        case ADD:
+            switchPortAdded(swId, port);
+            break;
+        case DELETE:
+            switchPortRemoved(swId, port);
+            break;
+        case DOWN:
+        case UP:
+        case OTHER_UPDATE:
+        default:
+            // XXX S what is the right set of port change handlers?
+            log.debug("Topology publisher does not handle these port updates: {}",
+                        changeType);
+        }
+    }
+
+    private void switchPortAdded(long switchId, OFPortDesc port) {
         final Dpid dpid = new Dpid(switchId);
-        PortEvent portEvent = new PortEvent(dpid, new PortNumber(port.getPortNumber()));
+        PortEvent portEvent = new PortEvent(dpid,
+                new PortNumber(port.getPortNo().getShortPortNumber()));
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         portEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET_LAYER);
+                TopologyElement.TYPE_PACKET_LAYER);
         portEvent.createStringAttribute("name", port.getName());
 
         portEvent.freeze();
 
         if (registryService.hasControl(switchId)) {
             topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
-            linkDiscovery.enableDiscoveryOnPort(switchId, port.getPortNumber());
+            linkDiscovery.enableDiscoveryOnPort(switchId,
+                    port.getPortNo().getShortPortNumber());
         } else {
             log.debug("Not the master for switch {}. Suppressed port add event {}.",
                     new Dpid(switchId), portEvent);
         }
     }
 
-    @Override
-    public void switchPortRemoved(Long switchId, OFPhysicalPort port) {
+    private void switchPortRemoved(long switchId, OFPortDesc port) {
         final Dpid dpid = new Dpid(switchId);
 
-        PortEvent portEvent = new PortEvent(dpid, new PortNumber(port.getPortNumber()));
+        PortEvent portEvent = new PortEvent(dpid, new PortNumber(
+                port.getPortNo().getShortPortNumber()));
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         portEvent.createStringAttribute(TopologyElement.TYPE,
-                                        TopologyElement.TYPE_PACKET_LAYER);
+                TopologyElement.TYPE_PACKET_LAYER);
         portEvent.createStringAttribute("name", port.getName());
 
         portEvent.freeze();
@@ -235,70 +356,8 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     }
 
     @Override
-    public void addedSwitch(IOFSwitch sw) {
-        final Dpid dpid = new Dpid(sw.getId());
-        SwitchEvent switchEvent = new SwitchEvent(dpid);
-        // FIXME should be merging, with existing attrs, etc..
-        // TODO define attr name as constant somewhere.
-        // TODO populate appropriate attributes.
-        switchEvent.createStringAttribute(TopologyElement.TYPE,
-                                          TopologyElement.TYPE_PACKET_LAYER);
-        switchEvent.createStringAttribute("ConnectedSince",
-                sw.getConnectedSince().toString());
-        switchEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
-                ConfigState.NOT_CONFIGURED.toString());
-        switchEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
-                AdminStatus.ACTIVE.toString());
-        switchEvent.freeze();
-
-        // TODO Not very robust
-        if (!registryService.hasControl(sw.getId())) {
-            log.debug("Not the master for switch {}. Suppressed switch add event {}.",
-                    dpid, switchEvent);
-            return;
-        }
-
-        List<PortEvent> portEvents = new ArrayList<PortEvent>();
-        for (OFPhysicalPort port : sw.getPorts()) {
-            PortEvent portEvent = new PortEvent(dpid, new PortNumber(port.getPortNumber()));
-            // FIXME should be merging, with existing attrs, etc..
-            // TODO define attr name as constant somewhere.
-            // TODO populate appropriate attributes.
-            portEvent.createStringAttribute("name", port.getName());
-            portEvent.createStringAttribute(TopologyElement.TYPE,
-                                            TopologyElement.TYPE_PACKET_LAYER);
-            portEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
-                    ConfigState.NOT_CONFIGURED.toString());
-            portEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
-                    AdminStatus.ACTIVE.toString());
-
-            portEvent.freeze();
-            portEvents.add(portEvent);
-        }
-        topologyDiscoveryInterface
-                .putSwitchDiscoveryEvent(switchEvent, portEvents);
-
-        for (OFPhysicalPort port : sw.getPorts()) {
-            // Allow links to be discovered on this port now that it's
-            // in the database
-            linkDiscovery.enableDiscoveryOnPort(sw.getId(), port.getPortNumber());
-        }
-    }
-
-    @Override
-    public void removedSwitch(IOFSwitch sw) {
-        // We don't use this event - switch remove is done by cleanup thread
-    }
-
-    @Override
-    public void switchPortChanged(Long switchId) {
-        // We don't use this event
-    }
-
-    @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "topologyPublisher";
     }
 
     /* *****************
@@ -312,13 +371,13 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService>
-    getServiceImpls() {
+            getServiceImpls() {
         return null;
     }
 
     @Override
     public Collection<Class<? extends IFloodlightService>>
-    getModuleDependencies() {
+            getModuleDependencies() {
         Collection<Class<? extends IFloodlightService>> l =
                 new ArrayList<Class<? extends IFloodlightService>>();
         l.add(IFloodlightProviderService.class);
@@ -339,8 +398,6 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
         hostService = context.getServiceImpl(IHostService.class);
 
         topologyService = context.getServiceImpl(ITopologyService.class);
-
-        floodlightProvider.addLocalSwitchMastershipListener(this);
     }
 
     @Override
@@ -393,41 +450,23 @@ public class TopologyPublisher implements /*IOFSwitchListener,*/
     public void hostRemoved(Host host) {
         log.debug("Called onosDeviceRemoved");
         HostEvent event = new HostEvent(host.getMacAddress());
-        //XXX shouldn't we be setting attachment points?
+        // XXX shouldn't we be setting attachment points?
         event.freeze();
         topologyDiscoveryInterface.removeHostDiscoveryEvent(event);
     }
 
-    @Override
-    public void controllerRoleChanged(Dpid dpid, Role role) {
-        log.debug("Local switch controller mastership role changed: dpid = {} role = {}", dpid, role);
+    private void controllerRoleChanged(Dpid dpid, Role role) {
+        log.debug("Local switch controller mastership role changed: dpid = {} role = {}",
+                dpid, role);
         MastershipEvent mastershipEvent =
-            new MastershipEvent(dpid, registryService.getOnosInstanceId(),
-                                role);
+                new MastershipEvent(dpid, registryService.getOnosInstanceId(),
+                        role);
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
         mastershipEvent.createStringAttribute(TopologyElement.TYPE,
-                                              TopologyElement.TYPE_ALL_LAYERS);
+                TopologyElement.TYPE_ALL_LAYERS);
         mastershipEvent.freeze();
         topologyDiscoveryInterface.putSwitchMastershipEvent(mastershipEvent);
-    }
-
-    @Override
-    public void switchDisconnected(Dpid dpid) {
-        log.debug("Local switch disconnected: dpid = {} role = {}", dpid);
-
-        Role role = Role.SLAVE;         // TODO: Should be Role.UNKNOWN
-
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(dpid, registryService.getOnosInstanceId(),
-                                role);
-        // FIXME should be merging, with existing attrs, etc..
-        // TODO define attr name as constant somewhere.
-        // TODO populate appropriate attributes.
-        mastershipEvent.createStringAttribute(TopologyElement.TYPE,
-                                              TopologyElement.TYPE_ALL_LAYERS);
-        mastershipEvent.freeze();
-        topologyDiscoveryInterface.removeSwitchMastershipEvent(mastershipEvent);
     }
 }

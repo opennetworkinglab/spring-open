@@ -23,39 +23,35 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.factory.BasicFactory;
-import org.openflow.protocol.factory.OFMessageFactory;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFMessageReader;
 
 /**
- * Decode an openflow message from a Channel, for use in a netty
- * pipeline
- *
- * @author readams
+ * Decode an openflow message from a Channel, for use in a netty pipeline
  */
 public class OFMessageDecoder extends FrameDecoder {
-
-    OFMessageFactory factory = new BasicFactory();
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel,
                             ChannelBuffer buffer) throws Exception {
         if (!channel.isConnected()) {
             // In testing, I see decode being called AFTER decode last.
-            // This check avoids that from reading curroupted frames
+            // This check avoids that from reading corrupted frames
             return null;
         }
 
-        List<OFMessage> message = factory.parseMessage(buffer);
-        return message;
-    }
+        // Note that a single call to decode results in reading a single
+        // OFMessage from the channel buffer, which is passed on to, and processed
+        // by, the controller (in OFChannelHandler).
+        // This is different from earlier behavior (with the original openflowj),
+        // where we parsed all the messages in the buffer, before passing on
+        // a list of the parsed messages to the controller.
+        // The performance *may or may not* not be as good as before.
+        OFMessageReader<OFMessage> reader = OFFactories.getGenericReader();
+		OFMessage message = reader.readFrom(buffer);
 
-    @Override
-    protected Object decodeLast(ChannelHandlerContext ctx, Channel channel,
-                                ChannelBuffer buffer) throws Exception {
-        // This is not strictly needed atthis time. It is used to detect
-        // connection reset detection from netty (for debug)
-        return null;
+		return message;
     }
 
 }

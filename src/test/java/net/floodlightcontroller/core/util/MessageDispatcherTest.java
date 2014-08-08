@@ -32,7 +32,7 @@ import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.test.FloodlightTestCase;
 
 import org.junit.Test;
-import org.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,8 @@ public class MessageDispatcherTest extends FloodlightTestCase {
 
     void addPrereqs(IOFMessageListener mock, String... deps) {
         for (String dep : deps) {
-            expect(mock.isCallbackOrderingPrereq(OFType.PACKET_IN, dep)).andReturn(true).anyTimes();
+            expect(mock.isCallbackOrderingPrereq(OFType.PACKET_IN, dep)).andReturn(true)
+                    .anyTimes();
         }
     }
 
@@ -81,7 +82,7 @@ public class MessageDispatcherTest extends FloodlightTestCase {
 
                 boolean orderwrong =
                         (i.isCallbackOrderingPrereq(OFType.PACKET_IN, j.getName()) ||
-                                j.isCallbackOrderingPostreq(OFType.PACKET_IN, i.getName()));
+                        j.isCallbackOrderingPostreq(OFType.PACKET_IN, i.getName()));
                 assertFalse("Invalid order: " +
                         ind_i + " (" + i.getName() + ") " +
                         ind_j + " (" + j.getName() + ") ", orderwrong);
@@ -139,7 +140,6 @@ public class MessageDispatcherTest extends FloodlightTestCase {
         }
         randomTestOrdering(mocks);
     }
-
 
     @Test
     public void testCallbackOrderingPartial2() throws Exception {

@@ -3,6 +3,8 @@ net.onrc.onos.core.topology.TopologyPublisher
 net.onrc.onos.core.linkdiscovery.LinkDiscoveryManager
 net.floodlightcontroller.restserver.RestApiServer
 net.floodlightcontroller.threadpool.ThreadPool
+net.floodlightcontroller.debugcounter.DebugCounter
+net.floodlightcontroller.debugevent.DebugEvent
 net.floodlightcontroller.core.test.MockFloodlightProvider
 net.floodlightcontroller.core.test.MockThreadPoolService
 net.onrc.onos.core.datagrid.HazelcastDatagrid

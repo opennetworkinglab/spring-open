@@ -39,8 +39,13 @@ import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.openflow.protocol.OFPacketIn;
-import org.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFPacketIn;
+import org.projectfloodlight.openflow.protocol.OFPacketInReason;
+import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.types.OFPort;
 
 /**
  * Unit tests for the Host Manager module (HostManger).
@@ -61,6 +66,7 @@ public class HostManagerTest extends FloodlightTestCase {
     private IEventChannel<Long, Host> eventChannel;
     private IFloodlightProviderService floodlightProvider;
     private Date lastSeenTimestamp;
+    private OFFactory ofact;
 
     @Override
     @Before
@@ -102,6 +108,8 @@ public class HostManagerTest extends FloodlightTestCase {
         modContext.addService(IFloodlightProviderService.class, floodlightProvider);
         modContext.getServiceImpl(IFloodlightProviderService.class);
         sw1Dpid = 1L;
+        ofact = OFFactories.getFactory(OFVersion.OF_10);
+
         sw1 = createMockSwitch(sw1Dpid);
         replay(sw1);
 
@@ -121,10 +129,8 @@ public class HostManagerTest extends FloodlightTestCase {
                 .setTtl((byte) 128)
                 .setSourceAddress("192.168.10.1")
                 .setDestinationAddress("192.168.255.255")
-                .setPayload(new UDP()
-                .setSourcePort((short) 5000)
-                .setDestinationPort((short) 5001)
-                .setPayload(new Data(new byte[]{0x01}))));
+                .setPayload(getUDP(new Data(new byte[]{0x01}))));
+
         /*
          * Normal IPv4 packet
          */
@@ -137,10 +143,8 @@ public class HostManagerTest extends FloodlightTestCase {
                 .setTtl((byte) 128)
                 .setSourceAddress("192.168.1.1")
                 .setDestinationAddress("192.168.1.2")
-                .setPayload(new UDP()
-                .setSourcePort((short) 5000)
-                .setDestinationPort((short) 5001)
-                .setPayload(new Data(new byte[]{0x01}))));
+                .setPayload(getUDP(new Data(new byte[]{0x01}))));
+
         /*
          * Same MAC header as pkt1,but not IP address set
          */
@@ -151,10 +155,8 @@ public class HostManagerTest extends FloodlightTestCase {
         .setPayload(
                 new IPv4()
                 .setTtl((byte) 128)
-                .setPayload(new UDP()
-                .setSourcePort((short) 5000)
-                .setDestinationPort((short) 5001)
-                .setPayload(new Data(new byte[]{0x01}))));
+                .setPayload(getUDP(new Data(new byte[]{0x01}))));
+
         /*
          * DHCP packet
          */
@@ -167,11 +169,7 @@ public class HostManagerTest extends FloodlightTestCase {
                 .setTtl((byte) 128)
                 .setSourceAddress("192.168.1.1")
                 .setDestinationAddress("192.168.1.2")
-                .setPayload(new UDP()
-                .setSourcePort((short) 5000)
-                .setDestinationPort((short) 5001)
-                .setChecksum((short) 0)
-                .setPayload(
+                .setPayload(getUDP(
                         new DHCP()
                         .setOpCode(DHCP.OPCODE_REPLY)
                         .setHardwareType(DHCP.HWTYPE_ETHERNET)
@@ -204,9 +202,8 @@ public class HostManagerTest extends FloodlightTestCase {
                 .setTargetProtocolAddress(IPv4.toIPv4AddressBytes("192.168.1.2")));
 
 
-        this.pktIn = new OFPacketIn().setInPort((short) sw1DevPort);
-
-        this.pktIn2 = new OFPacketIn().setInPort((short) sw1DevPort2);
+        this.pktIn = getPacketIn((short) sw1DevPort);
+        this.pktIn2 = getPacketIn((short) sw1DevPort2);
 
         lastSeenTimestamp = new Date(1);
     }
@@ -230,7 +227,8 @@ public class HostManagerTest extends FloodlightTestCase {
         Ethernet eth = (Ethernet) pkt1;
         Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
+                EasyMock.isA(HostManager.class));
         srcHost.setLastSeenTimestamp(lastSeenTimestamp);
         assertEquals(lastSeenTimestamp, srcHost.getLastSeenTimestamp());
     }
@@ -278,7 +276,8 @@ public class HostManagerTest extends FloodlightTestCase {
 
         hostManager.init(modContext);
         hostManager.startUp(modContext);
-        Command cmd = hostManager.processPacketIn(sw1, pktIn, (Ethernet) pkt1);
+        Command cmd = hostManager.processPacketIn(
+                sw1, pktIn, (Ethernet) pkt1, (short) sw1DevPort);
         assertEquals(Command.CONTINUE, cmd);
 
         EasyMock.verify(floodlightProvider);
@@ -297,7 +296,8 @@ public class HostManagerTest extends FloodlightTestCase {
 
         hostManager.init(modContext);
         hostManager.startUp(modContext);
-        Command cmd = hostManager.processPacketIn(sw1, pktIn2, (Ethernet) pkt1);
+        Command cmd = hostManager.processPacketIn(
+                sw1, pktIn2, (Ethernet) pkt1, (short) sw1DevPort2);
         assertEquals(Command.CONTINUE, cmd);
 
         EasyMock.verify(floodlightProvider);
@@ -308,7 +308,8 @@ public class HostManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testProcessPacketInStop() {
-        Command cmd = hostManager.processPacketIn(sw1, pktIn, (Ethernet) pkt0);
+        Command cmd = hostManager.processPacketIn(
+                sw1, pktIn, (Ethernet) pkt0, (short) sw1DevPort);
         assertEquals(Command.STOP, cmd);
     }
 
@@ -322,7 +323,8 @@ public class HostManagerTest extends FloodlightTestCase {
         Long longmac = eth.getSourceMAC().toLong();
         Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
+                EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
         floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
         EasyMock.expectLastCall();
@@ -344,7 +346,8 @@ public class HostManagerTest extends FloodlightTestCase {
         Ethernet eth = (Ethernet) pkt1;
         Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
+                EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
         floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
         EasyMock.expectLastCall();
@@ -366,7 +369,8 @@ public class HostManagerTest extends FloodlightTestCase {
         Ethernet eth = (Ethernet) pkt1;
         MACAddress mac = eth.getSourceMAC();
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN), EasyMock.isA(HostManager.class));
+        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
+                EasyMock.isA(HostManager.class));
         EasyMock.expectLastCall();
         floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
         EasyMock.expectLastCall();
@@ -377,5 +381,24 @@ public class HostManagerTest extends FloodlightTestCase {
         hostManager.deleteHostByMac(mac);
 
         EasyMock.verify(floodlightProvider);
+    }
+
+    /**
+     * Helper for building PacketIns. Defaults to a flowtable miss.
+     * @param inport the inport field value
+     * @return a PacketIn
+     */
+    private OFPacketIn getPacketIn(int inport) {
+        return ofact.buildPacketIn()
+                .setInPort(OFPort.of(inport))
+                .setReason(OFPacketInReason.NO_MATCH)
+                .build();
+    }
+
+    private UDP getUDP(IPacket payload) {
+        return (UDP) new UDP()
+        .setSourcePort((short) 5000)
+        .setDestinationPort((short) 5001)
+        .setPayload(payload);
     }
 }

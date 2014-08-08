@@ -1,22 +1,32 @@
 package net.onrc.onos.core.intent;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
-import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.FlowEntryActions;
-import net.onrc.onos.core.util.FlowEntryId;
-import net.onrc.onos.core.util.FlowEntryUserState;
+
+import org.projectfloodlight.openflow.protocol.OFActionType;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.match.Match.Builder;
+import org.projectfloodlight.openflow.types.OFBufferId;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.U64;
 
 /**
- * A class to represent an OpenFlow FlowMod.
+ * A class to represent an OpenFlow FlowMod. <br>
  * It is OpenFlow v.1.0-centric and contains a Match and an Action.
  */
 
 public class FlowEntry {
+    public static final int PRIORITY_DEFAULT = 32768; // Default Flow Priority
+
     protected long sw;
     protected Match match;
     protected Set<Action> actions;
@@ -37,12 +47,12 @@ public class FlowEntry {
      * @param dstIpAddress destination IP address
      * @param operator OpenFlow operation/command (add, remove, etc.)
      */
-// CHECKSTYLE:OFF suppress the warning about too many parameters
+    // CHECKSTYLE:OFF suppress the warning about too many parameters
     public FlowEntry(long sw, long srcPort, long dstPort,
-                     MACAddress srcMac, MACAddress dstMac,
-                     int srcIpAddress, int dstIpAddress,
-                     Operator operator) {
-// CHECKSTYLE:ON
+            MACAddress srcMac, MACAddress dstMac,
+            int srcIpAddress, int dstIpAddress,
+            Operator operator) {
+        // CHECKSTYLE:ON
         this.sw = sw;
         this.match = new Match(sw, srcPort, srcMac, dstMac, srcIpAddress, dstIpAddress);
         this.actions = new HashSet<Action>();
@@ -133,33 +143,91 @@ public class FlowEntry {
     }
 
     /**
-     * Converts the FlowEntry in to a legacy FlowEntry object.
+     * Builds and returns an OFFlowMod given an OFFactory.
      *
-     * @return an equivalent legacy FlowEntry object
+     * @param factory the OFFactory to use for building
+     * @return the OFFlowMod
      */
-    public net.onrc.onos.core.util.FlowEntry getFlowEntry() {
-        net.onrc.onos.core.util.FlowEntry entry = new net.onrc.onos.core.util.FlowEntry();
-        entry.setDpid(new Dpid(sw));
-        entry.setFlowEntryId(new FlowEntryId(flowEntryId));
-        entry.setFlowEntryMatch(match.getFlowEntryMatch());
-        FlowEntryActions flowEntryActions = new FlowEntryActions();
-        for (Action action : actions) {
-            flowEntryActions.addAction(action.getFlowEntryAction());
-        }
-        entry.setFlowEntryActions(flowEntryActions);
+    public OFFlowMod buildFlowMod(OFFactory factory) {
+        OFFlowMod.Builder builder = null;
+
         switch (operator) {
-            case ADD:
-                entry.setFlowEntryUserState(FlowEntryUserState.FE_USER_MODIFY);
-                break;
-            case REMOVE:
-                entry.setFlowEntryUserState(FlowEntryUserState.FE_USER_DELETE);
-                break;
-            default:
-                break;
+        case ADD:
+            builder = factory.buildFlowModifyStrict();
+            break;
+        case REMOVE:
+            builder = factory.buildFlowDeleteStrict();
+            break;
+        default:
+            // TODO throw error?
+            return null;
         }
-        entry.setIdleTimeout(idleTimeout);
-        entry.setHardTimeout(hardTimeout);
-        return entry;
+
+        // Build OFMatch
+        Builder matchBuilder = match.getOFMatchBuilder(factory);
+
+        // Build OFAction Set
+        List<OFAction> actionList = new ArrayList<>(actions.size());
+        for (Action action : actions) {
+            actionList.add(action.getOFAction(factory));
+        }
+
+        OFPort outp = OFPort.of((short) 0xffff); // OF1.0 OFPP.NONE
+        if (operator == Operator.REMOVE) {
+            if (actionList.size() == 1) {
+                if (actionList.get(0).getType() == OFActionType.OUTPUT) {
+                    OFActionOutput oa = (OFActionOutput) actionList.get(0);
+                    outp = oa.getPort();
+                }
+            }
+        }
+
+        // Build OFFlowMod
+        builder.setMatch(matchBuilder.build())
+                .setActions(actionList)
+                .setIdleTimeout(idleTimeout)
+                .setHardTimeout(hardTimeout)
+                .setCookie(U64.of(flowEntryId))
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setPriority(PRIORITY_DEFAULT)
+                .setOutPort(outp);
+
+        /* Note: The following are NOT USED.
+         * builder.setFlags()
+         * builder.setInstructions()
+         * builder.setOutGroup()
+         * builder.setTableId()
+         * builder.setXid()
+         */
+
+        // TODO from Flow Pusher
+        // Set the OFPFF_SEND_FLOW_REM flag if the Flow Entry is not
+        // permanent.
+        //
+        // if ((flowEntry.idleTimeout() != 0) ||
+        // (flowEntry.hardTimeout() != 0)) {
+        // fm.setFlags(OFFlowMod.OFPFF_SEND_FLOW_REM);
+        // }
+
+        // TODO do we care?
+        // fm.setOutPort(OFPort.OFPP_NONE.getValue());
+        // if ((flowModCommand == OFFlowMod.OFPFC_DELETE)
+        // || (flowModCommand == OFFlowMod.OFPFC_DELETE_STRICT)) {
+        // if (actionOutputPort.portNumber != null) {
+        // fm.setOutPort(actionOutputPort.portNumber);
+        // }
+        // }
+
+        // TODO
+        // Set the OFPFF_SEND_FLOW_REM flag if the Flow Entry is not
+        // permanent.
+        //
+        // if ((flowEntry.idleTimeout() != 0) ||
+        // (flowEntry.hardTimeout() != 0)) {
+        // fm.setFlags(OFFlowMod.OFPFF_SEND_FLOW_REM);
+        // }
+
+        return builder.build();
     }
 
     /**

@@ -1,6 +1,5 @@
 package net.onrc.onos.core.flowprogrammer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,12 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import net.floodlightcontroller.core.IOFSwitch;
-import net.onrc.onos.core.flowprogrammer.IFlowPusherService.MsgPriority;
 import net.onrc.onos.core.util.FlowEntryId;
 
 import org.openflow.protocol.OFFlowMod;
@@ -99,10 +96,6 @@ public class FlowSynchronizer implements IFlowSyncService {
                 Set<FlowEntryWrapper> graphEntries = getFlowEntriesFromGraph();
                 long step1 = System.nanoTime();
                 Set<FlowEntryWrapper> switchEntries = getFlowEntriesFromSwitch();
-                if (switchEntries == null) {
-                    log.debug("getFlowEntriesFromSwitch() failed");
-                    return null;
-                }
                 long step2 = System.nanoTime();
                 SyncResult result = compare(graphEntries, switchEntries);
                 long step3 = System.nanoTime();
@@ -184,12 +177,12 @@ public class FlowSynchronizer implements IFlowSyncService {
             Set<FlowEntryWrapper> entries = new HashSet<FlowEntryWrapper>();
 
             // TODO: fix when FlowSynchronizer is refactored
-        /*
+            /*
         for(IFlowEntry entry : swObj.getFlowEntries()) {
         FlowEntryWrapper fe = new FlowEntryWrapper(entry);
         entries.add(fe);
         }
-        */
+             */
             return entries;
         }
 
@@ -218,8 +211,9 @@ public class FlowSynchronizer implements IFlowSyncService {
             lengthU += req.getLengthU();
             req.setLengthU(lengthU);
 
-            List<OFStatistics> entries = null;
-            try {
+            //List<OFStatistics> entries = null;
+            // XXX S when we fix stats, we fix this
+            /*try {
                 Future<List<OFStatistics>> dfuture = sw.getStatistics(req);
                 entries = dfuture.get();
             } catch (IOException e) {
@@ -231,14 +225,16 @@ public class FlowSynchronizer implements IFlowSyncService {
             } catch (ExecutionException e) {
                 log.error("Error getting statistics", e);
                 return null;
-            }
+            }*/
 
             Set<FlowEntryWrapper> results = new HashSet<FlowEntryWrapper>();
+            /*
             for (OFStatistics result : entries) {
                 OFFlowStatisticsReply entry = (OFFlowStatisticsReply) result;
                 FlowEntryWrapper fe = new FlowEntryWrapper(entry);
                 results.add(fe);
             }
+             */
             return results;
         }
 
@@ -248,7 +244,7 @@ public class FlowSynchronizer implements IFlowSyncService {
      * FlowEntryWrapper represents abstract FlowEntry which is embodied
      * by FlowEntryId (from GraphDB) or OFFlowStatisticsReply (from switch).
      */
-    class FlowEntryWrapper {
+    static class FlowEntryWrapper {
         FlowEntryId flowEntryId;
         // TODO: fix when FlowSynchronizer is refactored
         // IFlowEntry iFlowEntry;
@@ -256,12 +252,12 @@ public class FlowSynchronizer implements IFlowSyncService {
 
 
         // TODO: fix when FlowSynchronizer is refactored
-    /*
+        /*
     public FlowEntryWrapper(IFlowEntry entry) {
         flowEntryId = new FlowEntryId(entry.getFlowEntryId());
         iFlowEntry = entry;
     }
-    */
+         */
 
         public FlowEntryWrapper(OFFlowStatisticsReply entry) {
             flowEntryId = new FlowEntryId(entry.getCookie());
@@ -285,7 +281,7 @@ public class FlowSynchronizer implements IFlowSyncService {
             double startDB = System.nanoTime();
             // Get the Flow Entry state from the Network Graph
             // TODO: fix when FlowSynchronizer is refactored
-        /*
+            /*
         if (iFlowEntry == null) {
             try {
         // TODO: fix when FlowSynchronizer is refactored
@@ -296,13 +292,13 @@ public class FlowSynchronizer implements IFlowSyncService {
                 return;
             }
         }
-        */
+             */
             dbTime = System.nanoTime() - startDB;
 
             //
             // TODO: The old FlowDatabaseOperation class is gone, so the code
             //
-        /*
+            /*
         double startExtract = System.nanoTime();
         FlowEntry flowEntry =
         FlowDatabaseOperation.extractFlowEntry(iFlowEntry);
@@ -316,7 +312,7 @@ public class FlowSynchronizer implements IFlowSyncService {
         double startPush = System.nanoTime();
         pusher.pushFlowEntry(sw, flowEntry, MsgPriority.HIGH);
         pushTime = System.nanoTime() - startPush;
-        */
+             */
         }
 
         /**
@@ -340,7 +336,8 @@ public class FlowSynchronizer implements IFlowSyncService {
             fm.setPriority(statisticsReply.getPriority());
             fm.setOutPort(OFPort.OFPP_NONE);
 
-            pusher.add(sw, fm, MsgPriority.HIGH);
+            // XXX BOC commented out pending FlowSync refactor
+            //pusher.add(sw, fm, MsgPriority.HIGH);
         }
 
         /**

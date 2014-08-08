@@ -17,6 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.IOFSwitch.PortChangeType;
 import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
@@ -68,6 +69,7 @@ import org.openflow.protocol.OFPort;
 import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.util.HexString;
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,8 +85,7 @@ import com.googlecode.concurrenttrees.radixinverted.ConcurrentInvertedRadixTree;
 import com.googlecode.concurrenttrees.radixinverted.InvertedRadixTree;
 
 public class SdnIp implements IFloodlightModule, ISdnIpService,
-        IArpRequester,
-        IOFSwitchListener, IConfigInfoService {
+        IArpRequester, IOFSwitchListener, IConfigInfoService {
 
     private static final Logger log = LoggerFactory.getLogger(SdnIp.class);
     private final CallerId callerId = new CallerId("SDNIP");
@@ -146,7 +147,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     // True when we have a full mesh of shortest paths between gateways
     private volatile boolean topologyReady = false;
 
-    //private SingletonTask topologyChangeDetectorTask;
+    // private SingletonTask topologyChangeDetectorTask;
 
     private SetMultimap<InetAddress, RibUpdate> prefixesWaitingOnArp;
 
@@ -156,7 +157,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     private Map<InetAddress, Path> pushedPaths;
     private Map<Prefix, Path> prefixToPath;
-    //  private Multimap<Prefix, PushedFlowMod> pushedFlows;
+    // private Multimap<Prefix, PushedFlowMod> pushedFlows;
     private Multimap<Prefix, FlowId> pushedFlowIds;
 
     private FlowCache flowCache;
@@ -245,8 +246,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
-        Collection<Class<? extends IFloodlightService>> l
-                = new ArrayList<>();
+        Collection<Class<? extends IFloodlightService>> l = new ArrayList<>();
         l.add(ISdnIpService.class);
         l.add(IConfigInfoService.class);
         return l;
@@ -254,8 +254,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
-        Map<Class<? extends IFloodlightService>, IFloodlightService> m
-                = new HashMap<>();
+        Map<Class<? extends IFloodlightService>, IFloodlightService> m = new HashMap<>();
         m.put(ISdnIpService.class, this);
         m.put(IConfigInfoService.class, this);
         return m;
@@ -263,8 +262,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
-        Collection<Class<? extends IFloodlightService>> l
-                = new ArrayList<>();
+        Collection<Class<? extends IFloodlightService>> l = new ArrayList<>();
         l.add(IFloodlightProviderService.class);
         l.add(IRestApiService.class);
         l.add(IControllerRegistryService.class);
@@ -289,11 +287,14 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         restApi = context.getServiceImpl(IRestApiService.class);
         proxyArp = context.getServiceImpl(IProxyArpService.class);
 
-        controllerRegistryService = context.getServiceImpl(IControllerRegistryService.class);
+        controllerRegistryService = context
+                .getServiceImpl(IControllerRegistryService.class);
         pathRuntime = context.getServiceImpl(IPathCalcRuntimeService.class);
 
-        //ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        //topologyChangeDetectorTask = new SingletonTask(executor, new TopologyChangeDetector());
+        // ScheduledExecutorService executor =
+        // Executors.newScheduledThreadPool(1);
+        // topologyChangeDetectorTask = new SingletonTask(executor, new
+        // TopologyChangeDetector());
 
         pathsWaitingOnArp = new HashMap<>();
         prefixesWaitingOnArp = Multimaps.synchronizedSetMultimap(
@@ -301,7 +302,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         pushedPaths = new HashMap<>();
         prefixToPath = new HashMap<>();
-//              pushedFlows = HashMultimap.<Prefix, PushedFlowMod>create();
+        // pushedFlows = HashMultimap.<Prefix, PushedFlowMod>create();
         pushedFlowIds = HashMultimap.create();
 
         flowCache = new FlowCache(floodlightProvider);
@@ -439,8 +440,10 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             RibEntry rib = bgpRoutes.put(prefix.toBinaryString(), update.getRibEntry());
 
             if (rib != null && !rib.equals(update.getRibEntry())) {
-                // There was an existing nexthop for this prefix. This update supersedes that,
-                // so we need to remove the old flows for this prefix from the switches
+                // There was an existing nexthop for this prefix. This update
+                // supersedes that,
+                // so we need to remove the old flows for this prefix from the
+                // switches
                 executeDeletePrefix(prefix, rib);
             }
 
@@ -527,11 +530,11 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     }
 
     /**
-     * Add a flow to match dst-IP prefix and rewrite MAC for one IP prefix
-     * to all other border switches.
+     * Add a flow to match dst-IP prefix and rewrite MAC for one IP prefix to
+     * all other border switches.
      */
     private void addPrefixFlows(Prefix prefix, Interface egressInterface,
-                                MACAddress nextHopMacAddress) {
+            MACAddress nextHopMacAddress) {
         log.debug("Adding flows for prefix {}, next hop mac {}",
                 prefix, nextHopMacAddress);
 
@@ -550,10 +553,11 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         // Create the DataPath object: dstSwitchPort
         SwitchPort dstPort =
-            new SwitchPort(new Dpid(egressInterface.getDpid()),
-                           new PortNumber(egressInterface.getPort()));
+                new SwitchPort(new Dpid(egressInterface.getDpid()),
+                        new PortNumber(egressInterface.getPort()));
 
-        // We only need one flow mod per switch, so pick one interface on each switch
+        // We only need one flow mod per switch, so pick one interface on each
+        // switch
         Map<Long, Interface> srcInterfaces = new HashMap<>();
         for (Interface intf : interfaces.values()) {
             if (!srcInterfaces.containsKey(intf.getDpid())
@@ -572,8 +576,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             // Create DataPath object: srcSwitchPort
             SwitchPort srcPort =
-                new SwitchPort(new Dpid(srcInterface.getDpid()),
-                               new PortNumber(srcInterface.getPort()));
+                    new SwitchPort(new Dpid(srcInterface.getDpid()),
+                            new PortNumber(srcInterface.getPort()));
 
             DataPath dataPath = new DataPath();
             dataPath.setSrcPort(srcPort);
@@ -620,9 +624,11 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         synchronized (this) {
             Prefix prefix = update.getPrefix();
 
-            //if (ptree.remove(prefix, update.getRibEntry())) {
-            // TODO check the change of logic here - remove doesn't check that the
-            // rib entry was what we expected (and we can't do this concurrently)
+            // if (ptree.remove(prefix, update.getRibEntry())) {
+            // TODO check the change of logic here - remove doesn't check that
+            // the
+            // rib entry was what we expected (and we can't do this
+            // concurrently)
             if (bgpRoutes.remove(prefix.toBinaryString())) {
                 /*
                  * Only delete flows if an entry was actually removed from the tree.
@@ -644,8 +650,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             Path path = prefixToPath.remove(prefix);
 
             if (path != null) {
-                //path could be null if we added to the Ptree but didn't push
-                //flows yet because we were waiting to resolve ARP
+                // path could be null if we added to the Ptree but didn't push
+                // flows yet because we were waiting to resolve ARP
 
                 path.decrementUsers();
                 if (path.getUsers() <= 0 && !path.isPermanent()) {
@@ -707,9 +713,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         }*/
     }
 
-
-    //TODO test next-hop changes
-    //TODO check delete/add synchronization
+    // TODO test next-hop changes
+    // TODO check delete/add synchronization
 
     /**
      * On startup, we need to calculate a full mesh of paths between all gateway
@@ -778,15 +783,16 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         flowPath.setFlowPathType(FlowPathType.FP_TYPE_SHORTEST_PATH);
         flowPath.setFlowPathUserState(FlowPathUserState.FP_USER_ADD);
 
-        // Insert the dest-mac based forwarding flow entry to the non-first-hop switches
+        // Insert the dest-mac based forwarding flow entry to the non-first-hop
+        // switches
         FlowPathFlags flowPathFlags = new FlowPathFlags();
         flowPathFlags.setFlags(FlowPathFlags.DISCARD_FIRST_HOP_ENTRY);
         flowPath.setFlowPathFlags(flowPathFlags);
 
         // Create the DataPath object: dstSwitchPort
         SwitchPort dstPort =
-            new SwitchPort(new Dpid(dstInterface.getDpid()),
-                           new PortNumber(dstInterface.getPort()));
+                new SwitchPort(new Dpid(dstInterface.getDpid()),
+                        new PortNumber(dstInterface.getPort()));
 
         for (Interface srcInterface : interfaces.values()) {
 
@@ -799,8 +805,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             // Create the DataPath object: srcSwitchPort
             SwitchPort srcPort =
-                new SwitchPort(new Dpid(srcInterface.getDpid()),
-                               new PortNumber(srcInterface.getPort()));
+                    new SwitchPort(new Dpid(srcInterface.getDpid()),
+                            new PortNumber(srcInterface.getPort()));
 
             DataPath dataPath = new DataPath();
             dataPath.setSrcPort(srcPort);
@@ -814,7 +820,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             flowPath.setFlowEntryMatch(flowEntryMatch);
 
             // NOTE: No need to add ACTION_OUTPUT. It is implied when creating
-            // Shortest Path Flow, and is always the last action for the Flow Entries
+            // Shortest Path Flow, and is always the last action for the Flow
+            // Entries
             log.debug("FlowPath of MAC based forwarding: {}", flowPath.toString());
             // TODO: Add the flow by using the new Path Intent framework
             /*
@@ -832,11 +839,11 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
     @Override
     public void beginRoutingNew() {
-            setupBgpPathsNew();
+        setupBgpPathsNew();
 
-        //setupFullMesh();
+        // setupFullMesh();
 
-        //Suppress link discovery on external-facing router ports
+        // Suppress link discovery on external-facing router ports
 
         for (Interface intf : interfaces.values()) {
             linkDiscoveryService.disableDiscoveryOnPort(intf.getDpid(), intf.getPort());
@@ -851,37 +858,39 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     }
 
     /**
-     * Setup the Paths to the BGP Daemon.
-     *
-     * Run a loop for all of the bgpPeers
-     * Push flow from BGPd to the peer
-     * Push flow from peer to BGPd
-     * Parameters to pass to the intent are as follows:
-     *     String id,
-     *     long srcSwitch, long srcPort, long srcMac, int srcIP,
-     *     long dstSwitch, long dstPort, long dstMac, int dstIP
+     * Setup the Paths to the BGP Daemon. Run a loop for all of the bgpPeers
+     * Push flow from BGPd to the peer Push flow from peer to BGPd Parameters to
+     * pass to the intent are as follows: String id, long srcSwitch, long
+     * srcPort, long srcMac, int srcIP, long dstSwitch, long dstPort, long
+     * dstMac, int dstIP
      */
     private void setupBgpPathsNew() {
         IntentOperationList operations = new IntentOperationList();
         for (BgpPeer bgpPeer : bgpPeers.values()) {
             Interface peerInterface = interfaces.get(bgpPeer.getInterfaceName());
-            //Inet4Address.
+            // Inet4Address.
             int srcIP = InetAddresses.coerceToInteger(peerInterface.getIpAddress());
             int dstIP = InetAddresses.coerceToInteger(bgpPeer.getIpAddress());
-            String fwdIntentId = caller + ":" + controllerRegistryService.getNextUniqueId();
-            String bwdIntentId = caller + ":" + controllerRegistryService.getNextUniqueId();
+            String fwdIntentId = caller + ":"
+                    + controllerRegistryService.getNextUniqueId();
+            String bwdIntentId = caller + ":"
+                    + controllerRegistryService.getNextUniqueId();
             SwitchPort srcPort =
-                new SwitchPort(bgpdAttachmentPoint.dpid(),
-                               bgpdAttachmentPoint.port());
+                    new SwitchPort(bgpdAttachmentPoint.dpid(),
+                            bgpdAttachmentPoint.port());
             SwitchPort dstPort =
-                new SwitchPort(new Dpid(peerInterface.getDpid()),
-                               new PortNumber(peerInterface.getSwitchPort().port()));
+                    new SwitchPort(new Dpid(peerInterface.getDpid()),
+                            new PortNumber(peerInterface.getSwitchPort().port()));
             ShortestPathIntent fwdIntent = new ShortestPathIntent(fwdIntentId,
-                    srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP,
-                    dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP);
+                    srcPort.dpid().value(), srcPort.port().value(),
+                    ShortestPathIntent.EMPTYMACADDRESS, srcIP,
+                    dstPort.dpid().value(), dstPort.port().value(),
+                    ShortestPathIntent.EMPTYMACADDRESS, dstIP);
             ShortestPathIntent bwdIntent = new ShortestPathIntent(bwdIntentId,
-                    dstPort.dpid().value(), dstPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, dstIP,
-                    srcPort.dpid().value(), srcPort.port().value(), ShortestPathIntent.EMPTYMACADDRESS, srcIP);
+                    dstPort.dpid().value(), dstPort.port().value(),
+                    ShortestPathIntent.EMPTYMACADDRESS, dstIP,
+                    srcPort.dpid().value(), srcPort.port().value(),
+                    ShortestPathIntent.EMPTYMACADDRESS, srcIP);
             IntentOperation.Operator operator = IntentOperation.Operator.ADD;
             operations.add(operator, fwdIntent);
             operations.add(operator, bwdIntent);
@@ -914,11 +923,13 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             flowEntryMatch.enableEthernetFrameType(Ethernet.TYPE_IPV4);
 
             // Match both source address and dest address
-            IPv4Net dstIPv4Net = new IPv4Net(bgpPeer.getIpAddress().getHostAddress() + "/32");
+            IPv4Net dstIPv4Net = new IPv4Net(bgpPeer.getIpAddress().getHostAddress()
+                    + "/32");
 
             flowEntryMatch.enableDstIPv4Net(dstIPv4Net);
 
-            IPv4Net srcIPv4Net = new IPv4Net(peerInterface.getIpAddress().getHostAddress() + "/32");
+            IPv4Net srcIPv4Net = new IPv4Net(peerInterface.getIpAddress()
+                    .getHostAddress() + "/32");
             flowEntryMatch.enableSrcIPv4Net(srcIPv4Net);
 
             // Match TCP protocol
@@ -935,13 +946,13 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             DataPath dataPath = new DataPath();
 
             SwitchPort srcPort =
-                new SwitchPort(bgpdAttachmentPoint.dpid(),
-                               bgpdAttachmentPoint.port());
+                    new SwitchPort(bgpdAttachmentPoint.dpid(),
+                            bgpdAttachmentPoint.port());
             dataPath.setSrcPort(srcPort);
 
             SwitchPort dstPort =
-                new SwitchPort(new Dpid(peerInterface.getDpid()),
-                               new PortNumber(peerInterface.getSwitchPort().port()));
+                    new SwitchPort(new Dpid(peerInterface.getDpid()),
+                            new PortNumber(peerInterface.getSwitchPort().port()));
             dataPath.setDstPort(dstPort);
 
             flowPath.setDataPath(dataPath);
@@ -1070,13 +1081,10 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             // match ICMP protocol BGP -> Peer
             flowPath.setFlowId(new FlowId());
-
             flowEntryMatch.enableDstIPv4Net(dstIPv4Net);
             flowEntryMatch.enableSrcIPv4Net(srcIPv4Net);
             flowPath.setFlowEntryMatch(flowEntryMatch);
-
             flowPath.setDataPath(dataPath);
-
             log.debug("ICMP flowPath: {}", flowPath.toString());
 
             // TODO: Add the flow by using the new Path Intent framework
@@ -1111,11 +1119,14 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 log.debug("Pushing path to {} at {} on {}",
                         path.getDstIpAddress().getHostAddress(), macAddress,
                         path.getDstInterface().getSwitchPort());
-                // These paths should always be to BGP peers. Paths to non-peers are
+                // These paths should always be to BGP peers. Paths to non-peers
+                // are
                 // handled once the first prefix is ready to push
                 if (pushedPaths.containsKey(path.getDstIpAddress())) {
-                    // A path already got pushed to this endpoint while we were waiting
-                    // for ARP. We'll copy over the permanent attribute if it is set on this path.
+                    // A path already got pushed to this endpoint while we were
+                    // waiting
+                    // for ARP. We'll copy over the permanent attribute if it is
+                    // set on this path.
                     if (path.isPermanent()) {
                         pushedPaths.get(path.getDstIpAddress()).setPermanent();
                     }
@@ -1135,9 +1146,12 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 if (rib != null && rib.equals(update.getRibEntry())) {
                     log.debug("Pushing prefix {} next hop {}", update.getPrefix(),
                             rib.getNextHop().getHostAddress());
-                    // We only push prefix flows if the prefix is still in the ptree
-                    // and the next hop is the same as our update. The prefix could
-                    // have been removed while we were waiting for the ARP, or the
+                    // We only push prefix flows if the prefix is still in the
+                    // ptree
+                    // and the next hop is the same as our update. The prefix
+                    // could
+                    // have been removed while we were waiting for the ARP, or
+                    // the
                     // next hop could have changed.
                     executeRibAdd(update);
                 } else {
@@ -1247,7 +1261,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         setupBgpPaths();
         setupFullMesh();
 
-        //Suppress link discovery on external-facing router ports
+        // Suppress link discovery on external-facing router ports
         for (Interface intf : interfaces.values()) {
             linkDiscoveryService.disableDiscoveryOnPort(intf.getDpid(), intf.getPort());
         }
@@ -1285,7 +1299,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         */
     }
 
-    // Actually we only need to go half way round to verify full mesh connectivity
+    // Actually we only need to go half way round to verify full mesh
+    // connectivity
     private void checkTopologyReady() {
         for (Interface dstInterface : interfaces.values()) {
             for (Interface srcInterface : interfaces.values()) {
@@ -1329,25 +1344,25 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 try {
                     RibUpdate update = ribUpdates.take();
                     switch (update.getOperation()) {
-                        case UPDATE:
-                            if (validateUpdate(update)) {
-                                processRibAdd(update);
-                            } else {
-                                log.debug("Rib UPDATE out of order: {} via {}",
-                                        update.getPrefix(), update.getRibEntry().getNextHop());
-                            }
-                            break;
-                        case DELETE:
-                            if (validateUpdate(update)) {
-                                processRibDelete(update);
-                            } else {
-                                log.debug("Rib DELETE out of order: {} via {}",
-                                        update.getPrefix(), update.getRibEntry().getNextHop());
-                            }
-                            break;
-                        default:
-                            log.error("Unknown operation {}", update.getOperation());
-                            break;
+                    case UPDATE:
+                        if (validateUpdate(update)) {
+                            processRibAdd(update);
+                        } else {
+                            log.debug("Rib UPDATE out of order: {} via {}",
+                                    update.getPrefix(), update.getRibEntry().getNextHop());
+                        }
+                        break;
+                    case DELETE:
+                        if (validateUpdate(update)) {
+                            processRibDelete(update);
+                        } else {
+                            log.debug("Rib DELETE out of order: {} via {}",
+                                    update.getPrefix(), update.getRibEntry().getNextHop());
+                        }
+                        break;
+                    default:
+                        log.error("Unknown operation {}", update.getOperation());
+                        break;
                     }
                 } catch (InterruptedException e) {
                     log.debug("Interrupted while taking from updates queue", e);
@@ -1368,10 +1383,11 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         RibEntry oldEntry = bgpRoutes.getValueForExactKey(
                 update.getPrefix().toBinaryString());
 
-        //If there is no existing entry we must assume this is the most recent
-        //update. However this might not always be the case as we might have a
-        //POST then DELETE reordering.
-        //if (oldEntry == null || !newEntry.getNextHop().equals(oldEntry.getNextHop())) {
+        // If there is no existing entry we must assume this is the most recent
+        // update. However this might not always be the case as we might have a
+        // POST then DELETE reordering.
+        // if (oldEntry == null ||
+        // !newEntry.getNextHop().equals(oldEntry.getNextHop())) {
         if (oldEntry == null) {
             return true;
         }
@@ -1387,7 +1403,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         }
 
         return newEntry.getSysUpTime() == oldEntry.getSysUpTime() &&
-               newEntry.getSequenceNum() > oldEntry.getSequenceNum();
+                newEntry.getSequenceNum() > oldEntry.getSequenceNum();
     }
 
     private Interface longestInterfacePrefixMatch(InetAddress address) {
@@ -1438,8 +1454,17 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     }
     */
 
+    // ******************
+    // IOFSwitchListener
+    // ******************
+
     @Override
-    public void addedSwitch(IOFSwitch sw) {
+    public void switchActivatedMaster(long swId) {
+        IOFSwitch sw = floodlightProvider.getSwitch(swId);
+        if (sw == null) {
+            log.warn("Added switch not available {} ", swId);
+            return;
+        }
         if (!topologyReady) {
             sw.clearAllFlowMods();
         }
@@ -1448,12 +1473,30 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     }
 
     @Override
-    public void removedSwitch(IOFSwitch sw) {
+    public void switchActivatedEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchMasterToEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchEqualToMaster(long swId) {
+        // for now treat as switchActivatedMaster
+        switchActivatedMaster(swId);
+    }
+
+    @Override
+    public void switchDisconnected(long swId) {
         // Not used
     }
 
     @Override
-    public void switchPortChanged(Long switchId) {
+    public void switchPortChanged(long swId, OFPortDesc port, PortChangeType pct) {
         // Not used
     }
 

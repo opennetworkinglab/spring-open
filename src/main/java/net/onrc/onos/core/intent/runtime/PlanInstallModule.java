@@ -31,17 +31,17 @@ import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.ITopologyService;
 
-import org.openflow.protocol.OFFlowRemoved;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFFlowRemoved;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The PlanInstallModule contains the PlanCalcRuntime and PlanInstallRuntime.
  * <p>
- * It is responsible for converting Intents into FlowMods and seeing that
- * they are properly installed.
+ * It is responsible for converting Intents into FlowMods and seeing that they
+ * are properly installed.
  */
 public class PlanInstallModule implements IFloodlightModule, IOFMessageListener {
 
@@ -76,8 +76,8 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
             while (true) {
                 try {
                     IntentOperationList intents = intentQueue.take();
-                    //TODO: consider draining the remaining intent lists
-                    //      and processing in one big batch
+                    // TODO: consider draining the remaining intent lists
+                    // and processing in one big batch
 
                     processIntents(intents);
                 } catch (InterruptedException e) {
@@ -111,8 +111,9 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         }
 
         /***
-         * This function is for sending intent state notification to other ONOS instances.
-         * The argument of "domainSwitchDpids" is required for dispatching this ONOS's managed switches.
+         * This function is for sending intent state notification to other ONOS
+         * instances. The argument of "domainSwitchDpids" is required for
+         * dispatching this ONOS's managed switches.
          *
          * @param intents list of intents
          * @param installed true if Intents were installed
@@ -125,31 +126,32 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
             for (IntentOperation i : intents) {
                 IntentState newState;
                 switch (i.operator) {
-                    case REMOVE:
-                        if (installed) {
-                            newState = success ? IntentState.DEL_ACK : IntentState.DEL_PENDING;
-                        } else {
-                            newState = IntentState.DEL_REQ;
+                case REMOVE:
+                    if (installed) {
+                        newState = success ? IntentState.DEL_ACK
+                                : IntentState.DEL_PENDING;
+                    } else {
+                        newState = IntentState.DEL_REQ;
+                    }
+                    break;
+                case ADD:
+                default:
+                    if (installed) {
+                        if (domainSwitchDpids != null) {
+                            states.domainSwitchDpids.addAll(domainSwitchDpids);
                         }
-                        break;
-                    case ADD:
-                    default:
-                        if (installed) {
-                            if (domainSwitchDpids != null) {
-                                states.domainSwitchDpids.addAll(domainSwitchDpids);
-                            }
-                            newState = success ? IntentState.INST_ACK : IntentState.INST_NACK;
-                        } else {
-                            newState = IntentState.INST_REQ;
-                        }
-                        break;
+                        newState = success ? IntentState.INST_ACK : IntentState.INST_NACK;
+                    } else {
+                        newState = IntentState.INST_REQ;
+                    }
+                    break;
                 }
                 states.put(i.intent.getId(), newState);
             }
 
             if (log.isTraceEnabled()) {
                 log.trace("sendNotifications, states {}, domainSwitchDpids {}",
-                       states, states.domainSwitchDpids);
+                        states, states.domainSwitchDpids);
             }
 
             // Send notifications using the same key every time
@@ -222,6 +224,7 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
 
     /**
      * Formatted log for debugging.
+     * <p>
      * TODO: merge this into debugging framework
      *
      * @param step the step of computation
@@ -261,7 +264,8 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
                 IntentOperationList.class);
         eventListener.start();
         // start publisher
-        intentStateChannel = datagridService.createChannel(INTENT_STATE_EVENT_CHANNEL_NAME,
+        intentStateChannel = datagridService.createChannel(
+                INTENT_STATE_EVENT_CHANNEL_NAME,
                 Long.class,
                 IntentStateList.class);
         floodlightProvider.addOFMessageListener(OFType.FLOW_REMOVED, this);
@@ -308,19 +312,19 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
         if (msg.getType().equals(OFType.FLOW_REMOVED) &&
-            (msg instanceof OFFlowRemoved)) {
+                (msg instanceof OFFlowRemoved)) {
             OFFlowRemoved flowRemovedMsg = (OFFlowRemoved) msg;
 
             if (log.isTraceEnabled()) {
-               log.trace("Receive flowRemoved from sw {} : Cookie {}",
-                       sw.getId(), flowRemovedMsg.getCookie());
+                log.trace("Receive flowRemoved from sw {} : Cookie {}",
+                        sw.getId(), flowRemovedMsg.getCookie());
             }
 
-            String intentParentId = Long.toString(flowRemovedMsg.getCookie());
+            String intentParentId = Long.toString(flowRemovedMsg.getCookie().getValue());
             Intent intent = parentIntentMap.get(intentParentId);
 
-            //We assume if the path src sw flow entry is expired,
-            //the path is expired.
+            // We assume if the path src sw flow entry is expired,
+            // the path is expired.
             if (!isFlowSrcRemoved(sw.getId(), intentParentId)) {
                 return Command.CONTINUE;
             }
@@ -343,7 +347,8 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
             log.debug("addEntry to intentStateChannel intentId {}, states {}",
                     pathIntentId, newState);
 
-            intentStateChannel.addTransientEntry(flowRemovedMsg.getCookie(), states);
+            intentStateChannel.addTransientEntry(flowRemovedMsg.getCookie().getValue(),
+                    states);
         }
 
         return Command.CONTINUE;
@@ -355,10 +360,10 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
      * @param dpid DPID of affected switch
      * @param shortestPathIntentId Intent to check
      * @return true if the flow's source switch entry is removed or expired,
-     * otherwise false.
+     *         otherwise false.
      */
     private boolean isFlowSrcRemoved(long dpid, String shortestPathIntentId) {
-        Intent intent =  parentIntentMap.get(shortestPathIntentId);
+        Intent intent = parentIntentMap.get(shortestPathIntentId);
         ShortestPathIntent spfIntent = null;
         if (intent instanceof ShortestPathIntent) {
             spfIntent = (ShortestPathIntent) intent;
@@ -376,33 +381,19 @@ public class PlanInstallModule implements IFloodlightModule, IOFMessageListener 
         return false;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see net.floodlightcontroller.core.IListener#getName()
-     */
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "planInstall";
     }
 
-    /*
-     * (non-Javadoc)
-     * @see net.floodlightcontroller.core.IListener#isCallbackOrderingPrereq(java.lang.Object, java.lang.String)
-     */
     @Override
     public boolean isCallbackOrderingPrereq(OFType type, String name) {
-        // TODO Auto-generated method stub
         return false;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see net.floodlightcontroller.core.IListener#isCallbackOrderingPostreq(java.lang.Object, java.lang.String)
-     */
     @Override
     public boolean isCallbackOrderingPostreq(OFType type, String name) {
-        // TODO Auto-generated method stub
         return false;
     }
+
 }

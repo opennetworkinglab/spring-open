@@ -24,10 +24,10 @@ import java.util.concurrent.TimeUnit;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFStatisticsReply;
-import org.openflow.protocol.OFType;
-import org.openflow.protocol.statistics.OFStatistics;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFStatsReply;
+import org.projectfloodlight.openflow.protocol.OFStatsReplyFlags;
+import org.projectfloodlight.openflow.protocol.OFType;
 
 /**
  * A concrete implementation that handles asynchronously receiving OFStatistics
@@ -35,7 +35,7 @@ import org.openflow.protocol.statistics.OFStatistics;
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
 public class OFStatisticsFuture extends
-        OFMessageFuture<List<OFStatistics>> {
+        OFMessageFuture<List<OFStatsReply>> {
 
     protected volatile boolean finished;
 
@@ -46,22 +46,23 @@ public class OFStatisticsFuture extends
     }
 
     public OFStatisticsFuture(IThreadPoolService tp,
-                              IOFSwitch sw, int transactionId, long timeout, TimeUnit unit) {
+                              IOFSwitch sw, int transactionId, long timeout,
+                              TimeUnit unit) {
         super(tp, sw, OFType.STATS_REPLY, transactionId, timeout, unit);
         init();
     }
 
     private void init() {
         this.finished = false;
-        this.result = new CopyOnWriteArrayList<OFStatistics>();
+        this.result = new CopyOnWriteArrayList<OFStatsReply>();
     }
 
     @Override
     protected void handleReply(IOFSwitch sw, OFMessage msg) {
-        OFStatisticsReply sr = (OFStatisticsReply) msg;
+        OFStatsReply sr = (OFStatsReply) msg;
         synchronized (this.result) {
-            this.result.addAll(sr.getStatistics());
-            if ((sr.getFlags() & 0x1) == 0) {
+            this.result.add(sr);
+            if ( !(sr.getFlags().contains(OFStatsReplyFlags.REPLY_MORE)) ) {
                 this.finished = true;
             }
         }

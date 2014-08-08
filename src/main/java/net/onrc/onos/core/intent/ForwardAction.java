@@ -3,6 +3,10 @@ package net.onrc.onos.core.intent;
 import net.onrc.onos.core.util.FlowEntryAction;
 import net.onrc.onos.core.util.PortNumber;
 
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.types.OFPort;
+
 /**
  * A class to represent the OpenFlow forwarding action.
  */
@@ -39,6 +43,11 @@ class ForwardAction extends Action {
         FlowEntryAction action = new FlowEntryAction();
         action.setActionOutput(new PortNumber((short) dstPort));
         return action;
+    }
+
+    @Override
+    public OFAction getOFAction(OFFactory factory) {
+        return factory.actions().output(OFPort.of((int) dstPort), Short.MAX_VALUE);
     }
 
     /**
