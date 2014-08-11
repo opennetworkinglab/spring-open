@@ -1,6 +1,7 @@
 package net.onrc.onos.core.topology;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,7 +52,7 @@ public class TopologyEventPreprocessor {
     //
     // Switch mastership state (updated by the topology events)
     //
-    Map<Dpid, OnosInstanceId> switchMastership = new HashMap<>();
+    private Map<Dpid, OnosInstanceId> switchMastership = new HashMap<>();
 
     /**
      * Constructor for a given Registry Service.
@@ -69,14 +70,14 @@ public class TopologyEventPreprocessor {
         private final OnosInstanceId onosInstanceId;
 
         // The last ADD events received from this ONOS instance
-        Map<ByteBuffer, TopologyEvent> topologyEvents = new HashMap<>();
+        private Map<ByteBuffer, TopologyEvent> topologyEvents = new HashMap<>();
 
         /**
          * Constructor for a given ONOS Instance ID.
          *
          * @param onosInstanceId the ONOS Instance ID.
          */
-        OnosInstanceLastAddEvents(OnosInstanceId onosInstanceId) {
+        private OnosInstanceLastAddEvents(OnosInstanceId onosInstanceId) {
             this.onosInstanceId = checkNotNull(onosInstanceId);
         }
 
@@ -87,15 +88,20 @@ public class TopologyEventPreprocessor {
          * @return true if the event should be applied to the final Topology
          * as well, otherwise false.
          */
-        boolean processEvent(EventEntry<TopologyEvent> event) {
+        private boolean processEvent(EventEntry<TopologyEvent> event) {
             TopologyEvent topologyEvent = event.eventData();
             ByteBuffer id = topologyEvent.getIDasByteBuffer();
             OnosInstanceId masterId = null;
+            boolean isConfigured = false;
 
             // Get the Master of the Origin DPID
             Dpid dpid = topologyEvent.getOriginDpid();
             if (dpid != null) {
                 masterId = switchMastership.get(dpid);
+            }
+
+            if (topologyEvent.getConfigState() == ConfigState.CONFIGURED) {
+                isConfigured = true;
             }
 
             //
@@ -106,7 +112,7 @@ public class TopologyEventPreprocessor {
                 topologyEvents.put(id, topologyEvent);
                 reorderedEvents.remove(id);
                 // Allow the ADD only if the event was originated by the Master
-                return onosInstanceId.equals(masterId);
+                return isConfigured || onosInstanceId.equals(masterId);
 
             case ENTRY_REMOVE:
                 reorderedEvents.remove(id);
@@ -121,7 +127,7 @@ public class TopologyEventPreprocessor {
                 if (masterId == null) {
                     return true;
                 }
-                return onosInstanceId.equals(masterId);
+                return isConfigured || onosInstanceId.equals(masterId);
 
             default:
                 log.error("Unknown topology event {}", event.eventType());
@@ -139,7 +145,7 @@ public class TopologyEventPreprocessor {
          * @param dpid the DPID to use.
          * @return a list of postponed events for the given DPID.
          */
-        List<EventEntry<TopologyEvent>> getPostponedEvents(Dpid dpid) {
+        private List<EventEntry<TopologyEvent>> getPostponedEvents(Dpid dpid) {
             List<EventEntry<TopologyEvent>> result = new LinkedList<>();
 
             //
@@ -169,7 +175,7 @@ public class TopologyEventPreprocessor {
      *
      * @return a list of previously reordered events.
      */
-    List<EventEntry<TopologyEvent>> extractReorderedEvents() {
+    private List<EventEntry<TopologyEvent>> extractReorderedEvents() {
         List<EventEntry<TopologyEvent>> result = new LinkedList<>();
 
         //
@@ -202,6 +208,77 @@ public class TopologyEventPreprocessor {
     }
 
     /**
+     * Processes a Mastership Event.
+     *
+     * @param instance the ONOS instance state to use.
+     * @param event the event to process.
+     * @return a list of postponed events if the processed event is a
+     * Mastership Event for a new Master, otherwise an empty list.
+     */
+    private List<EventEntry<TopologyEvent>> processMastershipEvent(
+                        OnosInstanceLastAddEvents instance,
+                        EventEntry<TopologyEvent> event) {
+        TopologyEvent topologyEvent = event.eventData();
+        MastershipEvent mastershipEvent = topologyEvent.getMastershipEvent();
+
+        if (mastershipEvent == null) {
+            return Collections.emptyList();  // Not a Mastership Event
+        }
+
+        OnosInstanceId onosInstanceId = topologyEvent.getOnosInstanceId();
+        Dpid dpid = mastershipEvent.getDpid();
+        boolean newMaster = false;
+
+        //
+        // Update the Switch Mastership state:
+        //  - If ADD a MASTER and the Mastership is confirmed by the
+        //    Registry Service, or if the ADD is explicitly CONFIGURED,
+        //    then add to the Mastership map and fetch the postponed
+        //    events from the originating ONOS Instance.
+        //  - Otherwise, remove from the Mastership map, but only if it is
+        //    the current MASTER.
+        //
+        if ((event.eventType() == EventEntry.Type.ENTRY_ADD) &&
+            (mastershipEvent.getRole() == Role.MASTER)) {
+
+            //
+            // Accept if explicitly configured, otherwise check
+            // with the Registry Service.
+            //
+            if (topologyEvent.getConfigState() == ConfigState.CONFIGURED) {
+                newMaster = true;
+            } else {
+                //
+                // Check with the Registry Service as well
+                //
+                try {
+                    String rc =
+                        registryService.getControllerForSwitch(dpid.value());
+                    if ((rc != null) &&
+                        onosInstanceId.equals(new OnosInstanceId(rc))) {
+                        newMaster = true;
+                    }
+                } catch (RegistryException e) {
+                    log.error("Caught RegistryException while pre-processing Mastership Event", e);
+                }
+            }
+        }
+
+        if (newMaster) {
+            // Add to the map
+            switchMastership.put(dpid, onosInstanceId);
+            return instance.getPostponedEvents(dpid);
+        }
+
+        // Not a Master: eventually remove from the map
+        OnosInstanceId oldId = switchMastership.get(dpid);
+        if (onosInstanceId.equals(oldId)) {
+            switchMastership.remove(dpid);
+        }
+        return Collections.emptyList();
+    }
+
+    /**
      * Pre-processes a list of events.
      *
      * @param events the events to pre-process.
@@ -215,7 +292,7 @@ public class TopologyEventPreprocessor {
         // Process the events
         //
         for (EventEntry<TopologyEvent> event : events) {
-            List<EventEntry<TopologyEvent>> postponedEvents = null;
+            List<EventEntry<TopologyEvent>> postponedEvents;
 
             // Ignore NO-OP events
             if (event.isNoop()) {
@@ -236,49 +313,7 @@ public class TopologyEventPreprocessor {
                 instanceState.put(onosInstanceId, instance);
             }
 
-            //
-            // Update the Switch Mastership state:
-            //  - If ADD a MASTER and the Mastership is confirmed by the
-            //    Registry Service, then add to the Mastership map and fetch
-            //    the postponed events from the originating ONOS Instance.
-            //  - Otherwise, remove from the Mastership map, but only if it is
-            //    the current MASTER.
-            //
-            MastershipEvent mastershipEvent =
-                topologyEvent.getMastershipEvent();
-            if (mastershipEvent != null) {
-                Dpid dpid = mastershipEvent.getDpid();
-                boolean newMaster = false;
-
-                if ((event.eventType() == EventEntry.Type.ENTRY_ADD) &&
-                    (mastershipEvent.getRole() == Role.MASTER)) {
-                    //
-                    // Check with the Registry Service as well
-                    //
-                    try {
-                        String rc =
-                            registryService.getControllerForSwitch(dpid.value());
-                        if ((rc != null) &&
-                            onosInstanceId.equals(new OnosInstanceId(rc))) {
-                            newMaster = true;
-                        }
-                    } catch (RegistryException e) {
-                        log.error("Caught RegistryException while pre-processing Mastership Event", e);
-                    }
-                }
-
-                if (newMaster) {
-                    // Add to the map
-                    switchMastership.put(dpid, onosInstanceId);
-                    postponedEvents = instance.getPostponedEvents(dpid);
-                } else {
-                    // Eventually remove from the map
-                    OnosInstanceId oldId = switchMastership.get(dpid);
-                    if (onosInstanceId.equals(oldId)) {
-                        switchMastership.remove(dpid);
-                    }
-                }
-            }
+            postponedEvents = processMastershipEvent(instance, event);
 
             //
             // Process the event and eventually store it in the
@@ -289,9 +324,7 @@ public class TopologyEventPreprocessor {
             }
 
             // Add the postponed events (if any)
-            if (postponedEvents != null) {
-                result.addAll(postponedEvents);
-            }
+            result.addAll(postponedEvents);
         }
 
         // Extract and add the previously reordered events

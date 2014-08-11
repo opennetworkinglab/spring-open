@@ -218,6 +218,30 @@ public final class TopologyEvent {
     }
 
     /**
+     * Returns the config state of the topology element.
+     *
+     * @return the config state of the topology element.
+     */
+    public ConfigState getConfigState() {
+        if (mastershipEvent != null) {
+            return mastershipEvent.getConfigState();
+        }
+        if (switchEvent != null) {
+            return switchEvent.getConfigState();
+        }
+        if (portEvent != null) {
+            return portEvent.getConfigState();
+        }
+        if (linkEvent != null) {
+            return linkEvent.getConfigState();
+        }
+        if (hostEvent != null) {
+            return hostEvent.getConfigState();
+        }
+        return ConfigState.NOT_CONFIGURED;      // Default: not configured
+    }
+
+    /**
      * Checks if all events contained are equal.
      *
      * @param obj TopologyEvent to compare against

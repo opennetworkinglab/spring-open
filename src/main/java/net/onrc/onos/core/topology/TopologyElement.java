@@ -195,7 +195,8 @@ public class TopologyElement<T extends TopologyElement<T>>
      */
     @Override
     public ConfigState getConfigState() {
-        return ConfigState.valueOf(getStringAttribute(ELEMENT_CONFIG_STATE));
+        return ConfigState.valueOf(getStringAttribute(ELEMENT_CONFIG_STATE,
+                                                      ConfigState.NOT_CONFIGURED.toString()));
     }
 
     /**
@@ -207,5 +208,4 @@ public class TopologyElement<T extends TopologyElement<T>>
     public AdminStatus getStatus() {
         return AdminStatus.valueOf(getStringAttribute(ELEMENT_ADMIN_STATUS));
     }
-
 }

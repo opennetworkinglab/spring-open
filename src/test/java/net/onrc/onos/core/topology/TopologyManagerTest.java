@@ -1551,4 +1551,142 @@ public class TopologyManagerTest extends UnitTest {
         theTopologyListener.clear();
         events.clear();
     }
+
+    /**
+     * Tests processing of Configured Switch Events with Mastership switchover
+     * between two ONOS instance, and the delivery of the topology events.
+     * <p/>
+     * NOTE: This test is similar to testProcessSwitchMastershipSwitchover()
+     * except that the topology and all events are considered as statically
+     * configured.
+     * <p/>
+     * We test the following scenario:
+     * - Initially, a Mastership Event and a Switch Event from one ONOS
+     *   instance are processed - both events should be delivered.
+     * - Later, a Mastership Event and a Switch event from another ONOS
+     *   instances are processed - both events should be delivered.
+     */
+    @Test
+    public void testProcessConfiguredSwitchMastershipSwitchover() {
+        TopologyEvents topologyEvents;
+        List<EventEntry<TopologyEvent>> events = new LinkedList<>();
+        EventEntry<TopologyEvent> eventEntry;
+        TopologyEvent topologyMastershipEvent;
+        TopologyEvent topologySwitchEvent;
+
+        setupTopologyManagerWithEventHandler();
+
+        // Reset the Registry Service so it is not used
+        reset(registryService);
+
+        // Prepare the Mastership Event from the first ONOS instance
+        Role role = Role.MASTER;
+        MastershipEvent mastershipEvent =
+            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
+        mastershipEvent.createStringAttribute(
+                TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.CONFIGURED.toString());
+        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+                                                    ONOS_INSTANCE_ID_1);
+
+        // Prepare the Switch Event from the first ONOS instance
+        SwitchEvent switchEvent = new SwitchEvent(DPID_1);
+        switchEvent.createStringAttribute(
+                TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.CONFIGURED.toString());
+        topologySwitchEvent = new TopologyEvent(switchEvent,
+                                                ONOS_INSTANCE_ID_1);
+
+        // Add the Mastership Event
+        eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
+                                                   topologyMastershipEvent);
+        events.add(eventEntry);
+
+        // Add the Switch Event
+        eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
+                                                   topologySwitchEvent);
+        events.add(eventEntry);
+
+        // Process the events
+        TestUtils.callMethod(theEventHandler, "processEvents",
+                             List.class, events);
+
+        // Check the fired events: both events should be fired
+        topologyEvents = theTopologyListener.topologyEvents;
+        assertNotNull(topologyEvents);
+        assertThat(topologyEvents.getAddedMastershipEvents(),
+                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedSwitchEvents(),
+                   hasItem(switchEvent));
+        theTopologyListener.clear();
+        events.clear();
+
+        // Prepare the Mastership Event from the second ONOS instance
+        role = Role.MASTER;
+        mastershipEvent = new MastershipEvent(DPID_1,
+                                              ONOS_INSTANCE_ID_2, role);
+        mastershipEvent.createStringAttribute(
+                TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.CONFIGURED.toString());
+        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+                                                    ONOS_INSTANCE_ID_2);
+
+        // Prepare the Switch Event from second ONOS instance
+        switchEvent = new SwitchEvent(DPID_1);
+        switchEvent.createStringAttribute(
+                TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.CONFIGURED.toString());
+        topologySwitchEvent = new TopologyEvent(switchEvent,
+                                                ONOS_INSTANCE_ID_2);
+
+        // Add the Mastership Event
+        eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
+                                                   topologyMastershipEvent);
+        events.add(eventEntry);
+
+        // Add the Switch Event
+        eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
+                                                   topologySwitchEvent);
+        events.add(eventEntry);
+
+        // Process the events
+        TestUtils.callMethod(theEventHandler, "processEvents",
+                             List.class, events);
+
+        // Check the fired events: both events should be fired
+        topologyEvents = theTopologyListener.topologyEvents;
+        assertNotNull(topologyEvents);
+        assertThat(topologyEvents.getAddedMastershipEvents(),
+                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedSwitchEvents(),
+                   hasItem(switchEvent));
+        theTopologyListener.clear();
+        events.clear();
+
+        // Prepare the REMOVE Switch Event from first ONOS instance
+        //
+        // NOTE: This event only is explicitly marked as NOT_CONFIGURED,
+        // otherwise it will override the previous configuration events.
+        //
+        switchEvent = new SwitchEvent(DPID_1);
+        switchEvent.createStringAttribute(
+                TopologyElement.ELEMENT_CONFIG_STATE,
+                ConfigState.NOT_CONFIGURED.toString());
+        topologySwitchEvent = new TopologyEvent(switchEvent,
+                                                ONOS_INSTANCE_ID_1);
+        // Add the Switch Event
+        eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_REMOVE,
+                                                   topologySwitchEvent);
+        events.add(eventEntry);
+
+        // Process the events
+        TestUtils.callMethod(theEventHandler, "processEvents",
+                             List.class, events);
+
+        // Check the fired events: no events should be fired
+        topologyEvents = theTopologyListener.topologyEvents;
+        assertNull(topologyEvents);
+        theTopologyListener.clear();
+        events.clear();
+    }
 }
