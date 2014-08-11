@@ -1,5 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Set;
 
 import net.onrc.onos.core.matchaction.MatchActionOperations;
@@ -12,9 +14,10 @@ import net.onrc.onos.core.util.SwitchPort;
 /**
  * A Flow object expressing the point-to-multipoints tree flow for the packet
  * layer.
+ * <p>
+ * NOTE: This class is not fully supported for the August release.
  */
-public class SingleSrcTreeFlow implements Flow {
-    protected final FlowId id;
+public class SingleSrcTreeFlow extends Flow {
     protected PacketMatch match;
     protected SwitchPort ingressPort;
     protected Tree tree;
@@ -23,28 +26,23 @@ public class SingleSrcTreeFlow implements Flow {
     /**
      * Creates new instance using Tree object.
      *
-     * @param id ID for this object.
-     * @param match Traffic filter for the tree.
-     * @param ingressPort A ingress port of the tree.
-     * @param tree Tree object specifying tree topology for this object.
-     * @param outputActions The set of the pairs of the switch DPID and
-     *        OutputAction object at the egress edge switchs.
+     * @param id ID for this object
+     * @param match the traffic filter for the tree
+     * @param ingressPort an ingress port of the tree
+     * @param tree the tree object specifying tree topology for this object
+     * @param outputActions the set of the pairs of the switch DPID and
+     *        OutputAction object at the egress edge switchs
      */
-    public SingleSrcTreeFlow(String id, PacketMatch match,
+    public SingleSrcTreeFlow(FlowId id, PacketMatch match,
             SwitchPort ingressPort, Tree tree, Set<Pair<Dpid, OutputAction>> outputActions) {
-        this.id = new FlowId(id);
-        this.match = match;
-        this.ingressPort = ingressPort;
-        this.tree = tree;
-        this.outputActions = outputActions;
+        super(id);
+        this.match = checkNotNull(match);
+        this.ingressPort = checkNotNull(ingressPort);
+        this.tree = checkNotNull(tree);
+        this.outputActions = checkNotNull(outputActions);
 
         // TODO: check if the tree is a P2MP tree.
         // TODO: check consistency among rootPort, tree, and actions.
-    }
-
-    @Override
-    public FlowId getId() {
-        return id;
     }
 
     @Override

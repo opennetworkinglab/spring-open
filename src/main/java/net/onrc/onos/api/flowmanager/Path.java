@@ -1,5 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +20,35 @@ public class Path extends FlowLinks {
     }
 
     /**
+     * Constructor to create the object from the list of FlowLinks.
+     *
+     * @param links the list of FlowLinks
+     * @throws IllegalArgumentException if the links does not form a single
+     *         connected directed path topology
+     */
+    public Path(List<FlowLink> links) {
+        super();
+        checkNotNull(links);
+        for (FlowLink link : links) {
+            if (!addLink(link)) {
+                throw new IllegalArgumentException();
+            }
+        }
+    }
+
+    /**
+     * Adds FlowLink to the Path object.
+     *
+     * @param link the FlowLink object to be added
+     * @return true if succeeded, false otherwise
+     */
+    public boolean addLink(FlowLink link) {
+        // TODO check connectivity
+        checkNotNull(link);
+        return add(link);
+    }
+
+    /**
      * Gets a list of switch DPIDs of the path.
      *
      * @return a list of Dpid objects
@@ -29,7 +60,7 @@ public class Path extends FlowLinks {
 
         List<Dpid> dpids = new ArrayList<Dpid>(size() + 1);
         dpids.add(getSrcDpid());
-        for (FlowLink link: this) {
+        for (FlowLink link : this) {
             dpids.add(link.getDstDpid());
         }
         return dpids;

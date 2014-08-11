@@ -1,5 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 
 import net.onrc.onos.core.matchaction.MatchActionOperations;
@@ -13,26 +15,34 @@ import net.onrc.onos.core.util.PortNumber;
  * TODO: Think this: Do we need a bandwidth constraint?
  */
 public class PacketPathFlow extends PathFlow {
-    private int hardTimeout;
-    private int idleTimeout;
+    private final PacketMatch match;
+    private final int hardTimeout;
+    private final int idleTimeout;
 
     /**
      * Constructor.
      *
-     * @param id ID for this new Flow object.
-     * @param match Match object at the source node of the path.
-     * @param inPort Ingress port number at the ingress edge node.
-     * @param path Path between ingress and egress edge node.
-     * @param edgeActions The list of Action objects at the egress edge node.
-     * @param hardTimeout hard-timeout value.
-     * @param idleTimeout idle-timeout value.
+     * @param id ID for this new Flow object
+     * @param match the Match object at the source node of the path
+     * @param ingressPort the Ingress port number at the ingress edge node
+     * @param path the Path between ingress and egress edge node
+     * @param egressActions the list of Action objects at the egress edge node
+     * @param hardTimeout the hard-timeout value in seconds, or 0 for no timeout
+     * @param idleTimeout the idle-timeout value in seconds, or 0 for no timeout
      */
-    public PacketPathFlow(String id,
-            PacketMatch match, PortNumber inPort, Path path, List<Action> edgeActions,
+    public PacketPathFlow(FlowId id,
+            PacketMatch match, PortNumber ingressPort, Path path,
+            List<Action> egressActions,
             int hardTimeout, int idleTimeout) {
-        super(id, match, inPort, path, edgeActions);
+        super(id, ingressPort, path, egressActions);
+        this.match = checkNotNull(match);
         this.hardTimeout = hardTimeout;
         this.idleTimeout = idleTimeout;
+    }
+
+    @Override
+    public PacketMatch getMatch() {
+        return match;
     }
 
     /**
@@ -56,6 +66,6 @@ public class PacketPathFlow extends PathFlow {
     @Override
     public MatchActionOperations compile() {
         // TODO Auto-generated method stub
-        return super.compile();
+        return null;
     }
 }

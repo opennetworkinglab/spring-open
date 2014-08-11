@@ -1,5 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,14 +27,43 @@ public class Tree extends FlowLinks {
     }
 
     /**
-     * Creates new instance using Path object.
+     * Creates new instance from the specified Path object.
+     *
+     * @param path the Path object
+     * @throws IllegalArgumentException if the path object does not form a
+     *         single connected directed path topology
      */
     public Tree(Path path) {
         super();
-        // TODO implement
+        checkNotNull(path);
+
+        for (FlowLink link : path) {
+            if (!addLink(link)) {
+                throw new IllegalArgumentException();
+            }
+        }
+    }
+
+    /**
+     * Creates new instance using FlowLinks object.
+     *
+     * @param links the FlowLinks object
+     * @throws IllegalArgumentException if the links object does not form a
+     *         single connected directed tree topology
+     */
+    public Tree(FlowLinks links) {
+        super();
+        checkNotNull(links);
+
+        for (FlowLink link : links) {
+            if (!addLink(link)) {
+                throw new IllegalArgumentException();
+            }
+        }
     }
 
     private void addPort(SwitchPort port) {
+        checkNotNull(port);
         if (!ports.containsKey(port.dpid())) {
             ports.put(port.dpid(), new HashSet<PortNumber>());
         }
@@ -49,6 +80,7 @@ public class Tree extends FlowLinks {
      * @return true if succeeded, false otherwise.
      */
     public boolean addLink(FlowLink link) {
+        checkNotNull(link);
         if (links.size() > 0) {
             if (!hasDpid(link.getSrcDpid()) && !hasDpid(link.getDstDpid())) {
                 // no attaching point

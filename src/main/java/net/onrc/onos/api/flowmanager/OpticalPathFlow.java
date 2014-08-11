@@ -4,6 +4,8 @@ import java.util.List;
 
 import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.matchaction.match.PacketMatchBuilder;
 import net.onrc.onos.core.util.PortNumber;
 
 /**
@@ -11,30 +13,42 @@ import net.onrc.onos.core.util.PortNumber;
  * <p>
  * TODO: Think this: How do we deal the optical path flow going through the
  * regenerators? Can we express it with multiple OpticalPathFlow objects?
+ * <p>
+ * NOTE: This class is not fully supported for the August release.
  */
 public class OpticalPathFlow extends PathFlow {
-    protected int lambda;
+    private final int lambda;
 
     /**
      * Constructor.
      *
-     * @param id ID for this new Flow object.
-     * @param inPort Ingress port number at the ingress edge node.
-     * @param path Path between ingress and egress edge node.
-     * @param actions The list of Action objects at the egress edge node.
-     * @param lambda The lambda to be used throughout the path.
+     * @param id the ID for this new Flow object
+     * @param ingressPort the Ingress port number at the ingress edge node
+     * @param path the Path between ingress and egress edge node
+     * @param egressActions the list of Action objects at the egress edge node
+     * @param lambda the lambda to be used throughout the path
      */
-    public OpticalPathFlow(String id,
-            PortNumber inPort, Path path, List<Action> actions, int lambda) {
-        super(id, null, inPort, path, actions);
+    public OpticalPathFlow(FlowId id,
+            PortNumber ingressPort, Path path, List<Action> egressActions, int lambda) {
+        super(id, ingressPort, path, egressActions);
         this.lambda = lambda;
-        // TODO Auto-generated constructor stub
+    }
+
+    /**
+     * Gets traffic filter for this flow.
+     * <p>
+     * This method only returns wildcard match, because the ingress transponder
+     * port does not have filtering functionality.
+     */
+    @Override
+    public PacketMatch getMatch() {
+        return (new PacketMatchBuilder()).build();
     }
 
     /**
      * Gets lambda which is used throughout the path.
      *
-     * @return lambda which is used throughout the path.
+     * @return lambda which is used throughout the path
      */
     public int getLambda() {
         return lambda;
@@ -43,6 +57,6 @@ public class OpticalPathFlow extends PathFlow {
     @Override
     public MatchActionOperations compile() {
         // TODO Auto-generated method stub
-        return super.compile();
+        return null;
     }
 }

@@ -1,33 +1,33 @@
 package net.onrc.onos.core.newintent;
 
-import com.google.common.base.Objects;
-import net.onrc.onos.api.flowmanager.PathFlow;
+import static com.google.common.base.Preconditions.checkNotNull;
+import net.onrc.onos.api.flowmanager.PacketPathFlow;
 import net.onrc.onos.api.newintent.AbstractIntent;
 import net.onrc.onos.api.newintent.InstallableIntent;
 import net.onrc.onos.api.newintent.IntentId;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.Objects;
 
 /**
- * Intent containing {@link PathFlow} object, which defines an explicit path.
+ * Intent containing {@link PacketPathFlow} object, which defines an explicit path.
  *
  * It is intended to establish a path by using Flow Manager's API.
  */
 public class PathFlowIntent extends AbstractIntent implements InstallableIntent {
 
-    private final PathFlow flow;
+    private final PacketPathFlow flow;
 
-    public PathFlowIntent(IntentId id, PathFlow flow) {
+    public PathFlowIntent(IntentId id, PacketPathFlow flow) {
         super(id);
         this.flow = checkNotNull(flow);
     }
 
     /**
-     * Returns {@link PathFlow} object, which defines an explicit path.
+     * Returns {@link PacketPathFlow} object, which defines an explicit path.
      *
-     * @return {@link PathFlow path}
+     * @return {@link PacketPathFlow path}
      */
-    public PathFlow getFlow() {
+    public PacketPathFlow getFlow() {
         return flow;
 
     }
