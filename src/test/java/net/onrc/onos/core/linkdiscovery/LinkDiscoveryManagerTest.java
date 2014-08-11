@@ -136,6 +136,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         IOFSwitch mockSwitch = createNiceMock(IOFSwitch.class);
         expect(mockSwitch.getId()).andReturn(id).anyTimes();
         expect(mockSwitch.portEnabled(EasyMock.anyShort())).andReturn(true).anyTimes();
+        expect(mockSwitch.getFactory()).andReturn(factory10).anyTimes();
         return mockSwitch;
     }
 

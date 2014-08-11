@@ -54,7 +54,6 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     private Topology topology;
     private IDatagridService datagrid;
     private IFlowPusherService flowPusher;
-    private OFFactory factory;
 
     private IEventChannel<Long, PacketOutNotification> packetOutEventChannel;
 
@@ -221,7 +220,6 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                 .getTopology();
         datagrid = context.getServiceImpl(IDatagridService.class);
         flowPusher = context.getServiceImpl(IFlowPusherService.class);
-        factory = floodlightProvider.getOFMessageFactory_10();
     }
 
     @Override
@@ -242,6 +240,8 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                 log.warn("Switch {} not found when sending packet", dpid);
                 continue;
             }
+
+            OFFactory factory = sw.getFactory();
 
             List<OFAction> actions = new ArrayList<>();
             for (Short port : outPorts.get(dpid)) {

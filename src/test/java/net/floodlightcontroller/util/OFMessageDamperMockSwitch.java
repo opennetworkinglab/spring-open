@@ -25,6 +25,7 @@ import org.jboss.netty.channel.Channel;
 import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
+import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFPortStatus;
@@ -473,6 +474,12 @@ public class OFMessageDamperMockSwitch implements IOFSwitch {
     public void setTableFull(boolean isFull) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public OFFactory getFactory() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

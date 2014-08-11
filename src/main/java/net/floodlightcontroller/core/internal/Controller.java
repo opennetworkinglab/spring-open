@@ -35,7 +35,6 @@ import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -938,12 +937,21 @@ public class Controller implements IFloodlightProviderService {
 //        }
 //    }
 
-    @Override
+
+    /**
+     * Gets an OpenFlow message factory for version 1.0.
+     *
+     * @return an OpenFlow 1.0 message factory
+     */
     public OFFactory getOFMessageFactory_10() {
         return factory10;
     }
 
-    @Override
+    /**
+     * Gets an OpenFlow message factory for version 1.3.
+     *
+     * @return an OpenFlow 1.3 message factory
+     */
     public OFFactory getOFMessageFactory_13() {
         return factory13;
     }

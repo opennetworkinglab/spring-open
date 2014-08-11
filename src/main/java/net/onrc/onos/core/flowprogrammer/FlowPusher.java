@@ -33,7 +33,6 @@ import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFType;
-import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -245,7 +244,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
     private FloodlightModuleContext context = null;
     private IThreadPoolService threadPool = null;
     private IFloodlightProviderService floodlightProvider = null;
-    protected Map<OFVersion, OFFactory> ofFactoryMap = null;
 
     // Map of threads versus dpid
     private Map<Long, FlowPusherThread> threadMap = null;
@@ -405,9 +403,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                 .getServiceImpl(IFloodlightProviderService.class);
         this.threadPool = context.getServiceImpl(IThreadPoolService.class);
 
-        ofFactoryMap = new HashMap<>();
-        ofFactoryMap.put(OFVersion.OF_10, floodlightProvider.getOFMessageFactory_10());
-        ofFactoryMap.put(OFVersion.OF_13, floodlightProvider.getOFMessageFactory_13());
         floodlightProvider.addOFMessageListener(OFType.BARRIER_REPLY, this);
     }
 
@@ -415,12 +410,6 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
      * Begin processing queue.
      */
     public void start() {
-        // TODO BOC
-        // if (factory == null) {
-        // log.error("FlowPusher not yet initialized.");
-        // return;
-        // }
-
         threadMap = new HashMap<Long, FlowPusherThread>();
         for (long i = 0; i < numberThread; ++i) {
             FlowPusherThread thread = new FlowPusherThread();
@@ -612,7 +601,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         //
         // Create the OpenFlow Flow Modification Entry to push
         //
-        OFFlowMod fm = flowEntry.buildFlowMod(ofFactoryMap.get(sw.getOFVersion()));
+        OFFlowMod fm = flowEntry.buildFlowMod(sw.getFactory());
         // log.trace("Pushing flow mod {}", fm);
         return addMessageImpl(sw, fm, priority);
     }
@@ -682,7 +671,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
     }
 
     protected OFBarrierRequest createBarrierRequest(IOFSwitch sw) {
-        OFFactory factory = ofFactoryMap.get(sw.getOFVersion());
+        OFFactory factory = sw.getFactory();
         if (factory == null) {
             log.error("No OF Message Factory for switch {} with OFVersion {}", sw,
                     sw.getOFVersion());

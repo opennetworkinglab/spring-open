@@ -27,7 +27,6 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.projectfloodlight.openflow.protocol.OFControllerRole;
-import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFType;
 
 /**
@@ -191,14 +190,6 @@ public interface IFloodlightProviderService extends IFloodlightService {
     //************************
     //  Utility methods
     //************************
-
-    /**
-     * Gets the Factory
-     *
-     * @return an OpenFlow message factory
-     */
-    public OFFactory getOFMessageFactory_13();
-    public OFFactory getOFMessageFactory_10();
 
     /**
      * Publish updates to Controller updates queue

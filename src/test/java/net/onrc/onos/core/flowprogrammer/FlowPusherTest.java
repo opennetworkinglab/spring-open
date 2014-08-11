@@ -472,8 +472,6 @@ public class FlowPusherTest {
         //factory10 = EasyMock.createMock(OFFactories.getFactory(OFVersion.OF_10).getClass());
         flProviderService = EasyMock.createMock(IFloodlightProviderService.class);
         threadPoolService = EasyMock.createMock(IThreadPoolService.class);
-        EasyMock.expect(flProviderService.getOFMessageFactory_10()).andReturn(factory10).anyTimes();
-        EasyMock.expect(flProviderService.getOFMessageFactory_13()).andReturn(null).anyTimes();
 
         EasyMock.expect(modContext.getServiceImpl(EasyMock.eq(IThreadPoolService.class)))
                 .andReturn(threadPoolService).once();

@@ -48,12 +48,9 @@ import net.floodlightcontroller.core.util.ListenerDispatcher;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.util.OnosInstanceId;
 
-import org.projectfloodlight.openflow.protocol.OFFactories;
-import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
-import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,10 +68,6 @@ public class MockFloodlightProvider implements IFloodlightModule,
     // TODO: need to add connected switches?
     protected ConcurrentHashMap<Long, IOFSwitch> activeMasterSwitches;
     protected ConcurrentHashMap<Long, IOFSwitch> activeEqualSwitches;
-
-    // protected BasicFactory factory;
-    protected static OFFactory factory13 = OFFactories.getFactory(OFVersion.OF_13);
-    protected static OFFactory factory10 = OFFactories.getFactory(OFVersion.OF_10);
 
     /**
      *
@@ -314,18 +307,6 @@ public class MockFloodlightProvider implements IFloodlightModule,
     public void publishUpdate(IUpdate update) {
         // TODO Auto-generated method stub
 
-    }
-
-    @Override
-    public OFFactory getOFMessageFactory_13() {
-        // TODO to be checked
-        return factory13;
-    }
-
-    @Override
-    public OFFactory getOFMessageFactory_10() {
-        // TODO to be checked
-        return factory10;
     }
 
     @Override

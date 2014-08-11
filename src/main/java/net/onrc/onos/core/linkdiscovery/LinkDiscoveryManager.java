@@ -57,7 +57,6 @@ import net.onrc.onos.core.packet.OnosLldp;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
@@ -68,7 +67,6 @@ import org.projectfloodlight.openflow.protocol.OFPortReason;
 import org.projectfloodlight.openflow.protocol.OFPortState;
 import org.projectfloodlight.openflow.protocol.OFPortStatus;
 import org.projectfloodlight.openflow.protocol.OFType;
-import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
@@ -106,9 +104,6 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
 
     private static final Logger log =
             LoggerFactory.getLogger(LinkDiscoveryManager.class);
-    // TODO Remove these factories.
-    protected OFFactory factory13 = OFFactories.getFactory(OFVersion.OF_13);
-    protected OFFactory factory10 = OFFactories.getFactory(OFVersion.OF_10);
 
     private IFloodlightProviderService controller;
 
@@ -322,8 +317,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
                     sw, port);
         }
 
-        OFFactory factory = (iofSwitch.getOFVersion() == OFVersion.OF_10)
-                ? factory10 : factory13;
+        OFFactory factory = iofSwitch.getFactory();
         OFPacketOut po = createLLDPPacketOut(sw, ofpPort, isReverse, factory);
 
         try {

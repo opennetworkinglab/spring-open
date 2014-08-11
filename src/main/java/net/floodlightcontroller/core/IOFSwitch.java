@@ -35,10 +35,9 @@ import org.jboss.netty.channel.Channel;
 import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
-import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
-import org.projectfloodlight.openflow.protocol.OFPortDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFPortStatus;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.OFStatsRequest;
@@ -205,9 +204,25 @@ public interface IOFSwitch {
      */
     public Set<OFActionType> getActions();
 
-    public void setOFVersion(OFVersion ofv);
+    /**
+     * Gets an OpenFlow message factory that can be used to create messages to
+     * send to this switch.
+     *
+     * @return an OFFactory for the correct OpenFlow version
+     */
+    public OFFactory getFactory();
 
+    /**
+     * Gets the OpenFlow version (eg. OF1.0, OF1.3) for this switch.
+     *
+     * @return the OpenFlow version of the switch
+     */
     public OFVersion getOFVersion();
+
+    /**
+     * Sets the OpenFlow version (eg. OF1.0, OF1.3) for this switch.
+     */
+    public void setOFVersion(OFVersion ofv);
 
 
     //************************

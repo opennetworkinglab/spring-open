@@ -118,7 +118,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             throw new SwitchDriverSubHandshakeAlreadyStarted();
         }
         startDriverHandshakeCalled = true;
-        factory = floodlightProvider.getOFMessageFactory_13();
+        factory = getFactory();
         // configureSwitch();
         sendBarrier(true);
     }

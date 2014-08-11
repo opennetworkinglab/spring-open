@@ -62,6 +62,8 @@ import org.jboss.netty.channel.Channel;
 import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortConfig;
@@ -269,14 +271,19 @@ public class OFSwitchImplBase implements IOFSwitch {
         return stringId;
     }
 
-    /** Retrieve the openflow version (eg. OF1.0, OF1.3) for this switch
-     */
-    public OFVersion getOFVersion() {
-	return ofversion;
+    @Override
+    public OFFactory getFactory() {
+        return OFFactories.getFactory(ofversion);
     }
 
+    @Override
+    public OFVersion getOFVersion() {
+        return ofversion;
+    }
+
+    @Override
     public void setOFVersion(OFVersion ofv) {
-	ofversion = ofv;
+        ofversion = ofv;
     }
 
     /**
@@ -1223,10 +1230,10 @@ public class OFSwitchImplBase implements IOFSwitch {
     public void clearAllFlowMods() {
         // Delete all pre-existing flows
 
-	// by default if match is not specified, then an empty list of matches
-	// is sent, resulting in a wildcard-all flows
-	// XXX fix this later
-	OFMessage fm = floodlightProvider.getOFMessageFactory_13()
+        // by default if match is not specified, then an empty list of matches
+        // is sent, resulting in a wildcard-all flows
+        // XXX fix this later to be sure it works for both 1.0 and 1.3
+        OFMessage fm = getFactory()
 						.buildFlowDelete()
 						.setOutPort(OFPort.ANY)
 						.setOutGroup(OFGroup.ANY)
