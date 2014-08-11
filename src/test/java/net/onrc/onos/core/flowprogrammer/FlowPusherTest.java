@@ -52,7 +52,7 @@ public class FlowPusherTest {
     private OFFactory factory10 = OFFactories.getFactory(OFVersion.OF_10);
 
     /**
-     * Test single OFMessage is correctly sent to single switch via MessageDamper.
+     * Test single OFMessage is correctly sent to single switch.
      */
     @Test
     public void testAddMessage() {
@@ -95,7 +95,7 @@ public class FlowPusherTest {
     }
 
     /**
-     * Test bunch of OFMessages are correctly sent to single switch via MessageDamper.
+     * Test bunch of OFMessages are correctly sent to single switch.
      */
     @Test
     public void testMassiveAddMessage() {

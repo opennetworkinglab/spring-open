@@ -53,7 +53,6 @@ import net.floodlightcontroller.debugcounter.NullDebugCounter;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.util.LinkedHashSetWrapper;
 import net.floodlightcontroller.util.OrderedCollection;
-import net.floodlightcontroller.util.TimedCache;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -134,7 +133,6 @@ public class OFSwitchImplBase implements IOFSwitch {
     protected Map<Integer, OFFeaturesReplyFuture> featuresFutureMap;
     protected boolean connected;
     protected Role role;
-    protected TimedCache<Long> timedCache;
     protected ReentrantReadWriteLock listenerLock;
     protected ConcurrentMap<Short, Long> portBroadcastCacheHitMap;
     /**
@@ -212,7 +210,6 @@ public class OFSwitchImplBase implements IOFSwitch {
         this.featuresFutureMap = new ConcurrentHashMap<Integer, OFFeaturesReplyFuture>();
         this.iofMsgListenersMap = new ConcurrentHashMap<Integer, IOFMessageListener>();
         this.role = null;
-        this.timedCache = new TimedCache<Long>(100, 5 * 1000);  // 5 seconds interval
         this.listenerLock = new ReentrantReadWriteLock();
         this.pendingRoleRequests = new LinkedList<OFSwitchImplBase.PendingRoleRequestEntry>();
         this.portManager = new PortManager();
