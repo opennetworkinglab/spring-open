@@ -466,16 +466,12 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         // Create the Topology Snapshot Event
         //
         TopologyEvents events = null;
-        List<MastershipEvent> mastershipEvents =
-            new ArrayList<>(lastAddMastershipEvents.values());
-        List<SwitchEvent> switchEvents =
-            new ArrayList<>(topology.getAllSwitchEvents());
-        List<PortEvent> portEvents =
-            new ArrayList<>(topology.getAllPortEvents());
-        List<LinkEvent> linkEvents =
-            new ArrayList<>(topology.getAllLinkEvents());
-        List<HostEvent> hostEvents =
-            new ArrayList<>(topology.getAllHostEvents());
+        Collection<MastershipEvent> mastershipEvents =
+            lastAddMastershipEvents.values();
+        Collection<SwitchEvent> switchEvents = topology.getAllSwitchEvents();
+        Collection<PortEvent> portEvents = topology.getAllPortEvents();
+        Collection<LinkEvent> linkEvents = topology.getAllLinkEvents();
+        Collection<HostEvent> hostEvents = topology.getAllHostEvents();
         if (!(mastershipEvents.isEmpty() &&
               switchEvents.isEmpty() &&
               portEvents.isEmpty() &&
@@ -581,22 +577,17 @@ public class TopologyManager implements TopologyDiscoveryInterface {
         //
         // Allocate the events to deliver.
         //
-        // TODO: We could avoid the extra list allocation and copy
-        // by using directly the original list. However, during
-        // the cleanup below, we should create new LinkedList objects
-        // instead of using clear()
-        //
         TopologyEvents events = new TopologyEvents(
-                new ArrayList<>(apiAddedMastershipEvents),
-                new ArrayList<>(apiRemovedMastershipEvents),
-                new ArrayList<>(apiAddedSwitchEvents),
-                new ArrayList<>(apiRemovedSwitchEvents),
-                new ArrayList<>(apiAddedPortEvents),
-                new ArrayList<>(apiRemovedPortEvents),
-                new ArrayList<>(apiAddedLinkEvents),
-                new ArrayList<>(apiRemovedLinkEvents),
-                new ArrayList<>(apiAddedHostEvents),
-                new ArrayList<>(apiRemovedHostEvents));
+                apiAddedMastershipEvents,
+                apiRemovedMastershipEvents,
+                apiAddedSwitchEvents,
+                apiRemovedSwitchEvents,
+                apiAddedPortEvents,
+                apiRemovedPortEvents,
+                apiAddedLinkEvents,
+                apiRemovedLinkEvents,
+                apiAddedHostEvents,
+                apiRemovedHostEvents);
 
         //
         // Deliver the events

@@ -9,6 +9,7 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.RegistryException;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.EventEntry;
+import static net.onrc.onos.core.util.ImmutableClassChecker.assertThatClassIsImmutable;
 import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
@@ -199,6 +200,14 @@ public class TopologyManagerTest extends UnitTest {
         // to avoid any side effects of starting the eventHandler thread.
         //
         // theTopologyManager.startup(datagridService);
+    }
+
+    /**
+     * Tests the immutability of {@link TopologyEvents}.
+     */
+    @Test
+    public void testImmutableTopologyEvents() {
+        assertThatClassIsImmutable(TopologyEvents.class);
     }
 
     /**
