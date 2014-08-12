@@ -2,8 +2,9 @@ package net.onrc.onos.api.newintent;
 
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.match.Match;
-import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.matchaction.match.PacketMatchBuilder;
 import net.onrc.onos.core.util.SwitchPort;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -18,7 +19,7 @@ import static org.junit.Assert.*;
 public abstract class ConnectivityIntentTest {
 
     public static final IntentId IID = new IntentId(123);
-    public static final Match MATCH = new PacketMatch();
+    public static final Match MATCH = (new PacketMatchBuilder()).build();
     public static final Action NOP = new NoAction();
 
     public static final SwitchPort P1 = new SwitchPort(111, (short) 0x1);
