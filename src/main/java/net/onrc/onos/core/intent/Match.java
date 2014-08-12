@@ -3,11 +3,6 @@ package net.onrc.onos.core.intent;
 import java.util.Objects;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.packet.Ethernet;
-import net.onrc.onos.core.util.FlowEntryMatch;
-import net.onrc.onos.core.util.IPv4;
-import net.onrc.onos.core.util.IPv4Net;
-import net.onrc.onos.core.util.PortNumber;
 
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.match.Match.Builder;
@@ -108,35 +103,6 @@ public class Match {
         } else {
             return false;
         }
-    }
-
-    /**
-     * Converts the Match into a legacy FlowEntryMatch object.
-     *
-     * @return an equivalent FlowEntryMatch object
-     */
-    public FlowEntryMatch getFlowEntryMatch() {
-        FlowEntryMatch match = new FlowEntryMatch();
-        if (srcMac != null) {
-            match.enableSrcMac(srcMac);
-        }
-        if (dstMac != null) {
-            match.enableDstMac(dstMac);
-        }
-        if (srcIp != ShortestPathIntent.EMPTYIPADDRESS) {
-            match.enableEthernetFrameType(Ethernet.TYPE_IPV4);
-            IPv4 srcIPv4 = new IPv4(srcIp);
-            IPv4Net srcIP = new IPv4Net(srcIPv4, IPV4_PREFIX_LEN);
-            match.enableSrcIPv4Net(srcIP);
-        }
-        if (dstIp != ShortestPathIntent.EMPTYIPADDRESS) {
-            match.enableEthernetFrameType(Ethernet.TYPE_IPV4);
-            IPv4 dstIPv4 = new IPv4(dstIp);
-            IPv4Net dstIP = new IPv4Net(dstIPv4, IPV4_PREFIX_LEN);
-            match.enableDstIPv4Net(dstIP);
-        }
-        match.enableInPort(new PortNumber((short) srcPort));
-        return match;
     }
 
     public Builder getOFMatchBuilder(OFFactory factory) {

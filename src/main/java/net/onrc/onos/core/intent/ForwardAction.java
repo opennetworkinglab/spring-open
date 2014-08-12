@@ -1,8 +1,5 @@
 package net.onrc.onos.core.intent;
 
-import net.onrc.onos.core.util.FlowEntryAction;
-import net.onrc.onos.core.util.PortNumber;
-
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.types.OFPort;
@@ -31,18 +28,6 @@ class ForwardAction extends Action {
     @Override
     public String toString() {
         return Long.toString(dstPort);
-    }
-
-    /**
-     * Converts the FowardAction into a legacy FlowEntryAction object.
-     *
-     * @return an equivalent FlowEntryAction object
-     */
-    @Override
-    public FlowEntryAction getFlowEntryAction() {
-        FlowEntryAction action = new FlowEntryAction();
-        action.setActionOutput(new PortNumber((short) dstPort));
-        return action;
     }
 
     @Override

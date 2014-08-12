@@ -36,7 +36,6 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.Topology;
-import net.onrc.onos.core.util.FlowPath;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -48,7 +47,7 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 
 public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
-        IForwardingService, IPacketListener, ChangedListener {
+        IPacketListener, ChangedListener {
     private static final Logger log = LoggerFactory.getLogger(Forwarding.class);
 
     private static final int SLEEP_TIME_FOR_DB_HOST_INSTALLED = 100; // milliseconds
@@ -59,8 +58,6 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     private static final ScheduledExecutorService EXECUTOR_SERVICE =
             Executors.newScheduledThreadPool(NUMBER_OF_THREAD_FOR_EXECUTOR);
-
-    private final String callerId = "Forwarding";
 
     private final HighLevelIntentChangedHandler highLevelIntentChangedHandler =
             new HighLevelIntentChangedHandler();
@@ -171,18 +168,12 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
-        List<Class<? extends IFloodlightService>> services =
-                new ArrayList<Class<? extends IFloodlightService>>(1);
-        services.add(IForwardingService.class);
-        return services;
+        return null;
     }
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
-        Map<Class<? extends IFloodlightService>, IFloodlightService> impls =
-                new HashMap<Class<? extends IFloodlightService>, IFloodlightService>(1);
-        impls.put(IForwardingService.class, this);
-        return impls;
+        return null;
     }
 
     @Override
@@ -469,14 +460,6 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             log.trace("Put a Path {} in the pending flow, intent ID {}", pathspec, intentId);
         }
         pathRuntime.executeIntentOperations(operations);
-    }
-
-    @Override
-    public void flowsInstalled(Collection<FlowPath> installedFlowPaths) {
-    }
-
-    @Override
-    public void flowRemoved(FlowPath removedFlowPath) {
     }
 
     public void flowRemoved(ShortestPathIntent spfIntent) {

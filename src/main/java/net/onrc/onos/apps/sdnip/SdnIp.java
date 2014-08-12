@@ -36,21 +36,8 @@ import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
-import net.onrc.onos.core.packet.Ethernet;
-import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.util.CallerId;
-import net.onrc.onos.core.util.DataPath;
 import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.FlowEntryAction;
-import net.onrc.onos.core.util.FlowEntryActions;
-import net.onrc.onos.core.util.FlowEntryMatch;
-import net.onrc.onos.core.util.FlowId;
-import net.onrc.onos.core.util.FlowPath;
-import net.onrc.onos.core.util.FlowPathFlags;
-import net.onrc.onos.core.util.FlowPathType;
-import net.onrc.onos.core.util.FlowPathUserState;
-import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.sf.json.JSONArray;
@@ -67,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.net.InetAddresses;
@@ -81,7 +67,6 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         IArpRequester, IOFSwitchListener, IConfigInfoService {
 
     private static final Logger log = LoggerFactory.getLogger(SdnIp.class);
-    private final CallerId callerId = new CallerId("SDNIP");
 
     private IFloodlightProviderService floodlightProvider;
     private ILinkDiscoveryService linkDiscoveryService;
@@ -151,7 +136,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     private Map<InetAddress, Path> pushedPaths;
     private Map<Prefix, Path> prefixToPath;
     // private Multimap<Prefix, PushedFlowMod> pushedFlows;
-    private Multimap<Prefix, FlowId> pushedFlowIds;
+    //private Multimap<Prefix, FlowId> pushedFlowIds;
 
     // XXX FlowCache has been removed
     //private FlowCache flowCache;
@@ -297,7 +282,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         pushedPaths = new HashMap<>();
         prefixToPath = new HashMap<>();
         // pushedFlows = HashMultimap.<Prefix, PushedFlowMod>create();
-        pushedFlowIds = HashMultimap.create();
+        // pushedFlowIds = HashMultimap.create();
 
         //flowCache = new FlowCache(floodlightProvider);
 
@@ -532,6 +517,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         log.debug("Adding flows for prefix {}, next hop mac {}",
                 prefix, nextHopMacAddress);
 
+        /*
         FlowPath flowPath = new FlowPath();
         flowPath.setInstallerId(callerId);
 
@@ -585,9 +571,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             flowEntryMatch.enableDstIPv4Net(dstIPv4Net);
             flowPath.setFlowEntryMatch(flowEntryMatch);
 
-            /*
+             *
              * Create the Flow Entry Action(s): dst-MAC rewrite action
-             */
+             *
             FlowEntryActions flowEntryActions = new FlowEntryActions();
             FlowEntryAction flowEntryAction1 = new FlowEntryAction();
             flowEntryAction1.setActionSetEthernetDstAddr(nextHopMacAddress);
@@ -610,8 +596,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
                 pushedFlowIds.put(prefix, flowPath.flowId());
             }
-            */
+
         }
+        */
     }
 
     private void processRibDelete(RibUpdate update) {
@@ -667,7 +654,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         // removeAll() statement should be replaced with the second removeAll()
         // statement.
         //
-        pushedFlowIds.removeAll(prefix);
+        // pushedFlowIds.removeAll(prefix);
         /*
         Collection<FlowId> flowIds = pushedFlowIds.removeAll(prefix);
         for (FlowId flowId : flowIds) {
@@ -764,11 +751,12 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     }
 
     private void calculateAndPushPath(Path path, MACAddress dstMacAddress) {
-        Interface dstInterface = path.getDstInterface();
+        // Interface dstInterface = path.getDstInterface();
 
         log.debug("Setting up path to {}, {}", path.getDstIpAddress().getHostAddress(),
                 dstMacAddress);
 
+        /*
         FlowPath flowPath = new FlowPath();
 
         flowPath.setInstallerId(callerId);
@@ -818,7 +806,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             // Entries
             log.debug("FlowPath of MAC based forwarding: {}", flowPath.toString());
             // TODO: Add the flow by using the new Path Intent framework
-            /*
+
             if (flowManagerService.addFlow(flowPath) == null) {
                 log.error("Failed to set up MAC based forwarding path to {}, {}",
                         path.getDstIpAddress().getHostAddress(),dstMacAddress);
@@ -827,8 +815,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 log.debug("Successfully set up MAC based forwarding path to {}, {}",
                         path.getDstIpAddress().getHostAddress(),dstMacAddress);
             }
-            */
+
         }
+        */
     }
 
     @Override
@@ -890,210 +879,6 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             operations.add(operator, bwdIntent);
         }
         pathRuntime.executeIntentOperations(operations);
-    }
-
-    /*
-     * Proactively install all BGP traffic paths from BGP host attachment point
-     * in SDN network to all the virtual gateways to BGP peers in other networks.
-     */
-    private void setupBgpPaths() {
-
-        for (BgpPeer bgpPeer : bgpPeers.values()) {
-
-            FlowPath flowPath = new FlowPath();
-            flowPath.setInstallerId(callerId);
-
-            // Set flowPath FlowPathType and FlowPathUserState
-            flowPath.setFlowPathType(FlowPathType.FP_TYPE_SHORTEST_PATH);
-            flowPath.setFlowPathUserState(FlowPathUserState.FP_USER_ADD);
-
-            // Install flow paths between BGPd and its peers
-            // There is no need to set the FlowPathFlags
-            flowPath.setFlowPathFlags(new FlowPathFlags(0));
-
-            Interface peerInterface = interfaces.get(bgpPeer.getInterfaceName());
-            // Create the Flow Path Match condition(s)
-            FlowEntryMatch flowEntryMatch = new FlowEntryMatch();
-            flowEntryMatch.enableEthernetFrameType(Ethernet.TYPE_IPV4);
-
-            // Match both source address and dest address
-            IPv4Net dstIPv4Net = new IPv4Net(bgpPeer.getIpAddress().getHostAddress()
-                    + "/32");
-
-            flowEntryMatch.enableDstIPv4Net(dstIPv4Net);
-
-            IPv4Net srcIPv4Net = new IPv4Net(peerInterface.getIpAddress()
-                    .getHostAddress() + "/32");
-            flowEntryMatch.enableSrcIPv4Net(srcIPv4Net);
-
-            // Match TCP protocol
-            flowEntryMatch.enableIpProto(IPv4.PROTOCOL_TCP);
-
-            // Match destination TCP port
-            flowEntryMatch.enableDstTcpUdpPort(BGP_PORT);
-            flowPath.setFlowEntryMatch(flowEntryMatch);
-
-            /**
-             * Create the DataPath: BGP -> BGP peer
-             */
-            // Flow path for src-TCP-port
-            DataPath dataPath = new DataPath();
-
-            SwitchPort srcPort =
-                    new SwitchPort(bgpdAttachmentPoint.dpid(),
-                            bgpdAttachmentPoint.port());
-            dataPath.setSrcPort(srcPort);
-
-            SwitchPort dstPort =
-                    new SwitchPort(new Dpid(peerInterface.getDpid()),
-                            new PortNumber(peerInterface.getSwitchPort().port()));
-            dataPath.setDstPort(dstPort);
-
-            flowPath.setDataPath(dataPath);
-
-            // TODO: Add the flow by using the new Path Intent framework
-            /*
-            if (flowManagerService.addFlow(flowPath) == null) {
-                log.error("Failed to set up path BGP -> peer {}"+"; dst-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            else {
-                log.debug("Successfully set up path BGP -> peer {}"+"; dst-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            */
-
-            // Disable dst-TCP-port, and set src-TCP-port
-            flowEntryMatch.disableDstTcpUdpPort();
-            flowEntryMatch.enableSrcTcpUdpPort(BGP_PORT);
-            flowPath.setFlowEntryMatch(flowEntryMatch);
-
-            // Create a new FlowId
-            flowPath.setFlowId(new FlowId());
-
-            // TODO: Add the flow by using the new Path Intent framework
-            /*
-            if (flowManagerService.addFlow(flowPath) == null) {
-                log.error("Failed to set up path BGP -> Peer {}" + "; src-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            else {
-                log.debug("Successfully set up path BGP -> Peer {}" + "; src-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            */
-
-            /**
-             * Create the DataPath: BGP <-BGP peer
-             */
-            // Reversed BGP flow path for src-TCP-port
-            flowPath.setFlowId(new FlowId());
-
-            DataPath reverseDataPath = new DataPath();
-
-            SwitchPort reverseDstPort =
-                    new SwitchPort(bgpdAttachmentPoint.dpid(),
-                            bgpdAttachmentPoint.port());
-            reverseDataPath.setDstPort(reverseDstPort);
-
-            SwitchPort reverseSrcPort =
-                    new SwitchPort(new Dpid(peerInterface.getDpid()),
-                            new PortNumber(peerInterface.getSwitchPort().port()));
-            reverseDataPath.setSrcPort(reverseSrcPort);
-            flowPath.setDataPath(reverseDataPath);
-
-            // Reverse the dst IP and src IP addresses
-            flowEntryMatch.enableDstIPv4Net(srcIPv4Net);
-            flowEntryMatch.enableSrcIPv4Net(dstIPv4Net);
-            flowPath.setFlowEntryMatch(flowEntryMatch);
-
-            log.debug("Reversed BGP FlowPath: {}", flowPath.toString());
-
-            // TODO: Add the flow by using the new Path Intent framework
-            /*
-            if (flowManagerService.addFlow(flowPath) == null) {
-
-                log.error("Failed to set up path BGP <- Peer {}" + "; src-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            else {
-                log.debug("Successfully set up path BGP <- Peer {}" + "; src-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            */
-
-            // Reversed BGP flow path for dst-TCP-port
-            flowPath.setFlowId(new FlowId());
-
-            // Disable src-TCP-port, and set the dst-TCP-port
-            flowEntryMatch.disableSrcTcpUdpPort();
-            flowEntryMatch.enableDstTcpUdpPort(BGP_PORT);
-            flowPath.setFlowEntryMatch(flowEntryMatch);
-
-            log.debug("Reversed BGP FlowPath: {}", flowPath.toString());
-
-            // TODO: Add the flow by using the new Path Intent framework
-            /*
-            if (flowManagerService.addFlow(flowPath) == null) {
-                log.error("Failed to setting up path BGP <- Peer {}" + "; dst-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            else {
-                log.debug("Successfully setting up path BGP <- Peer {}" + "; dst-TCP-port:179",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            */
-
-            /**
-             * ICMP paths between BGPd and its peers
-             */
-            // match ICMP protocol BGP <- Peer
-            flowPath.setFlowId(new FlowId());
-
-            flowEntryMatch.enableIpProto(IPv4.PROTOCOL_ICMP);
-            flowEntryMatch.disableSrcTcpUdpPort();
-            flowEntryMatch.disableDstTcpUdpPort();
-
-            flowPath.setFlowEntryMatch(flowEntryMatch);
-
-            flowPath.setDataPath(reverseDataPath);
-
-            log.debug("Reversed ICMP FlowPath: {}", flowPath.toString());
-
-            // TODO: Add the flow by using the new Path Intent framework
-            /*
-            if (flowManagerService.addFlow(flowPath) == null) {
-
-                log.error("Failed to set up ICMP path BGP <- Peer {}",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            else {
-                log.debug("Successfully set up ICMP path BGP <- Peer {}",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            */
-
-            // match ICMP protocol BGP -> Peer
-            flowPath.setFlowId(new FlowId());
-            flowEntryMatch.enableDstIPv4Net(dstIPv4Net);
-            flowEntryMatch.enableSrcIPv4Net(srcIPv4Net);
-            flowPath.setFlowEntryMatch(flowEntryMatch);
-            flowPath.setDataPath(dataPath);
-            log.debug("ICMP flowPath: {}", flowPath.toString());
-
-            // TODO: Add the flow by using the new Path Intent framework
-            /*
-            if (flowManagerService.addFlow(flowPath) == null) {
-
-                log.error("Failed to set up ICMP path BGP -> Peer {}",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            else {
-                log.debug("Successfully set up ICMP path BGP -> Peer {}",
-                        bgpPeer.getIpAddress().getHostAddress());
-            }
-            */
-        }
     }
 
     @Override
@@ -1251,7 +1036,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         /*setupArpFlows();
         setupDefaultDropFlows();*/
 
-        setupBgpPaths();
+        //setupBgpPaths();
         setupFullMesh();
 
         // Suppress link discovery on external-facing router ports
