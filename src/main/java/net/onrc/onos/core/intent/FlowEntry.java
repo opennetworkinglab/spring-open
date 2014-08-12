@@ -244,7 +244,7 @@ public class FlowEntry {
      * Generates hash using Objects.hash() on the match and actions.
      */
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(match, actions);
     }
 

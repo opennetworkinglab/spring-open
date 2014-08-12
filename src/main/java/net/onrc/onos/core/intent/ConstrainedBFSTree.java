@@ -52,7 +52,7 @@ public class ConstrainedBFSTree {
     /**
      * Calculates the BFS tree using any provided constraints and Intents.
      */
-    protected void calcTree() {
+    protected final void calcTree() {
         switchQueue.add(rootSwitch);
         switchSearched.add(rootSwitch.getDpid());
         while (!switchQueue.isEmpty()) {

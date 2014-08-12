@@ -111,7 +111,7 @@ public final class HZClient implements IKVClient {
 
                 // intentionally throwing Exception "e" thrown from non-fallback
                 // Hazelcast configuration loading.
-                throw new Error("Cannot find Hazelcast configuration: " + hazelcastConfigFileName, e);
+                throw new IllegalStateException("Cannot find Hazelcast configuration: " + hazelcastConfigFileName, e);
             }
         }
 

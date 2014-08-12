@@ -91,23 +91,24 @@ public class PersistIntent {
     public boolean persistIfLeader(long key, IntentOperationList operations) {
         boolean leader = true;
         boolean ret = false;
+        long keyValue = key;
         // TODO call controllerRegistry.isClusterLeader()
         if (leader) {
             try {
                 // reserve key 10 entries for multi-write if size over 1MB
-                key *= 10;
+                keyValue *= 10;
                 kryo.writeObject(output, operations);
                 output.close();
-                ByteBuffer keyBytes = ByteBuffer.allocate(8).putLong(key);
+                ByteBuffer keyBytes = ByteBuffer.allocate(8).putLong(keyValue);
                 byte[] buffer = stream.toByteArray();
                 int total = buffer.length;
                 if ((total >= VALUE_STORE_LIMIT)) {
                     int writeCount = total / VALUE_STORE_LIMIT;
                     int remainder = total % VALUE_STORE_LIMIT;
                     int upperIndex = 0;
-                    for (int i = 0; i < writeCount; i++, key++) {
+                    for (int i = 0; i < writeCount; i++, keyValue++) {
                         keyBytes.clear();
-                        keyBytes.putLong(key);
+                        keyBytes.putLong(keyValue);
                         keyBytes.flip();
                         upperIndex = (i * VALUE_STORE_LIMIT + VALUE_STORE_LIMIT) - 1;
                         log.debug("writing using indexes {}:{}", (i * VALUE_STORE_LIMIT), upperIndex);
@@ -115,7 +116,7 @@ public class PersistIntent {
                     }
                     if (remainder > 0) {
                         keyBytes.clear();
-                        keyBytes.putLong(key);
+                        keyBytes.putLong(keyValue);
                         keyBytes.flip();
                         log.debug("writing using indexes {}:{}", upperIndex, total);
                         table.create(keyBytes.array(), Arrays.copyOfRange(buffer, upperIndex + 1, total - 1));
@@ -124,13 +125,13 @@ public class PersistIntent {
                     keyBytes.flip();
                     table.create(keyBytes.array(), buffer);
                 }
-                log.debug("key is {} value length is {}", key, buffer.length);
+                log.debug("key is {} value length is {}", keyValue, buffer.length);
                 stream.reset();
                 stream.close();
                 log.debug("persist operations to ramcloud size of operations: {}", operations.size());
                 ret = true;
             } catch (ObjectExistsException ex) {
-                log.warn("Failed to store intent journal with key " + key);
+                log.warn("Failed to store intent journal with key " + keyValue);
             } catch (IOException ex) {
                 log.error("Failed to close the stream");
             }
