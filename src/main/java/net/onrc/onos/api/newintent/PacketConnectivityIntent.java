@@ -1,4 +1,4 @@
-package net.onrc.onos.api.intent;
+package net.onrc.onos.api.newintent;
 
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.SwitchPort;
@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+// TODO: consider if this intent should be sub-class of Connectivity intent
 /**
  * A packet layer Intent for a connectivity from a set of ports to a set of
  * ports.
@@ -16,7 +17,7 @@ import java.util.Set;
  * NOTE: Should this class support modifier methods? Should this object a
  * read-only object?
  */
-public class PacketConnectivityIntent extends Intent {
+public class PacketConnectivityIntent extends AbstractIntent {
     protected Set<SwitchPort> srcSwitchPorts;
     protected PacketMatch match;
     protected Set<SwitchPort> dstSwitchPorts;

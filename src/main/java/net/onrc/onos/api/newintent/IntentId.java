@@ -1,11 +1,13 @@
 package net.onrc.onos.api.newintent;
 
+import net.onrc.onos.api.batchoperation.BatchOperationTarget;
+
 /**
  * Intent identifier suitable as an external key.
  *
  * This class is immutable.
  */
-public final class IntentId {
+public final class IntentId implements BatchOperationTarget {
 
     private static final int DEC = 10;
     private static final int HEX = 16;

@@ -10,11 +10,11 @@ import static org.junit.Assert.assertThat;
 
 /**
  * This class tests the immutability, equality, and non-equality of
- * {@link net.onrc.onos.api.intent.IntentId}.
+ * {@link IntentId}.
  */
 public class IntentIdTest {
     /**
-     * Tests the immutability of {@link net.onrc.onos.api.intent.IntentId}.
+     * Tests the immutability of {@link IntentId}.
      */
     @Test
     public void intentIdFollowsGuidelineForImmutableObject() {
@@ -22,7 +22,7 @@ public class IntentIdTest {
     }
 
     /**
-     * Tests equality of {@link net.onrc.onos.api.intent.IntentId}.
+     * Tests equality of {@link IntentId}.
      */
     @Test
     public void testEquality() {
@@ -33,7 +33,7 @@ public class IntentIdTest {
     }
 
     /**
-     * Tests non-equality of {@link net.onrc.onos.api.intent.IntentId}.
+     * Tests non-equality of {@link IntentId}.
      */
     @Test
     public void testNonEquality() {

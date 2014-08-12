@@ -36,7 +36,7 @@ public enum IntentState {
     /**
      * The intent is being withdrawn.
      *
-     * When {@link net.onrc.onos.api.newintent.IntentService#withdraw(Intent)} is called,
+     * When {@link IntentService#withdraw(Intent)} is called,
      * the intent takes this state first.
      */
     WITHDRAWING,

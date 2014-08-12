@@ -1,7 +1,8 @@
-package net.onrc.onos.api.intent;
+package net.onrc.onos.api.newintent;
 
 import net.onrc.onos.core.util.SwitchPort;
 
+// TODO: consider if this intent should be sub-class of ConnectivityIntent
 /**
  * An optical layer Intent for a connectivity from a transponder port to another
  * transponder port.
@@ -10,7 +11,7 @@ import net.onrc.onos.core.util.SwitchPort;
  * ports and assign lambda automatically. The lambda can be specified using
  * OpticalPathFlow class.
  */
-public class OpticalConnectivityIntent extends Intent {
+public class OpticalConnectivityIntent extends AbstractIntent {
     protected SwitchPort srcSwitchPort;
     protected SwitchPort dstSwitchPort;
 

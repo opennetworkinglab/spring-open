@@ -1,4 +1,4 @@
-package net.onrc.onos.api.intent;
+package net.onrc.onos.api.newintent;
 
 /**
  * This interface is for generator of IntentId.

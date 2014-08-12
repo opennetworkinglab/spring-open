@@ -1,4 +1,4 @@
-package net.onrc.onos.api.intent;
+package net.onrc.onos.api.newintent;
 
 import net.onrc.onos.api.batchoperation.BatchOperation;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
