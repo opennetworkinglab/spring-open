@@ -423,7 +423,7 @@ public class Controller implements IFloodlightProviderService {
      */
     protected void removeConnectedSwitch(long dpid) {
         releaseRegistryControl(dpid);
-        connectedSwitches.remove(dpid);
+        OFChannelHandler ch = connectedSwitches.remove(dpid);
         IOFSwitch sw = activeMasterSwitches.remove(dpid);
         if (sw == null) {
             sw = activeEqualSwitches.remove(dpid);
@@ -434,7 +434,9 @@ public class Controller implements IFloodlightProviderService {
         }
         evSwitch.updateEventWithFlush(new SwitchEvent(dpid, "disconnected"));
         counters.switchDisconnected.updateCounterWithFlush();
-        addUpdateToQueue(new SwitchUpdate(dpid, SwitchUpdateType.DISCONNECTED));
+        if (ch != null) {
+            addUpdateToQueue(new SwitchUpdate(dpid, SwitchUpdateType.DISCONNECTED));
+        }
     }
 
     /**
@@ -446,7 +448,7 @@ public class Controller implements IFloodlightProviderService {
     protected void notifyPortChanged(long dpid, OFPortDesc port,
             PortChangeType changeType) {
         if (port == null || changeType == null) {
-            String msg = String.format("Switch port or changetType must not "
+            String msg = String.format("Switch port or changeType must not "
                     + "be null in port change notification");
             throw new NullPointerException(msg);
         }
