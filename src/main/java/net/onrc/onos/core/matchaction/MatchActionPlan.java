@@ -11,7 +11,7 @@ import java.util.List;
  * match-actions.
  */
 public class MatchActionPlan {
-    List<MatchActionPhase> phases;
+    List<MatchAction> phases;
 
     /**
      * Constructor.
@@ -26,7 +26,7 @@ public class MatchActionPlan {
      * @param phase The batch operation of match-actions to be added to the
      *        plan.
      */
-    public void addPhase(MatchActionPhase phase) {
+    public void addPhase(MatchAction phase) {
         phases.add(phase);
     }
 
@@ -35,7 +35,7 @@ public class MatchActionPlan {
      *
      * @return The list of phases, batch operations of match-actions.
      */
-    public List<MatchActionPhase> getPhases() {
+    public List<MatchAction> getPhases() {
         return Collections.unmodifiableList(phases);
     }
 }

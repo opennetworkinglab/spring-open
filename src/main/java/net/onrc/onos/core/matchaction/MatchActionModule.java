@@ -1,8 +1,7 @@
 package net.onrc.onos.core.matchaction;
 
-import java.util.Collection;
 import java.util.EventListener;
-
+import java.util.Set;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 
 /**
@@ -14,30 +13,17 @@ public class MatchActionModule implements MatchActionService {
 
     @Override
     public boolean addMatchAction(MatchAction matchAction) {
-        MatchActionPhase phase = new MatchActionPhase();
-        phase.addAddOperation(matchAction);
-        MatchActionPlan plan = new MatchActionPlan();
-        plan.addPhase(phase);
-        return executePlan(plan);
+        return false;
     }
 
     @Override
-    public boolean removeMatchAction(MatchActionId id) {
-        MatchActionPhase phase = new MatchActionPhase();
-        phase.addRemoveOperation(id);
-        MatchActionPlan plan = new MatchActionPlan();
-        plan.addPhase(phase);
-        return executePlan(plan);
-    }
-
-    @Override
-    public Collection<MatchAction> getMatchActions() {
+    public Set<MatchAction> getMatchActions() {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public boolean executePlan(MatchActionPlan plan) {
+    public boolean executeOperations(final MatchActionOperations operations) {
         // TODO Auto-generated method stub
         return false;
     }

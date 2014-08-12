@@ -1,7 +1,7 @@
 package net.onrc.onos.core.matchaction;
 
-import java.util.Collection;
 import java.util.EventListener;
+import java.util.Set;
 
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 
@@ -18,27 +18,19 @@ public interface MatchActionService {
     boolean addMatchAction(MatchAction matchAction);
 
     /**
-     * Removes the existing match-action entry.
-     *
-     * @param id ID for MatchaAction object to be removed.
-     * @return true if succeeded, false otherwise.
-     */
-    boolean removeMatchAction(MatchActionId id);
-
-    /**
      * Gets the set of match-action entries.
      *
      * @return The set of match-action entries.
      */
-    Collection<MatchAction> getMatchActions();
+    Set<MatchAction> getMatchActions();
 
     /**
      * Executes match-action operation plan.
      *
-     * @param plan MatchActionPlan to be executed.
+     * @param operations Operations to be executed.
      * @return true if succeeded, false otherwise.
      */
-    boolean executePlan(MatchActionPlan plan);
+    boolean executeOperations(MatchActionOperations operations);
 
     /**
      * Sets a conflict detection policy.

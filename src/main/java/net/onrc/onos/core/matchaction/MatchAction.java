@@ -10,7 +10,7 @@ import net.onrc.onos.core.util.SwitchPort;
 /**
  * A filter and actions for traffic.
  */
-public class MatchAction implements BatchOperationTarget {
+public final class MatchAction implements BatchOperationTarget {
     private final MatchActionId id;
     private final SwitchPort port;
     private final Match match;
@@ -20,7 +20,7 @@ public class MatchAction implements BatchOperationTarget {
      * Constructor.
      *
      * @param id ID for this MatchAction object
-     * @param port switch DPID
+     * @param port switch port to apply changes to
      * @param match the Match object as match condition on the port
      * @param actions the list of Action objects as actions on the switch
      */
