@@ -6,7 +6,9 @@ import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 
 import java.util.Date;
 
@@ -35,7 +37,6 @@ import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 
-import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -227,8 +228,8 @@ public class HostManagerTest extends FloodlightTestCase {
         Ethernet eth = (Ethernet) pkt1;
         Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(HostManager.class));
+        floodlightProvider.addOFMessageListener(eq(OFType.PACKET_IN),
+                isA(HostManager.class));
         srcHost.setLastSeenTimestamp(lastSeenTimestamp);
         assertEquals(lastSeenTimestamp, srcHost.getLastSeenTimestamp());
     }
@@ -267,11 +268,11 @@ public class HostManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testProcessPacketInAddNewHost() throws FloodlightModuleException {
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(HostManager.class));
-        EasyMock.expectLastCall();
-        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
-        EasyMock.expectLastCall();
+        floodlightProvider.addOFMessageListener(eq(OFType.PACKET_IN),
+                isA(HostManager.class));
+        expectLastCall();
+        floodlightProvider.publishUpdate(isA(IUpdate.class));
+        expectLastCall();
         replay(floodlightProvider);
 
         hostManager.init(modContext);
@@ -280,7 +281,7 @@ public class HostManagerTest extends FloodlightTestCase {
                 sw1, pktIn, (Ethernet) pkt1, (short) sw1DevPort);
         assertEquals(Command.CONTINUE, cmd);
 
-        EasyMock.verify(floodlightProvider);
+        verify(floodlightProvider);
     }
 
     /**
@@ -289,9 +290,9 @@ public class HostManagerTest extends FloodlightTestCase {
      */
     @Test
     public void testProcessPacketInHasLink() throws FloodlightModuleException {
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(HostManager.class));
-        EasyMock.expectLastCall();
+        floodlightProvider.addOFMessageListener(eq(OFType.PACKET_IN),
+                isA(HostManager.class));
+        expectLastCall();
         replay(floodlightProvider);
 
         hostManager.init(modContext);
@@ -300,7 +301,7 @@ public class HostManagerTest extends FloodlightTestCase {
                 sw1, pktIn2, (Ethernet) pkt1, (short) sw1DevPort2);
         assertEquals(Command.CONTINUE, cmd);
 
-        EasyMock.verify(floodlightProvider);
+        verify(floodlightProvider);
     }
 
     /**
@@ -323,18 +324,18 @@ public class HostManagerTest extends FloodlightTestCase {
         Long longmac = eth.getSourceMAC().toLong();
         Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(HostManager.class));
-        EasyMock.expectLastCall();
-        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
-        EasyMock.expectLastCall();
+        floodlightProvider.addOFMessageListener(eq(OFType.PACKET_IN),
+                isA(HostManager.class));
+        expectLastCall();
+        floodlightProvider.publishUpdate(isA(IUpdate.class));
+        expectLastCall();
         replay(floodlightProvider);
 
         hostManager.init(modContext);
         hostManager.startUp(modContext);
         hostManager.addHost(longmac, srcHost);
 
-        EasyMock.verify(floodlightProvider);
+        verify(floodlightProvider);
     }
 
     /**
@@ -346,18 +347,18 @@ public class HostManagerTest extends FloodlightTestCase {
         Ethernet eth = (Ethernet) pkt1;
         Host srcHost = hostManager.getSourceHostFromPacket(eth, sw1Dpid, sw1DevPort);
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(HostManager.class));
-        EasyMock.expectLastCall();
-        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
-        EasyMock.expectLastCall();
+        floodlightProvider.addOFMessageListener(eq(OFType.PACKET_IN),
+                isA(HostManager.class));
+        expectLastCall();
+        floodlightProvider.publishUpdate(isA(IUpdate.class));
+        expectLastCall();
         replay(floodlightProvider);
 
         hostManager.init(modContext);
         hostManager.startUp(modContext);
         hostManager.deleteHost(srcHost);
 
-        EasyMock.verify(floodlightProvider);
+        verify(floodlightProvider);
     }
 
     /**
@@ -369,18 +370,18 @@ public class HostManagerTest extends FloodlightTestCase {
         Ethernet eth = (Ethernet) pkt1;
         MACAddress mac = eth.getSourceMAC();
 
-        floodlightProvider.addOFMessageListener(EasyMock.eq(OFType.PACKET_IN),
-                EasyMock.isA(HostManager.class));
-        EasyMock.expectLastCall();
-        floodlightProvider.publishUpdate(EasyMock.isA(IUpdate.class));
-        EasyMock.expectLastCall();
+        floodlightProvider.addOFMessageListener(eq(OFType.PACKET_IN),
+                isA(HostManager.class));
+        expectLastCall();
+        floodlightProvider.publishUpdate(isA(IUpdate.class));
+        expectLastCall();
         replay(floodlightProvider);
 
         hostManager.init(modContext);
         hostManager.startUp(modContext);
         hostManager.deleteHostByMac(mac);
 
-        EasyMock.verify(floodlightProvider);
+        verify(floodlightProvider);
     }
 
     /**

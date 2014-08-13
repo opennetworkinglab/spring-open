@@ -15,7 +15,6 @@ import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 import net.onrc.onos.core.util.TestUtils;
 import net.onrc.onos.core.util.UnitTest;
-import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,8 +26,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.reset;
 import static org.easymock.EasyMock.verify;
@@ -92,10 +93,10 @@ public class TopologyManagerTest extends UnitTest {
     @Before
     public void setUp() throws Exception {
         // Mock objects for testing
-        datagridService = EasyMock.createNiceMock(IDatagridService.class);
-        dataStoreService = EasyMock.createNiceMock(TopologyDatastore.class);
+        datagridService = createNiceMock(IDatagridService.class);
+        dataStoreService = createNiceMock(TopologyDatastore.class);
         registryService = createMock(IControllerRegistryService.class);
-        eventChannel = EasyMock.createNiceMock(IEventChannel.class);
+        eventChannel = createNiceMock(IEventChannel.class);
 
         expect(datagridService.createChannel(
                 eq(eventChannelName),
@@ -170,7 +171,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Replace the eventHandler to prevent the thread from starting
         TestUtils.setField(theTopologyManager, "eventHandler",
-            EasyMock.createNiceMock(TopologyManager.EventHandler.class));
+            createNiceMock(TopologyManager.EventHandler.class));
         theTopologyManager.startup(datagridService);
 
         // Replace the data store with a mocked object
@@ -218,7 +219,7 @@ public class TopologyManagerTest extends UnitTest {
         // Mock the eventChannel functions first
         eventChannel.addEntry(anyObject(byte[].class),
                               anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(1, 1);          // 1 event
+        expectLastCall().times(1, 1);          // 1 event
         replay(eventChannel);
 
         setupTopologyManager();
@@ -242,7 +243,7 @@ public class TopologyManagerTest extends UnitTest {
     public void testRemoveSwitchMastershipEvent() {
         // Mock the eventChannel functions first
         eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(1, 1);          // 1 event
+        expectLastCall().times(1, 1);          // 1 event
         replay(eventChannel);
 
         setupTopologyManager();
@@ -267,7 +268,7 @@ public class TopologyManagerTest extends UnitTest {
         // Mock the eventChannel functions first
         eventChannel.addEntry(anyObject(byte[].class),
                               anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(3, 3);  // (1 Switch + 1 Port), 1 Port
+        expectLastCall().times(3, 3);  // (1 Switch + 1 Port), 1 Port
         replay(eventChannel);
 
         setupTopologyManager();
@@ -301,7 +302,7 @@ public class TopologyManagerTest extends UnitTest {
     public void testRemoveSwitchAndPortDiscoveryEvent() {
         // Mock the eventChannel functions first
         eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(2, 2);          // 1 Switch, 1 Port
+        expectLastCall().times(2, 2);          // 1 Switch, 1 Port
         replay(eventChannel);
 
         setupTopologyManager();
@@ -334,7 +335,7 @@ public class TopologyManagerTest extends UnitTest {
         // Mock the eventChannel functions first
         eventChannel.addEntry(anyObject(byte[].class),
                               anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(5, 5);  // (2 Switch + 2 Port + 1 Link)
+        expectLastCall().times(5, 5);  // (2 Switch + 2 Port + 1 Link)
         replay(eventChannel);
 
         setupTopologyManager();
@@ -374,7 +375,7 @@ public class TopologyManagerTest extends UnitTest {
     public void testRemoveLinkDiscoveryEvent() {
         // Mock the eventChannel functions first
         eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(1, 1);          // (1 Link)
+        expectLastCall().times(1, 1);          // (1 Link)
         replay(eventChannel);
 
         setupTopologyManager();
@@ -415,7 +416,7 @@ public class TopologyManagerTest extends UnitTest {
         // Mock the eventChannel functions first
         eventChannel.addEntry(anyObject(byte[].class),
                               anyObject(TopologyEvent.class));
-        EasyMock.expectLastCall().times(1, 1);          // 1 Host
+        expectLastCall().times(1, 1);          // 1 Host
         replay(eventChannel);
 
         setupTopologyManager();
@@ -443,7 +444,7 @@ public class TopologyManagerTest extends UnitTest {
     public void testRemoveHostDiscoveryEvent() {
         // Mock the eventChannel functions first
         eventChannel.removeEntry(anyObject(byte[].class));
-        EasyMock.expectLastCall().times(1, 1);          // 1 Host
+        expectLastCall().times(1, 1);          // 1 Host
         replay(eventChannel);
 
         setupTopologyManager();

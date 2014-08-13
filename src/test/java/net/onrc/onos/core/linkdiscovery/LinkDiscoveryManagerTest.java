@@ -17,9 +17,15 @@
 
 package net.onrc.onos.core.linkdiscovery;
 
+import static org.easymock.EasyMock.anyLong;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.anyShort;
+import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reportMatcher;
 import static org.easymock.EasyMock.verify;
 
 import java.io.IOException;
@@ -42,7 +48,6 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.OnosLldp;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 
-import org.easymock.EasyMock;
 import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,7 +129,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
      * @return anything of type OFPacketOut
      */
     private static OFPacketOut matchOutPort(int outPort) {
-        EasyMock.reportMatcher(new PacketOutPortMatcher(outPort));
+        reportMatcher(new PacketOutPortMatcher(outPort));
         return null;
     }
 
@@ -135,7 +140,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
     private IOFSwitch createMockSwitch(Long id) {
         IOFSwitch mockSwitch = createNiceMock(IOFSwitch.class);
         expect(mockSwitch.getId()).andReturn(id).anyTimes();
-        expect(mockSwitch.portEnabled(EasyMock.anyShort())).andReturn(true).anyTimes();
+        expect(mockSwitch.portEnabled(anyShort())).andReturn(true).anyTimes();
         expect(mockSwitch.getFactory()).andReturn(factory10).anyTimes();
         return mockSwitch;
     }
@@ -147,10 +152,10 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
 
     private OFPortDesc createMockPortWithState(short portNumber,
             Set<OFPortState> state) {
-        OFPort ofPort = EasyMock.createMock(OFPort.class);
+        OFPort ofPort = createMock(OFPort.class);
         expect(ofPort.getShortPortNumber()).andReturn(portNumber).anyTimes();
 
-        OFPortDesc ofPortDesc = EasyMock.createMock(OFPortDesc.class);
+        OFPortDesc ofPortDesc = createMock(OFPortDesc.class);
         expect(ofPortDesc.getPortNo()).andReturn(ofPort).anyTimes();
         expect(ofPortDesc.getHwAddr()).andReturn(
                 MacAddress.of(DEFAULT_MAC_ADDRESS)).anyTimes();
@@ -173,8 +178,8 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         MockThreadPoolService tp = new MockThreadPoolService();
         RestApiServer restApi = new RestApiServer();
         IControllerRegistryService registry =
-                EasyMock.createMock(IControllerRegistryService.class);
-        expect(registry.hasControl(EasyMock.anyLong())).andReturn(true).anyTimes();
+                createMock(IControllerRegistryService.class);
+        expect(registry.hasControl(anyLong())).andReturn(true).anyTimes();
         replay(registry);
         cntx.addService(IControllerRegistryService.class, registry);
         cntx.addService(IRestApiService.class, restApi);
@@ -414,10 +419,10 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
 
         expect(swTest.getPort(portNum)).andReturn(ofPortDesc).atLeastOnce();
         swTest.write(matchOutPort(portNum),
-                EasyMock.anyObject(FloodlightContext.class));
-        EasyMock.expectLastCall().times(1);
+                anyObject(FloodlightContext.class));
+        expectLastCall().times(1);
         swTest.flush();
-        EasyMock.expectLastCall().once();
+        expectLastCall().once();
         replay(swTest);
 
         linkDiscovery.sendDiscoveryMessage(3L, portNum, false);
@@ -445,7 +450,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         expect(sw.getPort(portNum)).andReturn(ofPortDesc).once();
 
         sw.write(matchOutPort(portNum),
-                EasyMock.anyObject(FloodlightContext.class));
+                anyObject(FloodlightContext.class));
         sw.flush();
 
         replay(sw);
@@ -544,7 +549,7 @@ public class LinkDiscoveryManagerTest extends FloodlightTestCase {
         ethPacket.setPayload(lldpPacket);
         ethPacket.setPad(true);
 
-        OFPacketIn pi = EasyMock.createMock(OFPacketIn.class);
+        OFPacketIn pi = createMock(OFPacketIn.class);
         expect(pi.getData()).andReturn(ethPacket.serialize()).anyTimes();
         replay(pi);
 

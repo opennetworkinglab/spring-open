@@ -28,7 +28,6 @@ import org.apache.curator.x.discovery.ServiceCacheBuilder;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
-import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +38,17 @@ import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.projectfloodlight.openflow.util.HexString;
+
+import static org.easymock.EasyMock.anyBoolean;
+import static org.easymock.EasyMock.anyInt;
+import static org.easymock.EasyMock.anyLong;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.getCurrentArguments;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 
 /**
  * Unit test for {@link ZookeeperRegistry}.
@@ -75,8 +85,8 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
 
         // Mock of CuratorFrameworkFactory
         PowerMock.mockStatic(CuratorFrameworkFactory.class);
-        EasyMock.expect(CuratorFrameworkFactory.newClient((String) EasyMock.anyObject(),
-                EasyMock.anyInt(), EasyMock.anyInt(), (RetryPolicy) EasyMock.anyObject())).andReturn(client);
+        expect(CuratorFrameworkFactory.newClient((String) anyObject(),
+                anyInt(), anyInt(), (RetryPolicy) anyObject())).andReturn(client);
         PowerMock.replay(CuratorFrameworkFactory.class);
 
         FloodlightModuleContext fmc = new FloodlightModuleContext();
@@ -172,17 +182,17 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     @Test
     public void testRequestControl() throws Exception {
         // Mock LeaderLatch
-        LeaderLatch latch = EasyMock.createMock(LeaderLatch.class);
-        latch.addListener(EasyMock.anyObject(SwitchLeaderListener.class));
-        EasyMock.expectLastCall().once();
+        LeaderLatch latch = createMock(LeaderLatch.class);
+        latch.addListener(anyObject(SwitchLeaderListener.class));
+        expectLastCall().once();
         latch.start();
-        EasyMock.expectLastCall().once();
-        EasyMock.replay(latch);
+        expectLastCall().once();
+        replay(latch);
 
         PowerMock.expectNew(LeaderLatch.class,
-                EasyMock.anyObject(CuratorFramework.class),
-                EasyMock.anyObject(String.class),
-                EasyMock.anyObject(String.class))
+                anyObject(CuratorFramework.class),
+                anyObject(String.class),
+                anyObject(String.class))
                 .andReturn(latch).once();
         PowerMock.replay(LeaderLatch.class);
 
@@ -199,7 +209,7 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
             fail(e.getMessage());
         }
 
-        EasyMock.verify(latch);
+        verify(latch);
     }
 
     /**
@@ -212,21 +222,21 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     @Test
     public void testReleaseControl() throws Exception {
         // Mock of LeaderLatch
-        LeaderLatch latch = EasyMock.createMock(LeaderLatch.class);
-        latch.addListener(EasyMock.anyObject(SwitchLeaderListener.class));
-        EasyMock.expectLastCall().once();
+        LeaderLatch latch = createMock(LeaderLatch.class);
+        latch.addListener(anyObject(SwitchLeaderListener.class));
+        expectLastCall().once();
         latch.start();
-        EasyMock.expectLastCall().once();
-        latch.removeListener(EasyMock.anyObject(SwitchLeaderListener.class));
-        EasyMock.expectLastCall().once();
+        expectLastCall().once();
+        latch.removeListener(anyObject(SwitchLeaderListener.class));
+        expectLastCall().once();
         latch.close();
-        EasyMock.expectLastCall().once();
-        EasyMock.replay(latch);
+        expectLastCall().once();
+        replay(latch);
 
         PowerMock.expectNew(LeaderLatch.class,
-                EasyMock.anyObject(CuratorFramework.class),
-                EasyMock.anyObject(String.class),
-                EasyMock.anyObject(String.class))
+                anyObject(CuratorFramework.class),
+                anyObject(String.class),
+                anyObject(String.class))
                 .andReturn(latch).once();
         PowerMock.replay(LeaderLatch.class);
 
@@ -239,7 +249,7 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         registry.requestControl(dpidToRequest, callback);
         registry.releaseControl(dpidToRequest);
 
-        EasyMock.verify(latch);
+        verify(latch);
     }
 
     /**
@@ -251,22 +261,22 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     @Test
     public void testHasControl() throws Exception {
         // Mock of LeaderLatch
-        LeaderLatch latch = EasyMock.createMock(LeaderLatch.class);
-        latch.addListener(EasyMock.anyObject(SwitchLeaderListener.class));
-        EasyMock.expectLastCall().once();
+        LeaderLatch latch = createMock(LeaderLatch.class);
+        latch.addListener(anyObject(SwitchLeaderListener.class));
+        expectLastCall().once();
         latch.start();
-        EasyMock.expectLastCall().once();
-        EasyMock.expect(latch.hasLeadership()).andReturn(true).anyTimes();
-        latch.removeListener(EasyMock.anyObject(SwitchLeaderListener.class));
-        EasyMock.expectLastCall().once();
+        expectLastCall().once();
+        expect(latch.hasLeadership()).andReturn(true).anyTimes();
+        latch.removeListener(anyObject(SwitchLeaderListener.class));
+        expectLastCall().once();
         latch.close();
-        EasyMock.expectLastCall().once();
-        EasyMock.replay(latch);
+        expectLastCall().once();
+        replay(latch);
 
         PowerMock.expectNew(LeaderLatch.class,
-                EasyMock.anyObject(CuratorFramework.class),
-                EasyMock.anyObject(String.class),
-                EasyMock.anyObject(String.class))
+                anyObject(CuratorFramework.class),
+                anyObject(String.class),
+                anyObject(String.class))
                 .andReturn(latch);
         PowerMock.replay(LeaderLatch.class);
 
@@ -289,7 +299,7 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
         // Test after release control
         assertFalse(registry.hasControl(dpidToRequest));
 
-        EasyMock.verify(latch);
+        verify(latch);
     }
 
     /**
@@ -414,9 +424,9 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
     @SuppressWarnings({"serial", "unchecked" })
     private CuratorFramework createCuratorFrameworkMock() throws Exception {
         // Mock of AtomicValue
-        AtomicValue<Long> atomicValue = EasyMock.createMock(AtomicValue.class);
-        EasyMock.expect(atomicValue.succeeded()).andReturn(true).anyTimes();
-        EasyMock.expect(atomicValue.preValue()).andAnswer(new IAnswer<Long>() {
+        AtomicValue<Long> atomicValue = createMock(AtomicValue.class);
+        expect(atomicValue.succeeded()).andReturn(true).anyTimes();
+        expect(atomicValue.preValue()).andAnswer(new IAnswer<Long>() {
             private long value = 0;
 
             @Override
@@ -425,7 +435,7 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
                 return value;
             }
         }).anyTimes();
-        EasyMock.expect(atomicValue.postValue()).andAnswer(new IAnswer<Long>() {
+        expect(atomicValue.postValue()).andAnswer(new IAnswer<Long>() {
             private long value = ID_BLOCK_SIZE;
 
             @Override
@@ -434,31 +444,31 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
                 return value;
             }
         }).anyTimes();
-        EasyMock.replay(atomicValue);
+        replay(atomicValue);
 
         // Mock DistributedAtomicLong
-        DistributedAtomicLong daLong = EasyMock.createMock(DistributedAtomicLong.class);
-        EasyMock.expect(daLong.add(EasyMock.anyLong())).andReturn(atomicValue).anyTimes();
-        EasyMock.replay(daLong);
+        DistributedAtomicLong daLong = createMock(DistributedAtomicLong.class);
+        expect(daLong.add(anyLong())).andReturn(atomicValue).anyTimes();
+        replay(daLong);
         PowerMock.expectNew(DistributedAtomicLong.class,
                 new Class<?>[]{CuratorFramework.class, String.class, RetryPolicy.class},
-                EasyMock.anyObject(CuratorFramework.class),
-                EasyMock.anyObject(String.class),
-                EasyMock.anyObject(RetryPolicy.class)).
+                anyObject(CuratorFramework.class),
+                anyObject(String.class),
+                anyObject(RetryPolicy.class)).
                 andReturn(daLong).anyTimes();
         PowerMock.replay(DistributedAtomicLong.class);
 
         // Mock ListenerContainer
-        ListenerContainer<PathChildrenCacheListener> listenerContainer = EasyMock.createMock(ListenerContainer.class);
-        listenerContainer.addListener(EasyMock.anyObject(PathChildrenCacheListener.class));
-        EasyMock.expectLastCall().andAnswer(new IAnswer<Object>() {
+        ListenerContainer<PathChildrenCacheListener> listenerContainer = createMock(ListenerContainer.class);
+        listenerContainer.addListener(anyObject(PathChildrenCacheListener.class));
+        expectLastCall().andAnswer(new IAnswer<Object>() {
             @Override
             public Object answer() throws Throwable {
-                pathChildrenCacheListener = (PathChildrenCacheListener) EasyMock.getCurrentArguments()[0];
+                pathChildrenCacheListener = (PathChildrenCacheListener) getCurrentArguments()[0];
                 return null;
             }
         }).once();
-        EasyMock.replay(listenerContainer);
+        replay(listenerContainer);
 
         // Mock PathChildrenCache
         PathChildrenCache pathChildrenCacheMain = createPathChildrenCacheMock(
@@ -472,58 +482,58 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
 
         // Mock PathChildrenCache constructor
         PowerMock.expectNew(PathChildrenCache.class,
-                EasyMock.anyObject(CuratorFramework.class), EasyMock.anyObject(String.class), EasyMock.anyBoolean()).
+                anyObject(CuratorFramework.class), anyObject(String.class), anyBoolean()).
                 andReturn(pathChildrenCacheMain).once();
         PowerMock.expectNew(PathChildrenCache.class,
-                EasyMock.anyObject(CuratorFramework.class), EasyMock.anyObject(String.class), EasyMock.anyBoolean()).
+                anyObject(CuratorFramework.class), anyObject(String.class), anyBoolean()).
                 andReturn(pathChildrenCache1).once();
         PowerMock.expectNew(PathChildrenCache.class,
-                EasyMock.anyObject(CuratorFramework.class), EasyMock.anyObject(String.class), EasyMock.anyBoolean()).
+                anyObject(CuratorFramework.class), anyObject(String.class), anyBoolean()).
                 andReturn(pathChildrenCache2).anyTimes();
         PowerMock.replay(PathChildrenCache.class);
 
         // Mock ServiceCache
-        ServiceCache<ControllerService> serviceCache = EasyMock.createMock(ServiceCache.class);
+        ServiceCache<ControllerService> serviceCache = createMock(ServiceCache.class);
         serviceCache.start();
-        EasyMock.expectLastCall().once();
-        EasyMock.expect(serviceCache.getInstances()).andReturn(new ArrayList<ServiceInstance<ControllerService>>() { {
+        expectLastCall().once();
+        expect(serviceCache.getInstances()).andReturn(new ArrayList<ServiceInstance<ControllerService>>() { {
             add(createServiceInstanceMock("controller1"));
             add(createServiceInstanceMock("controller2"));
         } }).anyTimes();
-        EasyMock.replay(serviceCache);
+        replay(serviceCache);
 
         // Mock ServiceCacheBuilder
-        ServiceCacheBuilder<ControllerService> serviceCacheBuilder = EasyMock.createMock(ServiceCacheBuilder.class);
-        EasyMock.expect(serviceCacheBuilder.name(EasyMock.anyObject(String.class)))
+        ServiceCacheBuilder<ControllerService> serviceCacheBuilder = createMock(ServiceCacheBuilder.class);
+        expect(serviceCacheBuilder.name(anyObject(String.class)))
             .andReturn(serviceCacheBuilder).once();
-        EasyMock.expect(serviceCacheBuilder.build()).andReturn(serviceCache).once();
-        EasyMock.replay(serviceCacheBuilder);
+        expect(serviceCacheBuilder.build()).andReturn(serviceCache).once();
+        replay(serviceCacheBuilder);
 
         // Mock ServiceDiscovery
-        ServiceDiscovery<ControllerService> serviceDiscovery = EasyMock.createMock(ServiceDiscovery.class);
+        ServiceDiscovery<ControllerService> serviceDiscovery = createMock(ServiceDiscovery.class);
         serviceDiscovery.start();
-        EasyMock.expectLastCall().once();
-        EasyMock.expect(serviceDiscovery.serviceCacheBuilder()).andReturn(serviceCacheBuilder).once();
-        serviceDiscovery.registerService(EasyMock.anyObject(ServiceInstance.class));
-        EasyMock.expectLastCall().once();
-        EasyMock.replay(serviceDiscovery);
+        expectLastCall().once();
+        expect(serviceDiscovery.serviceCacheBuilder()).andReturn(serviceCacheBuilder).once();
+        serviceDiscovery.registerService(anyObject(ServiceInstance.class));
+        expectLastCall().once();
+        replay(serviceDiscovery);
 
         // Mock CuratorFramework
-        CuratorFramework mockClient = EasyMock.createMock(CuratorFramework.class);
+        CuratorFramework mockClient = createMock(CuratorFramework.class);
         mockClient.start();
-        EasyMock.expectLastCall().once();
-        EasyMock.expect(mockClient.usingNamespace(EasyMock.anyObject(String.class))).andReturn(mockClient);
-        EasyMock.replay(mockClient);
+        expectLastCall().once();
+        expect(mockClient.usingNamespace(anyObject(String.class))).andReturn(mockClient);
+        replay(mockClient);
 
         // Mock ServiceDiscoveryBuilder
-        ServiceDiscoveryBuilder<ControllerService> builder = EasyMock.createMock(ServiceDiscoveryBuilder.class);
-        EasyMock.expect(builder.client(mockClient)).andReturn(builder).once();
-        EasyMock.expect(builder.basePath(EasyMock.anyObject(String.class))).andReturn(builder);
-        EasyMock.expect(builder.build()).andReturn(serviceDiscovery);
-        EasyMock.replay(builder);
+        ServiceDiscoveryBuilder<ControllerService> builder = createMock(ServiceDiscoveryBuilder.class);
+        expect(builder.client(mockClient)).andReturn(builder).once();
+        expect(builder.basePath(anyObject(String.class))).andReturn(builder);
+        expect(builder.build()).andReturn(serviceDiscovery);
+        replay(builder);
 
         PowerMock.mockStatic(ServiceDiscoveryBuilder.class);
-        EasyMock.expect(ServiceDiscoveryBuilder.builder(ControllerService.class)).andReturn(builder).once();
+        expect(ServiceDiscoveryBuilder.builder(ControllerService.class)).andReturn(builder).once();
         PowerMock.replay(ServiceDiscoveryBuilder.class);
 
         return mockClient;
@@ -536,14 +546,14 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
      * @return Mock ServiceInstance object
      */
     private ServiceInstance<ControllerService> createServiceInstanceMock(String controllerId) {
-        ControllerService controllerService = EasyMock.createMock(ControllerService.class);
-        EasyMock.expect(controllerService.getControllerId()).andReturn(controllerId).anyTimes();
-        EasyMock.replay(controllerService);
+        ControllerService controllerService = createMock(ControllerService.class);
+        expect(controllerService.getControllerId()).andReturn(controllerId).anyTimes();
+        replay(controllerService);
 
         @SuppressWarnings("unchecked")
-        ServiceInstance<ControllerService> serviceInstance = EasyMock.createMock(ServiceInstance.class);
-        EasyMock.expect(serviceInstance.getPayload()).andReturn(controllerService).anyTimes();
-        EasyMock.replay(serviceInstance);
+        ServiceInstance<ControllerService> serviceInstance = createMock(ServiceInstance.class);
+        expect(serviceInstance.getPayload()).andReturn(controllerService).anyTimes();
+        replay(serviceInstance);
 
         return serviceInstance;
     }
@@ -562,23 +572,23 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
                 final String[] paths,
                 ListenerContainer<PathChildrenCacheListener> listener)
                     throws Exception {
-        PathChildrenCache pathChildrenCache = EasyMock.createMock(PathChildrenCache.class);
+        PathChildrenCache pathChildrenCache = createMock(PathChildrenCache.class);
 
-        EasyMock.expect(pathChildrenCache.getListenable()).andReturn(listener).anyTimes();
+        expect(pathChildrenCache.getListenable()).andReturn(listener).anyTimes();
 
-        pathChildrenCache.start(EasyMock.anyObject(StartMode.class));
-        EasyMock.expectLastCall().anyTimes();
+        pathChildrenCache.start(anyObject(StartMode.class));
+        expectLastCall().anyTimes();
 
         List<ChildData> childs = new ArrayList<ChildData>();
         for (String path : paths) {
             childs.add(createChildDataMockForCurrentData(controllerId, path));
         }
-        EasyMock.expect(pathChildrenCache.getCurrentData()).andReturn(childs).anyTimes();
+        expect(pathChildrenCache.getCurrentData()).andReturn(childs).anyTimes();
 
         pathChildrenCache.rebuild();
-        EasyMock.expectLastCall().anyTimes();
+        expectLastCall().anyTimes();
 
-        EasyMock.replay(pathChildrenCache);
+        replay(pathChildrenCache);
 
         return pathChildrenCache;
     }
@@ -592,10 +602,10 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
      * @return Mock ChildData object
      */
     private ChildData createChildDataMockForCurrentData(String controllerId, String path) {
-        ChildData data = EasyMock.createMock(ChildData.class);
-        EasyMock.expect(data.getPath()).andReturn(path + "-0").anyTimes();
-        EasyMock.expect(data.getData()).andReturn(controllerId.getBytes()).anyTimes();
-        EasyMock.replay(data);
+        ChildData data = createMock(ChildData.class);
+        expect(data.getPath()).andReturn(path + "-0").anyTimes();
+        expect(data.getData()).andReturn(controllerId.getBytes()).anyTimes();
+        replay(data);
 
         return data;
     }
@@ -630,16 +640,16 @@ public class ZookeeperRegistryTest extends FloodlightTestCase {
      */
     private PathChildrenCacheEvent createChildrenCacheEventMock(String controllerId, String path,
                                                                 PathChildrenCacheEvent.Type type) {
-        PathChildrenCacheEvent event = EasyMock.createMock(PathChildrenCacheEvent.class);
-        ChildData data = EasyMock.createMock(ChildData.class);
+        PathChildrenCacheEvent event = createMock(PathChildrenCacheEvent.class);
+        ChildData data = createMock(ChildData.class);
 
-        EasyMock.expect(data.getPath()).andReturn(path).anyTimes();
-        EasyMock.expect(data.getData()).andReturn(controllerId.getBytes()).anyTimes();
-        EasyMock.replay(data);
+        expect(data.getPath()).andReturn(path).anyTimes();
+        expect(data.getData()).andReturn(controllerId.getBytes()).anyTimes();
+        replay(data);
 
-        EasyMock.expect(event.getType()).andReturn(type).anyTimes();
-        EasyMock.expect(event.getData()).andReturn(data).anyTimes();
-        EasyMock.replay(event);
+        expect(event.getType()).andReturn(type).anyTimes();
+        expect(event.getData()).andReturn(data).anyTimes();
+        replay(event);
 
         return event;
     }

@@ -1,5 +1,12 @@
 package net.onrc.onos.core.flowprogrammer;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.eq;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.getCurrentArguments;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -16,7 +23,6 @@ import net.onrc.onos.core.flowprogrammer.IFlowPusherService.MsgPriority;
 import net.onrc.onos.core.flowprogrammer.IFlowSyncService.SyncResult;
 import net.onrc.onos.core.intent.FlowEntry;
 
-import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.junit.After;
 import org.junit.Before;
@@ -60,15 +66,15 @@ public class FlowSynchronizerTest {
         idAdded = new ArrayList<Long>();
         idRemoved = new ArrayList<Long>();
 
-        pusher = EasyMock.createMock(FlowPusher.class);
-        EasyMock.expect(pusher.suspend(EasyMock.anyObject(IOFSwitch.class))).andReturn(true).anyTimes();
-        EasyMock.expect(pusher.resume(EasyMock.anyObject(IOFSwitch.class))).andReturn(true).anyTimes();
-        pusher.add(EasyMock.anyObject(IOFSwitch.class), EasyMock.anyObject(OFMessage.class),
-                EasyMock.eq(MsgPriority.HIGH));
-        EasyMock.expectLastCall().andAnswer(new IAnswer<Object>() {
+        pusher = createMock(FlowPusher.class);
+        expect(pusher.suspend(anyObject(IOFSwitch.class))).andReturn(true).anyTimes();
+        expect(pusher.resume(anyObject(IOFSwitch.class))).andReturn(true).anyTimes();
+        pusher.add(anyObject(IOFSwitch.class), anyObject(OFMessage.class),
+                eq(MsgPriority.HIGH));
+        expectLastCall().andAnswer(new IAnswer<Object>() {
             @Override
             public Object answer() throws Throwable {
-                OFMessage msg = (OFMessage) EasyMock.getCurrentArguments()[1];
+                OFMessage msg = (OFMessage) getCurrentArguments()[1];
                 if (msg.getType().equals(OFType.FLOW_MOD)) {
                     OFFlowMod fm = (OFFlowMod) msg;
                     if (fm.getCommand() == OFFlowModCommand.DELETE_STRICT) {
@@ -78,17 +84,17 @@ public class FlowSynchronizerTest {
                 return null;
             }
         }).anyTimes();
-        pusher.pushFlowEntry(EasyMock.anyObject(IOFSwitch.class), EasyMock.anyObject(FlowEntry.class),
-                EasyMock.eq(MsgPriority.HIGH));
-        EasyMock.expectLastCall().andAnswer(new IAnswer<Object>() {
+        pusher.pushFlowEntry(anyObject(IOFSwitch.class), anyObject(FlowEntry.class),
+                eq(MsgPriority.HIGH));
+        expectLastCall().andAnswer(new IAnswer<Object>() {
             @Override
             public Object answer() throws Throwable {
-                FlowEntry flow = (FlowEntry) EasyMock.getCurrentArguments()[1];
+                FlowEntry flow = (FlowEntry) getCurrentArguments()[1];
                 idAdded.add(flow.getFlowEntryId());
                 return null;
             }
         }).anyTimes();
-        EasyMock.replay(pusher);
+        replay(pusher);
     }
 
     @After
@@ -216,8 +222,8 @@ public class FlowSynchronizerTest {
      * @return Mock object.
      */
     private IOFSwitch createMockSwitch(long[] cookieList) {
-        IOFSwitch sw = EasyMock.createMock(IOFSwitch.class);
-        EasyMock.expect(sw.getId()).andReturn((long) 1).anyTimes();
+        IOFSwitch sw = createMock(IOFSwitch.class);
+        expect(sw.getId()).andReturn((long) 1).anyTimes();
 
         List<OFStatsReply> stats = new ArrayList<OFStatsReply>();
         for (long cookie : cookieList) {
@@ -225,24 +231,24 @@ public class FlowSynchronizerTest {
         }
 
         @SuppressWarnings("unchecked")
-        Future<List<OFStatsReply>> future = EasyMock.createMock(Future.class);
+        Future<List<OFStatsReply>> future = createMock(Future.class);
         try {
-            EasyMock.expect(future.get()).andReturn(stats).once();
+            expect(future.get()).andReturn(stats).once();
         } catch (InterruptedException e1) {
             fail("Failed in Future#get()");
         } catch (ExecutionException e1) {
             fail("Failed in Future#get()");
         }
-        EasyMock.replay(future);
+        replay(future);
 
         try {
-            EasyMock.expect(sw.getStatistics(EasyMock.anyObject(OFFlowStatsRequest.class)))
+            expect(sw.getStatistics(anyObject(OFFlowStatsRequest.class)))
                     .andReturn(future).once();
         } catch (IOException e) {
             fail("Failed in IOFSwitch#getStatistics()");
         }
 
-        EasyMock.replay(sw);
+        replay(sw);
         return sw;
     }
 
