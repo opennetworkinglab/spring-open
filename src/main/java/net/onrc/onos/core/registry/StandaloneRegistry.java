@@ -148,7 +148,7 @@ public class StandaloneRegistry implements IFloodlightModule,
             long blockHead = blockTop;
             long blockTail = blockTop + BLOCK_SIZE;
 
-            IdBlock block = new IdBlock(blockHead, blockTail - 1, BLOCK_SIZE);
+            IdBlock block = new IdBlock(blockHead, BLOCK_SIZE);
             blockTop = blockTail;
 
             return block;

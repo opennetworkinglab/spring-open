@@ -489,7 +489,7 @@ public class ZookeeperRegistry implements IFloodlightModule,
                 result = distributedIdCounter.add(range);
             } while (result == null || !result.succeeded());
 
-            return new IdBlock(result.preValue(), result.postValue() - 1, range);
+            return new IdBlock(result.preValue(), range);
         } catch (Exception e) {
             log.error("Error allocating ID block");
         }

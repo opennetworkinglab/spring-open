@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.onrc.onos.core.util.IdBlockAllocator;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 /**
@@ -21,7 +22,7 @@ import net.onrc.onos.core.util.OnosInstanceId;
  * mechanism that enables them to decide who should control a each switch. The
  * registry service provides this mechanism.
  */
-public interface IControllerRegistryService extends IFloodlightService {
+public interface IControllerRegistryService extends IFloodlightService, IdBlockAllocator {
 
     /**
      * Callback interface for control change events.
@@ -131,21 +132,6 @@ public interface IControllerRegistryService extends IFloodlightService {
      * @return Collection of dpids
      */
     public Collection<Long> getSwitchesControlledByController(String controllerId);
-
-    /**
-     * Get a unique Id Block.
-     *
-     * @return Id Block.
-     */
-    public IdBlock allocateUniqueIdBlock();
-
-    /**
-     * Get next unique id and retrieve a new range of ids if needed.
-     *
-     * @param range range to use for the identifier
-     * @return Id Block.
-     */
-    public IdBlock allocateUniqueIdBlock(long range);
 
     /**
      * Get a globally unique ID.
