@@ -14,6 +14,7 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.FlowEntry;
+import net.onrc.onos.core.util.Dpid;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
@@ -170,7 +171,7 @@ public class PlanInstallRuntime {
         log.debug("IOFSwitches: {}", switches);
         FlowModCount.startCount();
         for (Set<FlowEntry> phase : plan) {
-            Set<Pair<IOFSwitch, FlowEntry>> entries = new HashSet<>();
+            Set<Pair<Dpid, FlowEntry>> entries = new HashSet<>();
             Set<IOFSwitch> modifiedSwitches = new HashSet<>();
 
             long step1 = System.nanoTime();
@@ -182,7 +183,7 @@ public class PlanInstallRuntime {
                     log.debug("Skipping flow entry: {}", entry);
                     continue;
                 }
-                entries.add(Pair.of(sw, entry));
+                entries.add(Pair.of(new Dpid(entry.getSwitch()), entry));
                 modifiedSwitches.add(sw);
                 FlowModCount.countFlowEntry(sw, entry);
             }
@@ -197,7 +198,7 @@ public class PlanInstallRuntime {
             // wait for confirmation messages before proceeding
             List<Pair<IOFSwitch, OFMessageFuture<OFBarrierReply>>> barriers = new ArrayList<>();
             for (IOFSwitch sw : modifiedSwitches) {
-                barriers.add(Pair.of(sw, pusher.barrierAsync(sw)));
+                barriers.add(Pair.of(sw, pusher.barrierAsync(new Dpid(sw.getId()))));
             }
             for (Pair<IOFSwitch, OFMessageFuture<OFBarrierReply>> pair : barriers) {
                 IOFSwitch sw = pair.getLeft();

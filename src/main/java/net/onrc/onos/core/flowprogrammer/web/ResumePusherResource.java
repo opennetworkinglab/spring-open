@@ -1,6 +1,6 @@
 package net.onrc.onos.core.flowprogrammer.web;
 
-import net.floodlightcontroller.core.IOFSwitch;
+import net.onrc.onos.core.util.Dpid;
 
 import org.projectfloodlight.openflow.util.HexString;
 import org.restlet.resource.Get;
@@ -30,12 +30,6 @@ public class ResumePusherResource extends PusherResource {
             return false;
         }
 
-        IOFSwitch sw = provider.getSwitches().get(dpid);
-        if (sw == null) {
-            log.error("Invalid dpid");
-            return false;
-        }
-
-        return pusher.resume(sw);
+        return pusher.resume(new Dpid(dpid));
     }
 }

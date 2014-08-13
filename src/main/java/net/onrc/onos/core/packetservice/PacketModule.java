@@ -254,7 +254,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                     .setActions(actions)
                     .build();
 
-            flowPusher.add(sw, po);
+            flowPusher.add(new Dpid(sw.getId()), po);
         }
     }
 

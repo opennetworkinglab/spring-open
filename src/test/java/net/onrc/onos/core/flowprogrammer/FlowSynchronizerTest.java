@@ -22,6 +22,7 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService.MsgPriority;
 import net.onrc.onos.core.flowprogrammer.IFlowSyncService.SyncResult;
 import net.onrc.onos.core.intent.FlowEntry;
+import net.onrc.onos.core.util.Dpid;
 
 import org.easymock.IAnswer;
 import org.junit.After;
@@ -67,9 +68,9 @@ public class FlowSynchronizerTest {
         idRemoved = new ArrayList<Long>();
 
         pusher = createMock(FlowPusher.class);
-        expect(pusher.suspend(anyObject(IOFSwitch.class))).andReturn(true).anyTimes();
-        expect(pusher.resume(anyObject(IOFSwitch.class))).andReturn(true).anyTimes();
-        pusher.add(anyObject(IOFSwitch.class), anyObject(OFMessage.class),
+        expect(pusher.suspend(anyObject(Dpid.class))).andReturn(true).anyTimes();
+        expect(pusher.resume(anyObject(Dpid.class))).andReturn(true).anyTimes();
+        pusher.add(anyObject(Dpid.class), anyObject(OFMessage.class),
                 eq(MsgPriority.HIGH));
         expectLastCall().andAnswer(new IAnswer<Object>() {
             @Override
@@ -84,7 +85,7 @@ public class FlowSynchronizerTest {
                 return null;
             }
         }).anyTimes();
-        pusher.pushFlowEntry(anyObject(IOFSwitch.class), anyObject(FlowEntry.class),
+        pusher.pushFlowEntry(anyObject(Dpid.class), anyObject(FlowEntry.class),
                 eq(MsgPriority.HIGH));
         expectLastCall().andAnswer(new IAnswer<Object>() {
             @Override

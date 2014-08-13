@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import net.floodlightcontroller.core.IOFSwitch;
+import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,7 @@ public class FlowSynchronizer implements IFlowSyncService {
 
         @Override
         public SyncResult call() {
-            pusher.suspend(sw);
+            pusher.suspend(new Dpid(sw.getId()));
             try {
                 long start = System.nanoTime();
                 Set<FlowEntryWrapper> graphEntries = getFlowEntriesFromGraph();
@@ -96,7 +97,7 @@ public class FlowSynchronizer implements IFlowSyncService {
 
                 return result;
             } finally {
-                pusher.resume(sw);
+                pusher.resume(new Dpid(sw.getId()));
             }
         }
 

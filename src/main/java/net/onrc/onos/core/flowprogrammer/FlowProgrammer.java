@@ -16,6 +16,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.flowprogrammer.web.FlowProgrammerWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
+import net.onrc.onos.core.util.Dpid;
 
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.slf4j.Logger;
@@ -149,17 +150,13 @@ public class FlowProgrammer implements IFloodlightModule,
 
     @Override
     public void switchDisconnected(long swId) {
-        IOFSwitch sw = floodlightProvider.getSwitch(swId);
-        if (sw == null) {
-            log.warn("Removed switch not available {} ", swId);
-            return;
-        }
-        log.debug("Switch removed: {}", sw.getId());
+        Dpid dpid = new Dpid(swId);
+        log.debug("Switch removed: {}", dpid);
 
-        if (ENABLE_FLOW_SYNC) {
-            synchronizer.interrupt(sw);
-        }
-        pusher.deleteQueue(sw, true);
+        //if (ENABLE_FLOW_SYNC) {
+            //synchronizer.interrupt(sw);
+        //}
+        pusher.deleteQueue(dpid, true);
     }
 
     @Override

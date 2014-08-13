@@ -1,6 +1,6 @@
 package net.onrc.onos.core.flowprogrammer.web;
 
-import net.floodlightcontroller.core.IOFSwitch;
+import net.onrc.onos.core.util.Dpid;
 
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.util.HexString;
@@ -30,12 +30,6 @@ public class SendBarrierResource extends PusherResource {
             return null;
         }
 
-        IOFSwitch sw = provider.getSwitches().get(dpid);
-        if (sw == null) {
-            log.error("Invalid dpid");
-            return null;
-        }
-
-        return pusher.barrier(sw);
+        return pusher.barrier(new Dpid(dpid));
     }
 }
