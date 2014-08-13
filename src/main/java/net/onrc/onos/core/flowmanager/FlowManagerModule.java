@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.Flow;
+import net.onrc.onos.api.flowmanager.FlowBatchHandle;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
@@ -17,23 +18,25 @@ import net.onrc.onos.api.flowmanager.FlowManagerService;
  */
 public class FlowManagerModule implements FlowManagerService {
     private ConflictDetectionPolicy conflictDetectionPolicy;
+    private FlowOperationMap flowOperationMap;
 
     /**
      * Constructor.
      */
     public FlowManagerModule() {
         this.conflictDetectionPolicy = ConflictDetectionPolicy.FREE;
+        this.flowOperationMap = new FlowOperationMap();
     }
 
     @Override
-    public boolean addFlow(Flow flow) {
+    public FlowBatchHandle addFlow(Flow flow) {
         FlowBatchOperation ops = new FlowBatchOperation();
         ops.addAddFlowOperation(flow);
         return executeBatch(ops);
     }
 
     @Override
-    public boolean removeFlow(FlowId id) {
+    public FlowBatchHandle removeFlow(FlowId id) {
         FlowBatchOperation ops = new FlowBatchOperation();
         ops.addRemoveFlowOperation(id);
         return executeBatch(ops);
@@ -52,9 +55,15 @@ public class FlowManagerModule implements FlowManagerService {
     }
 
     @Override
-    public boolean executeBatch(FlowBatchOperation ops) {
-        // TODO Auto-generated method stub
-        return false;
+    public FlowBatchHandle executeBatch(FlowBatchOperation ops) {
+        // This method just put the batch-operation object to the global
+        // flow operation map with unique ID. The leader process will get
+        // the appended operation with events notified from the map.
+        FlowBatchHandle handler = flowOperationMap.putOperation(ops);
+
+        // Then it will return a handler to obtain the result of this operation,
+        // control the executing process, etc.
+        return handler;
     }
 
     @Override

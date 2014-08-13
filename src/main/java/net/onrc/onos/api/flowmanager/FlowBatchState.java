@@ -1,5 +1,6 @@
 package net.onrc.onos.api.flowmanager;
 
+
 /**
  * Represents the state of {@link FlowBatchOperation}.
  */

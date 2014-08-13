@@ -1,9 +1,13 @@
 package net.onrc.onos.api.flowmanager;
 
+import net.onrc.onos.core.flowmanager.FlowOperationMap;
+
+
 /**
  * Handle class to handle flow batch operation.
  */
 public class FlowBatchHandle {
+    private final FlowOperationMap flowOperationMap;
     private final FlowBatchId batchId;
 
     /**
@@ -12,9 +16,12 @@ public class FlowBatchHandle {
      * The ID is automatically generated and assigned by FlowManager, and used
      * as an internal key for the flow batch operation map.
      *
+     * @param opMap the FlowOperationMap object which maintains the flow batch
+     *        operation
      * @param id the batch operation ID
      */
-    public FlowBatchHandle(FlowBatchId id) {
+    public FlowBatchHandle(FlowOperationMap opMap, FlowBatchId id) {
+        flowOperationMap = opMap;
         batchId = id;
     }
 
@@ -25,5 +32,9 @@ public class FlowBatchHandle {
      */
     public FlowBatchId getBatchOperationId() {
         return batchId;
+    }
+
+    public FlowBatchState getState() {
+        return flowOperationMap.getState(batchId);
     }
 }

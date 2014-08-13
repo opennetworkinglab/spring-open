@@ -15,20 +15,26 @@ import java.util.Collection;
  */
 public interface FlowManagerService {
     /**
-     * Adds Flow object, calculates match-action plan and executes it.
+     * Adds Flow object, calculates match-action plan and executes it
+     * asynchronously.
+     * <p>
+     * To track the execution result, use the returned FlowBatchHandle object.
      *
      * @param flow Flow object to be added
-     * @return true if succeeded, false otherwise
+     * @return FlowBatchHandle object if succeeded, null otherwise
      */
-    boolean addFlow(Flow flow);
+    FlowBatchHandle addFlow(Flow flow);
 
     /**
-     * Removes Flow object, calculates match-action plan and executes it.
+     * Removes Flow object, calculates match-action plan and executes it
+     * asynchronously.
+     * <p>
+     * To track the execution result, use the returned FlowBatchHandle object.
      *
      * @param id ID for Flow object to be removed
-     * @return true if succeeded, false otherwise
+     * @return FlowBatchHandle object if succeeded, null otherwise
      */
-    boolean removeFlow(FlowId id);
+    FlowBatchHandle removeFlow(FlowId id);
 
     /**
      * Gets Flow object.
@@ -46,12 +52,14 @@ public interface FlowManagerService {
     Collection<Flow> getFlows();
 
     /**
-     * Executes batch operation of Flow object.
+     * Executes batch operation of Flow object asynchronously.
+     * <p>
+     * To track the execution result, use the returned FlowBatchHandle object.
      *
      * @param ops flow operations to be executed
-     * @return true if succeeded, false otherwise
+     * @return FlowBatchHandle object if succeeded, null otherwise
      */
-    boolean executeBatch(FlowBatchOperation ops);
+    FlowBatchHandle executeBatch(FlowBatchOperation ops);
 
     /**
      * Sets a conflict detection policy.
