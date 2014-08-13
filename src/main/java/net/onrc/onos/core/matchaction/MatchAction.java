@@ -5,9 +5,9 @@ import java.util.List;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.batchoperation.BatchOperationTarget;
-import net.onrc.onos.core.matchaction.action.IAction;
+import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.OutputAction;
-import net.onrc.onos.core.matchaction.match.IMatch;
+import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4;
@@ -20,19 +20,19 @@ import net.onrc.onos.core.util.SwitchPort;
 public class MatchAction implements BatchOperationTarget {
     protected final MatchActionId id;
     protected SwitchPort port;
-    protected List<IMatch> matches;
-    protected List<IAction> actions;
+    protected List<Match> matches;
+    protected List<Action> actions;
 
     /**
      * Constructor.
      *
      * @param id ID for this MatchAction object.
      * @param port Switch DPID
-     * @param matches The list of IMatch objects as match condition on the port.
-     * @param actions The list of IAction objects as actions on the switch.
+     * @param matches The list of Match objects as match condition on the port.
+     * @param actions The list of Action objects as actions on the switch.
      */
-    public MatchAction(String id, SwitchPort port, List<IMatch> matches,
-            List<IAction> actions) {
+    public MatchAction(String id, SwitchPort port, List<Match> matches,
+            List<Action> actions) {
         this.id = new MatchActionId(id);
         this.port = port;
         this.matches = matches;
@@ -59,8 +59,8 @@ public class MatchAction implements BatchOperationTarget {
             IPv4 srcIp, IPv4 dstIp, PortNumber dstPort) {
         // CHECKSTYLE:ON
         this(id, new SwitchPort(dpid, srcPort),
-                Arrays.asList((IMatch) new PacketMatch(srcMac, dstMac, srcIp, dstIp)),
-                Arrays.asList((IAction) new OutputAction(dstPort)));
+                Arrays.asList((Match) new PacketMatch(srcMac, dstMac, srcIp, dstIp)),
+                Arrays.asList((Action) new OutputAction(dstPort)));
     }
 
     public MatchActionId getId() {
@@ -81,7 +81,7 @@ public class MatchAction implements BatchOperationTarget {
      *
      * @return The traffic filter.
      */
-    public List<IMatch> getMatches() {
+    public List<Match> getMatches() {
         return matches;
     }
 
@@ -90,7 +90,7 @@ public class MatchAction implements BatchOperationTarget {
      *
      * @return The list of actions.
      */
-    public List<IAction> getActions() {
+    public List<Action> getActions() {
         return actions;
     }
 }

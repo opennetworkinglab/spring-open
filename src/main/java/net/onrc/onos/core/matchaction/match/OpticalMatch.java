@@ -6,7 +6,7 @@ package net.onrc.onos.core.matchaction.match;
  * This class does not have a switch ID and a port number. They are handled by
  * MatchAction, IFlow or Intent class.
  */
-public class OpticalMatch implements IMatch {
+public class OpticalMatch implements Match {
 
     // Match fields
     protected Integer srcLambda;

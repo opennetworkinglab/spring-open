@@ -4,8 +4,8 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import net.onrc.onos.api.intent.Intent;
 import net.onrc.onos.api.intent.IntentId;
-import net.onrc.onos.core.matchaction.action.IAction;
-import net.onrc.onos.core.matchaction.match.IMatch;
+import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.util.SwitchPort;
 
 import java.util.List;
@@ -22,8 +22,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class MultiPointToSinglePointIntent extends Intent {
     private final ImmutableList<SwitchPort> ingressPorts;
     private final SwitchPort egressPort;
-    private final IMatch match;
-    private final ImmutableList<IAction> modifications;
+    private final Match match;
+    private final ImmutableList<Action> modifications;
 
     /**
      * Constructs an intent representing multiple sources, single destination
@@ -38,8 +38,8 @@ public class MultiPointToSinglePointIntent extends Intent {
     public MultiPointToSinglePointIntent(IntentId id,
                                          List<SwitchPort> ingressPorts,
                                          SwitchPort egressPort,
-                                         IMatch match,
-                                         List<IAction> modifications) {
+                                         Match match,
+                                         List<Action> modifications) {
         super(id);
 
         this.ingressPorts = ImmutableList.copyOf(checkNotNull(ingressPorts));
@@ -71,7 +71,7 @@ public class MultiPointToSinglePointIntent extends Intent {
      *
      * @return the filter condition of the incoming traffic which can go through.
      */
-    public IMatch getMatch() {
+    public Match getMatch() {
         return match;
     }
 
@@ -80,7 +80,7 @@ public class MultiPointToSinglePointIntent extends Intent {
      *
      * @return the modification actions to the outgoing traffic.
      */
-    public ImmutableList<IAction> getModifications() {
+    public ImmutableList<Action> getModifications() {
         return modifications;
     }
 

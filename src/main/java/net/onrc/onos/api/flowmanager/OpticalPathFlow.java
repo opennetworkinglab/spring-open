@@ -3,7 +3,7 @@ package net.onrc.onos.api.flowmanager;
 import java.util.List;
 
 import net.onrc.onos.core.matchaction.MatchActionPlan;
-import net.onrc.onos.core.matchaction.action.IAction;
+import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.util.PortNumber;
 
 /**
@@ -21,11 +21,11 @@ public class OpticalPathFlow extends PathFlow {
      * @param id ID for this new IFlow object.
      * @param inPort Ingress port number at the ingress edge node.
      * @param path Path between ingress and egress edge node.
-     * @param actions The list of IAction objects at the egress edge node.
+     * @param actions The list of Action objects at the egress edge node.
      * @param lambda The lambda to be used throughout the path.
      */
     public OpticalPathFlow(String id,
-            PortNumber inPort, Path path, List<IAction> actions, int lambda) {
+            PortNumber inPort, Path path, List<Action> actions, int lambda) {
         super(id, null, inPort, path, actions);
         this.lambda = lambda;
         // TODO Auto-generated constructor stub

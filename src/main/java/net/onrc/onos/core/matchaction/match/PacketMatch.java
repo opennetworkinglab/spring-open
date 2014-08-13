@@ -10,7 +10,7 @@ import net.onrc.onos.core.util.IPv4;
  * This class does not have a switch ID and a port number. They are handled by
  * MatchAction, IFlow or Intent class.
  */
-public class PacketMatch implements IMatch {
+public class PacketMatch implements Match {
 
     // Match fields
     protected MACAddress srcMacAddress;

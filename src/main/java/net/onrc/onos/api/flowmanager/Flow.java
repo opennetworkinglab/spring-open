@@ -2,7 +2,7 @@ package net.onrc.onos.api.flowmanager;
 
 import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 import net.onrc.onos.core.matchaction.MatchActionPlan;
-import net.onrc.onos.core.matchaction.match.IMatch;
+import net.onrc.onos.core.matchaction.match.Match;
 
 /**
  * An interface class to define flow object which is managed by
@@ -24,7 +24,7 @@ public interface Flow extends BatchOperationTarget {
      *
      * @return a traffic filter for this flow object.
      */
-    public IMatch getMatch();
+    public Match getMatch();
 
     /**
      * Compiles this object to MatchAction plan.

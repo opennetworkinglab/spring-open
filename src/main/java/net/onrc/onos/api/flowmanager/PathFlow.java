@@ -3,8 +3,8 @@ package net.onrc.onos.api.flowmanager;
 import java.util.List;
 
 import net.onrc.onos.core.matchaction.MatchActionPlan;
-import net.onrc.onos.core.matchaction.action.IAction;
-import net.onrc.onos.core.matchaction.match.IMatch;
+import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.util.PortNumber;
 
 /**
@@ -15,10 +15,10 @@ import net.onrc.onos.core.util.PortNumber;
  */
 public class PathFlow implements Flow {
     protected final FlowId id;
-    protected IMatch match;
+    protected Match match;
     protected PortNumber ingressPort;
     protected Path path;
-    protected List<IAction> egressActions;
+    protected List<Action> egressActions;
 
     /**
      * Constructor.
@@ -28,10 +28,10 @@ public class PathFlow implements Flow {
      * @param ingressPort The ingress port number at the ingress node of the
      *        path.
      * @param path Path between ingress and egress edge node.
-     * @param egressActions The list of IAction objects at the egress edge node.
+     * @param egressActions The list of Action objects at the egress edge node.
      */
     public PathFlow(String id,
-            IMatch match, PortNumber ingressPort, Path path, List<IAction> egressActions) {
+            Match match, PortNumber ingressPort, Path path, List<Action> egressActions) {
         this.id = new FlowId(id);
         this.match = match;
         this.ingressPort = ingressPort;
@@ -45,7 +45,7 @@ public class PathFlow implements Flow {
     }
 
     @Override
-    public IMatch getMatch() {
+    public Match getMatch() {
         return match;
     }
 
@@ -74,11 +74,11 @@ public class PathFlow implements Flow {
     }
 
     /**
-     * Gets the list of IAction objects at the egress edge node.
+     * Gets the list of Action objects at the egress edge node.
      *
-     * @return The list of IAction objects at the egress edge node.
+     * @return The list of Action objects at the egress edge node.
      */
-    public List<IAction> getEgressActions() {
+    public List<Action> getEgressActions() {
         return egressActions;
     }
 }

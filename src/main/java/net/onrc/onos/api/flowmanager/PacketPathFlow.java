@@ -3,7 +3,7 @@ package net.onrc.onos.api.flowmanager;
 import java.util.List;
 
 import net.onrc.onos.core.matchaction.MatchActionPlan;
-import net.onrc.onos.core.matchaction.action.IAction;
+import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.PortNumber;
 
@@ -23,12 +23,12 @@ public class PacketPathFlow extends PathFlow {
      * @param match Match object at the source node of the path.
      * @param inPort Ingress port number at the ingress edge node.
      * @param path Path between ingress and egress edge node.
-     * @param edgeActions The list of IAction objects at the egress edge node.
+     * @param edgeActions The list of Action objects at the egress edge node.
      * @param hardTimeout hard-timeout value.
      * @param idleTimeout idle-timeout value.
      */
     public PacketPathFlow(String id,
-            PacketMatch match, PortNumber inPort, Path path, List<IAction> edgeActions,
+            PacketMatch match, PortNumber inPort, Path path, List<Action> edgeActions,
             int hardTimeout, int idleTimeout) {
         super(id, match, inPort, path, edgeActions);
         this.hardTimeout = hardTimeout;

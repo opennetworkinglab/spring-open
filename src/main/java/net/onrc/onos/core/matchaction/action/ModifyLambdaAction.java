@@ -6,7 +6,7 @@ package net.onrc.onos.core.matchaction.action;
  * This class does not have a switch ID. The switch ID is handled by
  * MatchAction, IFlow or Intent class.
  */
-public class ModifyLambdaAction implements IAction {
+public class ModifyLambdaAction implements Action {
     protected int lambda;
 
     /**

@@ -8,7 +8,7 @@ import net.onrc.onos.core.util.PortNumber;
  * This class does not have a switch ID. The switch ID is handled by
  * MatchAction, IFlow or Intent class.
  */
-public class OutputAction implements IAction {
+public class OutputAction implements Action {
     protected PortNumber portNumber;
 
     /**

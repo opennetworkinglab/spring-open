@@ -10,7 +10,7 @@ import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
  * <p>
  * TODO: Make all methods thread-safe
  */
-public class MatchActionModule implements IMatchActionService {
+public class MatchActionModule implements MatchActionService {
 
     @Override
     public boolean addMatchAction(MatchAction matchAction) {

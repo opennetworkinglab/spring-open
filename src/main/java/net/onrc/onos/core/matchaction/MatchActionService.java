@@ -8,7 +8,7 @@ import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 /**
  * An interface for the match-action service.
  */
-public interface IMatchActionService {
+public interface MatchActionService {
     /**
      * Adds a new match-action entry.
      *

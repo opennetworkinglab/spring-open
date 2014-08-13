@@ -3,7 +3,7 @@ package net.onrc.onos.core.newintent;
 import com.google.common.base.Objects;
 import net.onrc.onos.api.intent.Intent;
 import net.onrc.onos.api.intent.IntentId;
-import net.onrc.onos.core.matchaction.match.IMatch;
+import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.util.Pair;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -18,7 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PointToPointIntent extends Intent {
     private final SwitchPort ingressPort;
     private final SwitchPort egressPort;
-    private final IMatch match;
+    private final Match match;
     private final long idleTimeout;
     private final TimeUnit unit;
 
@@ -33,7 +33,7 @@ public class PointToPointIntent extends Intent {
      */
     public PointToPointIntent(IntentId id,
                               SwitchPort ingressPort, SwitchPort egressPort,
-                              IMatch match) {
+                              Match match) {
         this(id, ingressPort, egressPort, match, 0, TimeUnit.SECONDS);
     }
 
@@ -51,7 +51,7 @@ public class PointToPointIntent extends Intent {
      */
     public PointToPointIntent(IntentId id,
                               SwitchPort ingressPort, SwitchPort egressPort,
-                              IMatch match, long idleTimeout, TimeUnit unit) {
+                              Match match, long idleTimeout, TimeUnit unit) {
         super(id);
 
         checkArgument(idleTimeout >= 0, "idleTimeout should not be negative");
@@ -86,7 +86,7 @@ public class PointToPointIntent extends Intent {
      *
      * @return the match condition.
      */
-    public IMatch getMatch() {
+    public Match getMatch() {
         return match;
     }
 
