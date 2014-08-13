@@ -98,10 +98,9 @@ import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * The main controller class.  Handles all setup and network listeners
- * - Distributed ownership control of switch through IControllerRegistryService
+ * The main controller class. Handles all setup and network listeners -
+ * Distributed ownership control of switch through IControllerRegistryService
  */
 public class Controller implements IFloodlightProviderService {
 
@@ -126,8 +125,7 @@ public class Controller implements IFloodlightProviderService {
     protected HashMap<String, String> controllerNodeIPsCache;
     protected BlockingQueue<IUpdate> updates;
 
-    protected ConcurrentMap<OFType,
-        ListenerDispatcher<OFType, IOFMessageListener>> messageListeners;
+    protected ConcurrentMap<OFType, ListenerDispatcher<OFType, IOFMessageListener>> messageListeners;
     protected Set<IOFSwitchListener> switchListeners;
 
     // Module dependencies
@@ -154,7 +152,7 @@ public class Controller implements IFloodlightProviderService {
 
     // Load monitor for overload protection
     protected final boolean overload_drop =
-        Boolean.parseBoolean(System.getProperty("overload_drop", "false"));
+            Boolean.parseBoolean(System.getProperty("overload_drop", "false"));
     protected final LoadMonitor loadmonitor = new LoadMonitor(log);
 
     // Start time of the controller
@@ -168,35 +166,37 @@ public class Controller implements IFloodlightProviderService {
     protected static final int BATCH_MAX_SIZE = 100;
     protected static final boolean ALWAYS_DECODE_ETH = true;
 
-
-
     // ******************************
     // Switch Management and Updates
     // ******************************
 
     /**
-     * Switch updates are sent to all IOFSwitchListeners. A switch that is connected
-     * to this controller instance, but not activated, is not available for updates.
-     *
-     * In ONOS, each controller instance can simultaneously serve in a MASTER role
-     * for some connected switches, and in a EQUAL role for other connected switches.
-     * The EQUAL role can be treated as a SLAVE role, by ensuring that the
-     * controller instance never sends packets or commands out to the switch.
-     * Activated switches, either with Controller Role MASTER or EQUAL are announced
-     * as updates. We also support announcements of controller role transitions
-     * from MASTER --> EQUAL, and EQUAL --> MASTER, for an individual switch.
-     *
+     * Switch updates are sent to all IOFSwitchListeners. A switch that is
+     * connected to this controller instance, but not activated, is not
+     * available for updates.
+     * 
+     * In ONOS, each controller instance can simultaneously serve in a MASTER
+     * role for some connected switches, and in a EQUAL role for other connected
+     * switches. The EQUAL role can be treated as a SLAVE role, by ensuring that
+     * the controller instance never sends packets or commands out to the
+     * switch. Activated switches, either with Controller Role MASTER or EQUAL
+     * are announced as updates. We also support announcements of controller
+     * role transitions from MASTER --> EQUAL, and EQUAL --> MASTER, for an
+     * individual switch.
+     * 
      * Disconnection of only activated switches are announced. Finally, changes
      * to switch ports are announced with a portChangeType (see @IOFSwitch)
-     *
+     * 
      * @author saurav
      */
     public enum SwitchUpdateType {
         /** switch activated with this controller's role as MASTER */
         ACTIVATED_MASTER,
-        /** switch activated with this controller's role as EQUAL.
-         *  listener can treat this controller's role as SLAVE by not
-         *  sending packets or commands to the switch */
+        /**
+         * switch activated with this controller's role as EQUAL. listener can
+         * treat this controller's role as SLAVE by not sending packets or
+         * commands to the switch
+         */
         ACTIVATED_EQUAL,
         /** this controller's role for this switch changed from Master to Equal */
         MASTER_TO_EQUAL,
@@ -209,8 +209,8 @@ public class Controller implements IFloodlightProviderService {
     }
 
     /**
-     * Update message indicating a switch was added or removed
-     * ONOS: This message extended to indicate Port add or removed event.
+     * Update message indicating a switch was added or removed ONOS: This
+     * message extended to indicate Port add or removed event.
      */
     protected class SwitchUpdate implements IUpdate {
         public long getSwId() {
@@ -233,10 +233,11 @@ public class Controller implements IFloodlightProviderService {
         public SwitchUpdate(long swId, SwitchUpdateType switchUpdateType) {
             this(swId, switchUpdateType, null, null);
         }
+
         public SwitchUpdate(long swId,
-                            SwitchUpdateType switchUpdateType,
-                            OFPortDesc port,
-                            PortChangeType changeType) {
+                SwitchUpdateType switchUpdateType,
+                OFPortDesc port,
+                PortChangeType changeType) {
             if (switchUpdateType == SwitchUpdateType.PORTCHANGED) {
                 if (port == null) {
                     throw new NullPointerException("Port must not be null " +
@@ -267,37 +268,36 @@ public class Controller implements IFloodlightProviderService {
             }
             if (switchListeners != null) {
                 for (IOFSwitchListener listener : switchListeners) {
-                    switch(switchUpdateType) {
-                        case ACTIVATED_MASTER:
-                            // don't count here. We have more specific
-                            // counters before the update is created
-                            listener.switchActivatedMaster(swId);
-                            break;
-                        case ACTIVATED_EQUAL:
-                            // don't count here. We have more specific
-                            // counters before the update is created
-                            listener.switchActivatedEqual(swId);
-                            break;
-                        case MASTER_TO_EQUAL:
-                            listener.switchMasterToEqual(swId);
-                            break;
-                        case EQUAL_TO_MASTER:
-                            listener.switchEqualToMaster(swId);
-                            break;
-                        case DISCONNECTED:
-                            // don't count here. We have more specific
-                            // counters before the update is created
-                            listener.switchDisconnected(swId);
-                            break;
-                        case PORTCHANGED:
-                            counters.switchPortChanged.updateCounterWithFlush();
-                            listener.switchPortChanged(swId, port, changeType);
-                            break;
+                    switch (switchUpdateType) {
+                    case ACTIVATED_MASTER:
+                        // don't count here. We have more specific
+                        // counters before the update is created
+                        listener.switchActivatedMaster(swId);
+                        break;
+                    case ACTIVATED_EQUAL:
+                        // don't count here. We have more specific
+                        // counters before the update is created
+                        listener.switchActivatedEqual(swId);
+                        break;
+                    case MASTER_TO_EQUAL:
+                        listener.switchMasterToEqual(swId);
+                        break;
+                    case EQUAL_TO_MASTER:
+                        listener.switchEqualToMaster(swId);
+                        break;
+                    case DISCONNECTED:
+                        // don't count here. We have more specific
+                        // counters before the update is created
+                        listener.switchDisconnected(swId);
+                        break;
+                    case PORTCHANGED:
+                        counters.switchPortChanged.updateCounterWithFlush();
+                        listener.switchPortChanged(swId, port, changeType);
+                        break;
                     }
                 }
             }
         }
-
 
     }
 
@@ -313,7 +313,7 @@ public class Controller implements IFloodlightProviderService {
     }
 
     /**
-     *  Switch Events
+     * Switch Events
      */
     @Override
     public void addSwitchEvent(long dpid, String reason, boolean flushNow) {
@@ -335,9 +335,9 @@ public class Controller implements IFloodlightProviderService {
             log.error("Trying to activate switch but it is already "
                     + "activated: dpid {}. Found in activeMaster: {} "
                     + "Found in activeEqual: {}. Aborting ..", new Object[] {
-                            HexString.toHexString(dpid),
-                            (activeMasterSwitches.get(dpid) == null)? 'Y': 'N',
-                            (activeEqualSwitches.get(dpid) == null)? 'Y': 'N'});
+                    HexString.toHexString(dpid),
+                    (activeMasterSwitches.get(dpid) == null) ? 'Y' : 'N',
+                    (activeEqualSwitches.get(dpid) == null) ? 'Y' : 'N'});
             counters.switchWithSameDpidActivated.updateCounterWithFlush();
             return false;
         }
@@ -348,8 +348,9 @@ public class Controller implements IFloodlightProviderService {
      * Called when a switch is activated, with this controller's role as MASTER
      */
     protected boolean addActivatedMasterSwitch(long dpid, IOFSwitch sw) {
-        synchronized(multiCacheLock) {
-            if (!validActivation(dpid)) return false;
+        synchronized (multiCacheLock) {
+            if (!validActivation(dpid))
+                return false;
             activeMasterSwitches.put(dpid, sw);
         }
         // XXX Workaround to prevent race condition where a link is detected
@@ -360,7 +361,7 @@ public class Controller implements IFloodlightProviderService {
             linkDiscovery.disableDiscoveryOnPort(sw.getId(),
                     port.getPortNo().getShortPortNumber());
         }
-        //update counters and events
+        // update counters and events
         counters.switchActivated.updateCounterWithFlush();
         evSwitch.updateEventWithFlush(new SwitchEvent(dpid, "activeMaster"));
         addUpdateToQueue(new SwitchUpdate(dpid,
@@ -372,11 +373,12 @@ public class Controller implements IFloodlightProviderService {
      * Called when a switch is activated, with this controller's role as EQUAL
      */
     protected boolean addActivatedEqualSwitch(long dpid, IOFSwitch sw) {
-        synchronized(multiCacheLock) {
-            if (!validActivation(dpid)) return false;
+        synchronized (multiCacheLock) {
+            if (!validActivation(dpid))
+                return false;
             activeEqualSwitches.put(dpid, sw);
         }
-        //update counters and events
+        // update counters and events
         counters.switchActivated.updateCounterWithFlush();
         evSwitch.updateEventWithFlush(new SwitchEvent(dpid, "activeEqual"));
         addUpdateToQueue(new SwitchUpdate(dpid,
@@ -385,54 +387,54 @@ public class Controller implements IFloodlightProviderService {
     }
 
     /**
-     * Called when this controller's role for a switch transitions from equal
-     * to master. For 1.0 switches, we internally refer to the role 'slave' as
+     * Called when this controller's role for a switch transitions from equal to
+     * master. For 1.0 switches, we internally refer to the role 'slave' as
      * 'equal' - so this transition is equivalent to 'addActivatedMasterSwitch'.
      */
     protected void transitionToMasterSwitch(long dpid) {
-	synchronized(multiCacheLock) {
-		IOFSwitch sw = activeEqualSwitches.remove(dpid);
-		if (sw == null) {
-			log.error("Transition to master called on sw {}, but switch "
-					+ "was not found in controller-cache", dpid);
-			return;
-		}
-		activeMasterSwitches.put(dpid, sw);
-	}
-	addUpdateToQueue(new SwitchUpdate(dpid,
+        synchronized (multiCacheLock) {
+            IOFSwitch sw = activeEqualSwitches.remove(dpid);
+            if (sw == null) {
+                log.error("Transition to master called on sw {}, but switch "
+                        + "was not found in controller-cache", dpid);
+                return;
+            }
+            activeMasterSwitches.put(dpid, sw);
+        }
+        addUpdateToQueue(new SwitchUpdate(dpid,
                 SwitchUpdateType.EQUAL_TO_MASTER));
     }
 
-
     /**
-     * Called when this controller's role for a switch transitions to equal.
-     * For 1.0 switches, we internally refer to the role 'slave' as
-     * 'equal'.
+     * Called when this controller's role for a switch transitions to equal. For
+     * 1.0 switches, we internally refer to the role 'slave' as 'equal'.
      */
     protected void transitionToEqualSwitch(long dpid) {
-	synchronized(multiCacheLock) {
-		IOFSwitch sw = activeMasterSwitches.remove(dpid);
-		if (sw == null) {
-			log.error("Transition to equal called on sw {}, but switch "
-					+ "was not found in controller-cache", dpid);
-			return;
-		}
-		activeEqualSwitches.put(dpid, sw);
-	}
-	addUpdateToQueue(new SwitchUpdate(dpid,
+        synchronized (multiCacheLock) {
+            IOFSwitch sw = activeMasterSwitches.remove(dpid);
+            if (sw == null) {
+                log.error("Transition to equal called on sw {}, but switch "
+                        + "was not found in controller-cache", dpid);
+                return;
+            }
+            activeEqualSwitches.put(dpid, sw);
+        }
+        addUpdateToQueue(new SwitchUpdate(dpid,
                 SwitchUpdateType.MASTER_TO_EQUAL));
     }
 
     /**
      * Clear all state in controller switch maps for a switch that has
-     * disconnected from the local controller. Also release control for
-     * that switch from the global repository. Notify switch listeners.
+     * disconnected from the local controller. Also release control for that
+     * switch from the global repository. Notify switch listeners.
      */
     protected void removeConnectedSwitch(long dpid) {
         releaseRegistryControl(dpid);
         connectedSwitches.remove(dpid);
         IOFSwitch sw = activeMasterSwitches.remove(dpid);
-        if (sw == null) sw = activeEqualSwitches.remove(dpid);
+        if (sw == null) {
+            sw = activeEqualSwitches.remove(dpid);
+        }
         if (sw != null) {
             sw.cancelAllStatisticsReplies();
             sw.setConnected(false); // do we need this?
@@ -443,8 +445,9 @@ public class Controller implements IFloodlightProviderService {
     }
 
     /**
-     * Indicates that ports on the given switch have changed. Enqueue a
-     * switch update.
+     * Indicates that ports on the given switch have changed. Enqueue a switch
+     * update.
+     * 
      * @param sw
      */
     protected void notifyPortChanged(long dpid, OFPortDesc port,
@@ -465,7 +468,8 @@ public class Controller implements IFloodlightProviderService {
             // and attempted to be written to the database before the port is in
             // the database. We now suppress link discovery on ports until we're
             // sure they're in the database.
-            linkDiscovery.disableDiscoveryOnPort(dpid, port.getPortNo().getShortPortNumber());
+            linkDiscovery.disableDiscoveryOnPort(dpid, port.getPortNo()
+                    .getShortPortNumber());
         }
 
         SwitchUpdate update = new SwitchUpdate(dpid, SwitchUpdateType.PORTCHANGED,
@@ -509,7 +513,8 @@ public class Controller implements IFloodlightProviderService {
     // Role Handling
     // **********************
 
-    /** created by ONOS - works with registry service
+    /**
+     * created by ONOS - works with registry service
      */
     protected class RoleChangeCallback implements ControlChangeCallback {
         @Override
@@ -552,7 +557,7 @@ public class Controller implements IFloodlightProviderService {
                     HexString.toHexString(dpid));
             // FIXME shouldn't we immediately return here?
         }
-        //Request control of the switch from the global registry
+        // Request control of the switch from the global registry
         try {
             h.controlRequested = Boolean.TRUE;
             registryService.requestControl(dpid, new RoleChangeCallback());
@@ -567,7 +572,8 @@ public class Controller implements IFloodlightProviderService {
             } catch (InterruptedException e) {
                 // Ignore interruptions
             }
-            // safer to bounce the switch to reconnect here than proceeding further
+            // safer to bounce the switch to reconnect here than proceeding
+            // further
             // XXX S why? can't we just try again a little later?
             log.debug("Closing sw:{} because we weren't able to request control " +
                     "successfully" + dpid);
@@ -588,25 +594,24 @@ public class Controller implements IFloodlightProviderService {
         }
     }
 
-
     // *******************
     // OF Message Handling
     // *******************
 
     /**
-     *
      * Handle and dispatch a message to IOFMessageListeners.
-     *
-     * We only dispatch messages to listeners if the controller's role is MASTER.
-     *
+     * 
+     * We only dispatch messages to listeners if the controller's role is
+     * MASTER.
+     * 
      * @param sw The switch sending the message
      * @param m The message the switch sent
-     * @param flContext The floodlight context to use for this message. If
-     * null, a new context will be allocated.
+     * @param flContext The floodlight context to use for this message. If null,
+     *        a new context will be allocated.
      * @throws IOException
-     *
-     * FIXME: this method and the ChannelHandler disagree on which messages
-     * should be dispatched and which shouldn't
+     * 
+     *         FIXME: this method and the ChannelHandler disagree on which
+     *         messages should be dispatched and which shouldn't
      */
     @LogMessageDocs({
             @LogMessageDoc(level = "ERROR",
@@ -620,114 +625,115 @@ public class Controller implements IFloodlightProviderService {
                     explanation = "The switch sent a message not handled by " +
                             "the controller")
     })
-    @SuppressWarnings({ "fallthrough", "unchecked" })
+    @SuppressWarnings({"fallthrough", "unchecked"})
     protected void handleMessage(IOFSwitch sw, OFMessage m,
-                                 FloodlightContext bContext)
+            FloodlightContext bContext)
             throws IOException {
         Ethernet eth = null;
         short inport = -1;
 
         switch (m.getType()) {
-            case PACKET_IN:
-                OFPacketIn pi = (OFPacketIn) m;
-                //log.info("saw packet in from sw {}", sw.getStringId());
-                if (pi.getData().length <= 0) {
-                    log.error("Ignoring PacketIn (Xid = " + pi.getXid() +
-                            ") because/*  the data field is empty.");
+        case PACKET_IN:
+            OFPacketIn pi = (OFPacketIn) m;
+            // log.info("saw packet in from sw {}", sw.getStringId());
+            if (pi.getData().length <= 0) {
+                log.error("Ignoring PacketIn (Xid = " + pi.getXid() +
+                        ") because/*  the data field is empty.");
+                return;
+            }
+
+            // get incoming port to store in floodlight context
+            if (sw.getOFVersion() == OFVersion.OF_10) {
+                inport = pi.getInPort().getShortPortNumber();
+            } else if (sw.getOFVersion() == OFVersion.OF_13) {
+                for (MatchField<?> mf : pi.getMatch().getMatchFields()) {
+                    if (mf.id == MatchFields.IN_PORT) {
+                        inport = pi.getMatch().get((MatchField<OFPort>) mf)
+                                .getShortPortNumber();
+                        break;
+                    }
+                }
+                if (inport == -1) {
+                    log.error("Match field for incoming port missing in "
+                            + "packet-in from sw {}. Ignoring msg",
+                            sw.getStringId());
                     return;
                 }
+            } else {
+                // should have been taken care of earlier in handshake
+                log.error("OFVersion {} not supported for "
+                        + "packet-in from sw {}. Ignoring msg",
+                        sw.getOFVersion(), sw.getStringId());
+                return;
+            }
 
-                // get incoming port to store in floodlight context
-                if (sw.getOFVersion() == OFVersion.OF_10) {
-                    inport = pi.getInPort().getShortPortNumber();
-                } else if (sw.getOFVersion() == OFVersion.OF_13) {
-                    for (MatchField<?> mf : pi.getMatch().getMatchFields()) {
-                        if (mf.id == MatchFields.IN_PORT) {
-                            inport = pi.getMatch().get((MatchField<OFPort>)mf)
-                                        .getShortPortNumber();
-                            break;
-                        }
-                    }
-                    if (inport == -1) {
-                        log.error("Match field for incoming port missing in "
-                                + "packet-in from sw {} .. Ignoring msg",
-                                sw.getStringId());
-                        return;
-                    }
+            // decode enclosed ethernet packet to store in floodlight context
+            if (Controller.ALWAYS_DECODE_ETH) {
+                eth = new Ethernet();
+                eth.deserialize(pi.getData(), 0,
+                        pi.getData().length);
+            }
+            // fall through to default case...
+
+            /*log.debug("Sw:{} packet-in: {}", sw.getStringId(),
+            String.format("0x%x", eth.getEtherType()));*/
+            if (eth.getEtherType() != (short) EthType.LLDP.getValue())
+                log.trace("Sw:{} packet-in: {}", sw.getStringId(), pi);
+
+        default:
+
+            List<IOFMessageListener> listeners = null;
+
+            if (messageListeners.containsKey(m.getType())) {
+                listeners = messageListeners.get(m.getType()).
+                        getOrderedListeners();
+            }
+            FloodlightContext bc = null;
+            if (listeners != null) {
+                // Check if floodlight context is passed from the calling
+                // function, if so use that floodlight context, otherwise
+                // allocate one
+                if (bContext == null) {
+                    bc = flcontext_alloc();
                 } else {
-                    // should have been taken care of earlier in handshake
-                    log.error("OFVersion {} not supported for "
-                            + "packet-in from sw {} .. Ignoring msg",
-                            sw.getOFVersion(), sw.getStringId());
-                    return;
+                    bc = bContext;
+                }
+                if (eth != null) {
+                    IFloodlightProviderService.bcStore.put(bc,
+                            IFloodlightProviderService.CONTEXT_PI_PAYLOAD,
+                            eth);
+                }
+                if (inport != -1) {
+                    bc.getStorage().put(
+                            IFloodlightProviderService.CONTEXT_PI_INPORT,
+                            inport);
                 }
 
-                // decode enclosed ethernet packet to store in floodlight context
-                if (Controller.ALWAYS_DECODE_ETH) {
-                    eth = new Ethernet();
-                    eth.deserialize(pi.getData(), 0,
-                            pi.getData().length);
-                }
-                // fall through to default case...
+                // Get the starting time (overall and per-component) of
+                // the processing chain for this packet if performance
+                // monitoring is turned on
 
-                /*log.debug("Sw:{} packet-in: {}", sw.getStringId(),
-				String.format("0x%x", eth.getEtherType()));*/
-                if (eth.getEtherType() != (short)EthType.LLDP.getValue())
-			log.trace("Sw:{} packet-in: {}", sw.getStringId(), pi);
-
-            default:
-
-                List<IOFMessageListener> listeners = null;
-
-                if (messageListeners.containsKey(m.getType())) {
-                    listeners = messageListeners.get(m.getType()).
-                            getOrderedListeners();
-                }
-                FloodlightContext bc = null;
-                if (listeners != null) {
-                    // Check if floodlight context is passed from the calling
-                    // function, if so use that floodlight context, otherwise
-                    // allocate one
-                    if (bContext == null) {
-                        bc = flcontext_alloc();
-                    } else {
-                        bc = bContext;
-                    }
-                    if (eth != null) {
-                        IFloodlightProviderService.bcStore.put(bc,
-                                IFloodlightProviderService.CONTEXT_PI_PAYLOAD,
-                                eth);
-                    }
-                    if (inport != -1) {
-                        bc.getStorage().put(
-                                IFloodlightProviderService.CONTEXT_PI_INPORT,
-                                inport);
-                    }
-
-                    // Get the starting time (overall and per-component) of
-                    // the processing chain for this packet if performance
-                    // monitoring is turned on
-
-                    Command cmd = null;
-                    for (IOFMessageListener listener : listeners) {
-                        if (listener instanceof IOFSwitchFilter) {
-                            if (!((IOFSwitchFilter) listener).isInterested(sw)) {
-                                continue;
-                            }
-                        }
-
-                        cmd = listener.receive(sw, m, bc);
-
-                        if (Command.STOP.equals(cmd)) {
-                            break;
+                Command cmd = null;
+                for (IOFMessageListener listener : listeners) {
+                    if (listener instanceof IOFSwitchFilter) {
+                        if (!((IOFSwitchFilter) listener).isInterested(sw)) {
+                            continue;
                         }
                     }
 
-                } else {
-                    log.warn("Unhandled OF Message: {} from {}", m, sw);
+                    cmd = listener.receive(sw, m, bc);
+
+                    if (Command.STOP.equals(cmd)) {
+                        break;
+                    }
                 }
 
-                if ((bContext == null) && (bc != null)) flcontext_free(bc);
+            } else {
+                log.warn("Unhandled OF Message: {} from {}", m, sw);
+            }
+
+            if ((bContext == null) && (bc != null))
+                flcontext_free(bc);
         }
     }
 
@@ -737,7 +743,7 @@ public class Controller implements IFloodlightProviderService {
 
     // FIXME: remove this method
     @Override
-    public Map<Long,IOFSwitch> getSwitches() {
+    public Map<Long, IOFSwitch> getSwitches() {
         return getMasterSwitches();
     }
 
@@ -745,7 +751,6 @@ public class Controller implements IFloodlightProviderService {
     public Map<Long, IOFSwitch> getMasterSwitches() {
         return Collections.unmodifiableMap(activeMasterSwitches);
     }
-
 
     @Override
     public Set<Long> getAllSwitchDpids() {
@@ -772,24 +777,26 @@ public class Controller implements IFloodlightProviderService {
     @Override
     public IOFSwitch getSwitch(long dpid) {
         IOFSwitch sw = null;
-        if ((sw = activeMasterSwitches.get(dpid)) != null) return sw;
-        if ((sw = activeEqualSwitches.get(dpid)) != null) return sw;
+        if ((sw = activeMasterSwitches.get(dpid)) != null)
+            return sw;
+        if ((sw = activeEqualSwitches.get(dpid)) != null)
+            return sw;
         return sw;
     }
 
     @Override
     public IOFSwitch getMasterSwitch(long dpid) {
-        return  activeMasterSwitches.get(dpid);
+        return activeMasterSwitches.get(dpid);
     }
 
     @Override
     public IOFSwitch getEqualSwitch(long dpid) {
-        return  activeEqualSwitches.get(dpid);
+        return activeEqualSwitches.get(dpid);
     }
 
     @Override
     public synchronized void addOFMessageListener(OFType type,
-                                                  IOFMessageListener listener) {
+            IOFMessageListener listener) {
         ListenerDispatcher<OFType, IOFMessageListener> ldd =
                 messageListeners.get(type);
         if (ldd == null) {
@@ -801,7 +808,7 @@ public class Controller implements IFloodlightProviderService {
 
     @Override
     public synchronized void removeOFMessageListener(OFType type,
-                                                     IOFMessageListener listener) {
+            IOFMessageListener listener) {
         ListenerDispatcher<OFType, IOFMessageListener> ldd =
                 messageListeners.get(type);
         if (ldd != null) {
@@ -814,10 +821,8 @@ public class Controller implements IFloodlightProviderService {
     }
 
     private void logListeners() {
-        for (Map.Entry<OFType,
-                ListenerDispatcher<OFType,
-                        IOFMessageListener>> entry
-                : messageListeners.entrySet()) {
+        for (Map.Entry<OFType, ListenerDispatcher<OFType, IOFMessageListener>> entry : messageListeners
+                .entrySet()) {
 
             OFType type = entry.getKey();
             ListenerDispatcher<OFType, IOFMessageListener> ldd =
@@ -857,8 +862,8 @@ public class Controller implements IFloodlightProviderService {
     public Map<OFType, List<IOFMessageListener>> getListeners() {
         Map<OFType, List<IOFMessageListener>> lers =
                 new HashMap<OFType, List<IOFMessageListener>>();
-        for (Entry<OFType, ListenerDispatcher<OFType, IOFMessageListener>> e :
-                messageListeners.entrySet()) {
+        for (Entry<OFType, ListenerDispatcher<OFType, IOFMessageListener>> e : messageListeners
+                .entrySet()) {
             lers.put(e.getKey(), e.getValue().getOrderedListeners());
         }
         return Collections.unmodifiableMap(lers);
@@ -905,42 +910,39 @@ public class Controller implements IFloodlightProviderService {
         return true;
     }*/
 
+    // @Override
+    // public boolean injectOfMessage(IOFSwitch sw, OFMessage msg) {
+    // // call the overloaded version with floodlight context set to null
+    // return injectOfMessage(sw, msg, null);
+    // }
 
-
-//    @Override
-//    public boolean injectOfMessage(IOFSwitch sw, OFMessage msg) {
-//        // call the overloaded version with floodlight context set to null
-//        return injectOfMessage(sw, msg, null);
-//    }
-
-//    @Override
-//    public void handleOutgoingMessage(IOFSwitch sw, OFMessage m,
-//                                      FloodlightContext bc) {
-//
-//        List<IOFMessageListener> listeners = null;
-//        if (messageListeners.containsKey(m.getType())) {
-//            listeners =
-//                    messageListeners.get(m.getType()).getOrderedListeners();
-//        }
-//
-//        if (listeners != null) {
-//            for (IOFMessageListener listener : listeners) {
-//                if (listener instanceof IOFSwitchFilter) {
-//                    if (!((IOFSwitchFilter) listener).isInterested(sw)) {
-//                        continue;
-//                    }
-//                }
-//                if (Command.STOP.equals(listener.receive(sw, m, bc))) {
-//                    break;
-//                }
-//            }
-//        }
-//    }
-
+    // @Override
+    // public void handleOutgoingMessage(IOFSwitch sw, OFMessage m,
+    // FloodlightContext bc) {
+    //
+    // List<IOFMessageListener> listeners = null;
+    // if (messageListeners.containsKey(m.getType())) {
+    // listeners =
+    // messageListeners.get(m.getType()).getOrderedListeners();
+    // }
+    //
+    // if (listeners != null) {
+    // for (IOFMessageListener listener : listeners) {
+    // if (listener instanceof IOFSwitchFilter) {
+    // if (!((IOFSwitchFilter) listener).isInterested(sw)) {
+    // continue;
+    // }
+    // }
+    // if (Command.STOP.equals(listener.receive(sw, m, bc))) {
+    // break;
+    // }
+    // }
+    // }
+    // }
 
     /**
      * Gets an OpenFlow message factory for version 1.0.
-     *
+     * 
      * @return an OpenFlow 1.0 message factory
      */
     public OFFactory getOFMessageFactory_10() {
@@ -949,7 +951,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Gets an OpenFlow message factory for version 1.3.
-     *
+     * 
      * @return an OpenFlow 1.3 message factory
      */
     public OFFactory getOFMessageFactory_13() {
@@ -1004,7 +1006,6 @@ public class Controller implements IFloodlightProviderService {
         }
     }
 
-
     // **************
     // Initialization
     // **************
@@ -1013,25 +1014,24 @@ public class Controller implements IFloodlightProviderService {
     // controller roles per switch! Then it could be a way to
     // deterministically configure a switch to a MASTER controller instance
     /**
-     * Sets the initial role based on properties in the config params.
-     * It looks for two different properties.
-     * If the "role" property is specified then the value should be
-     * either "EQUAL", "MASTER", or "SLAVE" and the role of the
-     * controller is set to the specified value. If the "role" property
-     * is not specified then it looks next for the "role.path" property.
-     * In this case the value should be the path to a property file in
-     * the file system that contains a property called "floodlight.role"
-     * which can be one of the values listed above for the "role" property.
-     * The idea behind the "role.path" mechanism is that you have some
-     * separate heartbeat and master controller election algorithm that
-     * determines the role of the controller. When a role transition happens,
-     * it updates the current role in the file specified by the "role.path"
-     * file. Then if floodlight restarts for some reason it can get the
-     * correct current role of the controller from the file.
-     *
+     * Sets the initial role based on properties in the config params. It looks
+     * for two different properties. If the "role" property is specified then
+     * the value should be either "EQUAL", "MASTER", or "SLAVE" and the role of
+     * the controller is set to the specified value. If the "role" property is
+     * not specified then it looks next for the "role.path" property. In this
+     * case the value should be the path to a property file in the file system
+     * that contains a property called "floodlight.role" which can be one of the
+     * values listed above for the "role" property. The idea behind the
+     * "role.path" mechanism is that you have some separate heartbeat and master
+     * controller election algorithm that determines the role of the controller.
+     * When a role transition happens, it updates the current role in the file
+     * specified by the "role.path" file. Then if floodlight restarts for some
+     * reason it can get the correct current role of the controller from the
+     * file.
+     * 
      * @param configParams The config params for the FloodlightProvider service
-     * @return A valid role if role information is specified in the
-     * config params, otherwise null
+     * @return A valid role if role information is specified in the config
+     *         params, otherwise null
      */
     @LogMessageDocs({
             @LogMessageDoc(message = "Controller role set to {role}",
@@ -1089,7 +1089,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Tell controller that we're ready to accept switches loop
-     *
+     * 
      * @throws IOException
      */
     @Override
@@ -1138,7 +1138,7 @@ public class Controller implements IFloodlightProviderService {
                 update.dispatch();
             } catch (InterruptedException e) {
                 log.error("Received interrupted exception in updates loop;" +
-                          "terminating process");
+                        "terminating process");
                 terminate();
             } catch (Exception e) {
                 log.error("Exception in controller updates loop", e);
@@ -1175,7 +1175,8 @@ public class Controller implements IFloodlightProviderService {
         if (controllerId != null) {
             this.onosInstanceId = new OnosInstanceId(controllerId);
         } else {
-            //Try to get the hostname of the machine and use that for controller ID
+            // Try to get the hostname of the machine and use that for
+            // controller ID
             try {
                 String hostname = java.net.InetAddress.getLocalHost().getHostName();
                 this.onosInstanceId = new OnosInstanceId(hostname);
@@ -1187,7 +1188,6 @@ public class Controller implements IFloodlightProviderService {
         log.debug("ControllerId set to {}", this.onosInstanceId);
     }
 
-
     /**
      * Initialize internal data structures
      */
@@ -1196,7 +1196,7 @@ public class Controller implements IFloodlightProviderService {
         // module's startUp() might be called before ours
         this.messageListeners =
                 new ConcurrentHashMap<OFType, ListenerDispatcher<OFType,
-                                                    IOFMessageListener>>();
+                IOFMessageListener>>();
         this.switchListeners = new CopyOnWriteArraySet<IOFSwitchListener>();
         this.activeMasterSwitches = new ConcurrentHashMap<Long, IOFSwitch>();
         this.activeEqualSwitches = new ConcurrentHashMap<Long, IOFSwitch>();
@@ -1221,6 +1221,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Startup all of the controller's components
+     * 
      * @throws FloodlightModuleException
      */
     @LogMessageDoc(message = "Waiting for storage source",
@@ -1241,7 +1242,7 @@ public class Controller implements IFloodlightProviderService {
         // Startup load monitoring
         if (overload_drop) {
             this.loadmonitor.startMonitoring(
-                this.threadPool.getScheduledExecutor());
+                    this.threadPool.getScheduledExecutor());
         }
 
         // register counters and events
@@ -1270,7 +1271,7 @@ public class Controller implements IFloodlightProviderService {
         public IDebugCounter switchActivated;
         public IDebugCounter errorSameSwitchReactivated; // err
         public IDebugCounter switchWithSameDpidActivated; // warn
-        public IDebugCounter newSwitchActivated;   // new switch
+        public IDebugCounter newSwitchActivated; // new switch
         public IDebugCounter syncedSwitchActivated;
         public IDebugCounter readyForReconcile;
         public IDebugCounter newSwitchFromStore;
@@ -1285,7 +1286,9 @@ public class Controller implements IFloodlightProviderService {
         public IDebugCounter switchPortChanged;
         public IDebugCounter switchOtherChange;
         public IDebugCounter dispatchMessageWhileSlave;
-        public IDebugCounter dispatchMessage;  // does this cnt make sense? more specific?? per type? count stops?
+        public IDebugCounter dispatchMessage; // does this cnt make sense? more
+                                              // specific?? per type? count
+                                              // stops?
         public IDebugCounter controllerNodeIpsChanged;
         public IDebugCounter messageReceived;
         public IDebugCounter messageInputThrottled;
@@ -1310,400 +1313,402 @@ public class Controller implements IFloodlightProviderService {
 
         void createCounters(IDebugCounterService debugCounters) throws CounterException {
             setRoleEqual =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "set-role-equal",
-                            "Controller received a role request with role of "+
-                            "EQUAL which is unusual",
+                            "Controller received a role request with role of " +
+                                    "EQUAL which is unusual",
                             CounterType.ALWAYS_COUNT);
             setSameRole =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "set-same-role",
                             "Controller received a role request for the same " +
-                            "role the controller already had",
+                                    "role the controller already had",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             setRoleMaster =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "set-role-master",
                             "Controller received a role request with role of " +
-                            "MASTER. This counter can be at most 1.",
+                                    "MASTER. This counter can be at most 1.",
                             CounterType.ALWAYS_COUNT);
 
             remoteStoreNotification =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "remote-store-notification",
                             "Received a notification from the sync service " +
-                            "indicating that switch information has changed",
+                                    "indicating that switch information has changed",
                             CounterType.ALWAYS_COUNT);
 
             invalidPortsChanged =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "invalid-ports-changed",
                             "Received an unexpected ports changed " +
-                            "notification while the controller was in " +
-                            "SLAVE role.",
+                                    "notification while the controller was in " +
+                                    "SLAVE role.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             invalidSwitchActivatedWhileSlave =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "invalid-switch-activated-while-slave",
                             "Received an unexpected switchActivated " +
-                            "notification while the controller was in " +
-                            "SLAVE role.",
+                                    "notification while the controller was in " +
+                                    "SLAVE role.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             invalidStoreEventWhileMaster =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "invalid-store-event-while-master",
                             "Received an unexpected notification from " +
-                            "the sync store while the controller was in " +
-                            "MASTER role.",
+                                    "the sync store while the controller was in " +
+                                    "MASTER role.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             switchDisconnectedWhileSlave =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-disconnected-while-slave",
                             "A switch disconnected and the controller was " +
-                            "in SLAVE role.",
+                                    "in SLAVE role.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             switchActivated =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-activated",
                             "A switch connected to this controller is now " +
-                            "in MASTER role",
+                                    "in MASTER role",
                             CounterType.ALWAYS_COUNT);
 
             errorSameSwitchReactivated = // err
-                debugCounters.registerCounter(
-                            prefix, "error-same-switch-reactivated",
-                            "A switch that was already in active state " +
+            debugCounters.registerCounter(
+                    prefix, "error-same-switch-reactivated",
+                    "A switch that was already in active state " +
                             "was activated again. This indicates a " +
                             "controller defect",
-                            CounterType.ALWAYS_COUNT,
-                            IDebugCounterService.CTR_MDATA_ERROR);
+                    CounterType.ALWAYS_COUNT,
+                    IDebugCounterService.CTR_MDATA_ERROR);
 
             switchWithSameDpidActivated = // warn
-                debugCounters.registerCounter(
-                            prefix, "switch-with-same-dpid-activated",
-                            "A switch with the same DPID as another switch " +
+            debugCounters.registerCounter(
+                    prefix, "switch-with-same-dpid-activated",
+                    "A switch with the same DPID as another switch " +
                             "connected to the controller. This can be " +
                             "caused by multiple switches configured with " +
                             "the same DPID or by a switch reconnecting very " +
                             "quickly.",
-                            CounterType.COUNT_ON_DEMAND,
-                            IDebugCounterService.CTR_MDATA_WARN);
+                    CounterType.COUNT_ON_DEMAND,
+                    IDebugCounterService.CTR_MDATA_WARN);
 
-            newSwitchActivated =   // new switch
-                debugCounters.registerCounter(
-                            prefix, "new-switch-activated",
-                            "A new switch has completed the handshake as " +
+            newSwitchActivated = // new switch
+            debugCounters.registerCounter(
+                    prefix, "new-switch-activated",
+                    "A new switch has completed the handshake as " +
                             "MASTER. The switch was not known to any other " +
                             "controller in the cluster",
-                            CounterType.ALWAYS_COUNT);
+                    CounterType.ALWAYS_COUNT);
             syncedSwitchActivated =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "synced-switch-activated",
                             "A switch has completed the handshake as " +
-                            "MASTER. The switch was known to another " +
-                            "controller in the cluster",
+                                    "MASTER. The switch was known to another " +
+                                    "controller in the cluster",
                             CounterType.ALWAYS_COUNT);
 
             readyForReconcile =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "ready-for-reconcile",
                             "Controller is ready for flow reconciliation " +
-                            "after Slave to Master transition. Either all " +
-                            "previously known switches are now active " +
-                            "or they have timed out and have been removed." +
-                            "This counter will be 0 or 1.",
+                                    "after Slave to Master transition. Either all " +
+                                    "previously known switches are now active " +
+                                    "or they have timed out and have been removed." +
+                                    "This counter will be 0 or 1.",
                             CounterType.ALWAYS_COUNT);
 
             newSwitchFromStore =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "new-switch-from-store",
                             "A new switch has connected to another " +
-                            "another controller in the cluster. This " +
-                            "controller instance has received a sync store " +
-                            "notification for it.",
+                                    "another controller in the cluster. This " +
+                                    "controller instance has received a sync store " +
+                                    "notification for it.",
                             CounterType.ALWAYS_COUNT);
 
             updatedSwitchFromStore =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "updated-switch-from-store",
                             "Information about a switch connected to " +
-                            "another controller instance was updated in " +
-                            "the sync store. This controller instance has " +
-                            "received a notification for it",
+                                    "another controller instance was updated in " +
+                                    "the sync store. This controller instance has " +
+                                    "received a notification for it",
                             CounterType.ALWAYS_COUNT);
 
             switchDisconnected =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-disconnected",
                             "FIXME: switch has disconnected",
                             CounterType.ALWAYS_COUNT);
 
             syncedSwitchRemoved =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "synced-switch-removed",
                             "A switch connected to another controller " +
-                            "instance has disconnected from the controller " +
-                            "cluster. This controller instance has " +
-                            "received a notification for it",
+                                    "instance has disconnected from the controller " +
+                                    "cluster. This controller instance has " +
+                                    "received a notification for it",
                             CounterType.ALWAYS_COUNT);
 
             unknownSwitchRemovedFromStore =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "unknown-switch-removed-from-store",
                             "This controller instances has received a sync " +
-                            "store notification that a switch has " +
-                            "disconnected but this controller instance " +
-                            "did not have the any information about the " +
-                            "switch", // might be less than warning
+                                    "store notification that a switch has " +
+                                    "disconnected but this controller instance " +
+                                    "did not have the any information about the " +
+                                    "switch", // might be less than warning
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             consolidateStoreRunCount =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "consolidate-store-run-count",
                             "This controller has transitioned from SLAVE " +
-                            "to MASTER and waited for switches to reconnect. " +
-                            "The controller has finished waiting and has " +
-                            "reconciled switch entries in the sync store " +
-                            "with live state",
+                                    "to MASTER and waited for switches to reconnect. " +
+                                    "The controller has finished waiting and has " +
+                                    "reconciled switch entries in the sync store " +
+                                    "with live state",
                             CounterType.ALWAYS_COUNT);
 
             consolidateStoreInconsistencies =
                     debugCounters.registerCounter(
-                                prefix, "consolidate-store-inconsistencies",
-                                "During switch sync store consolidation: " +
-                                "Number of switches that were in the store " +
-                                "but not otherwise known plus number of " +
-                                "switches that were in the store previously " +
-                                "but are now missing plus number of "  +
-                                "connected switches that were absent from " +
-                                "the store although this controller has " +
-                                "written them. A non-zero count " +
-                                "indicates a brief split-brain dual MASTER " +
-                                "situation during fail-over",
-                                CounterType.ALWAYS_COUNT);
+                            prefix, "consolidate-store-inconsistencies",
+                            "During switch sync store consolidation: " +
+                                    "Number of switches that were in the store " +
+                                    "but not otherwise known plus number of " +
+                                    "switches that were in the store previously " +
+                                    "but are now missing plus number of " +
+                                    "connected switches that were absent from " +
+                                    "the store although this controller has " +
+                                    "written them. A non-zero count " +
+                                    "indicates a brief split-brain dual MASTER " +
+                                    "situation during fail-over",
+                            CounterType.ALWAYS_COUNT);
 
             storeSyncError =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "store-sync-error",
                             "Number of times a sync store operation failed " +
-                            "due to a store sync exception or an entry in " +
-                            "in the store had invalid data.",
+                                    "due to a store sync exception or an entry in " +
+                                    "in the store had invalid data.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_ERROR);
 
             switchesNotReconnectingToNewMaster =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switches-not-reconnecting-to-new-master",
                             "Switches that were connected to another " +
-                            "controller instance in the cluster but that " +
-                            "did not reconnect to this controller after it " +
-                            "transitioned to MASTER", // might be less than warning
+                                    "controller instance in the cluster but that " +
+                                    "did not reconnect to this controller after it " +
+                                    "transitioned to MASTER", // might be less
+                                                              // than warning
                             CounterType.ALWAYS_COUNT);
 
             switchPortChanged =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-port-changed",
                             "Number of times switch ports have changed",
                             CounterType.ALWAYS_COUNT);
             switchOtherChange =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-other-change",
                             "Number of times other information of a switch " +
-                            "has changed.",
+                                    "has changed.",
                             CounterType.ALWAYS_COUNT);
 
             dispatchMessageWhileSlave =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "dispatch-message-while-slave",
                             "Number of times an OF message was received " +
-                            "and supposed to be dispatched but the " +
-                            "controller was in SLAVE role and the message " +
-                            "was not dispatched",
+                                    "and supposed to be dispatched but the " +
+                                    "controller was in SLAVE role and the message " +
+                                    "was not dispatched",
                             CounterType.ALWAYS_COUNT);
 
-            dispatchMessage =  // does this cnt make sense? more specific?? per type? count stops?
-                debugCounters.registerCounter(
-                            prefix, "dispatch-message",
-                            "Number of times an OF message was dispatched " +
+            dispatchMessage = // does this cnt make sense? more specific?? per
+                              // type? count stops?
+            debugCounters.registerCounter(
+                    prefix, "dispatch-message",
+                    "Number of times an OF message was dispatched " +
                             "to registered modules",
-                            CounterType.ALWAYS_COUNT);
+                    CounterType.ALWAYS_COUNT);
 
             controllerNodeIpsChanged =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "controller-nodes-ips-changed",
                             "IP addresses of controller nodes have changed",
                             CounterType.ALWAYS_COUNT);
 
-        //------------------------
-        // channel handler counters. Factor them out ??
+            // ------------------------
+            // channel handler counters. Factor them out ??
             messageReceived =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "message-received",
                             "Number of OpenFlow messages received. Some of " +
-                            "these might be throttled",
+                                    "these might be throttled",
                             CounterType.ALWAYS_COUNT);
             messageInputThrottled =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "message-input-throttled",
                             "Number of OpenFlow messages that were " +
-                            "throttled due to high load from the sender",
+                                    "throttled due to high load from the sender",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
-        // TODO: more counters in messageReceived ??
+            // TODO: more counters in messageReceived ??
 
             switchDisconnectReadTimeout =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-disconnect-read-timeout",
                             "Number of times a switch was disconnected due " +
-                            "due the switch failing to send OpenFlow " +
-                            "messages or responding to OpenFlow ECHOs",
+                                    "due the switch failing to send OpenFlow " +
+                                    "messages or responding to OpenFlow ECHOs",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_ERROR);
             switchDisconnectHandshakeTimeout =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-disconnect-handshake-timeout",
                             "Number of times a switch was disconnected " +
-                            "because it failed to complete the handshake " +
-                            "in time.",
+                                    "because it failed to complete the handshake " +
+                                    "in time.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_ERROR);
             switchDisconnectIOError =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-disconnect-io-error",
                             "Number of times a switch was disconnected " +
-                            "due to IO errors on the switch connection.",
+                                    "due to IO errors on the switch connection.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_ERROR);
             switchDisconnectParseError =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-disconnect-parse-error",
-                           "Number of times a switch was disconnected " +
-                           "because it sent an invalid packet that could " +
-                           "not be parsed",
-                           CounterType.ALWAYS_COUNT,
-                           IDebugCounterService.CTR_MDATA_ERROR);
+                            "Number of times a switch was disconnected " +
+                                    "because it sent an invalid packet that could " +
+                                    "not be parsed",
+                            CounterType.ALWAYS_COUNT,
+                            IDebugCounterService.CTR_MDATA_ERROR);
 
             switchDisconnectSwitchStateException =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-disconnect-switch-state-exception",
                             "Number of times a switch was disconnected " +
-                            "because it sent messages that were invalid " +
-                            "given the switch connection's state.",
+                                    "because it sent messages that were invalid " +
+                                    "given the switch connection's state.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_ERROR);
             rejectedExecutionException =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "rejected-execution-exception",
                             "TODO",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_ERROR);
 
             switchDisconnectOtherException =
-                debugCounters.registerCounter(
-                            prefix,  "switch-disconnect-other-exception",
+                    debugCounters.registerCounter(
+                            prefix, "switch-disconnect-other-exception",
                             "Number of times a switch was disconnected " +
-                            "due to an exceptional situation not covered " +
-                            "by other counters",
+                                    "due to an exceptional situation not covered " +
+                                    "by other counters",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_ERROR);
 
             switchConnected =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "switch-connected",
                             "Number of times a new switch connection was " +
-                            "established",
+                                    "established",
                             CounterType.ALWAYS_COUNT);
 
             unhandledMessage =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "unhandled-message",
                             "Number of times an OpenFlow message was " +
-                            "received that the controller ignored because " +
-                            "it was inapproriate given the switch " +
-                            "connection's state.",
+                                    "received that the controller ignored because " +
+                                    "it was inapproriate given the switch " +
+                                    "connection's state.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
-                            // might be less than warning
+            // might be less than warning
 
             packetInWhileSwitchIsSlave =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "packet-in-while-switch-is-slave",
                             "Number of times a packet in was received " +
-                            "from a switch that was in SLAVE role. " +
-                            "Possibly inidicates inconsistent roles.",
+                                    "from a switch that was in SLAVE role. " +
+                                    "Possibly inidicates inconsistent roles.",
                             CounterType.ALWAYS_COUNT);
             epermErrorWhileSwitchIsMaster =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "eperm-error-while-switch-is-master",
                             "Number of times a permission error was " +
-                            "received while the switch was in MASTER role. " +
-                            "Possibly inidicates inconsistent roles.",
+                                    "received while the switch was in MASTER role. " +
+                                    "Possibly inidicates inconsistent roles.",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             roleNotResentBecauseRolePending =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "role-not-resent-because-role-pending",
                             "The controller tried to reestablish a role " +
-                            "with a switch but did not do so because a " +
-                            "previous role request was still pending",
+                                    "with a switch but did not do so because a " +
+                                    "previous role request was still pending",
                             CounterType.ALWAYS_COUNT);
             roleRequestSent =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "role-request-sent",
                             "Number of times the controller sent a role " +
-                            "request to a switch.",
+                                    "request to a switch.",
                             CounterType.ALWAYS_COUNT);
             roleReplyTimeout =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "role-reply-timeout",
                             "Number of times a role request message did not " +
-                            "receive the expected reply from a switch",
+                                    "receive the expected reply from a switch",
                             CounterType.ALWAYS_COUNT,
                             IDebugCounterService.CTR_MDATA_WARN);
 
             roleReplyReceived = // expected RoleReply received
-                debugCounters.registerCounter(
-                            prefix, "role-reply-received",
-                            "Number of times the controller received the " +
+            debugCounters.registerCounter(
+                    prefix, "role-reply-received",
+                    "Number of times the controller received the " +
                             "expected role reply message from a switch",
-                            CounterType.ALWAYS_COUNT);
+                    CounterType.ALWAYS_COUNT);
 
             roleReplyErrorUnsupported =
-                debugCounters.registerCounter(
+                    debugCounters.registerCounter(
                             prefix, "role-reply-error-unsupported",
                             "Number of times the controller received an " +
-                            "error from a switch in response to a role " +
-                            "request indicating that the switch does not " +
-                            "support roles.",
+                                    "error from a switch in response to a role " +
+                                    "request indicating that the switch does not " +
+                                    "support roles.",
                             CounterType.ALWAYS_COUNT);
 
             switchCounterRegistrationFailed =
                     debugCounters.registerCounter(prefix,
-                                "switch-counter-registration-failed",
-                                "Number of times the controller failed to " +
-                                "register per-switch debug counters",
-                                CounterType.ALWAYS_COUNT,
-                                IDebugCounterService.CTR_MDATA_WARN);
+                            "switch-counter-registration-failed",
+                            "Number of times the controller failed to " +
+                                    "register per-switch debug counters",
+                            CounterType.ALWAYS_COUNT,
+                            IDebugCounterService.CTR_MDATA_WARN);
 
             packetParsingError =
                     debugCounters.registerCounter(prefix,
-                                "packet-parsing-error",
-                                "Number of times the packet parsing " +
-                                "encountered an error",
-                                CounterType.ALWAYS_COUNT,
-                                IDebugCounterService.CTR_MDATA_ERROR);
+                            "packet-parsing-error",
+                            "Number of times the packet parsing " +
+                                    "encountered an error",
+                            CounterType.ALWAYS_COUNT,
+                            IDebugCounterService.CTR_MDATA_ERROR);
         }
     }
 
@@ -1722,9 +1727,9 @@ public class Controller implements IFloodlightProviderService {
         }
         try {
             evSwitch = debugEvents.registerEvent(
-                               Counters.prefix, "switchevent",
-                               "Switch connected, disconnected or port changed",
-                               EventType.ALWAYS_LOG, SwitchEvent.class, 100);
+                    Counters.prefix, "switchevent",
+                    "Switch connected, disconnected or port changed",
+                    EventType.ALWAYS_LOG, SwitchEvent.class, 100);
         } catch (MaxEventsRegistered e) {
             throw new FloodlightModuleException("Max events registered", e);
         }
@@ -1749,7 +1754,7 @@ public class Controller implements IFloodlightProviderService {
 
     @Override
     public void setAlwaysClearFlowsOnSwActivate(boolean value) {
-        //this.alwaysClearFlowsOnSwActivate = value;
+        // this.alwaysClearFlowsOnSwActivate = value;
         // XXX S need to be a little more careful about this
     }
 
@@ -1770,6 +1775,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Forward to the driver-manager to get an IOFSwitch instance.
+     * 
      * @param desc
      * @return
      */
@@ -1782,16 +1788,17 @@ public class Controller implements IFloodlightProviderService {
     }
 
     /**
-     * Part of the controller updates framework (see 'run()' method)
-     * Use this method to add an IUpdate. A thread-pool will serve the update
-     * by dispatching it to all listeners for that update.
+     * Part of the controller updates framework (see 'run()' method) Use this
+     * method to add an IUpdate. A thread-pool will serve the update by
+     * dispatching it to all listeners for that update.
+     * 
      * @param update
      */
-    @LogMessageDoc(level="WARN",
-            message="Failure adding update {} to queue",
-            explanation="The controller tried to add an internal notification" +
-                        " to its message queue but the add failed.",
-            recommendation=LogMessageDoc.REPORT_CONTROLLER_BUG)
+    @LogMessageDoc(level = "WARN",
+            message = "Failure adding update {} to queue",
+            explanation = "The controller tried to add an internal notification" +
+                    " to its message queue but the add failed.",
+            recommendation = LogMessageDoc.REPORT_CONTROLLER_BUG)
     private void addUpdateToQueue(IUpdate update) {
         try {
             this.updates.put(update);
@@ -1810,7 +1817,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * flcontext_free - Free the context to the current thread
-     *
+     * 
      * @param flcontext
      */
     protected void flcontext_free(FloodlightContext flcontext) {
@@ -1824,7 +1831,6 @@ public class Controller implements IFloodlightProviderService {
         log.info("Calling System.exit");
         System.exit(1);
     }
-
 
     // ***************
     // Floodlight context related
@@ -1842,8 +1848,9 @@ public class Controller implements IFloodlightProviderService {
             };
 
     /**
-     * flcontext_alloc - pop a context off the stack, if required create a new one
-     *
+     * flcontext_alloc - pop a context off the stack, if required create a new
+     * one
+     * 
      * @return FloodlightContext
      */
     protected static FloodlightContext flcontext_alloc() {
@@ -1857,6 +1864,5 @@ public class Controller implements IFloodlightProviderService {
 
         return flcontext;
     }
-
 
 }
