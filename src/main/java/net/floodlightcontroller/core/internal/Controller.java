@@ -174,7 +174,7 @@ public class Controller implements IFloodlightProviderService {
      * Switch updates are sent to all IOFSwitchListeners. A switch that is
      * connected to this controller instance, but not activated, is not
      * available for updates.
-     * 
+     *
      * In ONOS, each controller instance can simultaneously serve in a MASTER
      * role for some connected switches, and in a EQUAL role for other connected
      * switches. The EQUAL role can be treated as a SLAVE role, by ensuring that
@@ -183,10 +183,10 @@ public class Controller implements IFloodlightProviderService {
      * are announced as updates. We also support announcements of controller
      * role transitions from MASTER --> EQUAL, and EQUAL --> MASTER, for an
      * individual switch.
-     * 
+     *
      * Disconnection of only activated switches are announced. Finally, changes
      * to switch ports are announced with a portChangeType (see @IOFSwitch)
-     * 
+     *
      * @author saurav
      */
     public enum SwitchUpdateType {
@@ -447,7 +447,7 @@ public class Controller implements IFloodlightProviderService {
     /**
      * Indicates that ports on the given switch have changed. Enqueue a switch
      * update.
-     * 
+     *
      * @param sw
      */
     protected void notifyPortChanged(long dpid, OFPortDesc port,
@@ -600,16 +600,16 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Handle and dispatch a message to IOFMessageListeners.
-     * 
+     *
      * We only dispatch messages to listeners if the controller's role is
      * MASTER.
-     * 
+     *
      * @param sw The switch sending the message
      * @param m The message the switch sent
      * @param flContext The floodlight context to use for this message. If null,
      *        a new context will be allocated.
      * @throws IOException
-     * 
+     *
      *         FIXME: this method and the ChannelHandler disagree on which
      *         messages should be dispatched and which shouldn't
      */
@@ -942,7 +942,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Gets an OpenFlow message factory for version 1.0.
-     * 
+     *
      * @return an OpenFlow 1.0 message factory
      */
     public OFFactory getOFMessageFactory_10() {
@@ -951,7 +951,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Gets an OpenFlow message factory for version 1.3.
-     * 
+     *
      * @return an OpenFlow 1.3 message factory
      */
     public OFFactory getOFMessageFactory_13() {
@@ -1028,7 +1028,7 @@ public class Controller implements IFloodlightProviderService {
      * specified by the "role.path" file. Then if floodlight restarts for some
      * reason it can get the correct current role of the controller from the
      * file.
-     * 
+     *
      * @param configParams The config params for the FloodlightProvider service
      * @return A valid role if role information is specified in the config
      *         params, otherwise null
@@ -1089,7 +1089,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Tell controller that we're ready to accept switches loop
-     * 
+     *
      * @throws IOException
      */
     @Override
@@ -1217,11 +1217,19 @@ public class Controller implements IFloodlightProviderService {
             this.setAlwaysClearFlowsOnSwActivate(false);
             log.info("Flush switches on reconnect -- Disabled");
         }
+
+        option = configParams.get("cpqdUsePipeline13");
+        if (option != null && option.equalsIgnoreCase("true")) {
+            DriverManager.setConfigForCpqd(true);
+            log.info("Using OF1.3 pipeline for the CPqD software switch");
+        } else {
+            log.info("Using OF1.0 pipeline for the CPqD software switch");
+        }
     }
 
     /**
      * Startup all of the controller's components
-     * 
+     *
      * @throws FloodlightModuleException
      */
     @LogMessageDoc(message = "Waiting for storage source",
@@ -1775,7 +1783,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * Forward to the driver-manager to get an IOFSwitch instance.
-     * 
+     *
      * @param desc
      * @return
      */
@@ -1791,7 +1799,7 @@ public class Controller implements IFloodlightProviderService {
      * Part of the controller updates framework (see 'run()' method) Use this
      * method to add an IUpdate. A thread-pool will serve the update by
      * dispatching it to all listeners for that update.
-     * 
+     *
      * @param update
      */
     @LogMessageDoc(level = "WARN",
@@ -1817,7 +1825,7 @@ public class Controller implements IFloodlightProviderService {
 
     /**
      * flcontext_free - Free the context to the current thread
-     * 
+     *
      * @param flcontext
      */
     protected void flcontext_free(FloodlightContext flcontext) {
@@ -1850,7 +1858,7 @@ public class Controller implements IFloodlightProviderService {
     /**
      * flcontext_alloc - pop a context off the stack, if required create a new
      * one
-     * 
+     *
      * @return FloodlightContext
      */
     protected static FloodlightContext flcontext_alloc() {

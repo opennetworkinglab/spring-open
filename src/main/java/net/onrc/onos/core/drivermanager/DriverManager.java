@@ -16,6 +16,10 @@ public final class DriverManager {
 
     private static final Logger log = LoggerFactory.getLogger(DriverManager.class);
 
+    // Whether to use an OF 1.3 configured TTP, or to use an OF 1.0-style
+    // single table with packet-ins.
+    private static boolean cpqdUsePipeline13 = false;
+
     /**
      * Return an IOFSwitch object based on switch's manufacturer description
      * from OFDescStatsReply.
@@ -30,7 +34,7 @@ public final class DriverManager {
         if (vendor.startsWith("Stanford University, Ericsson Research and CPqD Research")
                 &&
                 hw.startsWith("OpenFlow 1.3 Reference Userspace Switch")) {
-            return new OFSwitchImplCPqD13(desc);
+            return new OFSwitchImplCPqD13(desc, cpqdUsePipeline13);
         }
 
         if (vendor.startsWith("Nicira") &&
@@ -54,5 +58,17 @@ public final class DriverManager {
      * Private constructor to avoid instantiation.
      */
     private DriverManager() {
+    }
+
+    /**
+     * Sets the configuration parameter which determines how the CPqD switch
+     * is set up. If usePipeline13 is true, a 1.3 pipeline will be set up on
+     * the switch. Otherwise, the switch will be set up in a 1.0 style with
+     * a single table where missed packets are sent to the controller.
+     *
+     * @param usePipeline13 whether to use a 1.3 pipeline or not
+     */
+    public static void setConfigForCpqd(boolean usePipeline13) {
+        cpqdUsePipeline13 = usePipeline13;
     }
 }

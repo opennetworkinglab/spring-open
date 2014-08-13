@@ -93,12 +93,15 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
 
     ConcurrentHashMap<Integer, OFGroup> l2groups;
 
-    public OFSwitchImplCPqD13(OFDescStatsReply desc) {
+    private final boolean usePipeline13;
+
+    public OFSwitchImplCPqD13(OFDescStatsReply desc, boolean usePipeline13) {
         super();
         driverHandshakeComplete = new AtomicBoolean(false);
         l2groups = new ConcurrentHashMap<Integer, OFGroup>();
         setSwitchDescription(desc);
 
+        this.usePipeline13 = usePipeline13;
     }
 
     /* (non-Javadoc)
@@ -119,7 +122,12 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         }
         startDriverHandshakeCalled = true;
         factory = getFactory();
-        // configureSwitch();
+        if (!usePipeline13) {
+            // Send packet-in to controller if a packet misses the first table
+            populateTableMissEntry(0, true, false, false, 0);
+        } //else {
+            // configureSwitch();
+        //}
         sendBarrier(true);
     }
 
