@@ -48,6 +48,7 @@ import org.projectfloodlight.openflow.protocol.match.Match;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.U64;
+import org.projectfloodlight.openflow.util.HexString;
 
 
 @Category(IntegrationTest.class)
@@ -69,12 +70,9 @@ public class FlowPusherTest {
 
         OFMessage msg = createMock(OFMessage.class);
         expect(msg.getXid()).andReturn((long) 1).anyTimes();
-        //EasyMock.expect(msg.()).andReturn((short) 100).anyTimes();
         replay(msg);
 
-        IOFSwitch sw = createConnectedSwitchMock(1, false);
-
-
+        IOFSwitch sw = createConnectedSwitchMock(1);
 
         try {
             sw.write(eq(msg), eq((FloodlightContext) null));
@@ -113,7 +111,7 @@ public class FlowPusherTest {
 
         beginInitMock();
 
-        IOFSwitch sw = createConnectedSwitchMock(1, false);
+        IOFSwitch sw = createConnectedSwitchMock(1);
 
 
         List<OFMessage> messages = new ArrayList<OFMessage>();
@@ -168,7 +166,7 @@ public class FlowPusherTest {
 
         Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
         for (int i = 0; i < numSwitch; ++i) {
-            IOFSwitch sw = createConnectedSwitchMock(i, false);
+            IOFSwitch sw = createConnectedSwitchMock(i);
 
             List<OFMessage> messages = new ArrayList<OFMessage>();
 
@@ -230,7 +228,7 @@ public class FlowPusherTest {
 
         Map<IOFSwitch, List<OFMessage>> swMap = new HashMap<IOFSwitch, List<OFMessage>>();
         for (int i = 0; i < numThreads; ++i) {
-            IOFSwitch sw = createConnectedSwitchMock(i, false);
+            IOFSwitch sw = createConnectedSwitchMock(i);
             //EasyMock.replay(sw);
 
             List<OFMessage> messages = new ArrayList<OFMessage>();
@@ -299,9 +297,7 @@ public class FlowPusherTest {
 
         beginInitMock();
 
-        IOFSwitch sw = createConnectedSwitchMock(1, true);
-        expect(sw.getOFVersion()).andReturn(OFVersion.OF_10).once();
-
+        IOFSwitch sw = createConnectedSwitchMock(1);
 
         List<OFMessage> messages = new ArrayList<OFMessage>();
 
@@ -370,7 +366,7 @@ public class FlowPusherTest {
     public void testBarrierMessage() {
         beginInitMock();
 
-        IOFSwitch sw = createConnectedSwitchMock(1, true);
+        IOFSwitch sw = createConnectedSwitchMock(1);
         expect(sw.getOFVersion()).andReturn(OFVersion.OF_10).once();
 
         try {
@@ -440,12 +436,7 @@ public class FlowPusherTest {
         expect(fm.getXid()).andReturn(XID_TO_VERIFY).anyTimes();
         expect(fm.getType()).andReturn(OFType.FLOW_MOD).anyTimes();
 
-
-
-
-        IOFSwitch sw = createConnectedSwitchMock(DPID_TO_VERIFY, false);
-        expect(sw.getStringId()).andReturn("1").anyTimes();
-        expect(sw.getOFVersion()).andReturn(OFVersion.OF_10).once();
+        IOFSwitch sw = createConnectedSwitchMock(DPID_TO_VERIFY);
 
         try {
             sw.write(anyObject(OFMessage.class), eq((FloodlightContext) null));
@@ -520,29 +511,19 @@ public class FlowPusherTest {
         pusher.start();
     }
 
-    private IOFSwitch createConnectedSwitchMock(long dpid, boolean useBarrier) {
+    private IOFSwitch createConnectedSwitchMock(long dpid) {
         IOFSwitch sw = createMock(IOFSwitch.class);
         expect(sw.isConnected()).andReturn(true).anyTimes();
         expect(sw.getId()).andReturn(dpid).anyTimes();
+        expect(sw.getStringId()).andReturn(HexString.toHexString(dpid))
+                .anyTimes();
+        expect(sw.getNextTransactionId()).andReturn(1).times(0, 1);
+        // TODO 1.3ize
+        expect(sw.getFactory()).andReturn(factory10).anyTimes();
         sw.flush();
         expectLastCall().anyTimes();
-        if (useBarrier) {
-            prepareBarrier(sw);
-        }
 
         return sw;
-    }
-
-    private void prepareBarrier(IOFSwitch sw) {
-        OFBarrierRequest.Builder bld = createMock(factory10.buildBarrierRequest().getClass());
-        expect(bld.setXid(anyInt())).andReturn(bld);
-        expect(bld.getXid()).andReturn((long) 1).anyTimes();
-        expect(bld.getType()).andReturn(OFType.BARRIER_REQUEST).anyTimes();
-
-        OFBarrierRequest req = createMock(OFBarrierRequest.class);
-        expect(bld.build()).andReturn(req).anyTimes();
-        replay(bld);
-        expect(sw.getNextTransactionId()).andReturn(1);
     }
 
 }
