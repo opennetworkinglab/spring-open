@@ -1,12 +1,12 @@
 package net.onrc.onos.core.flowmanager;
 
 import java.util.Collection;
-import java.util.EventListener;
 
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
+import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
 import net.onrc.onos.api.flowmanager.FlowId;
-import net.onrc.onos.api.flowmanager.Flow;
+import net.onrc.onos.api.flowmanager.FlowManagerListener;
 import net.onrc.onos.api.flowmanager.FlowManagerService;
 
 /**
@@ -73,13 +73,13 @@ public class FlowManagerModule implements FlowManagerService {
     }
 
     @Override
-    public void addEventListener(EventListener listener) {
+    public void addListener(FlowManagerListener listener) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void removeEventListener(EventListener listener) {
+    public void removeListener(FlowManagerListener listener) {
         // TODO Auto-generated method stub
 
     }

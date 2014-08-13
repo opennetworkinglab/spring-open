@@ -1,7 +1,6 @@
 package net.onrc.onos.api.flowmanager;
 
 import java.util.Collection;
-import java.util.EventListener;
 
 /**
  * An interface class for flow manager. The role of the flow manager is to
@@ -71,14 +70,14 @@ public interface FlowManagerService {
     /**
      * Adds event listener to this service.
      *
-     * @param listener EventListener to be added
+     * @param listener the listener to be added
      */
-    void addEventListener(EventListener listener);
+    void addListener(FlowManagerListener listener);
 
     /**
      * Removes event listener from this service.
      *
-     * @param listener EventListener to be removed
+     * @param listener the listener to be removed
      */
-    void removeEventListener(EventListener listener);
+    void removeListener(FlowManagerListener listener);
 }
