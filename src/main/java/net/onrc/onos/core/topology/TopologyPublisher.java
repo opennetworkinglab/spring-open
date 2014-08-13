@@ -300,8 +300,14 @@ public class TopologyPublisher implements IOFSwitchListener,
         case DELETE:
             switchPortRemoved(swId, port);
             break;
-        case DOWN:
         case UP:
+            // NOTE: Currently, we treat Port UP/DOWN same as Port ADD/DELETE
+            switchPortAdded(swId, port);
+            break;
+        case DOWN:
+            // NOTE: Currently, we treat Port UP/DOWN same as Port ADD/DELETE
+            switchPortRemoved(swId, port);
+            break;
         case OTHER_UPDATE:
         default:
             // XXX S what is the right set of port change handlers?
