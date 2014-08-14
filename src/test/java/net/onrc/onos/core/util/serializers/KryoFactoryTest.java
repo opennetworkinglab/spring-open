@@ -12,6 +12,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.HostEvent;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.topology.TopologyBatchOperation;
 import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
@@ -247,6 +248,31 @@ public class KryoFactoryTest {
             results.add(result);
             // update me if serialized form is expected to change
             assertEquals(21, result.size);
+        }
+
+        { // CHECKSTYLE IGNORE THIS LINE
+            TopologyBatchOperation tbo = new TopologyBatchOperation();
+            OnosInstanceId onosInstanceId =
+                new OnosInstanceId(ONOS_INSTANCE_NAME);
+
+            // using the back door to access package-scoped constructor
+            Constructor<TopologyEvent> swConst
+                = TopologyEvent.class.getDeclaredConstructor(SwitchEvent.class,
+                        OnosInstanceId.class);
+            swConst.setAccessible(true);
+
+            for (int i = 1; i <= 10; i++) {
+                Dpid dpid = new Dpid(i);
+                SwitchEvent switchEvent = new SwitchEvent(dpid);
+                TopologyEvent topologyEvent =
+                    swConst.newInstance(switchEvent, onosInstanceId);
+                tbo.addAddTopologyOperation(topologyEvent);
+            }
+
+            Result result = benchType(tbo, EqualityCheck.EQUALS);
+            results.add(result);
+            // update me if serialized form is expected to change
+            assertEquals(215, result.size);
         }
 
         // TODO Add registered classes we still use.

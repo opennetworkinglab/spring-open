@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 import net.onrc.onos.apps.proxyarp.ArpCacheNotification;
 import net.onrc.onos.apps.proxyarp.ArpReplyNotification;
 import net.onrc.onos.core.hostmanager.Host;
@@ -33,6 +34,7 @@ import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.TopologyBatchOperation;
 import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvent;
 import net.onrc.onos.core.util.CallerId;
@@ -213,6 +215,8 @@ public class KryoFactory {
         kryo.register(PortEvent.class);
         kryo.register(Role.class);
         kryo.register(SwitchEvent.class);
+        kryo.register(TopologyBatchOperation.class);
+        kryo.register(TopologyBatchOperation.Operator.class);
         kryo.register(TopologyElement.class);
         kryo.register(TopologyEvent.class);
 
@@ -230,6 +234,9 @@ public class KryoFactory {
         kryo.register(IntentOperationList.class);
         kryo.register(IntentStateList.class);
         kryo.register(HashMap.class);
+
+        // New intent-related classes
+        kryo.register(BatchOperationEntry.class);
 
         // Host-related classes
         kryo.register(HashSet.class);

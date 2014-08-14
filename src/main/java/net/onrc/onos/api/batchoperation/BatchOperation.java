@@ -55,4 +55,32 @@ public abstract class BatchOperation<T extends BatchOperationEntry<?, ?>> {
     public BatchOperation<T> addOperation(T entry) {
         return ops.add(entry) ? this : null;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null) {
+            return false;
+        }
+
+        if (getClass() != o.getClass()) {
+            return false;
+        }
+        BatchOperation<?> other = (BatchOperation<?>) o;
+
+        return this.ops.equals(other.ops);
+    }
+
+    @Override
+    public int hashCode() {
+        return ops.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return ops.toString();
+    }
 }
