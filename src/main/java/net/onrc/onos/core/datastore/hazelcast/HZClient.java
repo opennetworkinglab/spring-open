@@ -74,8 +74,9 @@ public final class HZClient implements IKVClient {
      * Get or create the Hazelcast Instance to use for datastore.
      */
     private HZClient() {
+        Config config = HazelcastDatagrid.loadHazelcastConfig(BASE_CONFIG_FILENAME);
         // Try to get the existing HZ instance in JVM if possible.
-        HazelcastInstance instance = Hazelcast.getHazelcastInstanceByName(HazelcastDatagrid.ONOS_HAZELCAST_INSTANCE);
+        HazelcastInstance instance = Hazelcast.getOrCreateHazelcastInstance(config);
         if (instance == null) {
             log.error("Failed to get the Hazelcast instance in JVM. "
                     + "Probably DataStoreClient was requested before "

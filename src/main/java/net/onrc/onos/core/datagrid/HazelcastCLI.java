@@ -38,7 +38,7 @@ public class HazelcastCLI extends TestApp {
             config.addExecutorConfig(new ExecutorConfig("e" + k).setPoolSize(k));
         }
 
-        HazelcastCLI cli = new HazelcastCLI(Hazelcast.newHazelcastInstance(config));
+        HazelcastCLI cli = new HazelcastCLI(Hazelcast.getOrCreateHazelcastInstance(config));
         cli.start(args);
     }
 

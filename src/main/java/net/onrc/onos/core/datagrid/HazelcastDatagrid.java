@@ -182,7 +182,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService,
      */
     @Override
     public void startUp(FloodlightModuleContext context) {
-        hazelcastInstance = Hazelcast.newHazelcastInstance(hazelcastConfig);
+        hazelcastInstance = Hazelcast.getOrCreateHazelcastInstance(hazelcastConfig);
 
         restApi.addRestletRoutable(new DatagridWebRoutable());
     }
