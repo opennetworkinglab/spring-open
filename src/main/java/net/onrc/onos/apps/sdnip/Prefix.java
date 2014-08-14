@@ -192,6 +192,16 @@ public class Prefix {
         return Arrays.copyOf(address, address.length);
     }
 
+    /**
+     * Gets the InetAddress.
+     *
+     * @return the inetAddress
+     */
+    public InetAddress getInetAddress() {
+        return inetAddress;
+    }
+
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof Prefix)) {

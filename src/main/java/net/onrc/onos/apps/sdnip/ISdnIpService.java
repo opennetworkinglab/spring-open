@@ -52,5 +52,6 @@ public interface ISdnIpService extends IFloodlightService {
     /**
      * Start SDN-IP Routing.
      */
-    public void beginRoutingNew();
+    public void beginRouting();
+
 }
