@@ -77,7 +77,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Channel handler deals with the switch connection and dispatches switch
  * messages to the appropriate locations.
- * 
+ *
  * @author readams, gregor, saurav
  */
 class OFChannelHandler extends IdleStateAwareChannelHandler {
@@ -123,6 +123,11 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
     protected static OFFactory factory13;
     protected static OFFactory factory10;
 
+    // Set to true if the controller should send a 1.0 HELLO instead of a 1.3
+    // HELLO. This is to support older switches that can't support 1.3 HELLO
+    // messages correctly.
+    static boolean useOnly10 = false;
+
     /**
      * transaction Ids to use during handshake. Since only one thread calls into
      * an OFChannelHandler instance, we don't need atomic. We will count down
@@ -131,7 +136,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     /**
      * Create a new unconnected OFChannelHandler.
-     * 
+     *
      * @param controller
      */
     OFChannelHandler(Controller controller) {
@@ -155,7 +160,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
      * arrived at the decision. When we send a role request to the switch, we
      * also use this enum to indicate what we expect back from the switch, so
      * the role changer can match the reply to our expectation.
-     * 
+     *
      * @author gregor, saurav
      */
     public enum RoleRecvStatus {
@@ -192,7 +197,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     /**
      * Forwards to RoleChanger. See there.
-     * 
+     *
      * @param role
      */
     public void sendRoleRequest(Role role, RoleRecvStatus expectation) {
@@ -215,14 +220,14 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
      * After a role request is submitted the role changer keeps track of the
      * pending request, collects the reply (if any) and times out the request if
      * necessary.
-     * 
+     *
      * To simplify role handling we only keep track of the /last/ pending role
      * reply send to the switch. If multiple requests are pending and we receive
      * replies for earlier requests we ignore them. However, this way of
      * handling pending requests implies that we could wait forever if a new
      * request is submitted before the timeout triggers. If necessary we could
      * work around that though.
-     * 
+     *
      * @author gregor
      * @author saurav (added support OF1.3 role messages, and expectations)
      */
@@ -253,7 +258,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         /**
          * Send NX role request message to the switch requesting the specified
          * role.
-         * 
+         *
          * @param sw switch to send the role request message to
          * @param role role to request
          */
@@ -319,14 +324,14 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * to support it in the IOFSwitch driver. If not supported, this method
          * sends nothing and returns 'false'. The caller should take appropriate
          * action.
-         * 
+         *
          * One other optimization we do here is that for OF1.0 switches with
          * Nicira role message support, we force the Role.EQUAL to become
          * Role.SLAVE, as there is no defined behavior for the Nicira role
          * OTHER. We cannot expect it to behave like SLAVE. We don't have this
          * problem with OF1.3 switches, because Role.EQUAL is well defined and
          * we can simulate SLAVE behavior by using ASYNC messages.
-         * 
+         *
          * @param role
          * @throws IOException
          * @returns false if and only if the switch does not support
@@ -366,16 +371,16 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Deliver a received role reply.
-         * 
+         *
          * Check if a request is pending and if the received reply matches the
          * the expected pending reply (we check both role and xid) we set the
          * role for the switch/channel.
-         * 
+         *
          * If a request is pending but doesn't match the reply we ignore it, and
          * return
-         * 
+         *
          * If no request is pending we disconnect with a SwitchStateException
-         * 
+         *
          * @param RoleReplyInfo information about role-reply in format that
          *        controller can understand.
          * @throws SwitchStateException if no request is pending
@@ -460,7 +465,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         /**
          * Called if we receive an error message. If the xid matches the pending
          * request we handle it otherwise we ignore it.
-         * 
+         *
          * Note: since we only keep the last pending request we might get error
          * messages for earlier role requests that we won't be able to handle
          */
@@ -532,7 +537,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Check if a pending role request has timed out.
-         * 
+         *
          * @throws SwitchStateException
          */
         void checkTimeout() throws SwitchStateException {
@@ -561,7 +566,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
      * The state machine for handling the switch/channel state. All state
      * transitions should happen from within the state machine (and not from
      * other parts of the code)
-     * 
+     *
      * @author gregor
      * @author saurav (modified to handle 1.0 & 1.3 switches, EQUAL state,
      *         role-handling )
@@ -1238,7 +1243,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * switch. The EQUAL role can be considered the same as the SLAVE role
          * if this controller does NOT send commands or packets to the switch.
          * This should always be true for OF1.0 switches. XXX S need to enforce.
-         * 
+         *
          * For OF1.3 switches, choosing this state as EQUAL instead of SLAVE,
          * gives us the flexibility that if an app wants to send
          * commands/packets to switches, it can, even thought it is running on a
@@ -1330,7 +1335,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Is this a state in which the handshake has completed?
-         * 
+         *
          * @return true if the handshake is complete
          */
         public boolean isHandshakeComplete() {
@@ -1341,7 +1346,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * Get a string specifying the switch connection, state, and message
          * received. To be used as message for SwitchStateException or log
          * messages
-         * 
+         *
          * @param h The channel handler (to get switch information_
          * @param m The OFMessage that has just been received
          * @param details A string giving more details about the exact nature of
@@ -1364,7 +1369,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * We have an OFMessage we didn't expect given the current state and we
          * want to treat this as an error. We currently throw an exception that
          * will terminate the connection However, we could be more forgiving
-         * 
+         *
          * @param h the channel handler that received the message
          * @param m the message
          * @throws SwitchStateException
@@ -1382,7 +1387,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         /**
          * We have an OFMessage we didn't expect given the current state and we
          * want to ignore the message
-         * 
+         *
          * @param h the channel handler the received the message
          * @param m the message
          */
@@ -1398,7 +1403,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Log an OpenFlow error message from a switch
-         * 
+         *
          * @param sw The switch that sent the error
          * @param error The error message
          */
@@ -1422,7 +1427,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         /**
          * Log an OpenFlow error message from a switch and disconnect the
          * channel
-         * 
+         *
          * @param sw The switch that sent the error
          * @param error The error message
          */
@@ -1443,10 +1448,10 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Extract the role from an OFVendor message.
-         * 
+         *
          * Extract the role from an OFVendor message if the message is a Nicira
          * role reply. Otherwise return null.
-         * 
+         *
          * @param h The channel handler receiving the message
          * @param vendorMessage The vendor message to parse.
          * @return The role in the message if the message is a Nicira role
@@ -1524,7 +1529,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Extract the role information from an OF1.3 Role Reply Message
-         * 
+         *
          * @param h
          * @param rrmsg
          * @return RoleReplyInfo object
@@ -1561,7 +1566,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * IOFSwitchListerners) the changes to ports will already be visible
          * once the switch is activated. As a result, no notifications are sent
          * out for these pending portStatus messages.
-         * 
+         *
          * @param h
          * @throws SwitchStateException
          */
@@ -1603,16 +1608,16 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Handle a port status message.
-         * 
+         *
          * Handle a port status message by updating the port maps in the
          * IOFSwitch instance and notifying Controller about the change so it
          * can dispatch a switch update.
-         * 
+         *
          * @param h The OFChannelHhandler that received the message
          * @param m The PortStatus message we received
          * @param doNotify if true switch port changed events will be dispatched
          * @throws SwitchStateException
-         * 
+         *
          */
         protected void handlePortStatusMessage(OFChannelHandler h, OFPortStatus m,
                 boolean doNotify) throws SwitchStateException {
@@ -1637,7 +1642,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * caller should have already verified that the role-reply msg received
          * was in response to a role-request msg sent out by this controller
          * after hearing from the registry service.
-         * 
+         *
          * @param h the ChannelHandler that received the message
          * @param role the role in the recieved role reply message
          */
@@ -1672,17 +1677,17 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         /**
          * Process an OF message received on the channel and update state
          * accordingly.
-         * 
+         *
          * The main "event" of the state machine. Process the received message,
          * send follow up message if required and update state if required.
-         * 
+         *
          * Switches on the message type and calls more specific event handlers
          * for each individual OF message type. If we receive a message that is
          * supposed to be sent from a controller to a switch we throw a
          * SwitchStateExeption.
-         * 
+         *
          * The more specific handlers can also throw SwitchStateExceptions
-         * 
+         *
          * @param h The OFChannelHandler that received the message
          * @param m The message we received.
          * @throws SwitchStateException
@@ -1876,7 +1881,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * Role request messages that don't get role-replies (or errors related
          * to the request) time out after DEFAULT_ROLE_TIMEOUT_MS secs, at which
          * time the controller state-machine disconnects the switch
-         * 
+         *
          * @param h the channel handler for this switch
          * @param pendingRole the role for which no reply was received
          * @throws SwitchStateException
@@ -2159,7 +2164,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     /**
      * Is this a state in which the handshake has completed?
-     * 
+     *
      * @return true if the handshake is complete
      */
     public boolean isHandshakeComplete() {
@@ -2174,7 +2179,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
     /**
      * Return a string describing this switch based on the already available
      * information (DPID and/or remote socket)
-     * 
+     *
      * @return
      */
     private String getSwitchInfoString() {
@@ -2198,7 +2203,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
     /**
      * Update the channels state. Only called from the state machine. TODO:
      * enforce restricted state transitions
-     * 
+     *
      * @param state
      */
     private void setState(ChannelState state) {
@@ -2207,7 +2212,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     /**
      * Send hello message to the switch using the handshake transactions ids.
-     * 
+     *
      * @throws IOException
      */
     private void sendHandshakeHelloMessage() throws IOException {
@@ -2218,21 +2223,29 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         // bitmap represents OF1.0 (ofp_version=0x01) and OF1.3
         // (ofp_version=0x04)
         // see Sec. 7.5.1 of the OF1.3.4 spec
-        U32 bitmap = U32.ofRaw(0x00000012);
-        OFHelloElem hem = factory13.buildHelloElemVersionbitmap()
-                .setBitmaps(Collections.singletonList(bitmap))
-                .build();
-        OFMessage.Builder mb = factory13.buildHello()
-                .setXid(this.handshakeTransactionIds--)
-                .setElements(Collections.singletonList(hem));
-        log.info("Sending OF_13 Hello to {}", channel.getRemoteAddress());
-        channel.write(Collections.singletonList(mb.build()));
+        OFHello hello;
+        if (useOnly10) {
+            hello = factory10.buildHello().setXid(handshakeTransactionIds--).build();
+            log.info("Sending OF_10 Hello to {}", channel.getRemoteAddress());
+        } else {
+            U32 bitmap = U32.ofRaw(0x00000012);
+            OFHelloElem hem = factory13.buildHelloElemVersionbitmap()
+                    .setBitmaps(Collections.singletonList(bitmap))
+                    .build();
+            OFHello.Builder mb = factory13.buildHello()
+                    .setXid(this.handshakeTransactionIds--)
+                    .setElements(Collections.singletonList(hem));
+            hello = mb.build();
+            log.info("Sending OF_13 Hello to {}", channel.getRemoteAddress());
+        }
+
+        channel.write(Collections.singletonList(hello));
     }
 
     /**
      * Send featuresRequest msg to the switch using the handshake transactions
      * ids.
-     * 
+     *
      * @throws IOException
      */
     private void sendHandshakeFeaturesRequestMessage() throws IOException {
@@ -2249,7 +2262,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     /**
      * Send the configuration requests to tell the switch we want full packets
-     * 
+     *
      * @throws IOException
      */
     private void sendHandshakeSetConfig() throws IOException {
@@ -2285,7 +2298,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     /**
      * send a description state request
-     * 
+     *
      * @throws IOException
      */
     private void sendHandshakeDescriptionStatsRequest() throws IOException {

@@ -1170,6 +1170,12 @@ public class Controller implements IFloodlightProviderService {
             }
         }
 
+        String useOnly10 = configParams.get("useOnly10");
+        if (useOnly10 != null && useOnly10.equalsIgnoreCase("true")) {
+            OFChannelHandler.useOnly10 = true;
+            log.info("Setting controller to only use OpenFlow 1.0");
+        }
+
         log.debug("ControllerId set to {}", this.onosInstanceId);
     }
 
