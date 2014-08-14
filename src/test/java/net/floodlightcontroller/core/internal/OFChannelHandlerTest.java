@@ -63,10 +63,8 @@ import org.projectfloodlight.openflow.types.U32;
  * Channel handler deals with the switch connection and dispatches
  * switch messages to the appropriate locations. These Unit Testing cases
  * test the channeler state machine and role changer. In the first release,
- * we will focus on OF version 1.0. we will add the testing case for version 1.3
- * later.
- *
- * @author Patrick liu (patrick.liu@huawei.com)
+ * we will focus on OF version 1.0. we will add the testing case for
+ * version 1.3 later.
  */
 public class OFChannelHandlerTest {
     private Controller controller;
@@ -112,9 +110,12 @@ public class OFChannelHandlerTest {
                 new Controller.Counters();
         counters.createCounters(debugCounterService);
         expect(controller.getCounters()).andReturn(counters).anyTimes();
-        expect(controller.getOFMessageFactory_10()).andReturn(factory10).anyTimes();
-        expect(controller.getOFMessageFactory_13()).andReturn(factory13).anyTimes();
-        expect(controller.addConnectedSwitch(2000,handler)).andReturn(true).anyTimes();
+        expect(controller.getOFMessageFactory_10()).andReturn(factory10)
+            .anyTimes();
+        expect(controller.getOFMessageFactory_13()).andReturn(factory13)
+            .anyTimes();
+        expect(controller.addConnectedSwitch(2000,handler)).andReturn(true)
+            .anyTimes();
         replay(controller);
         handler = new OFChannelHandler(controller);
         verify(controller);
@@ -253,7 +254,8 @@ public class OFChannelHandlerTest {
         exceptionEventCapture.reset();
     }
 
-    /** make sure that the transaction ids in the given messages are
+    /**
+     * Make sure that the transaction ids in the given messages are
      * not 0 and differ between each other.
      * While it's not a defect per se if the xids are we want to ensure
      * we use different ones for each message we send.
@@ -497,12 +499,12 @@ public class OFChannelHandlerTest {
                 handler.getStateForTesting());
     }
 
-    @Test
     /**
      * Move the channel from scratch to
      *  WAIT_SWITCH_DRIVER_SUB_HANDSHAKE state
      * Builds on moveToWaitInitialRole()
      */
+    @Test
     public void moveToWaitSubHandshake()
             throws Exception {
         moveToWaitInitialRole();
@@ -561,7 +563,6 @@ public class OFChannelHandlerTest {
                 handler.getStateForTesting());
     }
 
-    @Test
     /**
      * Move the channel from scratch to WAIT_INITIAL_ROLE state,
      * then move the channel to EQUAL state based on the switch Role.
@@ -572,6 +573,7 @@ public class OFChannelHandlerTest {
      * and PORT_STATUS), state machine will transit to MASTER or
      * EQUAL state based on the switch role.
      */
+    @Test
     public void moveToSlaveWithHandshakeComplete()
             throws Exception {
 
@@ -642,8 +644,6 @@ public class OFChannelHandlerTest {
                 handler.getStateForTesting());
     }
 
-
-    @Test
     /**
      * Move the channel from scratch to WAIT_INITIAL_ROLE state,
      * then to MASTERL state based on the switch Role.
@@ -654,6 +654,7 @@ public class OFChannelHandlerTest {
      * and PORT_STATUS), state machine will transit to MASTER or
      * EQUAL state based on the switch role.
      */
+    @Test
     public void moveToMasterWithHandshakeComplete()
             throws Exception {
 
@@ -715,11 +716,13 @@ public class OFChannelHandlerTest {
         assertEquals(OFChannelHandler.ChannelState.MASTER,
                 handler.getStateForTesting());
     }
-    @Test
-    /** Move the channel from scratch to
+
+    /**
+     * Move the channel from scratch to
      *  WAIT_SWITCH_DRIVER_SUB_HANDSHAKE state
      * Builds on moveToWaitSubHandshake()
      */
+    @Test
     public void moveToEqualViaWaitSubHandshake()
             throws Exception {
         moveToWaitSubHandshake();
@@ -772,11 +775,12 @@ public class OFChannelHandlerTest {
                 handler.getStateForTesting());
     }
 
-    @Test
-    /** Move the channel from scratch to
+    /**
+     * Move the channel from scratch to
      *  WAIT_SWITCH_DRIVER_SUB_HANDSHAKE state
      * Builds on moveToWaitSubHandshake()
      */
+    @Test
     public void moveToMasterViaWaitSubHandshake()
             throws Exception {
         moveToWaitSubHandshake();
@@ -834,11 +838,11 @@ public class OFChannelHandlerTest {
                 handler.getStateForTesting());
     }
 
-    @Test
     /**
      * Test the behavior in WAIT_SWITCH_DRIVER_SUB_HANDSHAKE state.
      * ECHO_REQUEST message received case
      */
+    @Test
     public void testWaitSwitchDriverSubhandshake() throws Exception {
         moveToWaitSubHandshake();
 
@@ -987,9 +991,9 @@ public class OFChannelHandlerTest {
      * adds testing for WAIT_INITAL_ROLE state
      *
      * This method tests the case that the switch does NOT support roles.
-     * In ONOS if the switch-driver says that nicira-role messages are not supported,
-     * then ONOS does NOT send role-request messages (see handleUnsentRoleMessage())
-     *
+     * In ONOS if the switch-driver says that nicira-role messages are not
+     * supported, then ONOS does NOT send role-request messages
+     * (see handleUnsentRoleMessage())
      */
     @Test
     public void testInitialMoveToMasterNoRole() throws Exception {
@@ -1036,7 +1040,8 @@ public class OFChannelHandlerTest {
                 handler.getStateForTesting());
     }
 
-    /** Move the channel from scratch to WAIT_INITIAL_ROLE state
+    /**
+     * Move the channel from scratch to WAIT_INITIAL_ROLE state
      * Builds on moveToWaitInitialRole()
      * adds testing for WAIT_INITAL_ROLE state
      *
@@ -1107,7 +1112,8 @@ public class OFChannelHandlerTest {
         }
 
      */
-    /** Move the channel from scratch to SLAVE state
+    /**
+     * Move the channel from scratch to SLAVE state
      * Builds on doMoveToWaitInitialRole()
      * adds testing for WAIT_INITAL_ROLE state
      *
@@ -1132,7 +1138,8 @@ public class OFChannelHandlerTest {
 
     }
 
-    /** Move the channel from scratch to SLAVE state
+    /**
+     * Move the channel from scratch to SLAVE state
      * Builds on doMoveToWaitInitialRole()
      * adds testing for WAIT_INITAL_ROLE state
      *
@@ -1174,7 +1181,8 @@ public class OFChannelHandlerTest {
         }
 
      */
-    /** Move channel from scratch to WAIT_INITIAL_STATE, then MASTER,
+    /**
+     * Move channel from scratch to WAIT_INITIAL_STATE, then MASTER,
      * then SLAVE for cases where the switch does not support roles.
      * I.e., the final SLAVE transition should disconnect the switch.
      */
@@ -1205,7 +1213,8 @@ public class OFChannelHandlerTest {
 
     }
 
-    /** Move the channel to MASTER state
+    /**
+     * Move the channel to MASTER state
      * Expects that the channel is in MASTER or SLAVE state.
      *
      */
@@ -1268,7 +1277,8 @@ public class OFChannelHandlerTest {
                 handler.getStateForTesting());
     }
 
-    /** Move the channel to SLAVE state
+    /**
+     * Move the channel to SLAVE state
      * Expects that the channel is in MASTER or SLAVE state.
      *
      */
@@ -1367,7 +1377,8 @@ public class OFChannelHandlerTest {
         changeRoleToSlaveWithRequest();
     }
 
-    /** Start from scratch and reply with an unexpected error to the role
+    /**
+     * Start from scratch and reply with an unexpected error to the role
      * change request
      * Builds on doMoveToWaitInitialRole()
      * adds testing for WAIT_INITAL_ROLE state
