@@ -59,6 +59,7 @@
     <hazelcast.version>3.2.4</hazelcast.version>
     <metrics.version>3.0.2</metrics.version>
     <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
+    <curator.version>2.6.0</curator.version>
   </properties>
   <build>
     <plugins>
@@ -656,22 +657,22 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
-      <version>2.4.1</version>
+      <version>${curator.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-client</artifactId>
-      <version>2.4.1</version>
+      <version>${curator.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-recipes</artifactId>
-      <version>2.4.1</version>
+      <version>${curator.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-x-discovery</artifactId>
-      <version>2.4.1</version>
+      <version>${curator.version}</version>
     </dependency>
     <dependency>
       <!-- findbugs suppression annotation and @GuardedBy, etc. -->
