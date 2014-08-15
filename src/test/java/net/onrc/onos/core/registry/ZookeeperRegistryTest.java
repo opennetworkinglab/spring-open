@@ -9,6 +9,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.test.FloodlightTestCase;
 import net.onrc.onos.core.registry.StandaloneRegistryTest.LoggingCallback;
 import net.onrc.onos.core.registry.ZookeeperRegistry.SwitchLeaderListener;
+import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.apache.curator.RetryPolicy;

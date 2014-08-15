@@ -2,7 +2,7 @@ package net.onrc.onos.core.newintent;
 
 import net.onrc.onos.api.newintent.IntentId;
 import net.onrc.onos.api.newintent.IntentIdGenerator;
-import net.onrc.onos.core.registry.IdBlock;
+import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.UnavailableIdException;
 import net.onrc.onos.core.util.IdBlockAllocator;
 

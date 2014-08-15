@@ -1,6 +1,5 @@
-package net.onrc.onos.core.registry;
+package net.onrc.onos.core.util;
 
-import net.onrc.onos.core.util.UnavailableIdException;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;

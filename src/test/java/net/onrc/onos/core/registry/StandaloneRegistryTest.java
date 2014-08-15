@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
+import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.junit.After;

@@ -15,6 +15,7 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.core.registry.web.RegistryWebRoutable;
+import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.apache.commons.lang.NotImplementedException;

@@ -1,7 +1,6 @@
-package net.onrc.onos.core.registry;
+package net.onrc.onos.core.util;
 
 import com.google.common.base.Objects;
-import net.onrc.onos.core.util.UnavailableIdException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

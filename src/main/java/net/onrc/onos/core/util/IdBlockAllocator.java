@@ -1,7 +1,5 @@
 package net.onrc.onos.core.util;
 
-import net.onrc.onos.core.registry.IdBlock;
-
 /**
  * An interface that gives unique ID spaces.
  */

@@ -11,7 +11,7 @@ import net.onrc.onos.core.datastore.IKVTable;
 import net.onrc.onos.core.datastore.ObjectExistsException;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.registry.IdBlock;
+import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.serializers.KryoFactory;
 
 import org.slf4j.Logger;
