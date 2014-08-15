@@ -176,6 +176,7 @@ public class KryoFactory {
         kryo.register(TopologyBatchOperation.Operator.class);
         kryo.register(TopologyElement.class);
         kryo.register(TopologyEvent.class);
+        kryo.register(TopologyEvent.Type.class);
 
         // Intent-related classes
         kryo.register(Path.class);

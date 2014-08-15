@@ -56,48 +56,6 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
         return dpid;
     }
 
-    /**
-     * Gets the event origin DPID.
-     *
-     * @return the event origin DPID.
-     */
-    public Dpid getOriginDpid() {
-        return this.dpid;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null) {
-            return false;
-        }
-
-        if (getClass() != o.getClass()) {
-            return false;
-        }
-        SwitchEvent other = (SwitchEvent) o;
-
-        // compare attributes
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        return Objects.equals(this.dpid, other.dpid);
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * super.hashCode() + Objects.hashCode(dpid);
-    }
-
-    @Override
-    public String toString() {
-        return "[SwitchEvent " + dpid + "]";
-    }
-
     public static final int SWITCHID_BYTES = 2 + 8;
 
     public static ByteBuffer getSwitchID(Dpid dpid) {
@@ -112,11 +70,42 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
                 .putChar('S').putLong(dpid).flip();
     }
 
-    public byte[] getID() {
-        return getSwitchID(dpid.value()).array();
+    @Override
+    public Dpid getOriginDpid() {
+        return this.dpid;
     }
 
+    @Override
     public ByteBuffer getIDasByteBuffer() {
         return getSwitchID(dpid.value());
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + Objects.hashCode(dpid);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        // Compare attributes
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        SwitchEvent other = (SwitchEvent) o;
+        return Objects.equals(this.dpid, other.dpid);
+    }
+
+    @Override
+    public String toString() {
+        return "[SwitchEvent " + dpid + "]";
     }
 }

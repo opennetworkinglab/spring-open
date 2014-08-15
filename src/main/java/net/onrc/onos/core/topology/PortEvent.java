@@ -95,48 +95,6 @@ public class PortEvent extends TopologyElement<PortEvent> {
         return id.getPortNumber();
     }
 
-    /**
-     * Gets the event origin DPID.
-     *
-     * @return the event origin DPID.
-     */
-    public Dpid getOriginDpid() {
-        return this.id.getDpid();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null) {
-            return false;
-        }
-
-        if (getClass() != o.getClass()) {
-            return false;
-        }
-        PortEvent other = (PortEvent) o;
-
-        // compare attributes
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        return Objects.equals(this.id, other.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * super.hashCode() + Objects.hashCode(id);
-    }
-
-    @Override
-    public String toString() {
-        return "[PortEvent " + getDpid() + "@" + getPortNumber() + "]";
-    }
-
     public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
 
     public static ByteBuffer getPortID(Dpid dpid, PortNumber number) {
@@ -157,11 +115,42 @@ public class PortEvent extends TopologyElement<PortEvent> {
                 .putChar('P').putLong(number).flip();
     }
 
-    public byte[] getID() {
-        return getIDasByteBuffer().array();
+    @Override
+    public Dpid getOriginDpid() {
+        return this.id.getDpid();
     }
 
+    @Override
     public ByteBuffer getIDasByteBuffer() {
         return getPortID(getDpid(), getPortNumber());
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + Objects.hashCode(id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        // Compare attributes
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        PortEvent other = (PortEvent) o;
+        return Objects.equals(this.id, other.id);
+    }
+
+    @Override
+    public String toString() {
+        return "[PortEvent " + getDpid() + "@" + getPortNumber() + "]";
     }
 }

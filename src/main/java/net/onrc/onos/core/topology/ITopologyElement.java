@@ -27,6 +27,4 @@ public interface ITopologyElement {
      * @return  AdminStatus
      */
     public AdminStatus getStatus();
-
-
 }

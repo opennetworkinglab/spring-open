@@ -1,5 +1,6 @@
 package net.onrc.onos.core.topology;
 
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -7,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import net.onrc.onos.core.util.Dpid;
 
 /**
  * Base class for Topology Elements.
@@ -17,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @param <T> Sub-class' type.
  *      (Required to define a method returning itself's type)
  */
-public class TopologyElement<T extends TopologyElement<T>>
+public abstract class TopologyElement<T extends TopologyElement<T>>
         implements ITopologyElement, StringAttributes, UpdateStringAttributes {
 
     // TODO: Where should the attribute names be defined?
@@ -208,4 +211,18 @@ public class TopologyElement<T extends TopologyElement<T>>
     public AdminStatus getStatus() {
         return AdminStatus.valueOf(getStringAttribute(ELEMENT_ADMIN_STATUS));
     }
+
+    /**
+     * Gets the topology event origin DPID.
+     *
+     * @return the topology event origin DPID.
+     */
+    abstract Dpid getOriginDpid();
+
+    /**
+     * Gets the topology event ID as a ByteBuffer.
+     *
+     * @return the topology event ID as a ByteBuffer.
+     */
+    abstract ByteBuffer getIDasByteBuffer();
 }

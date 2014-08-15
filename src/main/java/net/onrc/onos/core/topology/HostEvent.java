@@ -109,11 +109,13 @@ public class HostEvent extends TopologyElement<HostEvent> {
         this.lastSeenTime = lastSeenTime;
     }
 
-    /**
-     * Gets the event origin DPID.
-     *
-     * @return the event origin DPID.
-     */
+    // Assuming mac is unique cluster-wide
+    public static ByteBuffer getHostID(final byte[] mac) {
+        return (ByteBuffer) ByteBuffer.allocate(2 + mac.length)
+                .putChar('H').put(mac).flip();
+    }
+
+    @Override
     public Dpid getOriginDpid() {
         // TODO: Eventually, we should return a collection of Dpid values
         for (SwitchPort sp : attachmentPoints) {
@@ -123,56 +125,38 @@ public class HostEvent extends TopologyElement<HostEvent> {
     }
 
     @Override
-    public String toString() {
-        return "[HostEvent " + mac + " attachmentPoints:" + attachmentPoints + "]";
+    public ByteBuffer getIDasByteBuffer() {
+        return getHostID(mac.toBytes());
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result
-                + ((attachmentPoints == null) ? 0 : attachmentPoints.hashCode());
-        result = prime * result + ((mac == null) ? 0 : mac.hashCode());
-        return result;
+        return 31 * super.hashCode() + Objects.hash(attachmentPoints, mac);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
 
-        if (obj == null) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        if (getClass() != obj.getClass()) {
+        // Compare attributes
+        if (!super.equals(o)) {
             return false;
         }
 
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        HostEvent other = (HostEvent) obj;
-
+        HostEvent other = (HostEvent) o;
         // XXX lastSeenTime excluded from Equality condition, is it OK?
         return Objects.equals(mac, other.mac) &&
                 Objects.equals(this.attachmentPoints, other.attachmentPoints);
     }
 
-    // Assuming mac is unique cluster-wide
-    public static ByteBuffer getHostID(final byte[] mac) {
-        return (ByteBuffer) ByteBuffer.allocate(2 + mac.length)
-                .putChar('H').put(mac).flip();
-    }
-
-    public byte[] getID() {
-        return getHostID(mac.toBytes()).array();
-    }
-
-    public ByteBuffer getIDasByteBuffer() {
-        return getHostID(mac.toBytes());
+    @Override
+    public String toString() {
+        return "[HostEvent " + mac + " attachmentPoints:" + attachmentPoints + "]";
     }
 }

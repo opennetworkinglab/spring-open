@@ -89,28 +89,16 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
         return role;
     }
 
-    /**
-     * Gets the event origin DPID.
-     *
-     * @return the event origin DPID.
-     */
+    @Override
     public Dpid getOriginDpid() {
         return this.dpid;
     }
 
     @Override
-    public String toString() {
-        return "[MastershipEvent " + getDpid() + "@" + getOnosInstanceId() +
-            "->" + getRole() + "]";
-    }
-
-    public byte[] getID() {
-        String keyStr = "M" + getDpid() + "@" + getOnosInstanceId();
-        return keyStr.getBytes(StandardCharsets.UTF_8);
-    }
-
     public ByteBuffer getIDasByteBuffer() {
-        ByteBuffer buf = ByteBuffer.wrap(getID());
+        String keyStr = "M" + getDpid() + "@" + getOnosInstanceId();
+        byte[] id = keyStr.getBytes(StandardCharsets.UTF_8);
+        ByteBuffer buf = ByteBuffer.wrap(id);
         return buf;
     }
 
@@ -124,30 +112,32 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      * MastershipEvent objects are equal if they have same DPID and same
      * ONOS Instance ID.
      *
-     * @param obj another object to compare to this
-     * @return true if equal, false otherwise false.
+     * @param o another object to compare to this.
+     * @return true if equal, false otherwise.
      */
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
 
-        if (obj == null) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        if (getClass() != obj.getClass()) {
+        // Compare attributes
+        if (!super.equals(o)) {
             return false;
         }
 
-        // compare attributes
-        if (!super.equals(obj)) {
-            return false;
-        }
+        MastershipEvent other = (MastershipEvent) o;
+        return Objects.equals(dpid, other.dpid) &&
+            Objects.equals(onosInstanceId, other.onosInstanceId);
+    }
 
-        MastershipEvent other = (MastershipEvent) obj;
-        return dpid.equals(other.dpid) &&
-            onosInstanceId.equals(other.onosInstanceId);
+    @Override
+    public String toString() {
+        return "[MastershipEvent " + getDpid() + "@" + getOnosInstanceId() +
+            "->" + getRole() + "]";
     }
 }

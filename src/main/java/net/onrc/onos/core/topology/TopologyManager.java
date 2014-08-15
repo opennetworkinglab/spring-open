@@ -953,7 +953,7 @@ public class TopologyManager implements TopologyDiscoveryInterface {
 
             // Cleanup the Host Event from the local cache
             // TODO: The implementation below is probably wrong
-            ByteBuffer id = ByteBuffer.wrap(hostEvent.getID());
+            ByteBuffer id = hostEvent.getIDasByteBuffer();
             for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
                 Map<ByteBuffer, HostEvent> oldHostEvents =
                         discoveredAddedHostEvents.get(swp.getDpid());

@@ -238,7 +238,7 @@ public class KryoFactoryTest {
             Result result = benchType(obj, EqualityCheck.TO_STRING);
             results.add(result);
             // update me if serialized form is expected to change
-            assertEquals(47, result.size);
+            assertEquals(45, result.size);
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
@@ -272,7 +272,7 @@ public class KryoFactoryTest {
             Result result = benchType(tbo, EqualityCheck.EQUALS);
             results.add(result);
             // update me if serialized form is expected to change
-            assertEquals(215, result.size);
+            assertEquals(186, result.size);
         }
 
         // TODO Add registered classes we still use.

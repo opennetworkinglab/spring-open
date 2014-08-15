@@ -122,20 +122,6 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
         this.capacity = capacity;
     }
 
-    /**
-     * Gets the event origin DPID.
-     *
-     * @return the event origin DPID.
-     */
-    public Dpid getOriginDpid() {
-        return this.id.getDst().getDpid();
-    }
-
-    @Override
-    public String toString() {
-        return "[LinkEvent " + getSrc() + "->" + getDst() + "]";
-    }
-
     public static final int LINKID_BYTES = 2 + PortEvent.PORTID_BYTES * 2;
 
     public static ByteBuffer getLinkID(Dpid srcDpid, PortNumber srcPortNo,
@@ -152,10 +138,12 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
                 .put(PortEvent.getPortID(dstDpid, dstPortNo)).flip();
     }
 
-    public byte[] getID() {
-        return getIDasByteBuffer().array();
+    @Override
+    public Dpid getOriginDpid() {
+        return this.id.getDst().getDpid();
     }
 
+    @Override
     public ByteBuffer getIDasByteBuffer() {
         return getLinkID(getSrc().getDpid(), getSrc().getPortNumber(),
                 getDst().getDpid(), getDst().getPortNumber());
@@ -163,32 +151,30 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + Objects.hashCode(id);
-        return result;
+        return 31 * super.hashCode() + Objects.hashCode(id);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
 
-        if (obj == null) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        LinkEvent other = (LinkEvent) obj;
-
-        // compare attributes
-        if (!super.equals(obj)) {
+        // Compare attributes
+        if (!super.equals(o)) {
             return false;
         }
 
+        LinkEvent other = (LinkEvent) o;
         return Objects.equals(this.id, other.id);
+    }
+
+    @Override
+    public String toString() {
+        return "[LinkEvent " + getSrc() + "->" + getDst() + "]";
     }
 }

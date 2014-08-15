@@ -20,24 +20,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * are finalized.
  */
 public final class TopologyEvent implements BatchOperationTarget {
-    private final MastershipEvent mastershipEvent; // Set for Mastership event
-    private final SwitchEvent switchEvent;      // Set for Switch event
-    private final PortEvent portEvent;          // Set for Port event
-    private final LinkEvent linkEvent;          // Set for Link event
-    private final HostEvent hostEvent;          // Set for Host event
+    private final Type eventType;
+    private final TopologyElement<?> event;
     private final OnosInstanceId onosInstanceId;   // The ONOS Instance ID
+
+    /**
+     * The topology event type.
+     */
+    public enum Type {
+        MASTERSHIP,
+        SWITCH,
+        PORT,
+        LINK,
+        HOST,
+        NOOP,                   // TODO: temporary type; should be removed
+    }
 
     /**
      * Default constructor for serializer.
      */
     @Deprecated
     protected TopologyEvent() {
-        mastershipEvent = null;
-        switchEvent = null;
-        portEvent = null;
-        linkEvent = null;
-        hostEvent = null;
-        onosInstanceId = null;
+        this.eventType = Type.NOOP;
+        this.event = null;
+        this.onosInstanceId = null;
     }
 
     /**
@@ -46,11 +52,8 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
     protected TopologyEvent(OnosInstanceId onosInstanceId) {
-        mastershipEvent = null;
-        switchEvent = null;
-        portEvent = null;
-        linkEvent = null;
-        hostEvent = null;
+        this.eventType = Type.NOOP;
+        this.event = null;
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
@@ -62,11 +65,8 @@ public final class TopologyEvent implements BatchOperationTarget {
      */
     TopologyEvent(MastershipEvent mastershipEvent,
                   OnosInstanceId onosInstanceId) {
-        this.mastershipEvent = checkNotNull(mastershipEvent);
-        this.switchEvent = null;
-        this.portEvent = null;
-        this.linkEvent = null;
-        this.hostEvent = null;
+        this.eventType = Type.MASTERSHIP;
+        this.event = checkNotNull(mastershipEvent);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
@@ -77,11 +77,8 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
     TopologyEvent(SwitchEvent switchEvent, OnosInstanceId onosInstanceId) {
-        this.mastershipEvent = null;
-        this.switchEvent = checkNotNull(switchEvent);
-        this.portEvent = null;
-        this.linkEvent = null;
-        this.hostEvent = null;
+        this.eventType = Type.SWITCH;
+        this.event = checkNotNull(switchEvent);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
@@ -92,11 +89,8 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
     TopologyEvent(PortEvent portEvent, OnosInstanceId onosInstanceId) {
-        this.mastershipEvent = null;
-        this.switchEvent = null;
-        this.portEvent = checkNotNull(portEvent);
-        this.linkEvent = null;
-        this.hostEvent = null;
+        this.eventType = Type.PORT;
+        this.event = checkNotNull(portEvent);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
@@ -107,11 +101,8 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
     TopologyEvent(LinkEvent linkEvent, OnosInstanceId onosInstanceId) {
-        this.mastershipEvent = null;
-        this.switchEvent = null;
-        this.portEvent = null;
-        this.linkEvent = checkNotNull(linkEvent);
-        this.hostEvent = null;
+        this.eventType = Type.LINK;
+        this.event = checkNotNull(linkEvent);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
@@ -122,12 +113,18 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
     TopologyEvent(HostEvent hostEvent, OnosInstanceId onosInstanceId) {
-        this.mastershipEvent = null;
-        this.switchEvent = null;
-        this.portEvent = null;
-        this.linkEvent = null;
-        this.hostEvent = checkNotNull(hostEvent);
+        this.eventType = Type.HOST;
+        this.event = checkNotNull(hostEvent);
         this.onosInstanceId = checkNotNull(onosInstanceId);
+    }
+
+    /**
+     * Gets the Topology Event type.
+     *
+     * @return the Topology Event type.
+     */
+    TopologyEvent.Type getEventType() {
+        return this.eventType;
     }
 
     /**
@@ -136,6 +133,10 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @return the Mastership event.
      */
     public MastershipEvent getMastershipEvent() {
+        if (eventType != Type.MASTERSHIP) {
+            return null;
+        }
+        MastershipEvent mastershipEvent = (MastershipEvent) event;
         return mastershipEvent;
     }
 
@@ -145,6 +146,10 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @return the Switch event.
      */
     public SwitchEvent getSwitchEvent() {
+        if (eventType != Type.SWITCH) {
+            return null;
+        }
+        SwitchEvent switchEvent = (SwitchEvent) event;
         return switchEvent;
     }
 
@@ -154,6 +159,10 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @return the Port event.
      */
     public PortEvent getPortEvent() {
+        if (eventType != Type.PORT) {
+            return null;
+        }
+        PortEvent portEvent = (PortEvent) event;
         return portEvent;
     }
 
@@ -163,6 +172,10 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @return the Link event.
      */
     public LinkEvent getLinkEvent() {
+        if (eventType != Type.LINK) {
+            return null;
+        }
+        LinkEvent linkEvent = (LinkEvent) event;
         return linkEvent;
     }
 
@@ -172,6 +185,10 @@ public final class TopologyEvent implements BatchOperationTarget {
      * @return the Host event.
      */
     public HostEvent getHostEvent() {
+        if (eventType != Type.HOST) {
+            return null;
+        }
+        HostEvent hostEvent = (HostEvent) event;
         return hostEvent;
     }
 
@@ -185,30 +202,6 @@ public final class TopologyEvent implements BatchOperationTarget {
     }
 
     /**
-     * Gets the event origin DPID.
-     *
-     * @return the event origin DPID.
-     */
-    public Dpid getOriginDpid() {
-        if (mastershipEvent != null) {
-            return mastershipEvent.getOriginDpid();
-        }
-        if (switchEvent != null) {
-            return switchEvent.getOriginDpid();
-        }
-        if (portEvent != null) {
-            return portEvent.getOriginDpid();
-        }
-        if (linkEvent != null) {
-            return linkEvent.getOriginDpid();
-        }
-        if (hostEvent != null) {
-            return hostEvent.getOriginDpid();
-        }
-        return null;
-    }
-
-    /**
      * Tests whether the event origin DPID equals the specified DPID.
      *
      * @param dpid the DPID to compare against.
@@ -218,108 +211,23 @@ public final class TopologyEvent implements BatchOperationTarget {
         return dpid.equals(getOriginDpid());
     }
 
+    public Dpid getOriginDpid() {
+        if (eventType == Type.NOOP) {
+            return null;
+        }
+        return event.getOriginDpid();
+    }
+
     /**
      * Returns the config state of the topology element.
      *
      * @return the config state of the topology element.
      */
     public ConfigState getConfigState() {
-        if (mastershipEvent != null) {
-            return mastershipEvent.getConfigState();
+        if (eventType == Type.NOOP) {
+            return ConfigState.NOT_CONFIGURED;  // Default: not configured
         }
-        if (switchEvent != null) {
-            return switchEvent.getConfigState();
-        }
-        if (portEvent != null) {
-            return portEvent.getConfigState();
-        }
-        if (linkEvent != null) {
-            return linkEvent.getConfigState();
-        }
-        if (hostEvent != null) {
-            return hostEvent.getConfigState();
-        }
-        return ConfigState.NOT_CONFIGURED;      // Default: not configured
-    }
-
-    /**
-     * Checks if all events contained are equal.
-     *
-     * @param obj TopologyEvent to compare against
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (obj == null) {
-            return false;
-        }
-
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-
-        TopologyEvent other = (TopologyEvent) obj;
-        return Objects.equals(mastershipEvent, other.mastershipEvent) &&
-            Objects.equals(switchEvent, other.switchEvent) &&
-            Objects.equals(portEvent, other.portEvent) &&
-            Objects.equals(linkEvent, other.linkEvent) &&
-            Objects.equals(hostEvent, other.hostEvent) &&
-            Objects.equals(onosInstanceId, other.onosInstanceId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mastershipEvent, switchEvent, portEvent,
-                            linkEvent, hostEvent, onosInstanceId);
-    }
-
-    /**
-     * Gets the string representation of the event.
-     *
-     * @return the string representation of the event.
-     */
-    @Override
-    public String toString() {
-        String eventStr = null;
-
-        //
-        // Get the Event string
-        //
-        stringLabel: {
-            if (mastershipEvent != null) {
-                eventStr = mastershipEvent.toString();
-                break stringLabel;
-            }
-            if (switchEvent != null) {
-                eventStr = switchEvent.toString();
-                break stringLabel;
-            }
-            if (portEvent != null) {
-                eventStr = portEvent.toString();
-                break stringLabel;
-            }
-            if (linkEvent != null) {
-                eventStr = linkEvent.toString();
-                break stringLabel;
-            }
-            if (hostEvent != null) {
-                eventStr = hostEvent.toString();
-                break stringLabel;
-            }
-            // Test whether this is NO-OP event
-            if (onosInstanceId != null) {
-                eventStr = "NO-OP";
-                break stringLabel;
-            }
-            // No event found
-            return "[Unknown TopologyEvent]";
-        }
-
-        return "[TopologyEvent " + eventStr + " from " +
-            onosInstanceId.toString() + "]";
+        return event.getConfigState();
     }
 
     /**
@@ -331,46 +239,17 @@ public final class TopologyEvent implements BatchOperationTarget {
         return getIDasByteBuffer().array();
     }
 
-    /**
-     * Gets the Topology event ID as a ByteBuffer.
-     *
-     * @return the Topology event ID as a ByteBuffer.
-     */
     public ByteBuffer getIDasByteBuffer() {
         ByteBuffer eventId = null;
 
         //
         // Get the Event ID
         //
-        idLabel: {
-            if (mastershipEvent != null) {
-                eventId = mastershipEvent.getIDasByteBuffer();
-                break idLabel;
-            }
-            if (switchEvent != null) {
-                eventId = switchEvent.getIDasByteBuffer();
-                break idLabel;
-            }
-            if (portEvent != null) {
-                eventId = portEvent.getIDasByteBuffer();
-                break idLabel;
-            }
-            if (linkEvent != null) {
-                eventId = linkEvent.getIDasByteBuffer();
-                break idLabel;
-            }
-            if (hostEvent != null) {
-                eventId = hostEvent.getIDasByteBuffer();
-                break idLabel;
-            }
-            // Test whether this is NO-OP event
-            if (onosInstanceId != null) {
-                String id = "NO-OP";
-                eventId = ByteBuffer.wrap(id.getBytes(StandardCharsets.UTF_8));
-                break idLabel;
-            }
-            // No event found
-            throw new IllegalStateException("Invalid TopologyEvent ID");
+        if (eventType == Type.NOOP) {
+            String id = "NO-OP";
+            eventId = ByteBuffer.wrap(id.getBytes(StandardCharsets.UTF_8));
+        } else {
+            eventId = event.getIDasByteBuffer();
         }
 
         //
@@ -387,5 +266,41 @@ public final class TopologyEvent implements BatchOperationTarget {
         buf.put(onosId);
         buf.flip();
         return buf;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        TopologyEvent other = (TopologyEvent) o;
+        return Objects.equals(eventType, other.eventType) &&
+            Objects.equals(event, other.event) &&
+            Objects.equals(onosInstanceId, other.onosInstanceId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(eventType, event, onosInstanceId);
+    }
+
+    @Override
+    public String toString() {
+        String eventStr = null;
+
+        //
+        // Get the Event string
+        //
+        if (eventType == Type.NOOP) {
+            eventStr = "NO-OP";
+        } else {
+            eventStr = event.toString();
+        }
+        return "[TopologyEvent " + eventStr + " from " +
+            onosInstanceId.toString() + "]";
     }
 }
