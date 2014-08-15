@@ -2,7 +2,7 @@ package net.onrc.onos.api.flowmanager;
 
 import java.util.Set;
 
-import net.onrc.onos.core.matchaction.MatchActionPlan;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.Dpid;
@@ -53,7 +53,7 @@ public class SingleSrcTreeFlow implements Flow {
     }
 
     @Override
-    public MatchActionPlan compile() {
+    public MatchActionOperations compile() {
         // TODO Auto-generated method stub
         return null;
     }

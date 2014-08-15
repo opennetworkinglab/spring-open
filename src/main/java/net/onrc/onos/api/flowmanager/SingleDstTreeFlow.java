@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.onrc.onos.core.matchaction.MatchActionPlan;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.SwitchPort;
@@ -56,7 +56,7 @@ public class SingleDstTreeFlow implements Flow {
     }
 
     @Override
-    public MatchActionPlan compile() {
+    public MatchActionOperations compile() {
         // TODO Auto-generated method stub
         return null;
     }

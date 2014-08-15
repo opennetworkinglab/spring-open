@@ -8,14 +8,14 @@ public interface MatchActionOperationsEvent {
     /**
      * TODO.
      *
-     * @return
+     * @return Match Action Operations Id (this is a WIP).
      */
     public MatchActionOperationsId getId();
 
     /**
      * TODO.
      *
-     * @return
+     * @return Match Action Operations State (this is a WIP).
      */
     public MatchActionOperationsState getState();
 

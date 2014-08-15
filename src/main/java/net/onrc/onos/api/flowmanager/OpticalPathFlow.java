@@ -2,7 +2,7 @@ package net.onrc.onos.api.flowmanager;
 
 import java.util.List;
 
-import net.onrc.onos.core.matchaction.MatchActionPlan;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.util.PortNumber;
 
@@ -41,7 +41,7 @@ public class OpticalPathFlow extends PathFlow {
     }
 
     @Override
-    public MatchActionPlan compile() {
+    public MatchActionOperations compile() {
         // TODO Auto-generated method stub
         return super.compile();
     }

@@ -11,14 +11,14 @@ public interface MatchActionEvent {
     /**
      * TODO.
      *
-     * @return
+     * @return Match Action ID (This is a WIP).
      */
     public MatchActionId getId();
 
     /**
      * TODO.
      *
-     * @return
+     * @return Match Action Status (This is a WIP).
      */
     public MatchActionStatus getStatus();
 

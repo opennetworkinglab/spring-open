@@ -1,7 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
 import net.onrc.onos.api.batchoperation.BatchOperationTarget;
-import net.onrc.onos.core.matchaction.MatchActionPlan;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.match.Match;
 
 /**
@@ -29,9 +29,9 @@ public interface Flow extends BatchOperationTarget {
     /**
      * Compiles this object to MatchAction plan.
      * <p>
-     * This method is called by FlowManagerModule to create MatchAction plans.
+     * This method is called by FlowManagerModule to create MatchAction operations.
      *
      * @return a MatchAction plan of this flow object.
      */
-    public MatchActionPlan compile();
+    public MatchActionOperations compile();
 }
