@@ -47,7 +47,6 @@ public class Ethernet extends BasePacket {
         ETHER_TYPE_CLASS_MAP.put(TYPE_RARP, ARP.class);
         ETHER_TYPE_CLASS_MAP.put(TYPE_IPV4, IPv4.class);
         ETHER_TYPE_CLASS_MAP.put(TYPE_LLDP, LLDP.class);
-        ETHER_TYPE_CLASS_MAP.put(TYPE_BSN, BSN.class);
     }
 
     protected MACAddress destinationMACAddress;
@@ -477,8 +476,6 @@ public class Ethernet extends BasePacket {
             sb.append("\ndata packet");
         } else if (pkt instanceof LLC) {
             sb.append("\nllc packet");
-        } else if (pkt instanceof BPDU) {
-            sb.append("\nbpdu packet");
         } else {
             sb.append("\nunknown packet");
         }
