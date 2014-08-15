@@ -10,7 +10,7 @@ import net.onrc.onos.core.util.Pair;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
- * An IFlow object expressing the point-to-multipoints tree flow for the packet
+ * A Flow object expressing the point-to-multipoints tree flow for the packet
  * layer.
  */
 public class SingleSrcTreeFlow implements Flow {

@@ -8,7 +8,7 @@ import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.PortNumber;
 
 /**
- * IFlow object representing a packet path.
+ * Flow object representing a packet path.
  * <p>
  * TODO: Think this: Do we need a bandwidth constraint?
  */
@@ -19,7 +19,7 @@ public class PacketPathFlow extends PathFlow {
     /**
      * Constructor.
      *
-     * @param id ID for this new IFlow object.
+     * @param id ID for this new Flow object.
      * @param match Match object at the source node of the path.
      * @param inPort Ingress port number at the ingress edge node.
      * @param path Path between ingress and egress edge node.

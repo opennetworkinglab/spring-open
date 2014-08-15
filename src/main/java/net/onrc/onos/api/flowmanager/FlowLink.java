@@ -5,10 +5,10 @@ import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
- * A link representation used by IFlow objects.
+ * A link representation used by Flow objects.
  * <p>
  * TODO: Should lambda, bandwidth, tag, etc. be defined in this FlowLink, Path,
- * Tree or IFlow? We have to define it.
+ * Tree or Flow? We have to define it.
  */
 public class FlowLink {
     protected SwitchPort srcSwitchPort;

@@ -4,7 +4,7 @@ package net.onrc.onos.core.matchaction.match;
  * A match object (traffic specifier) for optical nodes, flow-paths and intents.
  * <p>
  * This class does not have a switch ID and a port number. They are handled by
- * MatchAction, IFlow or Intent class.
+ * MatchAction, Flow or Intent class.
  */
 public class OpticalMatch implements Match {
 

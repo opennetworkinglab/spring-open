@@ -3,7 +3,7 @@ package net.onrc.onos.api.flowmanager;
 import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 
 /**
- * Represents ID for IFlow objects.
+ * Represents ID for Flow objects.
  */
 public class FlowId implements BatchOperationTarget {
     private final String value;

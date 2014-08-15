@@ -10,8 +10,8 @@ import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowManagerService;
 
 /**
- * Manages a set of IFlow objects, computes and maintains a set of Match-Action
- * entries based on the IFlow objects, and executes Match-Action plans.
+ * Manages a set of Flow objects, computes and maintains a set of Match-Action
+ * entries based on the Flow objects, and executes Match-Action plans.
  * <p>
  * TODO: Make all methods thread-safe
  */

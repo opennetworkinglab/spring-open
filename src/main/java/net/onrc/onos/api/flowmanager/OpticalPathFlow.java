@@ -7,7 +7,7 @@ import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.util.PortNumber;
 
 /**
- * IFlow object representing an optical path.
+ * Flow object representing an optical path.
  * <p>
  * TODO: Think this: How do we deal the optical path flow going through the
  * regenerators? Can we express it with multiple OpticalPathFlow objects?
@@ -18,7 +18,7 @@ public class OpticalPathFlow extends PathFlow {
     /**
      * Constructor.
      *
-     * @param id ID for this new IFlow object.
+     * @param id ID for this new Flow object.
      * @param inPort Ingress port number at the ingress edge node.
      * @param path Path between ingress and egress edge node.
      * @param actions The list of Action objects at the egress edge node.

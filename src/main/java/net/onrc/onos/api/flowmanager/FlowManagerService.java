@@ -5,49 +5,49 @@ import java.util.EventListener;
 
 /**
  * An interface class for flow manager. The role of the flow manager is to
- * manage a set of Match-Action entries based on the specified IFlow objects.
+ * manage a set of Match-Action entries based on the specified Flow objects.
  * <p>
- * It compiles accepted IFlow objects to Match-Action entries by calculating the
+ * It compiles accepted Flow objects to Match-Action entries by calculating the
  * match-action operation phases and allocating resources based on the
- * constrains described in the IFlow objects, and executes calculated phases
+ * constrains described in the Flow objects, and executes calculated phases
  * using Match-Action Service.
  * <p>
- * TODO: add more getter with filter for IFlow objects.
+ * TODO: add more getter with filter for Flow objects.
  */
 public interface FlowManagerService {
     /**
-     * Adds IFlow object, calculates match-action plan and executes it.
+     * Adds Flow object, calculates match-action plan and executes it.
      *
-     * @param flow IFlow object to be added
+     * @param flow Flow object to be added
      * @return true if succeeded, false otherwise
      */
     boolean addFlow(Flow flow);
 
     /**
-     * Removes IFlow object, calculates match-action plan and executes it.
+     * Removes Flow object, calculates match-action plan and executes it.
      *
-     * @param id ID for IFlow object to be removed
+     * @param id ID for Flow object to be removed
      * @return true if succeeded, false otherwise
      */
     boolean removeFlow(FlowId id);
 
     /**
-     * Gets IFlow object.
+     * Gets Flow object.
      *
-     * @param id ID of IFlow object
-     * @return IFlow object if found, null otherwise
+     * @param id ID of Flow object
+     * @return Flow object if found, null otherwise
      */
     Flow getFlow(FlowId id);
 
     /**
-     * Gets All IFlow objects.
+     * Gets All Flow objects.
      *
-     * @return the collection of IFlow objects
+     * @return the collection of Flow objects
      */
     Collection<Flow> getFlows();
 
     /**
-     * Executes batch operation of IFlow object.
+     * Executes batch operation of Flow object.
      *
      * @param ops flow operations to be executed
      * @return true if succeeded, false otherwise

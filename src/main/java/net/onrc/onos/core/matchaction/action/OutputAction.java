@@ -6,7 +6,7 @@ import net.onrc.onos.core.util.PortNumber;
  * An action object to output traffic to specified port.
  * <p>
  * This class does not have a switch ID. The switch ID is handled by
- * MatchAction, IFlow or Intent class.
+ * MatchAction, Flow or Intent class.
  */
 public class OutputAction implements Action {
     protected PortNumber portNumber;

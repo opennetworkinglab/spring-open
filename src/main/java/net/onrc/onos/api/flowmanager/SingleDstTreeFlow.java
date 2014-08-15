@@ -11,7 +11,7 @@ import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
- * An IFlow object expressing the multipoints-to-point tree flow for the packet
+ * A Flow object expressing the multipoints-to-point tree flow for the packet
  * layer.
  * <p>
  * NOTE: This class might generate the MatchActionPlan which includes the MAC

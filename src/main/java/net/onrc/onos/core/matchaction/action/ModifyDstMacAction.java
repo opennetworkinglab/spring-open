@@ -6,7 +6,7 @@ import net.floodlightcontroller.util.MACAddress;
  * An action object to modify destination MAC address.
  * <p>
  * This class does not have a switch ID. The switch ID is handled by
- * MatchAction, IFlow or Intent class.
+ * MatchAction, Flow or Intent class.
  */
 public class ModifyDstMacAction implements Action {
     private final MACAddress dstMac;
