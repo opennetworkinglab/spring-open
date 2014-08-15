@@ -47,12 +47,10 @@ public class FlowEntry {
      * @param dstIpAddress destination IP address
      * @param operator OpenFlow operation/command (add, remove, etc.)
      */
-    // CHECKSTYLE:OFF suppress the warning about too many parameters
     public FlowEntry(long sw, long srcPort, long dstPort,
             MACAddress srcMac, MACAddress dstMac,
             int srcIpAddress, int dstIpAddress,
             Operator operator) {
-        // CHECKSTYLE:ON
         this.sw = sw;
         this.match = new Match(sw, srcPort, srcMac, dstMac, srcIpAddress, dstIpAddress);
         this.actions = new HashSet<Action>();

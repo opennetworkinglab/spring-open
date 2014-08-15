@@ -64,11 +64,9 @@ public class ShortestPathIntent extends Intent {
      * @param dstMac Destination Host MAC Address
      * @param dstIp Destination IP Address
      */
-    // CHECKSTYLE:OFF suppress the warning about too many parameters
     public ShortestPathIntent(String id,
             long srcSwitch, long srcPort, long srcMac, int srcIp,
-            long dstSwitch, long dstPort, long dstMac, int dstIp ) {
-        // CHECKSTYLE:ON
+            long dstSwitch, long dstPort, long dstMac, int dstIp) {
         super(id);
         this.srcSwitchDpid = srcSwitch;
         this.srcPortNumber = srcPort;

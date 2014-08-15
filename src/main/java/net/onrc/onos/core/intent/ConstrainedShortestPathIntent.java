@@ -27,12 +27,10 @@ public class ConstrainedShortestPathIntent extends ShortestPathIntent {
      * @param bandwidth   bandwidth which should be allocated for the path.
      *                    If 0, no intent for bandwidth allocation (best effort).
      */
-    // CHECKSTYLE:OFF suppress the warning about too many parameters
     public ConstrainedShortestPathIntent(String id,
                                          long srcSwitch, long srcPort, long srcMac,
                                          long dstSwitch, long dstPort, long dstMac,
                                          double bandwidth) {
-    // CHECKSTYLE:ON
         super(id, srcSwitch, srcPort, srcMac, dstSwitch, dstPort, dstMac);
         this.bandwidth = bandwidth;
     }

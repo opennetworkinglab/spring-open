@@ -58,7 +58,6 @@ public final class TopologyEvents {
      * @param addedHostEvents the collection of added Host Events.
      * @param removedHostEvents the collection of removed Host Events.
      */
-    // CHECKSTYLE:OFF suppress the warning about too many parameters
     public TopologyEvents(Collection<MastershipEvent> addedMastershipEvents,
                           Collection<MastershipEvent> removedMastershipEvents,
                           Collection<SwitchEvent> addedSwitchEvents,
@@ -69,7 +68,6 @@ public final class TopologyEvents {
                           Collection<LinkEvent> removedLinkEvents,
                           Collection<HostEvent> addedHostEvents,
                           Collection<HostEvent> removedHostEvents) {
-        // CHECKSTYLE:ON
         this.addedMastershipEvents = ImmutableList.<MastershipEvent>copyOf(
                         checkNotNull(addedMastershipEvents));
         this.removedMastershipEvents = ImmutableList.<MastershipEvent>copyOf(

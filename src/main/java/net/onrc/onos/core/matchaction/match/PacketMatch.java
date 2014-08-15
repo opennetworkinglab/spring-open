@@ -39,12 +39,10 @@ public class PacketMatch implements Match {
      * @param srcTcpPort the source TCP port number
      * @param dstTcpPort the destination TCP port number
      */
-    // CHECKSTYLE:OFF suppress the warning about too many parameters
     PacketMatch(MACAddress srcMac, MACAddress dstMac,
             Short etherType,
             IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
             Short srcTcpPort, Short dstTcpPort) {
-        // CHECKSTYLE:ON
         this.srcMac = srcMac;
         this.dstMac = dstMac;
         this.etherType = etherType;
