@@ -30,14 +30,4 @@ public interface ITopologyService extends IFloodlightService {
      * @param listener the listener to remove.
      */
     public void removeListener(ITopologyListener listener);
-
-    /**
-     * Allows a module to get a reference to the southbound interface to
-     * the topology.
-     * TODO Figure out how to hide the southbound interface from
-     * applications/modules that shouldn't touch it
-     *
-     * @return the TopologyDiscoveryInterface object
-     */
-    public TopologyDiscoveryInterface getTopologyDiscoveryInterface();
 }

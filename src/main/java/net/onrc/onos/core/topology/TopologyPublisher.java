@@ -1,7 +1,10 @@
 package net.onrc.onos.core.topology;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +20,9 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
+
+import net.onrc.onos.core.datagrid.IDatagridService;
+import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.hostmanager.Host;
 import net.onrc.onos.core.hostmanager.IHostListener;
 import net.onrc.onos.core.hostmanager.IHostService;
@@ -51,16 +57,57 @@ public class TopologyPublisher implements IOFSwitchListener,
     private ILinkDiscoveryService linkDiscovery;
     private IControllerRegistryService registryService;
     private ITopologyService topologyService;
+    private IDatagridService datagridService;
 
     private IHostService hostService;
 
     private Topology topology;
-    private TopologyDiscoveryInterface topologyDiscoveryInterface;
 
     private static final String ENABLE_CLEANUP_PROPERTY = "EnableCleanup";
     private boolean cleanupEnabled = true;
     private static final int CLEANUP_TASK_INTERVAL = 60; // in seconds
     private SingletonTask cleanupTask;
+
+    private IEventChannel<byte[], TopologyEvent> eventChannel;
+
+    //
+    // Local state for keeping track of locally discovered events so we can
+    // cleanup properly when a Switch or Port is removed.
+    //
+    // We keep all Port, (incoming) Link and Host events per Switch DPID:
+    //  - If a switch goes down, we remove all corresponding Port, Link and
+    //    Host events.
+    //  - If a port on a switch goes down, we remove all corresponding Link
+    //    and Host events discovered by this instance.
+    //
+    // How to handle side-effect of remote events.
+    //  - Remote Port Down event -> Link Down
+    //      Not handled. (XXX Shouldn't it be removed from discovered.. Map)
+    //  - Remote Host Added -> lose ownership of Host)
+    //      Not handled. (XXX Shouldn't it be removed from discovered.. Map)
+    //
+    // XXX Domain knowledge based invariant maintenance should be moved to
+    //     driver module, since the invariant may be different on optical, etc.
+    //
+    // What happens on leadership change?
+    //  - Probably should: remove from discovered.. Maps, but not send DELETE
+    //    events
+    //    XXX Switch/Port can be rediscovered by new leader, but Link, Host?
+    //  - Current: There is no way to recognize leadership change?
+    //      ZookeeperRegistry.requestControl(long, ControlChangeCallback)
+    //      is the only way to register listener, and it allows only one
+    //      listener, which is already used by Controller class.
+    //
+    // FIXME Replace with concurrent variant.
+    //   #removeSwitchDiscoveryEvent(SwitchEvent) runs in different thread.
+    //
+    private Map<Dpid, Map<ByteBuffer, PortEvent>> discoveredAddedPortEvents =
+            new HashMap<>();
+    private Map<Dpid, Map<ByteBuffer, LinkEvent>> discoveredAddedLinkEvents =
+            new HashMap<>();
+    private Map<Dpid, Map<ByteBuffer, HostEvent>> discoveredAddedHostEvents =
+            new HashMap<>();
+
 
     /**
      * Cleanup old switches from the topology. Old switches are those which have
@@ -132,8 +179,7 @@ public class TopologyPublisher implements IOFSwitchListener,
                         HexString.toHexString(dpid));
 
                 SwitchEvent switchEvent = new SwitchEvent(new Dpid(dpid));
-                topologyDiscoveryInterface.
-                        removeSwitchDiscoveryEvent(switchEvent);
+                removeSwitchDiscoveryEvent(switchEvent);
                 registryService.releaseControl(dpid);
             }
         }
@@ -163,7 +209,7 @@ public class TopologyPublisher implements IOFSwitchListener,
                     link.getDst(), linkEvent);
             return;
         }
-        topologyDiscoveryInterface.putLinkDiscoveryEvent(linkEvent);
+        putLinkDiscoveryEvent(linkEvent);
     }
 
     @Override
@@ -187,7 +233,7 @@ public class TopologyPublisher implements IOFSwitchListener,
                     link.getDst(), linkEvent);
             return;
         }
-        topologyDiscoveryInterface.removeLinkDiscoveryEvent(linkEvent);
+        removeLinkDiscoveryEvent(linkEvent);
     }
 
     /* *****************
@@ -242,7 +288,7 @@ public class TopologyPublisher implements IOFSwitchListener,
             portEvent.freeze();
             portEvents.add(portEvent);
         }
-        topologyDiscoveryInterface.putSwitchDiscoveryEvent(switchEvent, portEvents);
+        putSwitchDiscoveryEvent(switchEvent, portEvents);
 
         for (OFPortDesc port : sw.getPorts()) {
             // Allow links to be discovered on this port now that it's
@@ -287,7 +333,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         mastershipEvent.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_ALL_LAYERS);
         mastershipEvent.freeze();
-        topologyDiscoveryInterface.removeSwitchMastershipEvent(mastershipEvent);
+        removeSwitchMastershipEvent(mastershipEvent);
     }
 
     @Override
@@ -330,7 +376,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         portEvent.freeze();
 
         if (registryService.hasControl(switchId)) {
-            topologyDiscoveryInterface.putPortDiscoveryEvent(portEvent);
+            putPortDiscoveryEvent(portEvent);
             linkDiscovery.enableDiscoveryOnPort(switchId,
                     port.getPortNo().getShortPortNumber());
         } else {
@@ -354,7 +400,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         portEvent.freeze();
 
         if (registryService.hasControl(switchId)) {
-            topologyDiscoveryInterface.removePortDiscoveryEvent(portEvent);
+            removePortDiscoveryEvent(portEvent);
         } else {
             log.debug("Not the master for switch {}. Suppressed port del event {}.",
                     dpid, portEvent);
@@ -390,6 +436,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         l.add(ILinkDiscoveryService.class);
         l.add(IThreadPoolService.class);
         l.add(IControllerRegistryService.class);
+        l.add(IDatagridService.class);
         l.add(ITopologyService.class);
         l.add(IHostService.class);
         return l;
@@ -401,6 +448,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         linkDiscovery = context.getServiceImpl(ILinkDiscoveryService.class);
         registryService = context.getServiceImpl(IControllerRegistryService.class);
+        datagridService = context.getServiceImpl(IDatagridService.class);
         hostService = context.getServiceImpl(IHostService.class);
 
         topologyService = context.getServiceImpl(ITopologyService.class);
@@ -412,9 +460,12 @@ public class TopologyPublisher implements IOFSwitchListener,
         linkDiscovery.addListener(this);
         hostService.addHostListener(this);
 
+        eventChannel = datagridService.createChannel(
+                                TopologyManager.EVENT_CHANNEL_NAME,
+                                byte[].class,
+                                TopologyEvent.class);
+
         topology = topologyService.getTopology();
-        topologyDiscoveryInterface =
-                topologyService.getTopologyDiscoveryInterface();
 
         // Run the cleanup thread
         String enableCleanup =
@@ -449,7 +500,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         // Does not use vlan info now.
         event.freeze();
 
-        topologyDiscoveryInterface.putHostDiscoveryEvent(event);
+        putHostDiscoveryEvent(event);
     }
 
     @Override
@@ -458,7 +509,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         HostEvent event = new HostEvent(host.getMacAddress());
         // XXX shouldn't we be setting attachment points?
         event.freeze();
-        topologyDiscoveryInterface.removeHostDiscoveryEvent(event);
+        removeHostDiscoveryEvent(event);
     }
 
     private void controllerRoleChanged(Dpid dpid, Role role) {
@@ -473,6 +524,330 @@ public class TopologyPublisher implements IOFSwitchListener,
         mastershipEvent.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_ALL_LAYERS);
         mastershipEvent.freeze();
-        topologyDiscoveryInterface.putSwitchMastershipEvent(mastershipEvent);
+        putSwitchMastershipEvent(mastershipEvent);
+    }
+
+    /**
+     * Mastership updated event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    private void putSwitchMastershipEvent(MastershipEvent mastershipEvent) {
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(mastershipEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
+    }
+
+    /**
+     * Mastership removed event.
+     *
+     * @param mastershipEvent the mastership event.
+     */
+    private void removeSwitchMastershipEvent(MastershipEvent mastershipEvent) {
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(mastershipEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.removeEntry(topologyEvent.getID());
+    }
+
+    /**
+     * Switch discovered event.
+     *
+     * @param switchEvent the switch event.
+     * @param portEvents  the corresponding port events for the switch.
+     */
+    private void putSwitchDiscoveryEvent(SwitchEvent switchEvent,
+                                         Collection<PortEvent> portEvents) {
+        log.debug("Sending add switch: {}", switchEvent);
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(switchEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
+
+        // Send out notification for each port
+        for (PortEvent portEvent : portEvents) {
+            log.debug("Sending add port: {}", portEvent);
+            topologyEvent =
+                new TopologyEvent(portEvent,
+                                  registryService.getOnosInstanceId());
+            eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
+        }
+
+        //
+        // Keep track of the added ports
+        //
+        // Get the old Port Events
+        Map<ByteBuffer, PortEvent> oldPortEvents =
+            discoveredAddedPortEvents.get(switchEvent.getDpid());
+        if (oldPortEvents == null) {
+            oldPortEvents = new HashMap<>();
+        }
+
+        // Store the new Port Events in the local cache
+        Map<ByteBuffer, PortEvent> newPortEvents = new HashMap<>();
+        for (PortEvent portEvent : portEvents) {
+            ByteBuffer id = portEvent.getIDasByteBuffer();
+            newPortEvents.put(id, portEvent);
+        }
+        discoveredAddedPortEvents.put(switchEvent.getDpid(), newPortEvents);
+
+        //
+        // Extract the removed ports
+        //
+        List<PortEvent> removedPortEvents = new LinkedList<>();
+        for (Map.Entry<ByteBuffer, PortEvent> entry : oldPortEvents.entrySet()) {
+            ByteBuffer key = entry.getKey();
+            PortEvent portEvent = entry.getValue();
+            if (!newPortEvents.containsKey(key)) {
+                removedPortEvents.add(portEvent);
+            }
+        }
+
+        // Cleanup old removed ports
+        for (PortEvent portEvent : removedPortEvents) {
+            removePortDiscoveryEvent(portEvent);
+        }
+    }
+
+    /**
+     * Switch removed event.
+     *
+     * @param switchEvent the switch event.
+     */
+    private void removeSwitchDiscoveryEvent(SwitchEvent switchEvent) {
+        TopologyEvent topologyEvent;
+
+        // Get the old Port Events
+        Map<ByteBuffer, PortEvent> oldPortEvents =
+                discoveredAddedPortEvents.get(switchEvent.getDpid());
+        if (oldPortEvents == null) {
+            oldPortEvents = new HashMap<>();
+        }
+
+        log.debug("Sending remove switch: {}", switchEvent);
+        // Send out notification
+        topologyEvent =
+            new TopologyEvent(switchEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.removeEntry(topologyEvent.getID());
+
+        //
+        // Send out notification for each port.
+        //
+        // NOTE: We don't use removePortDiscoveryEvent() for the cleanup,
+        // because it will attempt to remove the port from the database,
+        // and the deactiveSwitch() call above already removed all ports.
+        //
+        for (PortEvent portEvent : oldPortEvents.values()) {
+            log.debug("Sending remove port:", portEvent);
+            topologyEvent =
+                new TopologyEvent(portEvent,
+                                  registryService.getOnosInstanceId());
+            eventChannel.removeEntry(topologyEvent.getID());
+        }
+        discoveredAddedPortEvents.remove(switchEvent.getDpid());
+
+        // Cleanup for each link
+        Map<ByteBuffer, LinkEvent> oldLinkEvents =
+            discoveredAddedLinkEvents.get(switchEvent.getDpid());
+        if (oldLinkEvents != null) {
+            for (LinkEvent linkEvent : new ArrayList<>(oldLinkEvents.values())) {
+                removeLinkDiscoveryEvent(linkEvent);
+            }
+            discoveredAddedLinkEvents.remove(switchEvent.getDpid());
+        }
+
+        // Cleanup for each host
+        Map<ByteBuffer, HostEvent> oldHostEvents =
+            discoveredAddedHostEvents.get(switchEvent.getDpid());
+        if (oldHostEvents != null) {
+            for (HostEvent hostEvent : new ArrayList<>(oldHostEvents.values())) {
+                removeHostDiscoveryEvent(hostEvent);
+            }
+            discoveredAddedHostEvents.remove(switchEvent.getDpid());
+        }
+    }
+
+    /**
+     * Port discovered event.
+     *
+     * @param portEvent the port event.
+     */
+    private void putPortDiscoveryEvent(PortEvent portEvent) {
+        log.debug("Sending add port: {}", portEvent);
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(portEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
+
+        // Store the new Port Event in the local cache
+        Map<ByteBuffer, PortEvent> oldPortEvents =
+            discoveredAddedPortEvents.get(portEvent.getDpid());
+        if (oldPortEvents == null) {
+            oldPortEvents = new HashMap<>();
+            discoveredAddedPortEvents.put(portEvent.getDpid(), oldPortEvents);
+        }
+        ByteBuffer id = portEvent.getIDasByteBuffer();
+        oldPortEvents.put(id, portEvent);
+    }
+
+    /**
+     * Port removed event.
+     *
+     * @param portEvent the port event.
+     */
+    private void removePortDiscoveryEvent(PortEvent portEvent) {
+        log.debug("Sending remove port: {}", portEvent);
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(portEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.removeEntry(topologyEvent.getID());
+
+        // Cleanup the Port Event from the local cache
+        Map<ByteBuffer, PortEvent> oldPortEvents =
+            discoveredAddedPortEvents.get(portEvent.getDpid());
+        if (oldPortEvents != null) {
+            ByteBuffer id = portEvent.getIDasByteBuffer();
+            oldPortEvents.remove(id);
+        }
+
+        // Cleanup for the incoming link
+        Map<ByteBuffer, LinkEvent> oldLinkEvents =
+            discoveredAddedLinkEvents.get(portEvent.getDpid());
+        if (oldLinkEvents != null) {
+            for (LinkEvent linkEvent : new ArrayList<>(oldLinkEvents.values())) {
+                if (linkEvent.getDst().equals(portEvent.getSwitchPort())) {
+                    removeLinkDiscoveryEvent(linkEvent);
+                    // XXX If we change our model to allow multiple Link on
+                    // a Port, this loop must be fixed to allow continuing.
+                    break;
+                }
+            }
+        }
+
+        // Cleanup for the connected hosts
+        // TODO: The implementation below is probably wrong
+        List<HostEvent> removedHostEvents = new LinkedList<>();
+        Map<ByteBuffer, HostEvent> oldHostEvents =
+            discoveredAddedHostEvents.get(portEvent.getDpid());
+        if (oldHostEvents != null) {
+            for (HostEvent hostEvent : new ArrayList<>(oldHostEvents.values())) {
+                for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
+                    if (swp.equals(portEvent.getSwitchPort())) {
+                        removedHostEvents.add(hostEvent);
+                    }
+                }
+            }
+            for (HostEvent hostEvent : removedHostEvents) {
+                removeHostDiscoveryEvent(hostEvent);
+            }
+        }
+    }
+
+    /**
+     * Link discovered event.
+     *
+     * @param linkEvent the link event.
+     */
+    private void putLinkDiscoveryEvent(LinkEvent linkEvent) {
+        log.debug("Sending add link: {}", linkEvent);
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(linkEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
+
+        // Store the new Link Event in the local cache
+        Map<ByteBuffer, LinkEvent> oldLinkEvents =
+            discoveredAddedLinkEvents.get(linkEvent.getDst().getDpid());
+        if (oldLinkEvents == null) {
+            oldLinkEvents = new HashMap<>();
+            discoveredAddedLinkEvents.put(linkEvent.getDst().getDpid(),
+                                          oldLinkEvents);
+        }
+        ByteBuffer id = linkEvent.getIDasByteBuffer();
+        oldLinkEvents.put(id, linkEvent);
+    }
+
+    /**
+     * Link removed event.
+     *
+     * @param linkEvent the link event.
+     */
+    private void removeLinkDiscoveryEvent(LinkEvent linkEvent) {
+        log.debug("Sending remove link: {}", linkEvent);
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(linkEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.removeEntry(topologyEvent.getID());
+
+        // Cleanup the Link Event from the local cache
+        Map<ByteBuffer, LinkEvent> oldLinkEvents =
+            discoveredAddedLinkEvents.get(linkEvent.getDst().getDpid());
+        if (oldLinkEvents != null) {
+            ByteBuffer id = linkEvent.getIDasByteBuffer();
+            oldLinkEvents.remove(id);
+        }
+    }
+
+    /**
+     * Host discovered event.
+     *
+     * @param hostEvent the host event.
+     */
+    private void putHostDiscoveryEvent(HostEvent hostEvent) {
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(hostEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.addEntry(topologyEvent.getID(), topologyEvent);
+        log.debug("Put the host info into the cache of the topology. mac {}",
+                  hostEvent.getMac());
+
+        // Store the new Host Event in the local cache
+        // TODO: The implementation below is probably wrong
+        for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
+            Map<ByteBuffer, HostEvent> oldHostEvents =
+                discoveredAddedHostEvents.get(swp.getDpid());
+            if (oldHostEvents == null) {
+                oldHostEvents = new HashMap<>();
+                discoveredAddedHostEvents.put(swp.getDpid(), oldHostEvents);
+            }
+            ByteBuffer id = hostEvent.getIDasByteBuffer();
+            oldHostEvents.put(id, hostEvent);
+        }
+    }
+
+    /**
+     * Host removed event.
+     *
+     * @param hostEvent the host event.
+     */
+    private void removeHostDiscoveryEvent(HostEvent hostEvent) {
+        // Send out notification
+        TopologyEvent topologyEvent =
+            new TopologyEvent(hostEvent,
+                              registryService.getOnosInstanceId());
+        eventChannel.removeEntry(topologyEvent.getID());
+        log.debug("Remove the host info into the cache of the topology. mac {}",
+                  hostEvent.getMac());
+
+        // Cleanup the Host Event from the local cache
+        // TODO: The implementation below is probably wrong
+        ByteBuffer id = hostEvent.getIDasByteBuffer();
+        for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
+            Map<ByteBuffer, HostEvent> oldHostEvents =
+                discoveredAddedHostEvents.get(swp.getDpid());
+            if (oldHostEvents != null) {
+                oldHostEvents.remove(id);
+            }
+        }
     }
 }

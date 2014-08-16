@@ -72,11 +72,6 @@ public class TopologyModule implements IFloodlightModule, ITopologyService {
     }
 
     @Override
-    public TopologyDiscoveryInterface getTopologyDiscoveryInterface() {
-        return topologyManager;
-    }
-
-    @Override
     public void addListener(ITopologyListener listener,
                             boolean startFromSnapshot) {
         topologyManager.addListener(listener, startFromSnapshot);
