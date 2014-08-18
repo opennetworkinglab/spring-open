@@ -22,6 +22,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(using = LinkEventSerializer.class)
 public class LinkEvent extends TopologyElement<LinkEvent> {
+    public static final int LINKID_BYTES = 2 + PortEvent.PORTID_BYTES * 2;
 
     private final LinkTuple id;
     // TODO add LastSeenTime, Capacity if appropriate
@@ -37,62 +38,70 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
     }
 
     /**
-     * Creates the Link object.
+     * Constructor for given LinkTuple.
      *
-     * @param id link tuple to identify this link
+     * @param id the link tuple to identify the link
      */
     public LinkEvent(LinkTuple id) {
         this.id = checkNotNull(id);
     }
 
     /**
-     * Creates the Link object.
+     * Constructor for given source and destination switch ports.
      *
-     * @param src source SwitchPort
-     * @param dst destination SwitchPort
+     * @param src the source SwitchPort to use
+     * @param dst the destination SwitchPort to use
      */
     public LinkEvent(SwitchPort src, SwitchPort dst) {
         this(new LinkTuple(src, dst));
     }
 
     /**
-     * Creates an unfrozen copy of given Object.
+     * Constructor for a given Link object.
+     * <p>
+     * TODO: This constructor should probably be removed.
      *
-     * @param original to make copy of.
+     * @param link the Link object to use.
      */
-    public LinkEvent(LinkEvent original) {
-        super(original);
-        this.id = original.id;
-    }
-
-    // TODO probably want to remove this
     public LinkEvent(Link link) {
         this(link.getLinkTuple());
         // FIXME losing attributes here
     }
 
     /**
-     * Gets a {@link LinkTuple} that identifies this link.
+     * Copy constructor.
+     * <p>
+     * Creates an unfrozen copy of the given LinkEvent object.
      *
-     * @return a LinkTuple representing the Port
+     * @param original the object ot make copy of
+     */
+    public LinkEvent(LinkEvent original) {
+        super(original);
+        this.id = original.id;
+    }
+
+    /**
+     * Gets the LinkTuple that identifies this link.
+     *
+     * @return the LinkTuple identifying this link
      */
     public LinkTuple getLinkTuple() {
         return id;
     }
 
     /**
-     * Gets the source SwitchPort.
+     * Gets the link source SwitchPort.
      *
-     * @return source SwitchPort.
+     * @return the link source SwitchPort
      */
     public SwitchPort getSrc() {
         return getLinkTuple().getSrc();
     }
 
     /**
-     * Gets the destination SwitchPort.
+     * Gets the link destination SwitchPort.
      *
-     * @return destination SwitchPort.
+     * @return the link destination SwitchPort
      */
     public SwitchPort getDst() {
         return getLinkTuple().getDst();
@@ -100,9 +109,10 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
 
     /**
      * Gets the link capacity.
+     * <p>
      * TODO: What is the unit?
      *
-     * @return capacity
+     * @return the link capacity
      */
     public Double getCapacity() {
         return capacity;
@@ -110,9 +120,10 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
 
     /**
      * Sets the link capacity.
+     * <p>
      * TODO: What is the unit?
      *
-     * @param capacity capacity
+     * @param capacity the link capacity to set
      */
     void setCapacity(Double capacity) {
         if (isFrozen()) {
@@ -122,14 +133,35 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
         this.capacity = capacity;
     }
 
-    public static final int LINKID_BYTES = 2 + PortEvent.PORTID_BYTES * 2;
-
+    /**
+     * Computes the link ID for given source and destination switch DPID and
+     * port numbers.
+     *
+     * @param srcDpid the source switch DPID to use
+     * @param srcPortNo the source port number to use
+     * @param dstDpid the destination switch DPID to use
+     * @param dstPortNo the destination port number to use
+     * @return the link ID as a ByteBuffer
+     */
     public static ByteBuffer getLinkID(Dpid srcDpid, PortNumber srcPortNo,
                                        Dpid dstDpid, PortNumber dstPortNo) {
         return getLinkID(srcDpid.value(), srcPortNo.value(),
                          dstDpid.value(), dstPortNo.value());
     }
 
+    /**
+     * Computes the link ID for given source and destination switch DPID and
+     * port numbers.
+     * <p>
+     * TODO: This method should be removed and replaced with the corresponding
+     * getLinkID(Dpid, PortNumber, Dpid, PortNumber) method.
+     *
+     * @param srcDpid the source switch DPID to use
+     * @param srcPortNo the source port number to use
+     * @param dstDpid the destination switch DPID to use
+     * @param dstPortNo the destination port number to use
+     * @return the link ID as a ByteBuffer
+     */
     public static ByteBuffer getLinkID(Long srcDpid, Long srcPortNo,
                                        Long dstDpid, Long dstPortNo) {
         return (ByteBuffer) ByteBuffer.allocate(LinkEvent.LINKID_BYTES)

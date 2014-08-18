@@ -45,7 +45,7 @@ public class HostEvent extends TopologyElement<HostEvent> {
     }
 
     /**
-     * Creates the Host object.
+     * Constructor for a given host MAC address.
      *
      * @param mac the MAC address to identify the host
      */
@@ -55,9 +55,11 @@ public class HostEvent extends TopologyElement<HostEvent> {
     }
 
     /**
-     * Creates an unfrozen copy of given Object.
+     * Copy constructor.
+     * <p>
+     * Creates an unfrozen copy of the given HostEvent object.
      *
-     * @param original to make copy of.
+     * @param original the object to make copy of
      */
     public HostEvent(HostEvent original) {
         super(original);
@@ -66,15 +68,29 @@ public class HostEvent extends TopologyElement<HostEvent> {
         this.lastSeenTime = original.lastSeenTime;
     }
 
-
+    /**
+     * Gets the host MAC address.
+     *
+     * @return the MAC address.
+     */
     public MACAddress getMac() {
         return mac;
     }
 
+    /**
+     * Gets the switch attachment points.
+     *
+     * @return the switch attachment points
+     */
     public List<SwitchPort> getAttachmentPoints() {
         return Collections.unmodifiableList(attachmentPoints);
     }
 
+    /**
+     * Sets the switch attachment points.
+     *
+     * @param attachmentPoints the switch attachment points to set
+     */
     public void setAttachmentPoints(List<SwitchPort> attachmentPoints) {
         if (isFrozen()) {
             throw new IllegalStateException("Tried to modify frozen instance: " + this);
@@ -82,6 +98,11 @@ public class HostEvent extends TopologyElement<HostEvent> {
         this.attachmentPoints = attachmentPoints;
     }
 
+    /**
+     * Adds a switch attachment point.
+     *
+     * @param attachmentPoint the switch attachment point to add
+     */
     public void addAttachmentPoint(SwitchPort attachmentPoint) {
         if (isFrozen()) {
             throw new IllegalStateException("Tried to modify frozen instance: " + this);
@@ -90,6 +111,11 @@ public class HostEvent extends TopologyElement<HostEvent> {
         this.attachmentPoints.add(0, attachmentPoint);
     }
 
+    /**
+     * Removes a switch attachment point.
+     *
+     * @param attachmentPoint the switch attachment point to remove
+     */
     public boolean removeAttachmentPoint(SwitchPort attachmentPoint) {
         if (isFrozen()) {
             throw new IllegalStateException("Tried to modify frozen instance: " + this);
@@ -97,11 +123,21 @@ public class HostEvent extends TopologyElement<HostEvent> {
         return this.attachmentPoints.remove(attachmentPoint);
     }
 
-
+    /**
+     * Gets the host last seen time in milliseconds since the epoch.
+     *
+     * @return the host last seen time in milliseconds since the epoch
+     */
     public long getLastSeenTime() {
         return lastSeenTime;
     }
 
+    /**
+     * Sets the host last seen time in milliseconds since the epoch.
+     *
+     * @param lastSeenTime the host last seen time in milliseconds since the
+     * epoch
+     */
     public void setLastSeenTime(long lastSeenTime) {
         if (isFrozen()) {
             throw new IllegalStateException("Tried to modify frozen instance: " + this);
@@ -109,7 +145,15 @@ public class HostEvent extends TopologyElement<HostEvent> {
         this.lastSeenTime = lastSeenTime;
     }
 
-    // Assuming mac is unique cluster-wide
+    /**
+     * Computes the host ID for a given host MAC address.
+     * <p>
+     * TODO: This method should be replaced with a method that uses
+     * MACAddress as an argument instead of a byte array.
+     *
+     * @param mac the host MAC address to use
+     * @return the host ID as a ByteBuffer
+     */
     public static ByteBuffer getHostID(final byte[] mac) {
         return (ByteBuffer) ByteBuffer.allocate(2 + mac.length)
                 .putChar('H').put(mac).flip();

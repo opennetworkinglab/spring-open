@@ -21,7 +21,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = MastershipEventSerializer.class)
 public class MastershipEvent extends TopologyElement<MastershipEvent> {
-
     private final Dpid dpid;
     private final OnosInstanceId onosInstanceId;
     private final Role role;
@@ -37,11 +36,12 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
     }
 
     /**
-     * Creates the Switch Mastership object.
+     * Constructor for given switch DPID, ONOS Instance ID, and ONOS instance
+     * role for the switch.
      *
-     * @param dpid the Switch DPID
+     * @param dpid the switch DPID
      * @param onosInstanceId the ONOS Instance ID
-     * @param role the ONOS instance role for the switch.
+     * @param role the ONOS instance role for the switch
      */
     public MastershipEvent(Dpid dpid, OnosInstanceId onosInstanceId,
                            Role role) {
@@ -51,9 +51,11 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
     }
 
     /**
-     * Creates an unfrozen copy of given Object.
+     * Copy constructor.
+     * <p>
+     * Creates an unfrozen copy of the given Switch MastershipEvent object.
      *
-     * @param original to make copy of.
+     * @param original the object to make copy of
      */
     public MastershipEvent(MastershipEvent original) {
         super(original);
@@ -65,7 +67,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
     /**
      * Gets the Switch DPID.
      *
-     * @return the Switch DPID.
+     * @return the Switch DPID
      */
     public Dpid getDpid() {
         return dpid;
@@ -74,7 +76,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
     /**
      * Gets the ONOS Instance ID.
      *
-     * @return the ONOS Instance ID.
+     * @return the ONOS Instance ID
      */
     public OnosInstanceId getOnosInstanceId() {
         return onosInstanceId;
@@ -83,7 +85,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
     /**
      * Gets the ONOS Controller Role for the Switch.
      *
-     * @return the ONOS Controller Role for the Switch.
+     * @return the ONOS Controller Role for the Switch
      */
     public Role getRole() {
         return role;
@@ -112,8 +114,8 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      * MastershipEvent objects are equal if they have same DPID and same
      * ONOS Instance ID.
      *
-     * @param o another object to compare to this.
-     * @return true if equal, false otherwise.
+     * @param o another object to compare to this
+     * @return true if equal, false otherwise
      */
     @Override
     public boolean equals(Object o) {

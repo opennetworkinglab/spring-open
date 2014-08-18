@@ -18,6 +18,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = SwitchEventSerializer.class)
 public class SwitchEvent extends TopologyElement<SwitchEvent> {
+    public static final int SWITCHID_BYTES = 2 + 8;
+
     private final Dpid dpid;
 
     /**
@@ -29,18 +31,20 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
     }
 
     /**
-     * Creates the switch object.
+     * Constructor for given switch DPID.
      *
-     * @param dpid Dpid to identify this switch
+     * @param dpid the switch DPID to identify the switch
      */
     public SwitchEvent(Dpid dpid) {
         this.dpid = checkNotNull(dpid);
     }
 
     /**
-     * Creates an unfrozen copy of given Object.
+     * Copy constructor.
+     * <p>
+     * Creates an unfrozen copy of the given SwitchEvent object.
      *
-     * @param original to make copy of.
+     * @param original the object to make copy of
      */
     public SwitchEvent(SwitchEvent original) {
         super(original);
@@ -50,18 +54,31 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
     /**
      * Gets the DPID identifying this switch.
      *
-     * @return DPID
+     * @return the DPID identifying this switch
      */
     public Dpid getDpid() {
         return dpid;
     }
 
-    public static final int SWITCHID_BYTES = 2 + 8;
-
+    /**
+     * Computes the switch ID for a given switch DPID.
+     *
+     * @param dpid the switch DPID to use
+     * @return the switch ID as a ByteBuffer
+     */
     public static ByteBuffer getSwitchID(Dpid dpid) {
         return getSwitchID(dpid.value());
     }
 
+    /**
+     * Computes the switch ID for a given switch DPID.
+     * <p>
+     * TODO: This method should be removed and replaced with the corresponding
+     * getSwitchID(Dpid) method.
+     *
+     * @param dpid the switch DPID to use
+     * @return the switch ID as a ByteBuffer
+     */
     public static ByteBuffer getSwitchID(Long dpid) {
         if (dpid == null) {
             throw new IllegalArgumentException("dpid cannot be null");

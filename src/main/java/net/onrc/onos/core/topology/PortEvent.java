@@ -20,6 +20,7 @@ import java.util.Objects;
  */
 @JsonSerialize(using = PortEventSerializer.class)
 public class PortEvent extends TopologyElement<PortEvent> {
+    public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
 
     private final SwitchPort id;
     // TODO Add Hardware Address
@@ -30,7 +31,6 @@ public class PortEvent extends TopologyElement<PortEvent> {
      */
     public static final String DESCRIPTION = "description";
 
-
     /**
      * Default constructor for Serializer to use.
      */
@@ -40,28 +40,30 @@ public class PortEvent extends TopologyElement<PortEvent> {
     }
 
     /**
-     * Creates the port object.
+     * Constructor for given SwitchPort.
      *
-     * @param switchPort SwitchPort to identify this port
+     * @param switchPort the SwitchPort to identify the port
      */
     public PortEvent(SwitchPort switchPort) {
         this.id = checkNotNull(switchPort);
     }
 
     /**
-     * Creates the port object.
+     * Constructor for given switch DPID and port number.
      *
-     * @param dpid SwitchPort to identify this port
-     * @param number PortNumber to identify this port
+     * @param dpid the DPID of the switch the port belongs to
+     * @param number the PortNumber to identify the port
      */
     public PortEvent(Dpid dpid, PortNumber number) {
         this.id = new SwitchPort(dpid, number);
     }
 
     /**
-     * Creates an unfrozen copy of given Object.
+     * Copy constructor.
+     * <p>
+     * Creates an unfrozen copy of the given PortEvent object.
      *
-     * @param original to make copy of.
+     * @param original the object to make copy of
      */
     public PortEvent(PortEvent original) {
         super(original);
@@ -71,16 +73,16 @@ public class PortEvent extends TopologyElement<PortEvent> {
     /**
      * Gets the SwitchPort identifying this port.
      *
-     * @return SwitchPort
+     * @return the SwitchPort identifying this port
      */
     public SwitchPort getSwitchPort() {
         return id;
     }
 
     /**
-     * Gets the Dpid of the switch this port belongs to.
+     * Gets the DPID of the switch this port belongs to.
      *
-     * @return DPID
+     * @return the DPID of the switch this port belongs to
      */
     public Dpid getDpid() {
         return id.getDpid();
@@ -89,20 +91,35 @@ public class PortEvent extends TopologyElement<PortEvent> {
     /**
      * Gets the port number.
      *
-     * @return port number
+     * @return the port number
      */
     public PortNumber getPortNumber() {
         return id.getPortNumber();
     }
 
-    public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
-
+    /**
+     * Computes the port ID for a given switch DPID and a port number.
+     *
+     * @param dpid the switch DPID to use
+     * @param number the port number to use
+     * @return the port ID as a ByteBuffer
+     */
     public static ByteBuffer getPortID(Dpid dpid, PortNumber number) {
         checkNotNull(dpid);
         checkNotNull(number);
         return getPortID(dpid.value(), number.value());
     }
 
+    /**
+     * Computes the port ID for a given switch DPID and a port number.
+     * <p>
+     * TODO: This method should be removed and replaced with the corresponding
+     * getPortID(Dpid, PortNumber) method.
+     *
+     * @param dpid the switch DPID to use
+     * @param number the port number to use
+     * @return the port ID as a ByteBuffer
+     */
     public static ByteBuffer getPortID(Long dpid, Long number) {
         if (dpid == null) {
             throw new IllegalArgumentException("dpid cannot be null");
