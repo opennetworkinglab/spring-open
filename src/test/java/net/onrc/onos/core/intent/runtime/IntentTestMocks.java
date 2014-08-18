@@ -135,7 +135,7 @@ public class IntentTestMocks {
      * will need to add items to the Context to allow communications with
      * downstream classes.
      *
-     * @return the FloodlightModuleCOntext used by the mock.
+     * @return the FloodlightModuleContext used by the mock.
      */
     public FloodlightModuleContext getModuleContext() {
         return moduleContext;
