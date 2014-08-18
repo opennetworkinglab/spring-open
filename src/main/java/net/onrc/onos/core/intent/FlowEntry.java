@@ -151,7 +151,11 @@ public class FlowEntry {
 
         switch (operator) {
         case ADD:
-            builder = factory.buildFlowModifyStrict();
+            // XXX Workaround for semantic differences between OF1.0 and 1.3.
+            // The original code for 1.0 used MODIFY_STRICT but in 1.3 a
+            // MODIFY* command won't create the flow entry if it doesn't
+            // already exist.
+            builder = factory.buildFlowAdd();
             break;
         case REMOVE:
             builder = factory.buildFlowDeleteStrict();
