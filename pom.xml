@@ -101,6 +101,18 @@
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>onos-logs</directory>
+              <includes>
+                <!-- log generated during unit test runs -->
+                <include>test.log</include>
+              </includes>
+            </fileset>
+          </filesets>
+          <failOnError>false</failOnError>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
