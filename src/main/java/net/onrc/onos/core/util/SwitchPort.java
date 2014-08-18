@@ -11,8 +11,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  */
 @JsonSerialize(using = SwitchPortSerializer.class)
 public final class SwitchPort {
-    private final Dpid dpid;        // The DPID of the switch
-    private final PortNumber port;        // The port of the switch
+    private final Dpid dpid;            // The DPID of the switch
+    private final PortNumber port;      // The port number on the switch
 
     /**
      * Default constructor for Serializer to use.
@@ -62,26 +62,8 @@ public final class SwitchPort {
      *
      * @return the DPID value of the Switch-Port.
      */
-    public Dpid dpid() {
-        return dpid;
-    }
-
-    /**
-     * Get the DPID value of the Switch-Port.
-     *
-     * @return the DPID value of the Switch-Port.
-     */
     public Dpid getDpid() {
         return dpid;
-    }
-
-    /**
-     * Get the port value of the Switch-Port.
-     *
-     * @return the port value of the Switch-Port.
-     */
-    public PortNumber port() {
-        return port;
     }
 
     /**

@@ -104,7 +104,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     public void sendPacket(Ethernet eth, SwitchPort switchPort) {
         SinglePacketOutNotification notification =
                 new SinglePacketOutNotification(eth.serialize(), 0,
-                        switchPort.dpid().value(), switchPort.port().shortValue());
+                        switchPort.getDpid().value(), switchPort.getPortNumber().shortValue());
 
         // TODO We shouldn't care what the destination MAC is
         long dstMac = eth.getDestinationMAC().toLong();
@@ -127,7 +127,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     public void broadcastPacketOutEdge(Ethernet eth, SwitchPort inSwitchPort) {
         BroadcastPacketOutNotification notification =
                 new BroadcastPacketOutNotification(eth.serialize(), 0,
-                        inSwitchPort.dpid().value(), inSwitchPort.port().shortValue());
+                        inSwitchPort.getDpid().value(), inSwitchPort.getPortNumber().shortValue());
 
         long dstMac = eth.getDestinationMAC().toLong();
         packetOutEventChannel.addTransientEntry(dstMac, notification);

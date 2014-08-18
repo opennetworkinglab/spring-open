@@ -445,10 +445,10 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
         }
 
         SwitchPort switchPort = OnosLldp.extractSwitchPort(packetData);
-        long remoteDpid = switchPort.dpid().value();
-        short remotePort = switchPort.port().shortValue();
+        long remoteDpid = switchPort.getDpid().value();
+        short remotePort = switchPort.getPortNumber().shortValue();
         IOFSwitch remoteSwitch = floodlightProvider.getSwitches().get(
-                switchPort.dpid().value());
+                switchPort.getDpid().value());
 
         OFPortDesc physicalPort = null;
         if (remoteSwitch != null) {

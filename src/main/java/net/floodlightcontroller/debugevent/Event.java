@@ -159,9 +159,9 @@ public class Event {
                             apsStr.append("--");
                         } else {
                             for (SwitchPort ap : aps) {
-                                apsStr.append(HexString.toHexString(ap.dpid().value()));
+                                apsStr.append(HexString.toHexString(ap.getDpid().value()));
                                 apsStr.append("/");
-                                apsStr.append(ap.port().value());
+                                apsStr.append(ap.getPortNumber().value());
                                 apsStr.append(" ");
                             }
                         }

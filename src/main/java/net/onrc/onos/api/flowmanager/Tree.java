@@ -64,10 +64,10 @@ public class Tree extends FlowLinks {
 
     private void addPort(SwitchPort port) {
         checkNotNull(port);
-        if (!ports.containsKey(port.dpid())) {
-            ports.put(port.dpid(), new HashSet<PortNumber>());
+        if (!ports.containsKey(port.getDpid())) {
+            ports.put(port.getDpid(), new HashSet<PortNumber>());
         }
-        ports.get(port.dpid()).add(port.port());
+        ports.get(port.getDpid()).add(port.getPortNumber());
     }
 
     /**

@@ -859,20 +859,20 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             String bwdIntentId = caller + ":"
                     + controllerRegistryService.getNextUniqueId();
             SwitchPort srcPort =
-                    new SwitchPort(bgpdAttachmentPoint.dpid(),
-                            bgpdAttachmentPoint.port());
+                    new SwitchPort(bgpdAttachmentPoint.getDpid(),
+                            bgpdAttachmentPoint.getPortNumber());
             SwitchPort dstPort =
                     new SwitchPort(new Dpid(peerInterface.getDpid()),
-                            new PortNumber(peerInterface.getSwitchPort().port()));
+                            new PortNumber(peerInterface.getSwitchPort().getPortNumber()));
             ShortestPathIntent fwdIntent = new ShortestPathIntent(fwdIntentId,
-                    srcPort.dpid().value(), srcPort.port().value(),
+                    srcPort.getDpid().value(), srcPort.getPortNumber().value(),
                     ShortestPathIntent.EMPTYMACADDRESS, srcIP,
-                    dstPort.dpid().value(), dstPort.port().value(),
+                    dstPort.getDpid().value(), dstPort.getPortNumber().value(),
                     ShortestPathIntent.EMPTYMACADDRESS, dstIP);
             ShortestPathIntent bwdIntent = new ShortestPathIntent(bwdIntentId,
-                    dstPort.dpid().value(), dstPort.port().value(),
+                    dstPort.getDpid().value(), dstPort.getPortNumber().value(),
                     ShortestPathIntent.EMPTYMACADDRESS, dstIP,
-                    srcPort.dpid().value(), srcPort.port().value(),
+                    srcPort.getDpid().value(), srcPort.getPortNumber().value(),
                     ShortestPathIntent.EMPTYMACADDRESS, srcIP);
             IntentOperation.Operator operator = IntentOperation.Operator.ADD;
             operations.add(operator, fwdIntent);

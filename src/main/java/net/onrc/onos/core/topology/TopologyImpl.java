@@ -142,7 +142,7 @@ public class TopologyImpl implements Topology, TopologyInternal {
 
     @Override
     public Port getPort(SwitchPort port) {
-        return getPort(port.dpid(), port.port());
+        return getPort(port.getDpid(), port.getPortNumber());
     }
 
     @Override

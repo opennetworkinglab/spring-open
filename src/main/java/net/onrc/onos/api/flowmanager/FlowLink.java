@@ -56,7 +56,7 @@ public class FlowLink {
      * @return The source switch DPID.
      */
     public Dpid getSrcDpid() {
-        return srcSwitchPort.dpid();
+        return srcSwitchPort.getDpid();
     }
 
     /**
@@ -65,7 +65,7 @@ public class FlowLink {
      * @return The source port number at the source switch.
      */
     public PortNumber getSrcPortNumber() {
-        return srcSwitchPort.port();
+        return srcSwitchPort.getPortNumber();
     }
 
     /**
@@ -83,7 +83,7 @@ public class FlowLink {
      * @return The destination switch DPID.
      */
     public Dpid getDstDpid() {
-        return dstSwitchPort.dpid();
+        return dstSwitchPort.getDpid();
     }
 
     /**
@@ -92,7 +92,7 @@ public class FlowLink {
      * @return The destination port number at the destination switch.
      */
     public PortNumber getDstPortNumber() {
-        return dstSwitchPort.port();
+        return dstSwitchPort.getPortNumber();
     }
 
     @Override
