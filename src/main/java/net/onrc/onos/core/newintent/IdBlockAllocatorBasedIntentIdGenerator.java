@@ -18,9 +18,10 @@ public class IdBlockAllocatorBasedIntentIdGenerator implements IntentIdGenerator
     private IdBlock idBlock;
 
     /**
-     * Constructs a {@link IdBlockAllocatorBasedIntentIdGenerator}.
+     * Constructs an intent ID generator, which uses the specified ID block allocator
+     * to generate a global unique intent ID.
      *
-     * @param allocator ID block allocator, which is used in this class
+     * @param allocator the ID block allocator to use for generating intent IDs
      */
     public IdBlockAllocatorBasedIntentIdGenerator(IdBlockAllocator allocator) {
         this.allocator = checkNotNull(allocator);
