@@ -1,6 +1,9 @@
 package net.onrc.onos.core.matchaction.action;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import net.onrc.onos.core.util.PortNumber;
+
+import com.google.common.base.Objects;
 
 /**
  * An action object to output traffic to specified port.
@@ -9,7 +12,7 @@ import net.onrc.onos.core.util.PortNumber;
  * MatchAction, Flow or Intent class.
  */
 public class OutputAction implements Action {
-    protected PortNumber portNumber;
+    private final PortNumber portNumber;
 
     /**
      * Constructor.
@@ -17,7 +20,7 @@ public class OutputAction implements Action {
      * @param dstPort The port number of the target output port.
      */
     public OutputAction(PortNumber dstPort) {
-        this.portNumber = dstPort;
+        this.portNumber = checkNotNull(dstPort);
     }
 
     /**
@@ -28,4 +31,22 @@ public class OutputAction implements Action {
     public PortNumber getPortNumber() {
         return portNumber;
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(portNumber);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        OutputAction that = (OutputAction) obj;
+        return Objects.equal(this.portNumber, that.portNumber);
+    }
+
 }

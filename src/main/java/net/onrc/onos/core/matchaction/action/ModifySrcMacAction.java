@@ -6,35 +6,35 @@ import net.floodlightcontroller.util.MACAddress;
 import com.google.common.base.Objects;
 
 /**
- * An action object to modify destination MAC address.
+ * An action object to modify source MAC address.
  * <p>
  * This class does not have a switch ID. The switch ID is handled by
  * MatchAction, Flow or Intent class.
  */
-public class ModifyDstMacAction implements Action {
-    private final MACAddress dstMac;
+public class ModifySrcMacAction implements Action {
+    private final MACAddress srcMac;
 
     /**
      * Constructor.
      *
-     * @param dstMac destination MAC address after the modification
+     * @param srcMac source MAC address after the modification
      */
-    public ModifyDstMacAction(MACAddress dstMac) {
-        this.dstMac = checkNotNull(dstMac);
+    public ModifySrcMacAction(MACAddress srcMac) {
+        this.srcMac = checkNotNull(srcMac);
     }
 
     /**
-     * Gets the destination MAC address.
+     * Gets the source MAC address.
      *
-     * @return the destination MAC address
+     * @return the source MAC address
      */
-    public MACAddress getDstMac() {
-        return dstMac;
+    public MACAddress getSrcMac() {
+        return srcMac;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(dstMac);
+        return Objects.hashCode(srcMac);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class ModifyDstMacAction implements Action {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        ModifyDstMacAction that = (ModifyDstMacAction) obj;
-        return Objects.equal(this.dstMac, that.dstMac);
+        ModifySrcMacAction that = (ModifySrcMacAction) obj;
+        return Objects.equal(this.srcMac, that.srcMac);
     }
 }
