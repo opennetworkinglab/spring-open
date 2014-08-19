@@ -51,6 +51,7 @@ def get_model_from_url(obj_type, data):
     to move model requests to specific url requests
     """
 
+    onos = 1
     startswith = '__startswith'
     data = dict(data)
 
@@ -389,62 +390,68 @@ def get_model_from_url(obj_type, data):
                 continue
             if switch_prefix and not entry['dpid'].startswith(switch_prefix):
                 continue
-
-            attrs = entry['attributes']
-            actions = entry['actions']
-            capabilities = entry['capabilities']
-            inet_address = entry.get('inetAddress')
-            ip_address = ''
-            tcp_port = ''
-            if inet_address:
-                # Current Java value looks like: /192.168.2.104:38420
-                inet_parts = inet_address.split(':')
-                ip_address = inet_parts[0][1:]
-                tcp_port = inet_parts[1]
-
-            result.append({
-               'dpid'                : entry['dpid'],
-               'connected-since'     : entry['connectedSince'],
-               'ip-address'          : ip_address,
-               'tcp-port'            : tcp_port,
-               'actions'             : actions,
-               'capabilities'        : capabilities,
-               'dp-desc'             : attrs.get('DescriptionData', ''),
-               'fast-wildcards'      : attrs.get('FastWildcards', ''),
-               'supports-nx-role'    : attrs.get('supportsNxRole', ''),
-               'supports-ofpp-flood' : attrs.get('supportsOfppFlood', ''),
-               'supports-ofpp-table' : attrs.get('supportsOfppTable', ''),
-               'core-switch'         : False,
-            })
-
+            if onos == 1:
+                result.append({
+                   'dpid'                : entry['dpid'],
+                   'connected-since'     : 0,
+                   'ip-address'          : 0,
+                })
+            else:
+                attrs = entry['attributes']
+                actions = entry['actions']
+                capabilities = entry['capabilities']
+                inet_address = entry.get('inetAddress')
+                ip_address = ''
+                tcp_port = ''
+                if inet_address:
+                    # Current Java value looks like: /192.168.2.104:38420
+                    inet_parts = inet_address.split(':')
+                    ip_address = inet_parts[0][1:]
+                    tcp_port = inet_parts[1]
+    
+                result.append({
+                   'dpid'                : entry['dpid'],
+                   'connected-since'     : entry['connectedSince'],
+                   'ip-address'          : ip_address,
+                   'tcp-port'            : tcp_port,
+                   'actions'             : actions,
+                   'capabilities'        : capabilities,
+                   'dp-desc'             : attrs.get('DescriptionData', ''),
+                   'fast-wildcards'      : attrs.get('FastWildcards', ''),
+                   'supports-nx-role'    : attrs.get('supportsNxRole', ''),
+                   'supports-ofpp-flood' : attrs.get('supportsOfppFlood', ''),
+                   'supports-ofpp-table' : attrs.get('supportsOfppTable', ''),
+                   'core-switch'         : False,
+                })
         # now add switch-config
 
         switch_config = sdnsh.rest_query_objects('switch-config', data)
         known_dpids = dict([[x['dpid'], x] for x in result])
 
-        for sw in switch_config:
-            dpid = sw['dpid']
-            if not dpid in known_dpids:
-                # be sensitive to search fields:
-                query_match = True
-                if len(data):
-                    for (d, dv) in data.items():
-                        # other ops aside from '='?
-                        if d.endswith(startswith):
-                            fn = d[:-len(startswith)]
-                            if not fn in sw or not sw[fn].startswith(dv):
+        if onos == 0:
+            for sw in switch_config:
+                dpid = sw['dpid']
+                if not dpid in known_dpids:
+                    # be sensitive to search fields:
+                    query_match = True
+                    if len(data):
+                        for (d, dv) in data.items():
+                            # other ops aside from '='?
+                            if d.endswith(startswith):
+                                fn = d[:-len(startswith)]
+                                if not fn in sw or not sw[fn].startswith(dv):
+                                    query_match = False
+                            elif (not d in sw) or dv != sw[d]:
                                 query_match = False
-                        elif (not d in sw) or dv != sw[d]:
-                            query_match = False
-                            break
-
-                if query_match:
-                    sw['ip-address'] = ''
-                    sw['tcp-port'] = ''
-                    sw['connected-since'] = ''
-                    result.append(sw)
-            else:
-                known_dpids[dpid].update(sw)
+                                break
+    
+                    if query_match:
+                        sw['ip-address'] = ''
+                        sw['tcp-port'] = ''
+                        sw['connected-since'] = ''
+                        result.append(sw)
+                else:
+                    known_dpids[dpid].update(sw)
     elif obj_type == 'interfaces':
 
         # These are called interfaces because the primary
@@ -476,15 +483,19 @@ def get_model_from_url(obj_type, data):
                 continue
 
             for p in entry['ports']:
-                portNumber = p['portNumber']
-                name = p['name']
+                if onos == 0:
+                    portNumber = p['portNumber']
+                    name = p['name']
+                else:
+                    portNumber = p['number']
+                    name = 0
 
                 if name_match and name.lower() != name_match:
                     continue
                 if name_prefix and not name.lower().startswith(name_prefix):
                     continue
-
-                result.append({
+                if onos == 0:
+                    result.append({
                                     'id'                 : '%s|%s' % (dpid,name),
                                     'portNumber'         : portNumber,
                                     'switch'             : dpid,
@@ -494,7 +505,20 @@ def get_model_from_url(obj_type, data):
                                     'advertisedFeatures' : p['advertisedFeatures'],
                                     'currentFeatures'    : p['currentFeatures'],
                                     'hardwareAddress'    : p['hardwareAddress'],
-                              })
+                                  })
+                else:
+                    result.append({
+                                    'id'                 : '%s|%s' % (dpid,name),
+                                    'portNumber'         : portNumber,
+                                    'switch'             : dpid,
+                                    'portName'           : 0,
+                                    'config'             : 0,
+                                    'state'              : p['state'],
+                                    'advertisedFeatures' : 0,
+                                    'currentFeatures'    : 0,
+                                    'hardwareAddress'    : 0,
+                                  })
+                
 
     #
     # order the result

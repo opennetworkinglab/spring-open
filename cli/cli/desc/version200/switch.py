@@ -951,12 +951,9 @@ SWITCH_FORMAT = {
     'switch' : {
         'field-orderings' : {
             'default' : [ 'Idx', '@', 'switch-alias', 'connected-since',
-                          'ip-address', 'tunnelCapable', 'tunnelEnabled',
-                          'tunnelState', 'core-switch', ],
+                          'ip-address', ],
             'details' : [ 'Idx','@', 'switch-alias', 'connected-since',
-                          'ip-address',
-                          'tunnelCapable', 'tunnelEnabled', 'tunnelState',
-                          'core-switch', ],
+                          'ip-address', ],
             'brief'   : [ 'Idx', '@', 'switch-alias', 'connected-since',
                           'ip-address', ],
             },

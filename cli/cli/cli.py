@@ -237,6 +237,7 @@ FT_PERIOD = 'period'
 FT_TIMEOUT = "FilterTimeout"
 FT_PERIOD_DEFAULT = 300
 
+onos=1
 #
 # --------------------------------------------------------------------------------
 # 
@@ -520,9 +521,16 @@ class SDNSh():
         #
         # commands which start at 'login'
         #
-        self.command_nested_dict['login'] = [ 'show', 'logout', 'exit',
+        if onos == 0:
+            self.command_nested_dict['login'] = [ 'show', 'logout', 'exit',
                                               'history', 'help', 'echo',
                                               'date', 'trace', 'traceroute',
+                                              'ping', 'test', 'version',
+                                              'connect', 'watch', 'no' ]
+        else:
+            self.command_nested_dict['login'] = [ 'show', 'logout', 'exit',
+                                              'history', 'help', 'echo',
+                                              'date', 'trace',
                                               'ping', 'test', 'version',
                                               'connect', 'watch', 'no' ]
 
@@ -7747,7 +7755,7 @@ class SDNSh():
         while self.run:
             # Get command line - this will use the command completion above
             try:
-                rest_to_model.validate_switch()
+                #rest_to_model.validate_switch()
                 url_cache.clear_cached_urls()
                 line = raw_input(self.prompt)
                 if self.batch:

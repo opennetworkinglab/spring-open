@@ -47,7 +47,12 @@ TEXT_JAVASCRIPT_CONTENT_TYPE = 'text/javascript'
 JSON_CONTENT_TYPE = 'application/json'
 BINARY_DATA_CONTENT_TYPE = 'application/octet-stream'
 
-CONTROLLER_URL_PREFIX = 'http://localhost:8080/wm/'
+onos = 1
+
+if onos == 1:
+    CONTROLLER_URL_PREFIX = 'http://localhost:9000/wm/'
+else:
+    CONTROLLER_URL_PREFIX = 'http://localhost:8080/wm/'
 
 def controller_url(*elements):
     return CONTROLLER_URL_PREFIX + '/'.join(elements)
@@ -675,18 +680,30 @@ def do_controller_storage_table_list(request):
 
 @safe_rest_view
 def do_device(request):
-    return get_sdnplatform_query(request, "device")
+    if onos == 0:
+        return get_sdnplatform_query(request, "device")
+    else:
+        url = controller_url("onos", "topology", "hosts")
+        if request.META['QUERY_STRING']:
+            url += '?' + request.META['QUERY_STRING']
+        return get_sdnplatform_response(url)        
 
 @safe_rest_view
 def do_switches(request):
-    url = controller_url("core", "controller", "switches", "json")
+    if onos == 0:
+        url = controller_url("core", "controller", "switches", "json")
+    else:
+        url = controller_url("onos", "topology", "switches")
     if request.META['QUERY_STRING']:
         url += '?' + request.META['QUERY_STRING']
     return get_sdnplatform_response(url)        
 
 @safe_rest_view
 def do_links(request):
-    url = controller_url("topology", "links", "json")
+    if onos == 0:
+        url = controller_url("topology", "links", "json")
+    else:
+        url = controller_url("onos", "topology", "links")
     if request.META['QUERY_STRING']:
         url += '?' + request.META['QUERY_STRING']
     return get_sdnplatform_response(url)        

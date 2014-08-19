@@ -17,7 +17,7 @@
 # Django settings for sdncon project.
 
 import os, sys
-from cassandra.ttypes import ConsistencyLevel
+#from cassandra.ttypes import ConsistencyLevel
 
 DEBUG = True
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
@@ -31,7 +31,8 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django_cassandra.db',
+        #'ENGINE': 'django_cassandra.db',
+        'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'sdncon',
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
@@ -155,7 +156,7 @@ apps_array = [
     'djangotoolbox',
     'sdncon.rest',
     'sdncon.controller',
-    'django_cassandra',
+    #'django_cassandra',
     'sdncon.coreui',
     'sdncon.clusterAdmin',
     #'sdncon.account',
