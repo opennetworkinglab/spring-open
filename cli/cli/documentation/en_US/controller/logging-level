@@ -1,0 +1,4 @@
+The logging level allows configuration of the syslog logging level.
+The keywords provided directly map to the syslog levels, although
+the command keywords are abbreviated versions of the typical syslog
+levels.

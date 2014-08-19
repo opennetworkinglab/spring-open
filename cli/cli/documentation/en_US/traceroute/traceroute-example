@@ -1,0 +1,6 @@
+traceroute 1.2.3.4
+  Compute the L3 path the host with IP address 1.2.3.4
+
+traceroute example.com
+  Compute the L3 path the host with a specific hostname
+

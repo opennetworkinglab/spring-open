@@ -1,0 +1,5 @@
+dst-ip 1.2.3.4
+  Associate a specific host address with this flow entry
+
+dst-ip 1.2.3.4/24
+  Associate a destination address range with this flow entry

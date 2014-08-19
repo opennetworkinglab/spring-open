@@ -1,0 +1,7 @@
+The 'ip-address <ip-address>' keyword pair can be used to 
+restrict the host's displayed by the ip-address associaited
+with the currently known hosts.
+
+If completion is requested after the ip-address keyword, the
+list of ip-addresses displayed are the ip-addresses currently
+associated with the known hosts.

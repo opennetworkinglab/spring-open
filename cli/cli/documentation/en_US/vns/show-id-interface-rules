@@ -1,0 +1,4 @@
+The 'interface-rules' keyword requests the display of
+the configured interface-rules for the named vns.  The
+vns interface-rules describe the membership rules 
+associated with a vns.

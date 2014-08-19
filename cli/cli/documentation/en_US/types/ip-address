@@ -1,0 +1,4 @@
+An ip-address is four deciman numbers separated by dots (.).
+Each of the deciman numbers can range between 0-255.  
+Ip-address are used to idnetify an ip protocol source
+or destination.  Examples are 192.168.2.129 and 10.11.12.13

@@ -1,0 +1,4 @@
+The queue option is a request for the controller to
+query the indicated switch  to acquire the switch queue details
+The returned value is an association between the interface names,
+the queue numbers, and some statitics for each of the queues.

@@ -1,0 +1,2 @@
+Forward all non-ARP, non-DHCP broadcast packets to all known hosts in
+this VNS.

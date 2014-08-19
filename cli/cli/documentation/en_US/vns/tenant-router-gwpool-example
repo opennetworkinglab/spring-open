@@ -1,0 +1,5 @@
+localhost(config-tenant-router)# gateway-pool pool1
+  create a gateway pool pool1
+
+localhost(config-tenant-router)# no gateway-pool pool1
+  remove the gateway pool named pool1

@@ -1,0 +1,2 @@
+Set the tenant virtual router active. If a tenant virtual router is inactive the controller will not use it
+or its rules.

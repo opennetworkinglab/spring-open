@@ -1,0 +1,14 @@
+Destination specifier for the copy
+
+The keyword 'running-config' can be used to specify the controller's
+current state (that is, overwrite the running state).
+
+The 'config://' URI scheme can be used to save config files
+to the local controller's disk.
+
+The 'http://' and 'ftp://' URI schemes can be used to reference remote
+resources.
+
+If the destination specifier is omitted, the resource referenced
+by the source specifier is sent to the Cli console.
+

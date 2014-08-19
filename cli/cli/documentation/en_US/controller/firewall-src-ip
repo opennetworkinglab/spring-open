@@ -1,0 +1,2 @@
+Associate the firewall rule with a specific source ip address.
+The rule will apply only to ip frames with this originating ip address.

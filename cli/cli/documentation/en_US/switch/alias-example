@@ -1,0 +1,5 @@
+alias switch-1
+  Attach a name to this switch
+
+no alias switch-1
+  Remove a switch alias

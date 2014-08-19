@@ -1,0 +1,3 @@
+The "details" option will cause verbose information to be printed out
+during each upgrade step.  This may be helpful in diagnosing failures
+during the upgrade process.

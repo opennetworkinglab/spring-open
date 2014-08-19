@@ -1,0 +1,5 @@
+use address-space address-space-1
+  Change the association of this VNS from 'default' to 'address-space-1'.
+
+no address-space address-space-1
+  Remove the address space association for this VNS.

@@ -1,0 +1,5 @@
+access-group pair-blocker in
+  Associate the 'pair-blocker' ACL with input packets to this VNS
+
+no access-group pair-blocker in
+  Remove the input packet ACL for this VNS instance

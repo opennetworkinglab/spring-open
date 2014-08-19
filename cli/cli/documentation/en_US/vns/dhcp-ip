@@ -1,0 +1,1 @@
+Specify the IP address of the local DHCP server or local DHCP relay. Used by dhcp-mode 'static'.

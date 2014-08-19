@@ -1,0 +1,2 @@
+Configure a match for this interface rule. If multiple matches are
+configured they will be logically AND'ed.

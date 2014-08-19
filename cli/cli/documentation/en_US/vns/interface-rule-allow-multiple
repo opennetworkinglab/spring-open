@@ -1,0 +1,2 @@
+If allow-multiple is set devices matching this rule are allowed to be in
+multiple VNS at the same time.

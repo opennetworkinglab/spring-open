@@ -1,0 +1,2 @@
+vlan-priority 4
+  Match packets with by priority field (in the VLAN header)

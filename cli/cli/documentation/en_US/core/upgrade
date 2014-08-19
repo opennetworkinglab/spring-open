@@ -1,0 +1,41 @@
+Upgrade the controller from an uploaded controller image. To perform 
+upgrade, you will first need to upload an upgrade image package by 
+scping the file using the "images" user. 
+
+	
+Upgrade image package is a file with name of format 
+"upgrade-YYYY.MM.DD.XXXX.pkg".
+Following is an example to prepare upgrade for controller with IP 
+address 192.168.67.141:"
+
+	
+scp $path/upgrade-2013.02.13.0921.pkg images@192.168.67.141:"
+
+	
+After you run the upgrade, the new controller image will be installed
+on the second image partition, and will be configured as the default
+boot image.  Running the "reload" command will boot the current node	
+If you are upgrading a cluster with multiple nodes, begin by upgrading
+the slave nodes followed by the master node.  You can find out which
+slave is the master by running "show controller-node all".  You should
+upgrade each node by running the upgrade, then reloading the
+controller node.
+
+	
+For example, if you have two nodes in your cluster, node1 (the current
+master) and node2 (the current slave), you should:	
+
+
+  # Upgrade node2 using the "upgrade" command\\
+  # Reboot node2 using the "reload" command\\
+  # Upgrade node1 using the "upgrade" command\\
+  # Reboot node1 using the "reload" command\\
+
+
+Note that when you reboot the master controller node1 there may be a
+brief disruption in your network.	
+
+
+Please refer to the section on upgrading in the user guide for more
+detailed information, including information on how to revert if the
+upgrade fails.	

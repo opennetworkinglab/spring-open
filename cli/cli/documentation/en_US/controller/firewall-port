@@ -1,0 +1,4 @@
+Specify the port to which traffic is allowed in the firewall rule.
+The port can be an explicit port number or one of the following
+named ports: 'openflow' (port 6633), 'web' (port 80),
+'ssl' (port 443) or 'ssh' (port 22).

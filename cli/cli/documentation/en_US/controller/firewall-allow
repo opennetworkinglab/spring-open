@@ -1,0 +1,3 @@
+The 'allow' keyword configures a firewall rule which
+describes a match condition for traffic.  When the condition
+is satisfied, the traffic is allowed.

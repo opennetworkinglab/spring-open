@@ -1,0 +1,1 @@
+The show tag command lists all the tags configured. Each tag's namespace, name and value are shown. Also shown is whether this tag is persisted or not, meaning, whether this tag was created internally by the controller itself or the user created this.

@@ -1,0 +1,5 @@
+clock timezone America/Los_Angeles
+  Configure a specific timezone for this controller
+
+no clock timezone
+  Remove any timezone setting; the default is to use UTC.

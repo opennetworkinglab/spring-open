@@ -1,0 +1,5 @@
+The rest choice enables printing of additional
+output when the cli issues any REST API calls.
+The command is valuable since it can provide an
+indication of what operations are being performed
+by the cli to perform the requested command.

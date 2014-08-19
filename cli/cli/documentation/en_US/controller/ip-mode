@@ -1,0 +1,3 @@
+Specify the mode for configuring the IP address, either 'static' to
+specify an explicit IP address or 'dhcp' to obtain the IP address
+from a DHCP server.

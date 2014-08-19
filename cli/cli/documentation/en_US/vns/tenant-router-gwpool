@@ -1,0 +1,2 @@
+This command is used to create a new next hop gateway pool. Any IP address within this gateway pool can be used as a next hop for a routing rule configured with the next hop as this gateway pool.
+

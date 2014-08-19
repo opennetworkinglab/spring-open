@@ -1,0 +1,2 @@
+The 'web' keyword identifies port 80.  This is not only the typical web interface,
+but also the port for REST API requests.

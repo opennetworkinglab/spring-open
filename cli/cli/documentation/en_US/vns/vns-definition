@@ -1,0 +1,16 @@
+This submode is used to create, then describe the membership of
+devices for the named VNS.   Within this submode, properties of
+the VNS can be configured.   Interface-rules are configured and
+managed, which configure the membership of devices.
+
+The controller provides a VNS named 'default' to collect devices
+which are not associated with any VNS.   
+
+Part of the configuration associated with a VNS includes the
+association of a particular address-space.   When not speficially
+configured, the 'default' address-space is associated with the
+VNS.
+
+Each address-space also has an associated default VNS.  IF the
+address space is called 'yellow', then the default VNS for this
+address space is called 'yellow-default'

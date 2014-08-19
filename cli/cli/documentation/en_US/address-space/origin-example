@@ -1,0 +1,5 @@
+origin rest
+  Note that this address-space was configured via REST
+
+no origin rest
+  Remove the origin notation for this address-space

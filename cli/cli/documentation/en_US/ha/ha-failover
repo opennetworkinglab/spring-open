@@ -1,0 +1,7 @@
+Configures failover parameters, or triggers a failover event.
+
+The 'failover' token directs the current node to fail over to
+a configured slave controller.
+
+The 'provision' token configures a slave controller by IP address that
+will function as a master controller after a failover event.

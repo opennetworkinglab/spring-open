@@ -1,0 +1,3 @@
+The switch-cluster command displays the clusters which
+have been constructed by the controller, based on the
+discovered topology.

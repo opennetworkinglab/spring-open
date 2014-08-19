@@ -1,0 +1,1 @@
+This command sets a specific shell or cli command to be included in the show tech-support output. A 'no' prepended to this command will delete the cli command from the show tech-support output.

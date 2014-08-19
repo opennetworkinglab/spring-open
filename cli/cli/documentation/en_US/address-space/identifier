@@ -1,0 +1,3 @@
+This is the name of the address-space.  The address-space name "default"
+represents the default address space that will be used if no other
+address-space matches.

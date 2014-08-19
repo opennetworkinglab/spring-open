@@ -1,0 +1,3 @@
+The attachment point portion is intended to
+identify the switch or interface name, otherwise
+the host cannot transmit or receive network traffic.

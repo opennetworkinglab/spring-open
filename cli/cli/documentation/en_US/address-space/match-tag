@@ -1,0 +1,2 @@
+Associate a tag or list of tags with this identifier-rule. If a list of
+tags is given *all* tags need to match.

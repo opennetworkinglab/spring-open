@@ -1,0 +1,21 @@
+localhost# show tenant all
+
+	# Tenant ID Active Description Router ID
+
+	-|---------|------|-----------|---------
+
+	1 A         True               vrA
+
+	2 default   True
+
+	3 red       True
+
+	4 system    True               vrsystem
+
+localhost# show tenant A
+
+	# Tenant ID Active Description Router ID
+
+	-|---------|------|-----------|---------
+
+1 A         True               vrA

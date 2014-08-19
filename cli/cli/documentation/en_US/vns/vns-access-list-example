@@ -1,0 +1,6 @@
+access-list access-list-1
+  Define a new access list for this VNS,
+  and enter its configuration sub-mode
+
+no access-list access-list-1
+  Remove the definition for this access list

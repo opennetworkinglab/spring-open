@@ -1,0 +1,11 @@
+This command is used to enter a submode to manage properties
+associated with the virtual switch.  This currently includes
+acl managment, and association of the acls rules to interfaces.
+
+The named vns-id must already exist.  See the vns-definition
+command to create new VNSs.
+
+Withing this submode, two other submodes can be entered.  The
+access-list submode associates specific acl rules with an access list,
+while the interface submode allows association of named access rules
+to specific interfaces.

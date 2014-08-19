@@ -1,0 +1,6 @@
+active
+  Within an address-space config sub-mode,
+  set this address-space as active
+
+no active
+  Deactivate the currently-configured address space

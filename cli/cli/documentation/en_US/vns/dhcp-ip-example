@@ -1,0 +1,2 @@
+dhcp-ip 1.2.3.4
+  In static DHCP mode, configure the local DHCP server or relay address 

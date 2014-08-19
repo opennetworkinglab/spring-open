@@ -1,0 +1,13 @@
+host 00:00:00:00:00:01
+  Define a host with a specific MAC, and enter its configuration sub-mode
+
+no host 00:00:00:00:00:01
+  Delete a definition for a specific host
+
+host address-space default 00:00:00:00:00:02
+  Define a host and bind it to a specific address space
+
+host vlan 42 00:00:00:00:00:03
+  Define a host and bind it to a specific VLAN.
+  Note here that VLAN associations are only valid with the 'default' address space.
+

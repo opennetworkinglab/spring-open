@@ -1,0 +1,8 @@
+The optional vlan parameter allows the identified mac
+address to be associated with a specific vlan.
+
+When this optional parameter isn't included, no vlan
+is associated with the mac.   
+
+Currently, the vlan may only be associated with a mac
+for the associated address-space 'default'.

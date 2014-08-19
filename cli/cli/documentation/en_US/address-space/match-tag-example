@@ -1,0 +1,5 @@
+match tags org.sdnplatform.tenant=CustomerA
+    Matches devices that match the given tag.
+
+match tags org.sdnplatform.tenant=CustomerA,com.example.type=router
+    Matches devices that match *all* of the given tags.

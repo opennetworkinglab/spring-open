@@ -1,0 +1,5 @@
+ha failover
+  Fail this controller node, defer to a slave controller
+
+ha provision 1.2.3.4
+  Configure a new controller node to function as a slave

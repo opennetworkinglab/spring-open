@@ -1,0 +1,9 @@
+The 'test path' command requests the controller to compute
+the path between interfaces on switches, return, and display
+the result.  No attempt it made to validate the connectivity
+between the two endpoints.
+
+To compute the path, and source and a destination needs to
+be provided.   These can be described in a variety of different
+forms:  hosts mac addresses,  ip addresses, or switch and interface
+names.

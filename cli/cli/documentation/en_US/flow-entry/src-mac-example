@@ -1,0 +1,6 @@
+src-mac 00:00:00:00:00:02
+  Specify a host by MAC address
+
+src-mac my-server
+  Specify a host by alias
+

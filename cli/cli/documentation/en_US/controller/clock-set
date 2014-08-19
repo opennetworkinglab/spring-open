@@ -1,0 +1,12 @@
+Configure the clock for a controller instance.
+Within the controller-node configuration sub-mode, the user can
+configure set the clock.
+
+When operating in HA mode with multiple controllers, setting the clock
+of the controllers to different values will have an effect on database
+reconciliation.   Since time stamps are used to determine which of the
+shared items are more up-to-date, if the time between controllers is
+very skewed, the any database updates applied may or may no be aplied
+correctly.   It is better to try to deal with time skew in the multiple
+controller enviromenment by using ntpdate.
+

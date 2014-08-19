@@ -1,0 +1,12 @@
+cli choices for the debug command enables various
+different cli features.  First the cli will
+provide details about internal failures, which is
+intended to provide a detailed description for
+some failure.  Failures may occur not only in the
+execution of commands, but while building the
+command, for example during the generation of
+completion choices.  Second, the cli option also
+enables direct editing of many of the underlying
+models (database tables) exported by the REST API.
+This feature is intended to provide a way to view
+or modify the internal contents of the database.

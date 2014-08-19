@@ -1,0 +1,8 @@
+arp-mode always-flood
+  Do not manage ARP packets, just flood them on all interfaces
+
+arp-mode flood-if-unknown
+  Only flood ARP packets for unknown destinations
+
+arp-mode drop-if-unknown
+  Drop ARP packets from unknown destinations

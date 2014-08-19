@@ -1,0 +1,3 @@
+The switch is part of the attachment point description.
+This can be a switch dpid, or an alias identifying a
+single switch.

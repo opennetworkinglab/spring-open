@@ -1,0 +1,6 @@
+Specify the TACACS+ encryption key used to communicate with
+this TACACS+ server.  If no key is specified, the global
+key is used.
+
+Reset the per-host key (and fall back to the global key)
+with the 'no' version of this command.

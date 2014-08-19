@@ -1,0 +1,5 @@
+The copy command with one parameters copies the contents
+of the configuraion file out for display.
+
+The copy command with two parameters copies the contents
+of the requested source into the dessination.

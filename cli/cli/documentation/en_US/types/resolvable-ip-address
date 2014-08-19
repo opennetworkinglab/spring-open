@@ -1,0 +1,4 @@
+A dotted-quat ip address (192.168.2.129), or a domain name 
+(localhost, example.com), which can be resolved may be
+included here.  Additionally, switch alias or dpids may also be included 
+if they're currently active (an ip address is associated with the switch)

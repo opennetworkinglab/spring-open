@@ -1,0 +1,3 @@
+Configure the adminstrative contact record (the SNMP sysContact MIB) for this device.
+
+Reset the contact information to system defaults with the 'no' version of this command.

@@ -1,0 +1,17 @@
+Reset controller to its factory default settings.
+    node1(config)# boot factory-default
+    Re-setting controller to factory defaults ...
+    Warning: This will reset your controller to factory-default state
+             and reboot it.  You will lose all node/controller
+             configuration and the logs
+    Do you want to continue [no]? yes
+    Resetting cassandra state ...
+    Removing existing log files ...
+    rsyslog stop/waiting
+    Resetting system state ...
+    
+    Current default time zone: 'Etc/UTC'
+    Local time is now:      Wed Oct 24 00:05:41 UTC 2012.
+    Universal Time is now:  Wed Oct 24 00:05:41 UTC 2012.
+    
+    passwd: password expiry information changed.

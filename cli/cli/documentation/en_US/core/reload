@@ -1,0 +1,10 @@
+This command will restart this controller node.  If you are running as
+part of a high availability cluster, this will trigger a failover to
+the remaining nodes, but you may wish to manually trigger this first
+using the "ha failover" command.
+
+Rebooting the controller will allow you to access the boot menu if you
+wish to revert to an older version of the controller software
+following an upgrade.  If you wish to do this, select the appropriate
+image from the boot loader prompt from the controller console to
+choose a different image version.

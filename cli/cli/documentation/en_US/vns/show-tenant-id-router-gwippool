@@ -1,0 +1,3 @@
+The 'gw-address-pool' keyword requests the display of
+the configured gateway ip addresses for all the gateway pools of the named virtual router.  
+

@@ -1,0 +1,4 @@
+Set up or tear down address space definitions.
+
+Specifying an address space by name enters the address-space
+configuration sub-mode.

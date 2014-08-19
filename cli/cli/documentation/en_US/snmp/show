@@ -1,0 +1,5 @@
+Display operational parameters of this device's SNMP support.
+
+Show the configurable parameters for the SNMP MIBs,
+and show the status of the network firewall
+(which might be blocking some SNMP requests)

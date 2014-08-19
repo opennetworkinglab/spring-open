@@ -1,0 +1,11 @@
+Source specifier for the copy
+
+The keyword 'running-config' can be used to specify the controller's
+current state.
+
+The 'config://' URI scheme can be used to reference saved config files
+from a previous 'copy' command.
+
+The 'http://' and 'ftp://' URI schemes can be used to reference remote
+resources.
+

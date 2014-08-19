@@ -1,0 +1,5 @@
+active
+  Activate this tenant instance
+
+no active
+  Deactivate this tenant instance

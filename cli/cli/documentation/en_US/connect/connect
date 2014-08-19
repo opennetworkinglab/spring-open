@@ -1,0 +1,21 @@
+The connect command directs the CLI to issue REST API requests to the
+selected controller.  The CLI uses the controller's REST API to
+perform all configuration, retrieve all the data for show commands,
+and also to generate the running config.  The CLI is an application
+which presents the controller's REST API to the user, and can also
+provide some limited aid to an application write trying to use the
+REST API, since the requests issued by the CLI can be viewed with the
+'debug rest' command (use 'help debug rest' for more details)
+
+When the controller is running as a HA slave, many commands will not
+be available.  If the master has configured port 80 to be available
+(controller-node interface submode's firewall command), then by using
+the connect command to use the master's REST API, ssh can be avoided.
+This would preserve the command history, allowing an easy way to
+re-issue failed commands.
+
+The REST API for the controller is typically configured at port 80.
+
+Completion for the command will display all the currently known
+controllers.  If the connect succeeds, the list of known controllers
+will very likely be different.

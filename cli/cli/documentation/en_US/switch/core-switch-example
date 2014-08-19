@@ -1,0 +1,5 @@
+core-switch
+  Configure the currently-configured switch as a core switch
+
+no core-switch
+  Remove the core-switch property

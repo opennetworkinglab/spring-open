@@ -1,0 +1,20 @@
+Upgrade the controller node using an uploaded upgrade package
+    node1> enable	
+    node1# upgrade	
+    Upgrade controller from image '/home/images/upgrade.pkg'?	
+    (yes to continue) yes	
+    Executing upgrade...	
+    1 - Verifying package checksum
+      Succeeded
+    2 - Verifying connectivity to other nodes via ping
+      Succeeded
+    3 - Checking minimum system requirements
+      Succeeded
+    4 - Copying configuration
+      Succeeded
+    5 - Creating new filesystem
+      Succeeded
+    Controller node upgrade complete.
+    Upgrade will not take effect until system is rebooted. Use 'reload' to
+    reboot this controller node. To revert, select the appropriate image 
+    from the boot menu

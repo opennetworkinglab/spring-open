@@ -1,0 +1,6 @@
+switchport mode external
+  Within a switch interface definiton, configure this interface to be
+  connected to an external network
+
+no switchport mode external
+  Remove the external connection attribute for this interface

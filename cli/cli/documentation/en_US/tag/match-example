@@ -1,0 +1,11 @@
+localhost(config)# tag tenant.name=coke
+localhost(config-tag)#
+localhost(config-tag)# match mac 00:00:00:00:00:01
+localhost(config-tag)#
+localhost(config-tag)# match vlan 2
+localhost(config-tag)# match switch 00:00:00:00:00:00:00:01
+localhost(config-tag)# match switch 00:00:00:00:00:00:00:01 eth1
+localhost(config-tag)# match mac 00:00:00:00:00:02 vlan 3
+localhost(config-tag)# match mac 00:00:00:00:00:03 switch 00:00:00:00:00:00:00:02
+localhost(config-tag)# match mac 00:00:00:00:00:03 switch 00:00:00:00:00:00:00:02 eth2
+localhost(config-tag)# match mac 00:00:00:00:00:03 vlan 3 switch 00:00:00:00:00:00:00:02 eth3

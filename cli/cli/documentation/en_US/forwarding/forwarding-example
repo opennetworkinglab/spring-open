@@ -1,0 +1,6 @@
+    forwarding core-priority 100
+        To set priority for forwarding flow-mods on core switches to 100, use:
+
+    forwarding access-priority 100
+        To set priority for forwarding flow-mods on access switches to 100, use:
+

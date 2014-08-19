@@ -1,0 +1,5 @@
+dst-mac 00:00:00:00:00:01
+  Associate a host by MAC address
+
+dst-mac my-computer
+  Associate a host alias with this flow entry

@@ -1,0 +1,2 @@
+This submode is used to create, then describe the connectivity and routing rules for the named virtual router for a given tenant.   
+Within this submode, properties of the virtual router can be configured.   

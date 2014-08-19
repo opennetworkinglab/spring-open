@@ -1,0 +1,4 @@
+The table option is a request for the controller to
+query the indicated switch,  for the switch's table
+details.  The returned values the names of the tables,
+the size of the tables, and some usage statistics

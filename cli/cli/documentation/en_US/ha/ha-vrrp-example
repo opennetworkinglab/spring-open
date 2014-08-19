@@ -1,0 +1,5 @@
+ha cluster-number 42
+  Set the cluster number (VRRP router ID)
+
+no ha cluster-number
+  Reset the VRRP router ID to the default ('1')

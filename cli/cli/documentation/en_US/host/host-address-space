@@ -1,0 +1,6 @@
+The optional address-space association for host allows the
+identified mac to be bound to a specific isolated address
+space. 
+
+When this optional parameter is not included, the mac
+is associated with the address-space named 'default'.

@@ -1,0 +1,5 @@
+route from tenant A to tenant B permit
+  create a routing rule to permit packets from tenant A to tenant B
+
+no route from tenant A to tenant B permit
+  remove the created routing rule

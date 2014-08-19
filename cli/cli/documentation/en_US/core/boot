@@ -1,0 +1,3 @@
+This command allows you to configure system boot parameters.  At the
+moment, you can restore the controller to its factory default
+configuration using the 'factory-default' parameter. 

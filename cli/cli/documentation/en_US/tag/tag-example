@@ -1,0 +1,5 @@
+tag example-com.role=primary
+  Define a tag association, and enter the tag configuration sub-mode
+
+no tag example-com.role=primary
+  Remove a tag definition

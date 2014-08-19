@@ -1,0 +1,5 @@
+host-alias my-mac-book
+  Associate a friendly name with the current host definition
+
+no host-alias my-mac-book
+  Remove a hostname association from this host

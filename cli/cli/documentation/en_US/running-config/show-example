@@ -1,0 +1,10 @@
+show running-config
+    Show the complete running-config
+
+show running-config swtich 00:00:00:00:00:73:28:03 
+    Show the running cofig details for a particular switch
+
+    !
+    switch 00:00:00:00:00:73:28:03
+      switch-alias ntgr-7328-3
+

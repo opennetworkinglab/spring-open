@@ -1,0 +1,8 @@
+Configure the default TACACS+ protocol key used to secure
+the communications channel with the TACACS+ server(s).
+
+The default key is used if there is no key defined
+for an individual server.
+
+The default key can be reset (to an empty key)
+with the 'no' form of this command.

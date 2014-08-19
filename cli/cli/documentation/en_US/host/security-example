@@ -1,0 +1,21 @@
+security policy bind ip-address 10.10.10.1
+  When the host sends any ip frames, the src address
+  of these frames must be 10.10.10.1.  
+
+no security policy bind ip-address 10.10.10.1
+  Remove a source-address binding requirement for this host
+
+security policy bind attachment-point ntgr-7328-3
+  The host identified by this submode can only send
+  and receive traffic when it attached to this switch.
+
+no security policy bind attachment-point ntgr-7328-3
+  Remove an attachment point requirement for this host
+
+security policy bind attachment-point ntgr-7328-3 12
+  The host identified by this submode can only send
+  and receive traffic when it attached to this switch and
+  interface named '12'
+
+no security policy bind attachment-point ntgr-7328-3 12
+  Remove an attachment point/interface requirement for this host

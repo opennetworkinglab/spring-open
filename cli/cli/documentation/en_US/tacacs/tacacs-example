@@ -1,0 +1,28 @@
+tacacs server timeout 50
+  Configure the global TACACS+ protocol timeout to 50s.
+
+no tacacs server timeout
+  Configure the default TACACS+ prototol timeout.
+
+tacacs server key SECRET-KEY
+  Configure the (plaintext) key used to communicate with
+  the TACACS+ server, if no key is specified for a given server.
+
+no tacacs server key
+  Reset the global TACACS+ server key.
+  If no key is specified, an empty key is assumed.
+
+tacacs server host AA.BB.CC.DD
+  Add a TACACS+ server with the specified IP address.
+
+no tacacs server host AA.BB.CC.DD
+  Delete the specified TACACS+ server
+
+tacacs server host AA.BB.CC.DD key SECRET-KEY
+  Specify an encryption key for this TACACS+ server.
+
+no tacacs server host AA.BB.CC.DD key
+  Remove any key associated with this server,
+  and use the global TACACS+ key instead.
+
+

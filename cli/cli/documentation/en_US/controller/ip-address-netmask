@@ -1,0 +1,2 @@
+Specify the statically-configured IP netmask of the controller node
+(e.g. 255.255.255.0).

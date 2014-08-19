@@ -1,0 +1,213 @@
+/*
+#
+# Copyright (c) 2013 Big Switch Networks, Inc.
+#
+# Licensed under the Eclipse Public License, Version 1.0 (the
+# "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+#
+#      http://www.eclipse.org/legal/epl-v10.html
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
+#
+
+dynamic table CSS, edited for 2 tables */
+
+.dynamictable {
+	margin:0px;padding:0px;
+        border-top: 0px;
+	/*border:1px solid #e5e5e5;*/
+	width:100%;
+        float: left;
+        position:relative;
+	
+	-moz-border-radius-bottomleft:5px;
+	-webkit-border-bottom-left-radius:5px;
+	border-bottom-left-radius:5px;
+	
+	-moz-border-radius-bottomright:5px;
+	-webkit-border-bottom-right-radius:5px;
+	border-bottom-right-radius:5px;
+	
+	/*-moz-border-radius-topright:5px;
+	-webkit-border-top-right-radius:5px;
+	border-top-right-radius:5px;
+	
+	-moz-border-radius-topleft:5px;
+	-webkit-border-top-left-radius:5px;
+	border-top-left-radius:5px;*/
+}.dynamictable table{
+	width:100%;
+	margin:0px;padding:0px;
+	border-collapse: collapse;
+	border-spacing: 0px;
+}.dynamictable tr:last-child td:last-child {
+	-moz-border-radius-bottomright:5px;
+	-webkit-border-bottom-right-radius:5px;
+	border-bottom-right-radius:5px;
+}
+.dynamictable table tr:first-child td:first-child {
+/*	-moz-border-radius-topleft:5px;
+	-webkit-border-top-left-radius:5px;
+	border-top-left-radius:5px;*/
+}
+.dynamictable table tr:first-child td:last-child {
+/*	-moz-border-radius-topright:5px;
+	-webkit-border-top-right-radius:5px;
+	border-top-right-radius:5px;*/
+}.dynamictable tr:last-child td:first-child{
+	-moz-border-radius-bottomleft:5px;
+	-webkit-border-bottom-left-radius:5px;
+	border-bottom-left-radius:5px;
+}.dynamictable tr:hover td{
+	
+}
+.dynamictable tr:nth-child(odd){ background-color:#e5e5e5; }
+.dynamictable tr:nth-child(even)    { background-color:#ffffff; }.dynamictable td{
+	vertical-align:middle;
+	
+	
+	border-width:0px 1px 1px 0px;
+	text-align:center;
+	padding:7px;
+	font-size:12px;
+	font-family:Helvetica;
+	font-weight:normal;
+	color:#4d4d4f;
+}.dynamictable tr:last-child td{
+	border-width:0px 1px 0px 0px;
+}.dynamictable tr td:last-child{
+	border-width:0px 0px 1px 0px;
+}.dynamictable tr:last-child td:last-child{
+	border-width:0px 0px 0px 0px;
+}
+.dynamictable tr:first-child td{
+		background:-o-linear-gradient(bottom, #fdb813 5%, #fdb813 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #fdb813), color-stop(1, #fdb813) );
+	background:-moz-linear-gradient( center top, #fdb813 5%, #fdb813 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#fdb813", endColorstr="#fdb813");	background: -o-linear-gradient(top,#fdb813,fdb813);
+
+	background-color:#fdb813;
+	/*border:0px solid #e5e5e5;*/
+	text-align:center;
+	border-width:0px 0px 1px 1px;
+	font-size:14px;
+	font-family:Helvetica;
+	font-weight:bold;
+	color:#ffffff;
+}
+.dynamictable tr:first-child:hover td{
+	background:-o-linear-gradient(bottom, #fdb813 5%, #fdb813 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #fdb813), color-stop(1, #fdb813) );
+	background:-moz-linear-gradient( center top, #fdb813 5%, #fdb813 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#fdb813", endColorstr="#fdb813");	background: -o-linear-gradient(top,#fdb813,fdb813);
+
+	background-color:#fdb813;
+}
+.dynamictable tr:first-child td:first-child{
+	border-width:0px 0px 1px 0px;
+}
+.dynamictable tr:first-child td:last-child{
+	border-width:0px 0px 1px 1px;
+}
+
+/* begin dynamictable 2 */
+
+.dynamictable2 {
+	margin:0px;padding:0px;
+        border-top: 0px;
+	/*border:1px solid #e5e5e5;*/
+	width:100%;
+        float: left;
+        position:relative;
+	
+	-moz-border-radius-bottomleft:5px;
+	-webkit-border-bottom-left-radius:5px;
+	border-bottom-left-radius:5px;
+	
+	-moz-border-radius-bottomright:5px;
+	-webkit-border-bottom-right-radius:5px;
+	border-bottom-right-radius:5px;
+	
+	-moz-border-radius-topright:5px;
+	-webkit-border-top-right-radius:5px;
+	border-top-right-radius:5px;
+	
+	-moz-border-radius-topleft:5px;
+	-webkit-border-top-left-radius:5px;
+	border-top-left-radius:5px;
+}.dynamictable2 table{
+	width:100%;
+	margin:0px;padding:0px;
+	border-collapse: collapse;
+	border-spacing: 0px;
+}.dynamictable2 tr:last-child td:last-child {
+	-moz-border-radius-bottomright:5px;
+	-webkit-border-bottom-right-radius:5px;
+	border-bottom-right-radius:5px;
+}
+.dynamictable2 table tr:first-child td:first-child {
+	-moz-border-radius-topleft:5px;
+	-webkit-border-top-left-radius:5px;
+	border-top-left-radius:5px;
+}
+.dynamictable2 table tr:first-child td:last-child {
+	-moz-border-radius-topright:5px;
+	-webkit-border-top-right-radius:5px;
+	border-top-right-radius:5px;
+}.dynamictable2 tr:last-child td:first-child{
+	-moz-border-radius-bottomleft:5px;
+	-webkit-border-bottom-left-radius:5px;
+	border-bottom-left-radius:5px;
+}.dynamictable2 tr:hover td{
+	
+}
+.dynamictable2 tr:nth-child(odd){ background-color:#f5f5f5; }
+.dynamictable2 tr:nth-child(even)    { background-color:#ffffff; }.dynamictable2 td{
+	vertical-align:middle;
+	
+	
+	border-width:0px 1px 1px 0px;
+	text-align:center;
+	padding:7px;
+	font-size:12px;
+	font-family:Helvetica;
+	font-weight:normal;
+	color:#4d4d4f;
+}.dynamictable2 tr:last-child td{
+	border-width:0px 1px 0px 0px;
+}.dynamictable2 tr td:last-child{
+	border-width:0px 0px 1px 0px;
+}.dynamictable2 tr:last-child td:last-child{
+	border-width:0px 0px 0px 0px;
+}
+.dynamictable2 tr:first-child td{
+		background:-o-linear-gradient(bottom, #fdb813 5%, #fdb813 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #fdb813), color-stop(1, #fdb813) );
+	background:-moz-linear-gradient( center top, #fdb813 5%, #fdb813 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#fdb813", endColorstr="#fdb813");	background: -o-linear-gradient(top,#fdb813,fdb813);
+
+	background-color:#fdb813;
+	/*border:0px solid #e5e5e5;*/
+	text-align:center;
+	border-width:0px 0px 1px 1px;
+	font-size:14px;
+	font-family:Helvetica;
+	font-weight:bold;
+	color:#ffffff;
+}
+.dynamictable2 tr:first-child:hover td{
+	background:-o-linear-gradient(bottom, #fdb813 5%, #fdb813 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #fdb813), color-stop(1, #fdb813) );
+	background:-moz-linear-gradient( center top, #fdb813 5%, #fdb813 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#fdb813", endColorstr="#fdb813");	background: -o-linear-gradient(top,#fdb813,fdb813);
+
+	background-color:#fdb813;
+}
+.dynamictable2 tr:first-child td:first-child{
+	border-width:0px 0px 1px 0px;
+}
+.dynamictable2 tr:first-child td:last-child{
+	border-width:0px 0px 1px 1px;
+}
+

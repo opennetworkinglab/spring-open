@@ -1,0 +1,5 @@
+The 'all' token is used in place of an identifier's
+value to request every item associated with the command.
+The 'all' token is reserved, identifiers may not
+use the 'all' token as their name, no switch-alias or
+host-alias may be called 'all'

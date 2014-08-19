@@ -1,0 +1,3 @@
+The features option is a request for the controller to
+query the indicated switch to acquire details about 
+the interfaces of the switch.

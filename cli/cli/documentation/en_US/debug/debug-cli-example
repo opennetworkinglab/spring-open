@@ -1,0 +1,11 @@
+debug rest
+  Enable rest api output
+
+debug rest detail
+  Enable rest api output, and also display replies from the rest api calls
+
+debug cli
+  Enable debugging mode for the cli
+
+debug bash
+  Open a bash subshell

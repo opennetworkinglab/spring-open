@@ -1,0 +1,3 @@
+The 'vcenter' keyword filters the runnig-config output to
+only vcenter related configuration, including the dvs
+and dvs-port-groups.

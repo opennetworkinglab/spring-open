@@ -1,0 +1,4 @@
+The aggregate option displays aggregated flow statistics.
+It is a request for the controller to activly
+query the indicated switch to acquire and display
+the results.

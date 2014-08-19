@@ -1,0 +1,24 @@
+snmp-server enable
+  Enable SNMP support.
+
+no snmp-server enable
+  Disable SNMP support.
+
+snmp-server community ro MY-SNMP
+  Set the community string (for authenticating to this SNMP service)
+  to "MY-SNMP"
+
+no snmp-server community
+  Reset the community string to default (the empty string)
+
+snmp-server location snmp.example.com
+  Set the server location reported during SNMP queries.
+
+no snmp-server location
+  Reset to the system default server location.
+
+snmp-server contact admin@example.com
+  Set the administrative contact reported during SNMP queries.
+
+no snmp-server contact
+  Reset to the system default administrative contact setting.

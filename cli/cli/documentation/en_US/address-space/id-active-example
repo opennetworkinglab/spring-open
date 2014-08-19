@@ -1,0 +1,5 @@
+active
+  Configure this address space identifier rule as active
+
+no active
+  Deactivate this address space identifier rule

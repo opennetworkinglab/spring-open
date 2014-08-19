@@ -1,0 +1,2 @@
+The flow selection request the controller to query
+the selected switch for all the flows currently active.

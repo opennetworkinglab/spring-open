@@ -1,0 +1,5 @@
+The desc option is a request for the controller to
+query the indicated switch.  to acquire the switch description.
+The returned values include the switch model and version,
+the switch vendor, serial number, and software version
+currently running.

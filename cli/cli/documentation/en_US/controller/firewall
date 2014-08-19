@@ -1,0 +1,2 @@
+Configure a firewall rule to allow traffic to the specified port number
+and protocol (tcp, udp, or vrrp) of the controller node.

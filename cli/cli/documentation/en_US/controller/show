@@ -1,0 +1,5 @@
+Show controller-node displays operational details for 
+the identified controller nodes.  Among the items
+displayed are the controller-alias, the HA role,
+and also a column labeled '@' to identify the controller
+currently connected to the CLI

@@ -1,0 +1,12 @@
+match switch 00:00:11:22:33:44:55:66
+    Matches all interfaces on the switch with this DPID.
+
+match switch 00:00:11:22:33:44:55:66 Ethernet1
+    Matches interface Ethernet1 on the specified switch.
+
+match switch 00:00:11:22:33:44:55:66 Ethernet1,Ethernet5-10,port2
+    Matches interfaces Ethernet1, Ethernet5, Ethernet6, ... Ethernet10,
+	and port2 on the specified switch.
+
+match switch ToR-1-1 
+    Matches the switch with the alias 'ToR-1-1'

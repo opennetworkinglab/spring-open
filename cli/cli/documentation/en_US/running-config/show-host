@@ -1,0 +1,3 @@
+The 'host' keyword filters the running-config output to only display
+the host related configuration.  This includes host aliases, and
+any host security associations.

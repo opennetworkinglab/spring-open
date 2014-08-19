@@ -1,0 +1,8 @@
+The switch command enters the switch submode for a single
+identified switch.   Within the submode, various configuraion
+can be performed on the switch, including setting the switch-alias,
+enable or disabling the tunnel features.
+
+The 'no' variation of the switch command will not remove swtich's
+currently connected to the controller, instead it will remove
+any user configured details of the identified switch.

@@ -1,0 +1,4 @@
+The port option is a request for the controller to
+send to the indicated switch, the reply is the openflow
+protocol port reply, which lists all the interfaces
+and provides tx and rx statistics.

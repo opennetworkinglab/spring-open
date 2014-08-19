@@ -1,0 +1,7 @@
+identifier-rule rule42
+  Define a new identifier rule for this address-space definition,
+  and enter the identifier-rule submode
+
+no identifier-rule rule42
+  Delete an identifier rule associated with the
+  currently-define address-space

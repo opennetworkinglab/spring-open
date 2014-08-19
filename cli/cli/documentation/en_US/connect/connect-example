@@ -1,0 +1,8 @@
+connect localhost
+    Connect to the current controller (really a no-op)
+
+connect controller-node-b
+    Connect to the controller identified by an alias
+
+connect 192.168.2.129 port 8000
+    Connect to the identified ip address

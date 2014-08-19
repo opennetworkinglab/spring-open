@@ -1,0 +1,4 @@
+Show TACACS+ aaa operational state.
+
+Print out the global aaa sources and services,
+as well as any configured TACACS+ servers and parameters.

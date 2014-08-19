@@ -1,0 +1,3 @@
+The 'feature' keyword filters the running-config output
+to display the features enabled or disabled which differ
+from the default features.

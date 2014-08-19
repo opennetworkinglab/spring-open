@@ -1,0 +1,7 @@
+The debug command enables and disables various settings intended to 
+describe the cli's own behavior.   In addition, some of the choices
+allow nested invocation of various other tools, intended to debug
+various related controller components, for example, 'debug cassandra-cli'
+is intended to enter the cassandra cli to view internal database state,
+and 'debug bash' is intended to enter a bash subshell to gain access to
+the internal environment of the controller.  

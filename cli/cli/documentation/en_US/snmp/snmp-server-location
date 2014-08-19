@@ -1,0 +1,3 @@
+Configure this device's location via the sysLocation SNMP MIB.
+
+Reset the location to the system default with the 'no' version of this command.

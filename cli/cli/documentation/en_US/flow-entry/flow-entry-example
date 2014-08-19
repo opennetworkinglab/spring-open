@@ -1,0 +1,5 @@
+flow-entry example-1
+  Define a new flow entry
+
+no flow-entry example-1
+  Delete a flow entry by name

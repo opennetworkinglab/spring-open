@@ -1,0 +1,2 @@
+The 'network-service' keyword filter the running-config output
+to only display the network-service related configuration.

@@ -1,0 +1,6 @@
+The "force" option will run the upgrade but will ignore any validation
+errors.  These errors include validating the package checksum, minimum
+system requirements, and connectivity.  Note that if you choose this
+option, there is an increased chance that your controller upgrade will
+be unsuccessful.
+

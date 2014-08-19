@@ -1,0 +1,7 @@
+A cidr-range is an ip-address followed by a slash '/',
+the followed by a decimal number in the range [0..31]
+The cidr-range identifes both a single ip address, and
+a range of ip-address, the trailing number describes
+a netmask, the number indicates the length of 1-bits
+within the mask.  Examples:  192.168.1.1/25, and
+10.0.0.65/24

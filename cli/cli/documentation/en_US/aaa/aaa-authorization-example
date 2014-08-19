@@ -1,0 +1,14 @@
+aaa authorization exec default group tacacs+
+  Use TACACS+ for authorizing CLI access
+
+aaa authorization exec default local
+  Use local UNIX /etc/passwd for authorizing CLI access
+
+aaa authorization exec default group tacacs+ local
+  Use both TACACS+ and /etc/passwd for CLI authorization
+
+no aaa authorization exec default
+  Reset authorization sources for SSH CLI access.
+
+
+

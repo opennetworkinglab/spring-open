@@ -1,0 +1,3 @@
+The 'controller-node' keyword filter the running config
+to only display controller-node configuration.  This includes
+descriptions for the controller node interfaces, and firewall rules.

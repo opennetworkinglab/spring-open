@@ -1,0 +1,5 @@
+addres-space MY-ADDRESS
+  Define a new address space, and enter its configuration submode
+
+no address-space MY-ADDRESS
+  Delete an address space by name

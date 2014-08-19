@@ -1,0 +1,6 @@
+ copy running-config
+   Variation of the 'show running-config' command
+
+ copy running-config config://xyz
+  Copy the current running config into the configuration 
+  target named config://xyz

@@ -1,0 +1,6 @@
+vns-definition my-first-vns
+  Define a new VNS instance by name,
+  and enter the VNS definition sub-mode
+
+no vns-definition my-first-vns
+  Remove a named VNS

@@ -1,0 +1,16 @@
+The security command within the host submode is used to
+bind ip address and attachment points for the hosts
+identified by the submode.
+
+What a host is presented to the controller, the attachment
+point of the host is also identified.   When the security
+command is used to constrain the attachment point, the
+controller can use the configured details to choose whether
+it will allow the host to join the network.
+
+When an ip address is bound to the host, no other host
+may use the indicated ip address.   This is implemented
+by snooping arp's and the dhcp protocol.  It is still
+possible for the host to send frames with spoofed
+src ip address, but the destination will not be able
+to reply to these frames.

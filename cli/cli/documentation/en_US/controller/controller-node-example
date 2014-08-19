@@ -1,0 +1,5 @@
+controller-node localhost
+  Enter configuration sub-mode for the current controller
+
+controller-node 39df9a30-0ce7-423b-98ba-86d543aecf05
+  Enter configuration sub-mode for a specific (possibly remote) controller

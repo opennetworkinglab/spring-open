@@ -1,0 +1,8 @@
+If you've already run an upgrade operation on this controller node,
+but want to abort the upgrade before you reboot into the new
+partition, run the "upgrade abort" command to configure the controller
+to boot by default from the current-active partition and set the
+controller status back to "Ready."
+
+This can allow you to restart a failed upgrade process, for example
+if a node failure occurs while attempting to upgrade.

@@ -1,0 +1,29 @@
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02
+  Test packet injection between two hosts
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 src-switch 00:00:00:00:00:00:00:00 32
+  Run the packet-in test, specifying a specific switch physical port
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... vlan 1001
+  Run the packet-in test, tagging packets with a specific VLAN
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... priority 2
+  Run the packet-in test, tagging packets with a specific ether priority
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... src-ip-address 1.2.3.4
+  Run the packet-in test, tagging packets with a specific source IP address
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... dst-ip-address 1.2.3.4
+  Run the packet-in test, tagging packets with a specific destination IP address
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... protocol 6
+  Run the packet-in test, tagging packets with a specific IP protocol number (TCP)
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... tos 7
+  Run the packet-in test, tagging packets with a specific set of TOS bits
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... src-port 80
+  Run the packet-in test, tagging packets with a specific source port number
+
+test packet-in src-host 00:00:00:00:00:01 dst-host 00:00:00:00:00:02 ... dst-port 443
+  Run the packet-in test, tagging packets with a specific destination port number

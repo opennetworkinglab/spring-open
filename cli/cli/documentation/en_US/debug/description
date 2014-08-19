@@ -1,0 +1,7 @@
+The description choice enables additional output
+to display the internal execution of command
+descriptions.  The option is intended to help
+debug the cli's command descriptions.  It will not
+only enable output for command execution, but also
+enable output while performing command completion
+choices for commands.

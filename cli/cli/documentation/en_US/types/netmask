@@ -1,0 +1,6 @@
+A netmask, associated with an ip-address, used to identify
+an ip address ranges.   An ip-address is within the range
+if the ip-address, binary-and-ed with the mask, matches the
+associated ip-address (which is also binary-and-ed with the
+mask).  Netmasks must be a single group of 1-bits, starting
+with a 1-bit.   Examples are 255.255.255.0 and 255.255.255.128

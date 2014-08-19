@@ -1,0 +1,2 @@
+Specify the duration for which to display stats. If this value is specified
+you should specify either the start-time or end-time but not both.

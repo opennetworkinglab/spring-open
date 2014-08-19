@@ -1,0 +1,3 @@
+interface main-interface
+  Enter the VNS interface configuration sub-mode.
+  The interface is named based on a corresponding interface-rule specifier.

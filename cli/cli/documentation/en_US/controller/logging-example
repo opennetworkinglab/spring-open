@@ -1,0 +1,13 @@
+logging on
+  Enable logging
+
+no logging on
+  Disable logging
+
+logging server 1.2.3.4
+  Send syslog records to a specific server or domain name
+
+logging server 1.2.2.4 level warning
+  Send syslog messages at a specific level (numeric or symbolic)
+
+no logging server 1.2.3.4

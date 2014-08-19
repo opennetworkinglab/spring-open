@@ -1,0 +1,14 @@
+aaa authentication login default group tacacs+
+  Use TACACS+ for authenticating SSH CLI logins
+
+aaa authentication login default local
+  Use local UNIX /etc/passwd for authenticating SSH CLI logins.
+
+aaa authentication login default group tacacs+ local
+  Use both TACACS+ and /etc/passwd for login.
+
+no aaa authentication login default
+  Reset authentication sources for SSH CLI login.
+
+
+

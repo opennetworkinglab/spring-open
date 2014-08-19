@@ -1,0 +1,4 @@
+The 'tag' keyword filters the running-config to only
+display the tag submode related configuration.  Uses
+of the tag within vns, address-space, or other submodes
+is not included.

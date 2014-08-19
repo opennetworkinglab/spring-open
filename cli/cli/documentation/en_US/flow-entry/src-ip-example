@@ -1,0 +1,5 @@
+src-ip 1.2.3.4
+  Match a specific address
+
+src-ip 1.2.3.4/23
+  Match an IP address range

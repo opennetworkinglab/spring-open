@@ -1,0 +1,3 @@
+The tag command enters the tag submode for a single tag-value. The tag-value is composed of a tag and the value assigned to it, tag itself is composed of namespace that the tag belongs to and the tag's name itself. The syntax of tag-value - <namespace>.<name>=<value>. Example of tag-value is - "tenant.name=coke".  Within the tag submode, this tag-value can be associated with hosts through match command.
+
+The 'no' variation of the tag command will remove the tag-value and untag the hosts. 

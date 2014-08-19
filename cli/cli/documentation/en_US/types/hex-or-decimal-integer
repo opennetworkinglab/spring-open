@@ -1,0 +1,3 @@
+This is an integer value which can be expressed either
+in decimal or hex.  Hex values must be prefixed by 0x.
+Examples: 10, 0xabc, 0

@@ -1,0 +1,2 @@
+The 'snmp' keyword filters the running-config output to only
+display the snmp configuration.

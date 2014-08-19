@@ -1,0 +1,4 @@
+The 'interfaces' keyword lists the interfaces on the switch.
+This information is posed by the switch to the controller when
+the switch first connects, and then updated by the switch if
+new interfaces are created or deleted.

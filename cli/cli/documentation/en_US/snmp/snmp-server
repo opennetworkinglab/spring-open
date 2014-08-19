@@ -1,0 +1,4 @@
+Configure this device to respond to SNMP queries.
+
+Configure SNMP protocol parameters, and configure how
+responses to SNMP queries are composed.

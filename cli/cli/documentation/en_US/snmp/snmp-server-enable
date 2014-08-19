@@ -1,0 +1,3 @@
+Enable this device for responding to SNMP.
+
+Use the 'no' version of this command to disable SNMP features.

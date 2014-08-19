@@ -1,0 +1,4 @@
+When a pair of configuration files are selected, with
+the 'diff' keyword separating the two files, this
+positional parammeter identifies the first of the
+two config files to diff.

@@ -1,0 +1,5 @@
+ntp server 1.2.3.4
+  Set the NTP server address
+
+no ntp server
+  Disable the NTP server

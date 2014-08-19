@@ -1,0 +1,3 @@
+Associates a VLAN with this address-space. This VLAN is used for
+internal disambiguation and for tagging packets that egress to other
+networks (according to identifier-rule configuration).

@@ -1,0 +1,7 @@
+Configure server and protocol parameters for TACACS+.
+Specify remote TACACS+ servers, along with protocol timeouts 
+and security settings.
+
+TACACS+ specific configuration here is enabled by a corresponding
+'aaa' command to enable authentication, authorization, or accounting
+via the TACACS+ protocol.

@@ -1,0 +1,4 @@
+vlan-tag-on-egress 42
+  Associate a VLAN tag with this address-space.
+  Each address-space must have an associated VLAN, else this address-space
+  will be ignored by the controller

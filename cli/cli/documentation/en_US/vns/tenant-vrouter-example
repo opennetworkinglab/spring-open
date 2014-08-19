@@ -1,0 +1,6 @@
+router my-first-router
+  Define a new router instance by name,
+  and enter the tenant-router sub-mode
+
+no router my-first-router
+  Remove a named router

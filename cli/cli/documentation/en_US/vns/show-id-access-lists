@@ -1,0 +1,5 @@
+The 'access-list' keyword requests display of the 
+configured access-lists associated with the vns.
+The output includes not only the access-list, but
+a brief descripion of the acl rules associated with
+the access-list.

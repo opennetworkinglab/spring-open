@@ -1,0 +1,8 @@
+tunnel termination enabled
+  Enable tunnel termination for this switch
+
+tunnel termination disabled
+  Disable tunnel termination for this switch
+
+no tunnel termination
+  Disable tunnel termination for this switch

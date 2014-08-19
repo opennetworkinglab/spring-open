@@ -1,0 +1,10 @@
+This 'show host' variant allows the selection of 
+particular related host details, for example the
+attachment point or the ip address.  
+
+The variant exists to more completely list the
+host's associated attributes.  In the more basic
+version of the command, these columns may have
+abbreviated information (displaying only one
+ip address, for example), to provide a more 
+concise display.

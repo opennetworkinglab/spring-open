@@ -1,0 +1,2 @@
+localhost(config-tenant-router)# description "this is the virtual router for testing"
+  Add a textual description to a tenant virtual router

@@ -1,0 +1,2 @@
+Specify the sample window for showing the stats. The sample window is the
+number of raw stat values to average around a down-sampled data point.

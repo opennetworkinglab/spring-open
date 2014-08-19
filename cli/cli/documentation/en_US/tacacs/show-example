@@ -1,0 +1,2 @@
+show tacacs
+  Display the TACACS+ aaa operational state.

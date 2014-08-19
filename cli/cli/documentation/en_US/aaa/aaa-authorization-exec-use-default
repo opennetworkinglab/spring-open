@@ -1,0 +1,5 @@
+Configure authorization sources while connecting via the default channel
+(currently SSH).
+
+Reset the authorization sources (currently to 'local' only) with
+the 'no' version of this command.

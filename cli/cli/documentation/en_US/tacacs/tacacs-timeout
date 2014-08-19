@@ -1,0 +1,9 @@
+Configure the global timeout for communicating with TACACS+ servers.
+The timeout is specified in seconds.
+
+If the timeout expires before the TACACS+ server responds,
+then the TACACS+ aaa action is considered 'failed',
+and other methods can be attempted.
+
+The server timeout is reset to the system default using the 'no' 
+command prefix.

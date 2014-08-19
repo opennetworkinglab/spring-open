@@ -1,0 +1,4 @@
+This is the name of the VNS. The VNS name "default" represents the
+default VNS in the default address space. A VNS name conforming to
+"<address-space-name>-default" represents the default VNS for the
+address-space "address-space-name"

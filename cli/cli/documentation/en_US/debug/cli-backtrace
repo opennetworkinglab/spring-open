@@ -1,0 +1,5 @@
+The cli-backtrace enables additional output during
+cli failures, displaying a backtrace.  The
+difference between cli-backtrace and the cli
+choice is that the model (database tables) editing
+features are not enabled

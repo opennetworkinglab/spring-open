@@ -1,0 +1,5 @@
+set length 50
+  Set the terminal length to 50 lines.
+
+set length term
+  Set the terminal length to the natural screen height.

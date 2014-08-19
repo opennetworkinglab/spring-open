@@ -1,0 +1,9 @@
+broadcast always-flood
+  Miscellaneious broadcast packets are sent on all interfaces
+
+broadcast forward-to-known
+  Miscellaneous broadcast packets are forwarded only to known hosts
+
+broadcast drop
+  Miscellaneous broadcast packets are dropped
+

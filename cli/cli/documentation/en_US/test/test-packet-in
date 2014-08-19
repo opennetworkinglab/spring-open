@@ -1,0 +1,6 @@
+The 'packet-in' test type provides a tools to
+determine whether a source and dest can transmit
+a frame.   A frame is injected as if it originated
+from the indicated port on a source switch, and 
+is directed to a destination switch and port.  When
+it arrives, the command announces the path traversed.

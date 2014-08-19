@@ -1,0 +1,5 @@
+switch 00:00:00:00:00:00:00:01
+  Define a new switch, and enter the switch configuration sub-mode
+
+no switch 00:00:00:00:00:00:00:01
+  Delete a switch definition

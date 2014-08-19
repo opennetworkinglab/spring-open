@@ -1,0 +1,8 @@
+dhcp-mode static
+  VNS will forward DHCP traffic to a single known host
+
+dhcp-mode flood-if-unknown
+  Flood DHCP packets if the server is not known
+
+dhcp-mode always-flood
+  Do not manage DHCP traffice

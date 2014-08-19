@@ -1,0 +1,13 @@
+Reset the controller to the factory default configuration.  This will
+wipe out all configuration and logs files and restore the controller
+to its initial default configuration.
+
+This will require rebooting the controller node.  When the controller
+finishes rebooting, you will need to go through the normal "first time
+setup" process, including reconfiguring the network interface
+configuration.
+
+Note that if you have customized the controller base image through
+debug facilities, then some configuration may not be restored through
+this command.  If this is the case, it is recommended that you start
+with a fresh controller image.

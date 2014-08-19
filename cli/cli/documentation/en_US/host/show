@@ -1,0 +1,8 @@
+The 'show host' command displays details for hosts,
+including the mac address, the associated host alias,
+the address space, ip address, attachment point,
+configured tags and the last time the host was
+serviced by the controller.
+
+The tag column here only displays a synopsis
+of the associated tags.

@@ -1,0 +1,3 @@
+The prirority of this identifier-rule. Higher numeric values represent
+higher priority. The highest priority identifier-rule that matches a
+given packet will be choosen. 

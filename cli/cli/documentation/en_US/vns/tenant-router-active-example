@@ -1,0 +1,5 @@
+localhost(config-tenant-router-intf)# active
+  Activate this interface instance
+
+localhost(config-tenant-router-intf)# no active
+  Deactivate this interface instance

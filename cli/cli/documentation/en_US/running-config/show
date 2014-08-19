@@ -1,0 +1,15 @@
+The 'show running-config' command displays the complete
+configuration for the controller.   When the controller
+is operating with HA enabled, 'show running-config' displays
+the configuraion of the HA cluster.
+
+The running-config is intended to show the configuration
+necessary to update a default configuration to the current
+configuration.  The running-config then displays deviations
+from the default configuration; configuration whice arises
+from the default configuration will not be shown in the
+running-config
+
+While operating with HA enabled, a replay of the running
+config will not cause a slave to be (re)configured into
+HA-enabled if it is not already operating as HA-enabled.

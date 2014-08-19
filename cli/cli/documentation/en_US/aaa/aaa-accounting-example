@@ -1,0 +1,13 @@
+aaa accounting exec default none
+  Turn off accounting services for SSH CLI accesses.
+  The native (/var/log) accounting cannot be disabled.
+
+no aaa accounting exec default
+  Reset the accounting services for SSH CLI accesses to defaults.
+  This disables all accounting services, with the exception
+  of native (/var/log) accounting, which is always enabled.
+
+aaa accounting exec default start-stop group tacacs+
+  Configure the currently-defined set of TACACS+ servers
+  as an accounting service for SSH CLI login and logout.
+

@@ -1,0 +1,6 @@
+interface-alias defintf
+  Assign an alias to this switch interface
+
+no interface-alias defintf
+  Remove an alias for this switch interface
+

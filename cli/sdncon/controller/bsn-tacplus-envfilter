@@ -1,0 +1,11 @@
+#!/usr/bin/python
+
+import os, sys
+
+PAM_SUCCESS = 0  # Successful function return
+PAM_SYSTEM_ERR = 4  # System error
+PAM_AUTH_ERR = 7 # Authentication failure
+
+# test AV pairs in os.environ here
+
+sys.exit(PAM_SUCCESS)

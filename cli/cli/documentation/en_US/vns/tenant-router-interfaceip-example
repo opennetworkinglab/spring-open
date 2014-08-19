@@ -1,0 +1,3 @@
+localhost(config-tenant-router-intf)# ip  10.0.1.1/24
+
+localhost(config-tenant-router-intf)# no ip  10.0.1.1/24

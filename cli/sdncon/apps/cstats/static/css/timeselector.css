@@ -1,0 +1,122 @@
+  ul.bsntimeinterval {
+     list-style: none;
+     margin: 2px;
+     padding: 0px;
+     vertical-align: middle;
+     clear: both;
+  }
+  ul.bsntimeinterval li {
+     float: left;
+     margin: 0;
+     padding: 0;
+     height: 30px;
+     display: table;
+     border-spacing: 0px;
+  }
+  .bsntimeinterval div.center {
+     display: table-cell;
+     vertical-align: middle;
+  }
+  .bsntimeinterval a {
+     display: block;
+  }
+  a.bsnselector {
+     cursor: pointer;
+     margin: 0px;
+     padding: 3px;
+     border: solid 1px #333333;
+     border-right: none;
+     color: #2E6E9E;
+     vertical-align: middle;
+
+     background-color: #EEEEEE;
+     /* Firefox 3.6+ */
+     background: -moz-linear-gradient(100% 100% 90deg, #CCCCCC, #EEEEEE);
+     
+     /* Safari 5.1+, Chrome 10+ */
+     background: -webkit-linear-gradient(#EEEEEE, #CCCCCC);
+     
+     /* Opera 11.10+ */
+     background: -o-linear-gradient(#CCCCCC, #EEEEEE);
+
+  }
+  a.bsnselector.left {
+     border-top-left-radius: .5em;
+     border-bottom-left-radius: .5em;
+  }
+  a.bsnselector.right {
+     border-top-right-radius: .5em;
+     border-bottom-right-radius: .5em;
+     border-right: solid 1px #333333;
+  }
+  a.bsnselector:hover {
+     background-color: #DDDDDD;
+
+     /* Firefox 3.6+ */
+     background: -moz-linear-gradient(100% 100% 90deg, #BBBBBB, #DDDDDD);
+     
+     /* Safari 5.1+, Chrome 10+ */
+     background: -webkit-linear-gradient(#DDDDDD, #BBBBBB);
+     
+     /* Opera 11.10+ */
+     background: -o-linear-gradient(#BBBBBB, #DDDDDD);
+  }
+  a.bsnselector.selected {
+     color: #EEEEEE;
+     background-color: #2E6E9E;
+
+     /* Firefox 3.6+ */
+     background: -moz-linear-gradient(100% 100% 90deg, #2E6E9E, #3D92C2);
+     
+     /* Safari 5.1+, Chrome 10+ */
+     background: -webkit-linear-gradient(#3D92C2, #2E6E9E);
+     
+     /* Opera 11.10+ */
+     background: -o-linear-gradient(#2E6E9E, #3D92C2);
+  }
+  .bsnlabel {
+     margin-left: 5px;
+     margin-right: 2px;
+  }
+  .bsnlabel.disabled {
+     color: #BBBBBB;
+  }
+  .bsntimepicker {
+     width: 10em;
+  }
+  .bsncheckbox {
+     vertical-align: middle;
+     margin-left: 5px;
+     margin-right: 0px;
+  }
+  .bsnarrow {
+     cursor: pointer;
+     padding-left: 3px;
+     padding-right: 3px;
+  }
+  .bsnarrow div {
+     width: 0;
+     height: 0;
+  }
+  .bsnarrow.left div {
+     border-top: 11px solid transparent;
+     border-bottom: 11px solid transparent; 
+     border-right:10px solid #CCCCCC;
+  }
+  .bsnarrow.left:hover div {
+     border-right:10px solid #2E6E9E;
+  }
+  .bsnarrow.right div {
+     border-top: 11px solid transparent;
+     border-bottom: 11px solid transparent;
+     border-left: 10px solid #CCCCCC;
+  }
+  .bsnarrow.right:hover div {
+     border-left: 10px solid #2E6E9E;
+  }
+  .bsncheckbox {
+     display: inline;
+  }
+  .clear {
+     clear: both;
+  }

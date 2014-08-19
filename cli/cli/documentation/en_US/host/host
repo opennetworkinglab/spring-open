@@ -1,0 +1,23 @@
+The host command enters a submode which
+allows configuration for the identified device.  The command's
+parameters identify a unique device, which may require
+the use of the optional address-space and vlan parameters.
+
+The identified device does not
+currently need to be known to the controller, providing
+for pre-configuraion of hosts.
+
+Various host configuration within the submode includes
+host-alias, and host security associations.
+
+If completion is requested for the hosts, the resulting 
+entries shown are the collection of currently known hosts,
+and the collection of configured hosts.
+
+The mac address identifying the specific host is
+case insensitive.
+
+The 'no' variation of the host command will remove all configured
+details for the identified device.  If a 'show host' is issued
+afterwards, the host will still appear if the controller has any
+operational state assocaited with the host.

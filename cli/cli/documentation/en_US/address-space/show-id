@@ -1,0 +1,4 @@
+This 'show address-space' command variation is used to identify a
+specific address-space (the 'all' token provides display for every
+address-spaceJ), to describe particular operational or configured
+details.

@@ -1,0 +1,11 @@
+This submode is used to create a named tenant. Within this submode, properties of
+the tenant can be configured. VNS are configured and managed, which configure the membership of devices.
+Virtual router is configured and managed, which defines the connectivity within and among tenants.
+
+The controller provides a tenant named 'default' to collect devices
+which are not associated with any tenant.
+
+The controller provides a tenant named 'system' to hold system virtual router
+which is used to define the connectivity among all tenants.
+
+The controller provides a tenant named 'external' to hold configuration for external network access.

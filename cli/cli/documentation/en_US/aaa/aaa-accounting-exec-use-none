@@ -1,0 +1,3 @@
+Disable accounting services for this role and channel.
+
+Note that local (/var/log) accounting is always enabled.

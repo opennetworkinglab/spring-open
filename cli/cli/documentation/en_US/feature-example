@@ -1,0 +1,5 @@
+feature netvirt
+  Enable the network virtualization feature
+
+no feature netvirt
+  Disable the network virtualization feature

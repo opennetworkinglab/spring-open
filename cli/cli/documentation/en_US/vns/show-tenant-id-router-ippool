@@ -1,0 +1,2 @@
+The 'ip-address-pool' keyword requests the display of
+the configured ip address/subnet for all the interfaces of the named virtual router.  

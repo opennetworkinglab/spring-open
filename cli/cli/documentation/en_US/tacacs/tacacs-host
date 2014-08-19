@@ -1,0 +1,1 @@
+Configure TACACS+ servers by IP address for aaa roles.Hosts are not active for aaa rules unless the associated 'aaa' command is used. Delete the host with the 'no' form of this command.

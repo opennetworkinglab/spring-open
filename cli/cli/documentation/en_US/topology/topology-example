@@ -1,0 +1,5 @@
+    topology autoportfast
+        Enable autoportfast and suppress link discovery on fast ports.
+
+    no topology autoportfast
+        Do not suppress link discovery on fast ports.

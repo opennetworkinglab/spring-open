@@ -1,0 +1,4 @@
+Hosts are identified by the use of either a mac-address
+(six hex bytes separated by colons), or a host alias.
+Host alias can be created in the host submode under config,
+bu using the host-alias command.

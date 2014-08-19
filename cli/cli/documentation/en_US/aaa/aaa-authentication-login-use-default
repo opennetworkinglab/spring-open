@@ -1,0 +1,5 @@
+Configure authentication sources while logging into the CLI
+via the default channel (currently SSH).
+
+Reset the authentication sources (currently to 'local' only) with
+the 'no' version of this command.

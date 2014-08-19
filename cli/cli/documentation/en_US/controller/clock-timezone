@@ -1,0 +1,3 @@
+Configure the timezone for a controller instance's clock.
+Within the controller-node configuration sub-mode, the user can
+configure the local timezone for the node.

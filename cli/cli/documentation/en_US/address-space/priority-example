@@ -1,0 +1,6 @@
+priority 100
+  Set the priority of this currently-defined address-space
+
+no priority 100
+  Remove the previous priority declaration,
+  and reset this address-space's priority to the default value

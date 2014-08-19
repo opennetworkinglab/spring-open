@@ -1,0 +1,94 @@
+h1. CLI concepts
+h2. Access and modes
+The CLI can be accessed through the console window of the virtual machine or by using ssh to connect to the virtual machine. Logging in as the admin user gives access to the CLI.
+
+The admin user will be logged into the CLI in login mode. The prompt will have a > to indicate this mode.
+
+Enter enable mode by typing the enable command. The prompt will have a # to indicate this mode.
+
+Enter config mode by typing the configure command. The prompt will have a (config)# to indicate this mode.
+
+There are a number of config submodes which will be indicated in the prompt as (config-<submode>)#, and each submode allows configuration of a specific type of object in the database.
+
+Type exit to return to the previous mode, or type end to exit all config modes and return to enable mode.
+
+h2. Navigation and help
+There are a number of ways users can navigate the CLI and receive help at any time.
+
+For navigation, the CLI implements a Linux/shell-style navigation - for example:
+
+* Ctrl-B - back one character
+* Ctrl-F - forward one character
+* Ctrl-A - move to the start of the line
+* Ctrl-E - move to the end of the line
+* Ctrl-P - display the previous command - can be repeated to go through history
+* Ctrl-R - search for text among previous commands
+Refer to http://tiswww.case.edu/php/chet/readline/readline.html for more information on all keyboard shortcuts and facilities.
+
+Help is also accessible by typing the command help. The output will vary based on the specific mode the user is in.
+
+Command completion at any point can be pressing tab once or twice. Pressing tab once will complete the value if possible, and pressing tab twice will show all possible completions. Type the ? character to show completions at any time.
+
+The CLI will accept shortened versions of commands and options so long as there is no ambiguity in the commands. For example, sh run will be interpreted as show running-config.
+
+CLI conveniences: pipes, watching commands, and other tricks
+The output of any CLI command can be piped to common Unix shell utilities such as grep, awk, wc, tail, more, or less. This can make searching for data or browsing through output significantly easier. For example, to find all the ports of a given switch, type:
+{noformat}
+10.0.2.15> show port | grep :24
+00:0a:00:24:a8:c4:69:00 52    28    00:24:a8:c4:69:cc
+00:0a:00:24:a8:c4:69:00 54    30    00:24:a8:c4:69:ca
+00:0a:00:24:a8:c4:69:00 56    32    00:24:a8:c4:69:c8
+00:0a:00:24:a8:c4:69:00 57    33    00:24:a8:c4:69:c7
+00:0a:00:24:a8:c4:69:00 58    34    00:24:a8:c4:69:c6
+10.0.2.15>
+{noformat}
+The CLI provides begin, include, and exclude as pipe options that may be familiar to administrators of existing network devices. begin is useful for starting to view large output at a particular point. For example, to see just the lsof output of show tech-support, type:
+{noformat}
+10.0.2.15> show tech-support | begin lsof |more
+Executing os command: sudo lsof
+COMMAND    PID       USER   FD      TYPE             DEVICE SIZE/OFF       NODE NAME
+init         1       root  cwd       DIR               8,16     4096          2 /
+init         1       root  rtd       DIR               8,16     4096          2 /
+init         1       root  txt       REG               8,16   125640       4081 /sbin/init
+init         1       root  mem       REG               8,16    51712      19738 /lib/libnss_files-2.12.1.so
+init         1       root  mem       REG               8,16    43552      26679 /lib/libnss_nis-2.12.1.so
+init         1       root  mem       REG               8,16    97256      19579 /lib/libnsl-2.12.1.so
+...
+{noformat}
+The CLI also allows users to repeatedly invoke a command by prepending the command watch. For example, watch show switch <dpid> flow will allow the user to monitor the flows on a specific switch. This may be familiar to Unix users who use top or the corresponding watch command in Unix.
+
+Multiple CLI commands can be entered into the CLI on a single line, separated by a semi-colon. For example, to get all the way into a configuring a flow entry on a specific switch, type:
+{noformat}
+10.0.2.15> enable; conf; switch 00:0a:00:24:a8:c4:69:00; flow-entry foo
+10.0.2.15(config-flow-entry)#
+{noformat}
+Finally, the CLI allows redirecting the output of a command to a local file or to the URL of an HTTP server or an FTP server. The local file is stored in the controller database (as general access to the local filesystem is not given). This is convenient for storing away show output or versions of configurations. For example, to store the output of show host, type:
+{noformat}
+10.0.2.15# show host > config://hostoutput
+user data created
+10.0.2.15# show config
+Name       Length Version Timestamp
+----------|------|-------|-------------------
+hostoutput 1775   1       2010-12-15.08:29:31
+
+10.0.2.15# show config hostoutput | head -10
+MAC Address       Name Switch ID               Ingress Port IP Address     Vendor
+-----------------|----|-----------------------|------------|--------------|----------------------------
+00:0c:29:6a:83:8c      00:0a:00:24:a8:c4:69:00 38           192.168.10.207 VMware, Inc.
+00:21:f7:de:e9:00      00:0c:00:21:f7:de:e9:00 local(65534) 192.168.12.102 ProCurve Networking by HP
+00:25:90:08:94:d5      00:0a:00:21:f7:de:e9:00 2            128.8.109.145  Super Micro Computer, Inc.
+00:30:48:f9:cc:f7      00:00:00:30:48:f9:cc:f7 local(65534) 192.168.2.99   Supermicro Computer, Inc.
+00:30:48:f9:cd:0b      00:00:00:30:48:f9:cd:0b local(65534) 0.0.0.0        Supermicro Computer, Inc.
+00:30:48:f9:cd:0d      00:00:00:00:00:00:00:01 17           192.168.11.2   Supermicro Computer, Inc.
+00:50:8d:65:be:4b      00:00:00:00:00:00:00:01 22           192.168.11.1   ABIT COMPUTER CORPORATION
+10:00:00:67:ad:07      00:00:00:30:48:f9:cc:f7 4            192.168.12.132 unknown
+{noformat}
+h2. Conventions
+Text in courier font indicates either text that should be typed in by the user or output from a command.
+
+Text enclosed in parentheses ( ) indicates a set of required arguments. The options are separated by a vertical bar |.
+
+Text enclosed in square brackets [ ] indicates optional arguments. The options are separated by a vertical bar |.
+
+Text enclosed in angle brackets < > indicates a value that should be entered/substituted by the user.
+

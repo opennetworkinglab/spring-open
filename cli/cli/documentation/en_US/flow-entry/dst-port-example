@@ -1,0 +1,5 @@
+dst-port 80
+  Associate a port by number
+
+dst-port https
+  Associate a port by service name

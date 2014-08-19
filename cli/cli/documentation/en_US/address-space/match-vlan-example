@@ -1,0 +1,8 @@
+match vlans 1001
+  Associate one or more VLAN IDs with this identifer rule
+
+no match vlans 1001
+  Remove a VLAN ID association from this identifier rule
+
+no match vlans
+  Remove all VLAN ID associations from this identifier rule

@@ -1,0 +1,5 @@
+arp 10.0.0.1 11:22:33:44:55:66
+  create a static arp entry
+
+no arp 10.0.0.1 11:22:33:44:55:66
+  remove a static arp entry

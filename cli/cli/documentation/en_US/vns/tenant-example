@@ -1,0 +1,6 @@
+tenant my-first-tenant
+  Define a new tenant instance by name,
+  and enter the tenant sub-mode
+
+no tenant my-first-tenant
+  Remove a named tenant

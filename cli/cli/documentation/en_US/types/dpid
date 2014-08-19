@@ -1,0 +1,5 @@
+Dpid's uniquely identify a switch, a dpid is an eight
+hex byte string which the switch announces to the controller,
+In most situations a switch-alias can be used as a replacement
+token for the dpid.   Switch-alias are managed in the switch
+submode within config submode.

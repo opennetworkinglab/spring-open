@@ -1,0 +1,9 @@
+The host-alias command allows associating a more identifiable
+name with the host identified by entering the host submode.
+Host aliases must start with an alphabetic character, and
+can continue with alphanumerics, '_', or '-'.  The maximum length of a
+host alias is 255 characters.
+
+Once an alias is associated with a host, various show commands
+will provide the alias along with, or instead of the mac
+address to identify the host.

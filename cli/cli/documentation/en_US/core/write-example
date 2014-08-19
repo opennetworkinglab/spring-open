@@ -1,0 +1,12 @@
+Display the current running-config:
+    node1# write terminal 
+    !
+    ! SDNOS 1.0 - custom version
+    ! Current Time: 2012-10-23.20:37:51
+    !
+    ...
+
+Reset to factory defaults:
+    node1# write erase 
+    Re-setting controller to factory defaults ...
+    ...

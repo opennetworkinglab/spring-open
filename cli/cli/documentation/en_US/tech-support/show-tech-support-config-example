@@ -1,0 +1,6 @@
+Meis-MacBook-Pro.local(config)# tech-support-config shell date
+Meis-MacBook-Pro.local(config)# show tech-support-config
+Type of command Command name
+---------------|------------
+shell           date
+Meis-MacBook-Pro.local(config)# 

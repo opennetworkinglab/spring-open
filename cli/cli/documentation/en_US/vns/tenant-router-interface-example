@@ -1,0 +1,5 @@
+localhost(config-tenant-router)# interface if1 vns A1
+  create a virtual router interface if1 and connect it to VNS A1
+  
+localhost(config-tenant-router)# no interface if1
+  remove the named virtual router interface if1

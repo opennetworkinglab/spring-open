@@ -1,0 +1,3 @@
+A mac-address, six hex digits separated by colons ':', used to
+identify a unique entity on an ethernet network.   
+Examples: 00:50:56:ad:fe:bb, 00:1b:a9:3f:2e:6e 

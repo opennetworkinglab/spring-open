@@ -1,0 +1,5 @@
+interface-rule my-rule-1
+  Define a new interface rule, and enter its configuration sub-mode
+
+no interface-rule my-rule-1
+  Delete an interface rule by name

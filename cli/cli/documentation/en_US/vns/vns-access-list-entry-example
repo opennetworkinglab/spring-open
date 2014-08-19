@@ -1,0 +1,26 @@
+10 deny ip 10.0.0.1 10.0.0.2
+  Add an ACL rule to deny IP traffic between two hosts
+
+11 allow tcp 10.0.0.3
+  Add an ACL rule to allow TCP traffic from a specific host
+
+12 deny 51
+  Add an ACL rule to deny AH packets
+
+13 deny tcp any eq http
+  Add an ACL rule to deny HTTP traffic
+
+14 deny tcp any eq http
+  Add an ACL rule to deny HTTP traffic
+
+15 deny mac 00:00:00:00:00:01 any
+  Add an ACL rule to deny traffic based on source MAC address
+
+16 deny mac 00:00:00:00:00:01 00:00:00:00:00:02
+  Add an ACL rule to deny traffic between MAC addresses
+
+16 deny mac any any 0x0842
+  Add an ACL rule to deny wake-on-LAN packets
+
+17 deny mac any any vlan 42
+  Add an ACL rule to deny packets from a specific VLAN

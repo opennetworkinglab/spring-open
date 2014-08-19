@@ -1,0 +1,2 @@
+Configure the local password database (UNIX /etc/passwd)
+as an authentication mechanism.

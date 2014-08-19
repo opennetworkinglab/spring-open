@@ -1,0 +1,2 @@
+Associate VLANs with identifier-rule. In this software version the
+specified VLAN must be equal to value specified for 'vlan-tag-on-egress'

@@ -1,0 +1,3 @@
+An Identifier is a strings starting with an alphabetic
+character, followed by a number of alphanumeric characters,
+along with '_' and '-'.  Its used to name some entity.

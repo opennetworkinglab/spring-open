@@ -1,0 +1,2 @@
+Configure accounting services to record 'start' (login)
+and 'stop' (logout) events.

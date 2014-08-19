@@ -1,0 +1,2 @@
+hard-timeout 30
+  Time out this flow after 30s

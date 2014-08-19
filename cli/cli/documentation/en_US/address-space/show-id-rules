@@ -1,0 +1,4 @@
+The 'identifier-rules' keyword requests the display of the configured
+identifier-rules for the named adderss-space.  The address-space
+identifier-rules describe the membership rules associated with an
+address-space.

@@ -1,0 +1,5 @@
+ping 1.2.3.4
+  Ping a specific host with a default package count (5)
+
+ping 10 1.2.3.4
+  Ping a specific host with a fixed number of packets

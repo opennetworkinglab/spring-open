@@ -1,0 +1,4 @@
+Configure the community string for simple read-only SNMP client authentication.
+
+Reset the community string (default empty) with the 'no' version of this command.
+

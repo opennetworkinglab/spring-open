@@ -1,0 +1,2 @@
+Associate a switch or set of switch interfaces with this interface-rule.
+Hosts present on the specified switch/interfaces will be matched. 

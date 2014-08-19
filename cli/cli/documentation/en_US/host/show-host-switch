@@ -1,0 +1,8 @@
+The 'switch <dpid>' keyword pair can be used to restrict the
+hosts displayed by the identified <dpid>.  The hosts displayed
+will all have attachement points associated with the requested
+<dpid>.
+
+If completion is requested after the 'switch' keyword, the
+list of switches displayed are the switches associated with
+the active attachment points of the known hosts.
