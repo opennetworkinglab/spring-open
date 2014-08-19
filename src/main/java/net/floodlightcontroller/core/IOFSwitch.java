@@ -26,11 +26,13 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
+import net.floodlightcontroller.core.web.serializers.IOFSwitchSerializer;
 import net.floodlightcontroller.debugcounter.IDebugCounterService;
 import net.floodlightcontroller.debugcounter.IDebugCounterService.CounterException;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.util.OrderedCollection;
 
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.jboss.netty.channel.Channel;
 import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
@@ -44,7 +46,7 @@ import org.projectfloodlight.openflow.protocol.OFStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.types.U64;
 
-
+@JsonSerialize(using = IOFSwitchSerializer.class)
 public interface IOFSwitch {
 
 	/**
