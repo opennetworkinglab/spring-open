@@ -67,7 +67,7 @@ public abstract class Flow implements BatchOperationTarget {
         if (this == obj) {
             return true;
         }
-        if ((obj == null) || !(obj instanceof Flow)) {
+        if (!(obj instanceof Flow)) {
             return false;
         }
         Flow other = (Flow) obj;
