@@ -53,17 +53,6 @@ public class SingleDstTreeFlow extends Flow {
         // TODO: check consistency among ingressPorts, tree, and actions.
     }
 
-    @Override
-    public PacketMatch getMatch() {
-        return match;
-    }
-
-    @Override
-    public MatchActionOperations compile() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     /**
      * Gets the ingress ports of the tree.
      *
@@ -89,5 +78,16 @@ public class SingleDstTreeFlow extends Flow {
      */
     public List<Action> getEgressActions() {
         return actions;
+    }
+
+    @Override
+    public PacketMatch getMatch() {
+        return match;
+    }
+
+    @Override
+    public List<MatchActionOperations> compile(FlowBatchOperation.Operator op) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

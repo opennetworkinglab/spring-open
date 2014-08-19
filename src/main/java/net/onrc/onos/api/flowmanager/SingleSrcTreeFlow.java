@@ -2,6 +2,7 @@ package net.onrc.onos.api.flowmanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.List;
 import java.util.Set;
 
 import net.onrc.onos.core.matchaction.MatchActionOperations;
@@ -45,17 +46,6 @@ public class SingleSrcTreeFlow extends Flow {
         // TODO: check consistency among rootPort, tree, and actions.
     }
 
-    @Override
-    public PacketMatch getMatch() {
-        return match;
-    }
-
-    @Override
-    public MatchActionOperations compile() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     /**
      * Gets the ingress port (the root) of the tree.
      *
@@ -81,5 +71,16 @@ public class SingleSrcTreeFlow extends Flow {
      */
     public Set<Pair<Dpid, OutputAction>> getOutputActions() {
         return outputActions;
+    }
+
+    @Override
+    public PacketMatch getMatch() {
+        return match;
+    }
+
+    @Override
+    public List<MatchActionOperations> compile(FlowBatchOperation.Operator op) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

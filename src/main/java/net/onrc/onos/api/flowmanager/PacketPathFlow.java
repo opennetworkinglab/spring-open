@@ -40,11 +40,6 @@ public class PacketPathFlow extends PathFlow {
         this.idleTimeout = idleTimeout;
     }
 
-    @Override
-    public PacketMatch getMatch() {
-        return match;
-    }
-
     /**
      * Gets idle-timeout value.
      *
@@ -64,7 +59,12 @@ public class PacketPathFlow extends PathFlow {
     }
 
     @Override
-    public MatchActionOperations compile() {
+    public PacketMatch getMatch() {
+        return match;
+    }
+
+    @Override
+    public List<MatchActionOperations> compile(FlowBatchOperation.Operator op) {
         // TODO Auto-generated method stub
         return null;
     }

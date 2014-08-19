@@ -35,6 +35,15 @@ public class OpticalPathFlow extends PathFlow {
     }
 
     /**
+     * Gets lambda which is used throughout the path.
+     *
+     * @return lambda which is used throughout the path
+     */
+    public int getLambda() {
+        return lambda;
+    }
+
+    /**
      * Gets traffic filter for this flow.
      * <p>
      * This method only returns wildcard match, because the ingress transponder
@@ -45,17 +54,8 @@ public class OpticalPathFlow extends PathFlow {
         return (new PacketMatchBuilder()).build();
     }
 
-    /**
-     * Gets lambda which is used throughout the path.
-     *
-     * @return lambda which is used throughout the path
-     */
-    public int getLambda() {
-        return lambda;
-    }
-
     @Override
-    public MatchActionOperations compile() {
+    public List<MatchActionOperations> compile(FlowBatchOperation.Operator op) {
         // TODO Auto-generated method stub
         return null;
     }
