@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 
@@ -19,7 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * TODO: This class should become immutable after its internals and usage
  * are finalized.
  */
-public final class TopologyEvent implements BatchOperationTarget {
+public final class TopologyEvent implements TopologyBatchTarget {
     private final Type eventType;
     private final TopologyElement<?> event;
     private final OnosInstanceId onosInstanceId;   // The ONOS Instance ID

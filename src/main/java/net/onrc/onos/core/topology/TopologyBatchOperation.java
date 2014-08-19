@@ -7,7 +7,8 @@ import net.onrc.onos.api.batchoperation.BatchOperationEntry;
  * A list of topology operations.
  */
 public class TopologyBatchOperation extends
-        BatchOperation<BatchOperationEntry<TopologyBatchOperation.Operator, ?>> {
+        BatchOperation<BatchOperationEntry<TopologyBatchOperation.Operator, TopologyBatchTarget>> {
+
     /**
      * The topology operations' operators.
      */
@@ -27,27 +28,25 @@ public class TopologyBatchOperation extends
      * Adds an add-TopologyEvent operation.
      *
      * @param topologyEvent the Topology Event to be added
-     * @return the TopologyBatchOperation object if succeeded, null otherwise
+     * @return the TopologyBatchOperation object
      */
     public TopologyBatchOperation addAddTopologyOperation(
                                         TopologyEvent topologyEvent) {
-        return (null == super.addOperation(
-                new BatchOperationEntry<Operator, TopologyEvent>(
-                                        Operator.ADD, topologyEvent)))
-                ? null : this;
+        return (TopologyBatchOperation) addOperation(
+                new BatchOperationEntry<Operator, TopologyBatchTarget>(
+                                        Operator.ADD, topologyEvent));
     }
 
     /**
      * Adds a remove-TopologyEvent operation.
      *
      * @param topologyEvent the Topology Event to be removed
-     * @return the TopologyBatchOperation object if succeeded, null otherwise
+     * @return the TopologyBatchOperation object
      */
     public TopologyBatchOperation addRemoveTopologyOperation(
                                         TopologyEvent topologyEvent) {
-        return (null == super.addOperation(
-                new BatchOperationEntry<Operator, TopologyEvent>(
-                                        Operator.REMOVE, topologyEvent)))
-                ? null : this;
+        return (TopologyBatchOperation) addOperation(
+                new BatchOperationEntry<Operator, TopologyBatchTarget>(
+                                        Operator.REMOVE, topologyEvent));
     }
 }
