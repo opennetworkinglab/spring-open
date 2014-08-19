@@ -1216,6 +1216,14 @@ public class Controller implements IFloodlightProviderService {
         } else {
             log.info("Using OF1.0 pipeline for the CPqD software switch");
         }
+
+        String disableOvsClassification =
+                configParams.get("disableOvsClassification");
+        if (disableOvsClassification != null &&
+                disableOvsClassification.equalsIgnoreCase("true")) {
+            DriverManager.setDisableOvsClassification(true);
+            log.info("OVS switches will be classified as default switches");
+        }
     }
 
     /**

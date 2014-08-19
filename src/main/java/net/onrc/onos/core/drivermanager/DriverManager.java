@@ -20,6 +20,11 @@ public final class DriverManager {
     // single table with packet-ins.
     private static boolean cpqdUsePipeline13 = false;
 
+    // This flag can be set to prevent the driver manager from classifying
+    // switches as OVS switches (and thereby the default switch implementation
+    // will be used).
+    private static boolean disableOvsClassification = false;
+
     /**
      * Return an IOFSwitch object based on switch's manufacturer description
      * from OFDescStatsReply.
@@ -37,7 +42,7 @@ public final class DriverManager {
             return new OFSwitchImplCPqD13(desc, cpqdUsePipeline13);
         }
 
-        if (vendor.startsWith("Nicira") &&
+        if (!disableOvsClassification && vendor.startsWith("Nicira") &&
                 hw.startsWith("Open vSwitch")) {
             if (ofv == OFVersion.OF_10) {
                 return new OFSwitchImplOVS10(desc);
@@ -70,5 +75,23 @@ public final class DriverManager {
      */
     public static void setConfigForCpqd(boolean usePipeline13) {
         cpqdUsePipeline13 = usePipeline13;
+    }
+
+    /**
+     * Sets the configuration parameter which determines whether switches can
+     * be classified as OVS switches or as the default switch implementation.
+     *
+     * Our use case for this is when running OVS under the Flow Space Firewall
+     * (FSFW). The FSFW relays the switch desc reply (containing OVS
+     * description) from the switch to the controller. This causes us to
+     * classify the fake FSFW switch as OVS, however the FSFW switch doesn't
+     * support Nicira role requests and it breaks if we try to send them.
+     * Our workaround is to disable classifying switches as OVS.
+     *
+     * @param disableOvsClassificationFlag whether to use OVS switches or not
+     */
+    public static void setDisableOvsClassification(
+            boolean disableOvsClassificationFlag) {
+        disableOvsClassification = disableOvsClassificationFlag;
     }
 }
