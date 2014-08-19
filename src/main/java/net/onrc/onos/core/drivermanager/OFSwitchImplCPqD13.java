@@ -125,9 +125,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         if (!usePipeline13) {
             // Send packet-in to controller if a packet misses the first table
             populateTableMissEntry(0, true, false, false, 0);
-        } //else {
-            // configureSwitch();
-        //}
+        } // else {
+          // configureSwitch();
+        // }
         sendBarrier(true);
     }
 

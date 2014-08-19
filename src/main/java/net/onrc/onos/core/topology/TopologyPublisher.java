@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -24,8 +25,11 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
+import net.onrc.onos.core.configmanager.INetworkConfigService;
+import net.onrc.onos.core.configmanager.INetworkConfigService.LinkConfigStatus;
+import net.onrc.onos.core.configmanager.INetworkConfigService.NetworkConfigState;
+import net.onrc.onos.core.configmanager.INetworkConfigService.SwitchConfigStatus;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.hostmanager.Host;
@@ -74,8 +78,8 @@ public class TopologyPublisher implements IOFSwitchListener,
     private IDatagridService datagridService;
 
     private IHostService hostService;
-
     private MutableTopology mutableTopology;
+    private INetworkConfigService networkConfigService;
 
     private static final String ENABLE_CLEANUP_PROPERTY = "EnableCleanup";
     private boolean cleanupEnabled = true;
@@ -288,6 +292,13 @@ public class TopologyPublisher implements IOFSwitchListener,
 
     @Override
     public void linkAdded(Link link) {
+        LinkConfigStatus ret = networkConfigService.checkLinkConfig(link);
+        if (ret.getConfigState() == NetworkConfigState.DENY) {
+            log.warn("Discovered {} denied by configuration. {} "
+                    + "Not allowing it to proceed.", link, ret.getMsg());
+            return;
+        }
+
         LinkData linkData = new LinkData(
                 new SwitchPort(link.getSrc(), link.getSrcPort()),
                 new SwitchPort(link.getDst(), link.getDstPort()));
@@ -297,8 +308,17 @@ public class TopologyPublisher implements IOFSwitchListener,
         // TODO populate appropriate attributes.
         linkData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_PACKET_LAYER);
-        linkData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
-                ConfigState.NOT_CONFIGURED.toString());
+        if (ret.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
+            Map<String, String> attr = ret.getLinkConfig().getPublishAttributes();
+            for (Entry<String, String> e : attr.entrySet()) {
+                linkData.createStringAttribute(e.getKey(), e.getValue());
+            }
+            linkData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                    ConfigState.CONFIGURED.toString());
+        } else {
+            linkData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                    ConfigState.NOT_CONFIGURED.toString());
+        }
         linkData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                 AdminStatus.ACTIVE.toString());
         linkData.freeze();
@@ -335,6 +355,13 @@ public class TopologyPublisher implements IOFSwitchListener,
             return;
         }
 
+        SwitchConfigStatus ret = networkConfigService.checkSwitchConfig(dpid);
+        if (ret.getConfigState() == NetworkConfigState.DENY) {
+            log.warn("Activated switch {} denied by network configuration. {} "
+                    + "Not allowing it to proceed.", dpid, ret.getMsg());
+            return;
+        }
+
         controllerRoleChanged(dpid, Role.MASTER);
 
         SwitchData switchData = new SwitchData(dpid);
@@ -345,10 +372,19 @@ public class TopologyPublisher implements IOFSwitchListener,
                 TopologyElement.TYPE_PACKET_LAYER);
         switchData.createStringAttribute("ConnectedSince",
                 sw.getConnectedSince().toString());
-        switchData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
-                ConfigState.NOT_CONFIGURED.toString());
         switchData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                 AdminStatus.ACTIVE.toString());
+        if (ret.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
+            Map<String, String> attr = ret.getSwitchConfig().getPublishAttributes();
+            for (Entry<String, String> e : attr.entrySet()) {
+                switchData.createStringAttribute(e.getKey(), e.getValue());
+            }
+            switchData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                    ConfigState.CONFIGURED.toString());
+        } else {
+            switchData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+                    ConfigState.NOT_CONFIGURED.toString());
+        }
         switchData.freeze();
         // The Port events
         List<PortData> portDataEntries = new ArrayList<PortData>();
@@ -516,6 +552,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         l.add(IDatagridService.class);
         l.add(ITopologyService.class);
         l.add(IHostService.class);
+        l.add(INetworkConfigService.class);
         return l;
     }
 
@@ -527,6 +564,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         registryService = context.getServiceImpl(IControllerRegistryService.class);
         datagridService = context.getServiceImpl(IDatagridService.class);
         hostService = context.getServiceImpl(IHostService.class);
+        networkConfigService = context.getServiceImpl(INetworkConfigService.class);
         topologyService = context.getServiceImpl(ITopologyService.class);
     }
 
