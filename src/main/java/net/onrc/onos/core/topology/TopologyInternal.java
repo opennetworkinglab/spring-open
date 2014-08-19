@@ -5,6 +5,7 @@ import java.util.Collection;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.LinkTuple;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
@@ -33,6 +34,23 @@ public interface TopologyInternal extends Topology {
      * @return the PortEvent for the Port identifier if found, otherwise null
      */
     public PortEvent getPortEvent(SwitchPort port);
+
+    /**
+     * Gets a PortEvent.
+     *
+     * @param dpid Switch DPID
+     * @param portNumber Port number
+     * @return the PortEvent for the (Dpid, PortNumber) if found, otherwise null
+     */
+    public PortEvent getPortEvent(Dpid dpid, PortNumber portNumber);
+
+    /**
+     * Gets all the PortEvents on a switch.
+     *
+     * @param dpid Switch DPID
+     * @return PortEvents
+     */
+    public Collection<PortEvent> getPortEvents(Dpid dpid);
 
     /**
      * Gets all PortEvent entries.

@@ -371,11 +371,25 @@ public class TopologyImpl implements Topology, TopologyInternal {
 
     @Override
     public PortEvent getPortEvent(final SwitchPort port) {
-        ConcurrentMap<PortNumber, PortEvent> portMap = this.ports.get(port.getDpid());
+        return getPortEvent(port.getDpid(), port.getPortNumber());
+    }
+
+    @Override
+    public PortEvent getPortEvent(final Dpid dpid, PortNumber portNumber) {
+        ConcurrentMap<PortNumber, PortEvent> portMap = this.ports.get(dpid);
         if (portMap != null) {
-            return portMap.get(port.getPortNumber());
+            return portMap.get(portNumber);
         }
         return null;
+    }
+
+    @Override
+    public Collection<PortEvent> getPortEvents(final Dpid dpid) {
+        ConcurrentMap<PortNumber, PortEvent> portList = ports.get(dpid);
+        if (portList == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableCollection(portList.values());
     }
 
     @Override
