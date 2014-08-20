@@ -1,17 +1,22 @@
 package net.onrc.onos.core.util;
 
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.concurrent.ThreadSafe;
+
 import com.google.common.base.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A class representing an ID space. This class is not thread-safe.
+ * A class representing an ID space.
  */
+@ThreadSafe
 public final class IdBlock {
     private final long start;
     private final long size;
 
-    private long currentId;
+    private AtomicLong currentId;
 
     /**
      * Constructs a new ID block with the specified size and initial value.
@@ -26,7 +31,7 @@ public final class IdBlock {
         this.start = start;
         this.size = size;
 
-        this.currentId = start;
+        this.currentId = new AtomicLong(start);
     }
 
     // TODO: consider if this method is needed or not
@@ -65,18 +70,18 @@ public final class IdBlock {
      * @throws UnavailableIdException if there is no available ID in the block.
      */
     public long getNextId() {
-        if (currentId > getEnd()) {
+        final long id = currentId.getAndIncrement();
+        if (id > getEnd()) {
             throw new UnavailableIdException(String.format(
-                    "use all IDs in allocated space (size: %d, end: %d, current: %d)",
-                    size, getEnd(), currentId
+                    "used all IDs in allocated space (size: %d, end: %d, current: %d)",
+                    size, getEnd(), id
             ));
         }
-        long id = currentId;
-        currentId++;
 
         return id;
     }
 
+    // TODO: Do we really need equals and hashCode? Should it contain currentId?
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -89,7 +94,7 @@ public final class IdBlock {
         IdBlock that = (IdBlock) o;
         return Objects.equal(this.start, that.start)
                 && Objects.equal(this.size, that.size)
-                && Objects.equal(this.currentId, that.currentId);
+                && Objects.equal(this.currentId.get(), that.currentId.get());
     }
 
     @Override
