@@ -81,4 +81,11 @@ public class TopologyModule implements IFloodlightModule, ITopologyService {
     public void removeListener(ITopologyListener listener) {
         topologyManager.removeListener(listener);
     }
+
+    @Override
+    public boolean publish(TopologyBatchOperation tbo) {
+        // TODO: Replace with a call to the new (log-based) TopologyReplicator
+        // return topologyReplicator.publish(tbo);
+        return false;
+    }
 }

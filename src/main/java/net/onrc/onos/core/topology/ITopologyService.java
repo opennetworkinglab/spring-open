@@ -5,7 +5,8 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 /**
  * Interface for providing the topology service to other modules.
  */
-public interface ITopologyService extends IFloodlightService {
+public interface ITopologyService extends IFloodlightService,
+                                        ITopologyReplicationWriter {
     /**
      * Allows a module to get a reference to the global topology object.
      *

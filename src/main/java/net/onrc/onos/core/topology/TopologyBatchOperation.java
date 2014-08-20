@@ -7,7 +7,7 @@ import net.onrc.onos.api.batchoperation.BatchOperationEntry;
  * A list of topology operations.
  */
 public class TopologyBatchOperation extends
-        BatchOperation<BatchOperationEntry<TopologyBatchOperation.Operator, TopologyBatchTarget>> {
+        BatchOperation<BatchOperationEntry<TopologyBatchOperation.Operator, TopologyEvent>> {
 
     /**
      * The topology operations' operators.
@@ -25,28 +25,28 @@ public class TopologyBatchOperation extends
     }
 
     /**
-     * Adds an add-TopologyEvent operation.
+     * Appends an ADD-TopologyEvent operation.
      *
-     * @param topologyEvent the Topology Event to be added
+     * @param topologyEvent the Topology Event to be appended
      * @return the TopologyBatchOperation object
      */
-    public TopologyBatchOperation addAddTopologyOperation(
+    public TopologyBatchOperation appendAddOperation(
                                         TopologyEvent topologyEvent) {
         return (TopologyBatchOperation) addOperation(
-                new BatchOperationEntry<Operator, TopologyBatchTarget>(
+                new BatchOperationEntry<Operator, TopologyEvent>(
                                         Operator.ADD, topologyEvent));
     }
 
     /**
-     * Adds a remove-TopologyEvent operation.
+     * Appends a REMOVE-TopologyEvent operation.
      *
-     * @param topologyEvent the Topology Event to be removed
+     * @param topologyEvent the Topology Event to be appended
      * @return the TopologyBatchOperation object
      */
-    public TopologyBatchOperation addRemoveTopologyOperation(
+    public TopologyBatchOperation appendRemoveOperation(
                                         TopologyEvent topologyEvent) {
         return (TopologyBatchOperation) addOperation(
-                new BatchOperationEntry<Operator, TopologyBatchTarget>(
+                new BatchOperationEntry<Operator, TopologyEvent>(
                                         Operator.REMOVE, topologyEvent));
     }
 }

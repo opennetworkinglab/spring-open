@@ -350,7 +350,7 @@ public class KryoFactoryTest {
                 SwitchEvent switchEvent = new SwitchEvent(dpid);
                 TopologyEvent topologyEvent =
                     swConst.newInstance(switchEvent, onosInstanceId);
-                tbo.addAddTopologyOperation(topologyEvent);
+                tbo.appendAddOperation(topologyEvent);
             }
 
             Result result = benchType(tbo, EqualityCheck.EQUALS);
