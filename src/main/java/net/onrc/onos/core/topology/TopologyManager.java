@@ -29,14 +29,12 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.EventEntry;
 import net.onrc.onos.core.util.SwitchPort;
-import net.onrc.onos.core.util.serializers.KryoFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * The TopologyManager receives topology updates from the southbound discovery
@@ -63,7 +61,6 @@ public class TopologyManager {
     private EventHandler eventHandler = new EventHandler();
 
     private final TopologyImpl topology = new TopologyImpl();
-    private Kryo kryo = KryoFactory.newKryoObject();
     private TopologyEventPreprocessor eventPreprocessor;
     private CopyOnWriteArrayList<ITopologyListener> topologyListeners =
         new CopyOnWriteArrayList<>();
