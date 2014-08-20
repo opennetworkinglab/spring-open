@@ -1,6 +1,9 @@
 package net.onrc.onos.core.matchaction;
 
+import java.util.Collections;
 import java.util.EventListener;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 
@@ -11,6 +14,19 @@ import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
  */
 public class MatchActionModule implements MatchActionService {
 
+    private final HashSet<MatchAction> currentOperations = new HashSet<>();
+
+    private boolean processMatchActionEntries(
+            final List<MatchActionOperationEntry> entries) {
+        int successfulOperations = 0;
+        for (final MatchActionOperationEntry entry : entries) {
+            if (currentOperations.add(entry.getTarget())) {
+                successfulOperations++;
+            }
+        }
+        return entries.size() == successfulOperations;
+    }
+
     @Override
     public boolean addMatchAction(MatchAction matchAction) {
         return false;
@@ -18,14 +34,12 @@ public class MatchActionModule implements MatchActionService {
 
     @Override
     public Set<MatchAction> getMatchActions() {
-        // TODO Auto-generated method stub
-        return null;
+        return Collections.unmodifiableSet(currentOperations);
     }
 
     @Override
     public boolean executeOperations(final MatchActionOperations operations) {
-        // TODO Auto-generated method stub
-        return false;
+        return processMatchActionEntries(operations.getOperations());
     }
 
     @Override

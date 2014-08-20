@@ -8,7 +8,7 @@ import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
- * A filter and actions for traffic.
+ * A filter and actions for traffic.  Objects of this class are immutable.
  */
 public final class MatchAction implements BatchOperationTarget {
     private final MatchActionId id;
@@ -65,5 +65,19 @@ public final class MatchAction implements BatchOperationTarget {
      */
     public List<Action> getActions() {
         return actions;
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MatchAction) {
+            MatchAction other = (MatchAction) obj;
+            return (id.equals(other.id));
+        }
+        return false;
     }
 }

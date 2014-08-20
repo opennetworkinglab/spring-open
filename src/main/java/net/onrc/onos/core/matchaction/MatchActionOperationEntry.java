@@ -2,6 +2,10 @@ package net.onrc.onos.core.matchaction;
 
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 
+/**
+ * This class pairs an Operator and a Match Action to represent an executable
+ * Match Action operation.
+ */
 public final class MatchActionOperationEntry
        extends BatchOperationEntry<MatchActionOperations.Operator, MatchAction> {
 

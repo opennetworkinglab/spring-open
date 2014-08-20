@@ -8,23 +8,43 @@ import org.junit.Test;
  */
 public class TestImmutableClasses {
 
+    /**
+     * MatchAction objects should be immutable.
+     */
     @Test
     public void checkMatchActionImmutable() {
         ImmutableClassChecker.assertThatClassIsImmutable(MatchAction.class);
     }
 
+    /**
+     * MatchActionOperationEntry objects should be immutable.
+     */
     @Test
     public void checkMatchActionOperationEntryImmutable() {
         ImmutableClassChecker.assertThatClassIsImmutable(MatchActionOperationEntry.class);
     }
 
+    /**
+     * MatchActionId objects should be immutable.
+     */
     @Test
     public void checkMatchActionId() {
         ImmutableClassChecker.assertThatClassIsImmutable(MatchActionId.class);
     }
 
+    /**
+     * MatchActionOperations objects should be immutable.
+     */
     @Test
     public void checkMatchActionOperations() {
         ImmutableClassChecker.assertThatClassIsImmutable(MatchActionOperations.class);
+    }
+
+    /**
+     * MatchActionOperationsId objects should be immutable.
+     */
+    @Test
+    public void checkMatchActionOperationsId() {
+        ImmutableClassChecker.assertThatClassIsImmutable(MatchActionOperationsId.class);
     }
 }
