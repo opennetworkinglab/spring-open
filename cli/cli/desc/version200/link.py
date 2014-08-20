@@ -67,8 +67,8 @@ LINKS_FORMAT = {
     'links' : {
         'field-orderings' : {
             'default' : [ 'Idx',
-                          'src-switch', 'src-port', 'src-port-state',
-                          'dst-switch', 'dst-port', 'dst-port-state', 'type' ]
+                          'src-switch', 'src-port', 
+                          'dst-switch', 'dst-port', 'type' ]
              },
         'fields' : {
             'src-switch'     : {

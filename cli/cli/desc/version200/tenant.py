@@ -18,6 +18,7 @@
 #
 
 import command
+'''
 def tenant_origin_external(data):
     """
     Return origin-name when the tenant wasn't created by the cli,
@@ -101,6 +102,8 @@ def complete_tenant_preprocess(data):
 command.add_completion('complete-tenant-preprocess', complete_tenant_preprocess,
                            {'kwargs': {'data': '$data',
                                        }})
+'''
+"""
 #
 # ----------------------------------------------------------------------
 # tenant submode commands
@@ -539,3 +542,4 @@ TENANT_FORMAT = {
            }
         },
 }
+"""

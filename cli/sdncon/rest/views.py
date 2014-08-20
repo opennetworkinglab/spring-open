@@ -19,7 +19,9 @@ from django.forms import ValidationError
 from django.http import HttpResponse
 from django.utils import simplejson
 from functools import wraps
-from sdncon.controller.models import Controller, ControllerAlias, ControllerDomainNameServer, ControllerInterface, FirewallRule, Switch, Port, PortAlias, Link
+from sdncon.controller.models import Controller
+#from sdncon.controller.models import ControllerAlias, ControllerDomainNameServer, ControllerInterface, FirewallRule
+from sdncon.controller.models import Switch, Port, PortAlias, Link
 from sdncon.rest.models import UserData
 from sdncon.controller.notification import begin_batch_notification, end_batch_notification
 from django.views.decorators.csrf import csrf_exempt

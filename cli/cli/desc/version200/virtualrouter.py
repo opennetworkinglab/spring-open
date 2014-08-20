@@ -164,7 +164,7 @@ def virtualrouter_confirm_external_delete(data):
 command.add_action('virtualrouter-confirm-external-delete', virtualrouter_confirm_external_delete,
                     {'kwargs': {'data'      : '$data',}})
 
-
+"""
 #
 # ----------------------------------------------------------------------
 # router submode commands
@@ -1114,3 +1114,4 @@ INTERFACE_ADDRESS_POOL_FORMAT = {
            }
         },
 }
+"""

@@ -13,7 +13,7 @@
 # implied. See the License for the specific language governing
 # permissions and limitations under the License.
 #
-
+"""
 SWITCH_SUBMODE_COMMAND_DESCRIPTION = {
     'name'          : 'switch',
     'short-help'    : 'Enter switch submode, configure switch details',
@@ -38,7 +38,7 @@ SWITCH_SUBMODE_COMMAND_DESCRIPTION = {
         }
     )
 }
-
+"""
 #
 # ------------------------------------------------------------------------------
 # show switch
@@ -153,7 +153,7 @@ SWITCH_SHOW_WITH_DPID_COMMAND_DESCRIPTION = {
         },
     )
 }
-
+"""
 SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
     'name'                : 'show',
     'mode'                : 'login',
@@ -676,9 +676,9 @@ show_tunnel_pipeline = (
         'format'   : 'tunnel-pipeline',
     }
 )
-
+"""
 import fmtcnv
-
+"""
 TUNNEL_PIPELINE_FORMAT = {
     'tunnel-pipeline' : {
         'field-orderings' : {
@@ -941,7 +941,7 @@ SWITCH_INTERFACE_INTERFACE_ALIAS_COMMAND_DESCRIPTION = {
         }
     )
 }
-
+"""
 #
 # FORMATS
 #
@@ -951,9 +951,9 @@ SWITCH_FORMAT = {
     'switch' : {
         'field-orderings' : {
             'default' : [ 'Idx', '@', 'switch-alias', 'connected-since',
-                          'ip-address', ],
+                          'ip-address', 'type'],
             'details' : [ 'Idx','@', 'switch-alias', 'connected-since',
-                          'ip-address', ],
+                          'ip-address', 'type'],
             'brief'   : [ 'Idx', '@', 'switch-alias', 'connected-since',
                           'ip-address', ],
             },
@@ -969,7 +969,7 @@ SWITCH_FORMAT = {
                                    },
             'connected-since'    : {
                                      'verbose-name' : 'Connected Since',
-                                     'formatter' : fmtcnv.timestamp_to_local_timestr,
+                                     #'formatter' : fmtcnv.timestamp_to_local_timestr,
                                    },
             'capabilities'       : {
                                      'formatter' : fmtcnv.decode_switch_capabilities,
@@ -1009,11 +1009,13 @@ SWITCH_FORMAT = {
                                    },
             'serial-num'         : {
                                    },
+            'type'               : {
+                                   },
             }
         },
 }
 
-
+"""
 SWITCH_CONFIG_FORMAT = {
     'switch-config' : {
         'field-orderings' : {
@@ -1156,4 +1158,4 @@ TUNNEL_DETAILS_FORMAT = {
         },
     },
 }
-
+"""

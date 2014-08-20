@@ -16,7 +16,7 @@
 
 import command
 import fmtcnv
-
+'''
 def address_space_origin_external (data):
     """
     Return origin-name when the address space wasn't created by the cli,
@@ -73,8 +73,8 @@ def address_space_confirm_external_delete (data):
 command.add_action('address-space-confirm-external-delete',
                    address_space_confirm_external_delete,
                    {'kwargs': {'data'      : '$data',}})
-
-
+'''
+"""
 #
 # ----------------------------------------------------------------------
 # address-space submode configuration commands
@@ -193,7 +193,7 @@ ADDRESS_SPACE_PRIORITY_COMMAND_DESCRIPTION = {
         }
     )
 }
-
+"""
 
 def address_space_check_unique_vlan(data):
     """
@@ -217,7 +217,7 @@ command.add_action('address-space-check-unique-vlan',
                    address_space_check_unique_vlan,
                    {'kwargs': {'data' : '$data',}})
 
-
+"""
 #
 # conf/address-space <as>/vlan-tag-on-egress <tag>
 #
@@ -634,4 +634,4 @@ ADDRESS_SPACE_IDENTIFIER_RULE_FORMAT = {
             }
         },
 }
-
+"""

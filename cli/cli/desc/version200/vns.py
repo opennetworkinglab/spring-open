@@ -16,7 +16,7 @@
 
 import command
 import fmtcnv
-
+'''
 def vns_origin_external(data):
     """
     Return origin-name when the vns wasn't created by the cli,
@@ -91,7 +91,8 @@ command.add_action('vns-confirm-external-delete', vns_confirm_external_delete,
 
 command.add_action('vns-confirm-external-delete', vns_confirm_external_delete,
                     {'kwargs': {'data'      : '$data',}})
-
+'''
+"""
 #
 # ----------------------------------------------------------------------
 # vns-definition submode commands
@@ -1888,3 +1889,4 @@ VNS_INTERFACE_FORMAT = {
             }
         },
 }
+"""

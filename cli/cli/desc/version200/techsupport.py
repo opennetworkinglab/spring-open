@@ -26,7 +26,7 @@
 #  tech-support-config type command
 #  no tech-support-config type command
 #
-
+"""
 TECH_SUPPORT_COMMAND_DESCRIPTION = {
     'name'         : 'tech-support-config',
     'mode'         : 'config',
@@ -79,3 +79,4 @@ TECH_SUPPORT_CONF_SHOW_COMMAND_DESCRIPTION = {
         },
     )
 }
+"""

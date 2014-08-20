@@ -15,10 +15,12 @@
 #
 
 from sdncon.rest.config import add_config_handler
+"""
 from sdncon.controller.models import Feature, GlobalConfig, Controller, \
     ControllerInterface, ControllerDomainNameServer, \
     FirewallRule, ControllerAlias, SnmpServerConfig, ImageDropUser
 from sdncon.controller.models import TacacsPlusConfig, TacacsPlusHost
+"""
 from oswrapper import exec_os_wrapper
 import os
 import re
@@ -46,7 +48,7 @@ def get_local_controller_id(default_id='localhost'):
             f.close()
     return local_controller_id
 
-
+"""
 # Add the config handlers here. Check the comments for add_config_handler in rest/config.py
 # for a description of the calling conventions for config handlers.
 
@@ -233,7 +235,7 @@ def snmp_server_config_handler(op, old_instance, new_instance, modified_fields=N
         print "Calling oswrapper with:", [server_enable, community, location, contact, enable_changed]
         exec_os_wrapper('SetSnmpServerConfig', 'set',
                         [server_enable, community, location, contact, enable_changed])
-
+"""
 def test_config_handler(op, old_instance, new_instance, modified_fields=None):
     pass
 
@@ -247,6 +249,7 @@ def init_config():
     # Associate the config handlers with specific callout for each of the fields
     #  Keep in mind that these are the django names, NOT the rest api names,
     #
+    """
     disabled_by_shell_variable = os.environ.get('SDNCON_CONFIG_HANDLERS_DISABLED', False)
     disabled_by_file = os.path.exists("%s/sdncon_config_handlers_disabled" % sdncon.SDN_ROOT)
     if not disabled_by_shell_variable and not disabled_by_file:
@@ -282,3 +285,4 @@ def init_config():
                 Feature: None,
                 GlobalConfig: ['ha-enabled', 'cluster-number'],
             }, test_config_handler)
+    """

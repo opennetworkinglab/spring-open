@@ -18,7 +18,7 @@
 #
 # vCenter commands
 #
-
+"""
 import os
 VCENTER_COMMAND_DESCRIPTION = {
     'name'         : 'vcenter',
@@ -546,3 +546,4 @@ VCENTER_DVS_PORT_GROUP_FORMAT = {
 
         },
 }
+"""

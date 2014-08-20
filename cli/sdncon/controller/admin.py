@@ -15,7 +15,7 @@
 #
 
 from django.contrib import admin
-from .models import Switch, StaticFlowTableEntry, HostConfig
+#from .models import Switch, StaticFlowTableEntry, HostConfig
 
 #admin.site.register(Switch)
 #admin.site.register(StaticFlowTableEntry)

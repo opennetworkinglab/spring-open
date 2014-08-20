@@ -13,7 +13,7 @@
 # implied. See the License for the specific language governing
 # permissions and limitations under the License.
 #
-
+"""
 TACACS_SERVER_HOST_COMMAND_DESCRIPTION = {
     'name'         : 'tacacs',
     'mode'         : 'config*',
@@ -388,3 +388,4 @@ SHOW_TACACS_PLUS_HOST_FORMAT = {
         }
     }
 }
+"""

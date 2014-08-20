@@ -13,7 +13,7 @@
 # implied. See the License for the specific language governing
 # permissions and limitations under the License.
 #
-
+"""
 HOST_SUBMODE_COMMAND_DESCRIPTION = {
     'name'                : 'host',
     'obj-type'            : 'host-config',
@@ -60,7 +60,7 @@ HOST_SUBMODE_COMMAND_DESCRIPTION = {
          }
     )
 }
-
+"""
 
 host_show_mac_action = (
     {
@@ -357,7 +357,7 @@ HOST_SHOW_MAC_ITEMS_COMMAND_DESCRIPTION = {
     )
 }
 
-
+"""
 HOST_HOST_ALIAS_COMMAND_DESCRIPTION = {
     'name'         : 'host-alias',
     'mode'         : 'config-host',
@@ -460,7 +460,7 @@ HOST_SECURITY_POLICY_BIND_IP_ADDRESS_COMMAND_DESCRIPTION = {
         },
     ),
 }
-
+"""
 
 #
 # FORMATS
@@ -472,12 +472,12 @@ import fmtcnv
 HOST_FORMAT = {
     'host': {
         'field-orderings' : {
-            'default' : [ 'Idx', 'id', 'address-space', 'vlan', 
-                          'ips', 'attachment-points', 'tag', 'last-seen' ],
-            'details' : [ 'Idx', 'id', 'address-space', 'vlan', 
-                          'vendor', 'ips', 'attachment-points', 'tag', 'dhcp-client-name',
-                          'last-seen' ],
-            'brief'   : [ 'Idx', 'id', 'address-space', 'vlan', 'ips', 'last-seen'],
+            'default' : [ 'Idx', 'id',  
+                          'ips', 'attachment-points' ],
+            'details' : [ 'Idx', 'id',  
+                          'vendor', 'ips', 'attachment-points'
+                          ],
+            'brief'   : [ 'Idx', 'id', 'ips'],
             },
 
 
@@ -604,7 +604,7 @@ HOST_ALIAS_FORMAT = {
         },
 }
 
-
+"""
 HOST_CONFIG_FORMAT = {
     'host-config' : {
         'field-orderings' : {
@@ -647,3 +647,4 @@ HOST_CONFIG_FORMAT = {
         },
     },
 }
+"""

@@ -516,7 +516,7 @@ class SDNSh():
         #
         # config mode commands
         #
-        self.command_dict['config'] = [ "boot" ]
+        #self.command_dict['config'] = [ "boot" ]
 
         #
         # commands which start at 'login'
@@ -534,9 +534,9 @@ class SDNSh():
                                               'ping', 'test', 'version',
                                               'connect', 'watch', 'no' ]
 
-        self.command_nested_dict['enable'] = [ 'clear', 'end' ]
+        #self.command_nested_dict['enable'] = [ 'clear', 'end' ]
 
-        self.command_dict['config-internal'] = ['lint', 'permute']
+        #self.command_dict['config-internal'] = ['lint', 'permute']
 
     #
     # --------------------------------------------------------------------------------
@@ -1413,7 +1413,10 @@ class SDNSh():
     #
     #
     def all_obj_types_starting_with(self, text=""):
-        netvirt_feature = self.netvirt_feature_enabled()
+        if onos == 0:
+            netvirt_feature = self.netvirt_feature_enabled()
+        else:
+            netvirt_feature = False
 
         matched_obj_types = [x for x in mi.obj_types
                              if x.startswith(text) and
@@ -1489,7 +1492,7 @@ class SDNSh():
             return True
         return default_value
 
- 
+    '''
     #
     # --------------------------------------------------------------------------
     # address_space_default_create
@@ -1623,7 +1626,7 @@ class SDNSh():
         if controller_netvirt_feature == False:
             return False
         return True
-
+    '''
 
     #
     # --------------------------------------------------------------------------------
@@ -1687,7 +1690,10 @@ class SDNSh():
             return []
         #
         # vns features
-        netvirt_features = self.netvirt_feature_enabled()
+        if onos == 0:
+            netvirt_features = self.netvirt_feature_enabled()
+        else:
+            netvirt_features = False
         vns_objects = [ 'vns-definition' ]
 
         ret_list = [x for x in mi.obj_types
@@ -1768,7 +1774,10 @@ class SDNSh():
         #
         # vns features commands include:
         netvirt_feature_commands = ['vns', 'vns-definition']
-        netvirt_feature = self.netvirt_feature_enabled()
+        if onos == 0:
+            netvirt_feature = self.netvirt_feature_enabled()
+        else:
+            netvirt_feature = False
 
         mode_list = self.commands_for_mode(self.current_mode())
         ret_list = self.commands_feature_enabled(utif.unique_list_from_list(mode_list))
@@ -2583,7 +2592,10 @@ class SDNSh():
         matching_methods = [x for x in dir(self)
                             if self.show_command_prefix_matches(x, text)]
 
-        netvirt_feature = self.netvirt_feature_enabled()
+        if onos == 0:
+            netvirt_feature = self.netvirt_feature_enabled()
+        else:
+            netvirt_feature = False
 
         for method in matching_methods:
             m = re.search("do_show_(.*)", method)
@@ -7750,7 +7762,8 @@ class SDNSh():
             # vns feature enablement.
             #  when vns is enabled, call a init procedure
             #
-            self.netvirt_feature_enabled()
+            if onos == 0:
+                self.netvirt_feature_enabled()
 
         while self.run:
             # Get command line - this will use the command completion above

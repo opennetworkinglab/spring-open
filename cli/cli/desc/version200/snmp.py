@@ -37,7 +37,7 @@ command.add_action('snmp-validate-firewall', snmp_validate_firewall,
                     {'kwargs': { 'data'   : '$data',
                                }})
 
-
+"""
 #
 # --------------------------------------------------------------------------------
 # SNMP command descriptions 
@@ -134,7 +134,7 @@ SNMP_SERVER_COMMAND_DESCRIPTION = {
         },
     )
 }
-
+"""
 
 def snmp_firewall_interfaces(data):
     """
@@ -160,7 +160,7 @@ command.add_action('snmp-firewall-interfaces', snmp_firewall_interfaces,
                     {'kwargs': { 'data'   : '$data',
                                }})
 
-
+"""
 SNMP_SERVER_SHOW_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'mode'         : 'login',
@@ -211,3 +211,4 @@ SNMP_CONFIG_SUMMARY_FORMAT = {
         },
     }
 }
+"""

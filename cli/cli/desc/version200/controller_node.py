@@ -16,7 +16,7 @@
 
 import command
 import fmtcnv
-
+"""
 CONTROLLER_NODE_FORMAT = {
     'controller-node' : {
         'field-orderings' : {
@@ -1077,3 +1077,4 @@ CLOCK_SET_COMMAND_DESCRIPTION = {
         },
     )
 }
+"""

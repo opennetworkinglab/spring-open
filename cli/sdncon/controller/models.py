@@ -64,7 +64,6 @@ def get_timestamp():
     """
     return int(time.time()*1000000)
 
-
 #
 # ------------------------------------------------------------
 
@@ -114,6 +113,7 @@ class Feature(models.Model):
             {'name': 'static_flow_pusher_feature', 'rest_name': 'static-flow-pusher-feature'},
             {'name': 'performance_monitor_feature','rest_name': 'performance-monitor-feature'},
             )
+"""
 
 #
 # ------------------------------------------------------------
@@ -237,7 +237,7 @@ class ForwardingConfig(models.Model):
             {'name': 'core_priority',      'rest_name': 'core-priority'},
         )
 
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -384,7 +384,7 @@ class Controller(models.Model):
             {'name': 'logging_level',           'rest_name': 'logging-level'},
             )
 
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -611,7 +611,7 @@ class ControllerDomainNameServer(models.Model):
         NAME = 'controller-domain-name-server'
         FIELD_INFO = (
             )
-
+"""
 
 #
 # ------------------------------------------------------------
@@ -1027,6 +1027,7 @@ class SwitchInterfaceAlias(models.Model):
         FIELD_INFO = (
             {'name': 'switch_interface', 'rest_name': 'switch-interface'},
         )
+"""
 #
 # ------------------------------------------------------------
 
@@ -1206,7 +1207,7 @@ class StaticFlowTableEntry(models.Model):
             {'name': 'tp_dst',          'rest_name': 'dst-port'},
             {'name': 'actions',         'rest_name': 'actions'},
             )
-
+"""
 
 #
 # ------------------------------------------------------------
@@ -1288,6 +1289,7 @@ class Link(models.Model):
             {'name': 'link_type',       'rest_name': 'link-type'}
             )
             
+"""
 #
 # ------------------------------------------------------------
 # An address-space separation
@@ -1495,7 +1497,7 @@ class AddressSpaceIdentifierRule (models.Model):
             {'name': 'vlans',           'rest_name': 'vlans'},
             {'name': 'tag',             'rest_name': 'tag'},
             )
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -1504,9 +1506,9 @@ class HostConfig(models.Model):
     #
     # fields ----------------------------------------
 
-    address_space = models.ForeignKey(
-        AddressSpace,
-        verbose_name = "Address space name")
+    #address_space = models.ForeignKey(
+    #    AddressSpace,
+    #    verbose_name = "Address space name")
 
     mac = models.CharField(
         verbose_name="MAC Address",
@@ -1526,22 +1528,24 @@ class HostConfig(models.Model):
 
     def __unicode__(self):
         self.mac = self.mac.lower()
-        return "%s::%s" % (self.addressSpace, self.mac)
+        #return "%s::%s" % (self.addressSpace, self.mac)
+        return "%s" % (self.addressSpace)
 
     class CassandraSettings:
-        COMPOUND_KEY_FIELDS = ('address_space', 'vlan', 'mac')
+        #COMPOUND_KEY_FIELDS = ('address_space', 'vlan', 'mac')
+        COMPOUND_KEY_FIELDS = ('vlan', 'mac')
 
     def validate_unique(self, exclude = None):
         # Invoke the default validator; error out if the vns already exists
         super(HostConfig, self).validate_unique(exclude)
-        if self.vlan and str(self.address_space) != 'default': 
-            raise ValidationError('host: vlan configured for '
-                                  'address-space other than "default" %s' % self.address_space)
+        #if self.vlan and str(self.address_space) != 'default': 
+        #    raise ValidationError('host: vlan configured for '
+        #                          'address-space other than "default" %s' % self.address_space)
 
     class Rest:
         NAME = 'host-config'
         FIELD_INFO = (
-            {'name': 'address_space', 'rest_name': 'address-space'},
+            #{'name': 'address_space', 'rest_name': 'address-space'},
             )
 
 #
@@ -1642,7 +1646,7 @@ class HostAlias(models.Model):
     class Rest:
         NAME = 'host-alias'
 
-
+"""
 class VlanConfig(models.Model):
     #
     # fields ----------------------------------------    
@@ -2849,7 +2853,7 @@ class VirtualRoutingRule (models.Model):
                       {'name': 'dst_vns',                  'rest_name': 'dst-vns'},
                       {'name': 'gateway_pool',             'rest_name': 'gateway-pool'},
             )
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -2963,7 +2967,7 @@ class TagMapping(models.Model):
 
 #
 # ------------------------------------------------------------
-
+"""
 class TechSupportConf(models.Model):
 
     #
@@ -3223,3 +3227,4 @@ class ImageDropUser(models.Model):
 #
 #    class Rest:
 #        NAME = 'user'
+"""

@@ -43,7 +43,7 @@ import struct
 import re
 import doctest
 
-
+onos=1
 class CliModelInfo(): 
     # so the model is accessible from the formatter functions
     singleton = None
@@ -88,6 +88,7 @@ class CliModelInfo():
                                 else:
                                     for attr in addl_fields[f].keys():
                                         model_fields[f][attr] = addl_fields[f][attr]
+        #print self.complete_obj_type_info_dict
 
     def add_type_info(self, name, type_info):
         self.complete_obj_type_info_dict[name] = type_info
@@ -110,10 +111,474 @@ class CliModelInfo():
         return obj_type_info['fields'].get(field_name, None)
 
     # LOOK! Refactor - Should we merge this with model_info_list?
-    additional_model_info_dict = {
+    if (onos == 1):
+        additional_model_info_dict = {
+        'switches' : {
+            # switches are now directly fetched via rest api.
+            # 'has_rest_model' isn't set
+            # for this table.
+            # XXX perhaps these types of descriptions need to be
+            # in a file other than climodelinfo?
+            'source'          : 'user-config',
+            'source'          : 'display',
+            'url'             : 'switches',
+            'config-obj-type' : 'switch-config',
+
+            'fields' : {
+                'dpid'               : {
+                                         'edit' : False,
+                                         'max_length': 32,
+                                         'null': False,
+                                         'primary_key': True,
+                                         'type': 'CharField',
+                                         'edit' : False,
+                                       },
+                'active'             : {
+                                         'edit' : False
+                                       },
+                'core-switch'        : {
+                                         'edit' : False,
+                                       },
+                'connected-since'    : { 
+                                         'edit' : False
+                                       },
+                'capabilities'       : {
+                                         'edit' : False
+                                       },
+                'actions'            : {
+                                         'edit' : False
+                                       },
+                'ip-address'         : {
+                                         'edit' : False
+                                       },
+                'socket-address'     : {
+                                         'edit' : False
+                                       },
+                'buffers'            : {
+                                         'edit' : False
+                                       },
+                'controller'         : {
+                                         'edit' : False,
+                                       },
+                'tables'             : {
+                                         'edit' : False
+                                       },
+                'switch-alias'       : {
+                                         'help_text' : 'Switch alias for DPID',
+                                         'edit' : False,
+                                       },
+                'tunnels'            : {
+                                         'edit' : False,
+                                       },
+                'tunnel-supported'   : {
+                                         'edit' : False,
+                                       },
+                'tunnel-termination' : {
+                                         'edit' : False,
+                                       },
+                'tunnel-active'      : {
+                                         'edit' : False,
+                                       },
+                'dp-desc'            : {
+                                         'edit' : False,
+                                       },
+                'hw-desc'            : {
+                                         'edit' : False,
+                                       },
+                'sw-desc'            : {
+                                         'edit' : False,
+                                       },
+                'serial-num'         : {
+                                         'edit' : False,
+                                       },
+                }
+            },
+        'interfaces' : {
+            # switches are now directly fetched via rest api.
+            # 'has_rest_model' isn't set
+            # for this table.
+            # XXX perhaps these types of descriptions need to be
+            # in a file other than climodelinfo?
+            'source'          : 'display',
+            'url'             : 'switches',
+            'config-obj-type' : 'switch-interface-config',
+
+            'fields' : {
+                'id'                  : {
+                                         'edit' : False,
+                                         'max_length': 48,
+                                         'null': False,
+                                         'primary_key': True,
+                                         'type' : 'compound-key',
+                                         'edit' : False,
+                                         'help_text' : '#!dpid',
+                                         'compound_key_fields': [ 'dpid' ]
+                                        },
+                'dpid'                : {
+                                           #'type'           : 'ForeignKey',
+                                           #'rel_field_name' : 'dpid',
+                                           #'rel_obj_type'   : 'switch',
+                                        },
+                'name'                : {
+                                        },
+                'number'              : {
+                                        },
+                'config'              : {
+                                        },
+                'state'               : {
+                                        },
+                'current-features'    : {
+                                        },
+                'advertised-features' : {
+                                        },
+                'supported-features'  : {
+                                        },
+                'peer-features'       : {
+                                        },
+                }
+            },
+
+
+        'switch-config' : {
+            'source' : 'debug-only',
+        },
+
+
+        'switch-alias' : {
+            'source'          : 'user-config',
+            'cascade_delete'  : True,
+            },
+
+
+        'switch-interface-config' : {
+            'source'          : 'debug-only',
+            'cascade_delete'  : True,
+
+            'fields'          : {
+                'broadcast'           : { 'edit' : False
+                                        },
+                'name'                : { 'edit' : False
+                                        },
+                'mode'                : { 
+                                          'edit' : False
+                                        },
+                },
+            },
+
+
+        'host-alias' : {
+            'source'          : 'user-config',
+            'cascade_delete'  : True,
+            },
+
+
+        'link' : { 
+            'source'          : 'switch',
+
+            'fields' : {
+                'link-type'      : {
+                                    'type' : 'CharField'
+                                   },
+                }
+            },
+
+
+        'port' : {
+            'source'          : 'debug-only',
+
+            'fields' : {
+                'switch'              : {
+                                        },
+                'number'              : {
+                                        },
+                'config'              : {
+                                        },
+                'state'               : {
+                                        },
+                'current-features'    : {
+                                        },
+                'advertised-features' : {
+                                        },
+                'supported-features'  : {
+                                        },
+                'peer-features'       : {
+                                        },
+                }
+            },
+
+        'switch-interfaces' : {
+            'source'    : 'switch',
+
+            'fields' : {
+                'Idx'                 : { 
+                                           'edit' : False,
+                                          'type' : 'CharField'
+                                        },
+                'id'                  : {
+                                          'primary_key': True,
+                                          # format's out of the sorting business
+                                          # 'sort' : 'tail-integer',
+                                        },
+                'switch'              : {
+                                        },
+                'name'                : {
+                                          'type' : 'CharField',
+                                          'max_length' : 32,
+                                        },
+                'hardware-address'    : {
+                                        },
+                'config'              : { 
+                                        },
+                'state'               : {
+                                        },
+                'stp-state'           : { 
+                                        },
+                'current-features'    : { 
+                                        },
+                'advertised-features' : {
+                                        },
+                'supported-features'  : {
+                                        },
+                'peer-features'       : {
+                                        },
+                'receiveBytes'        : {
+                                        },
+                'receivePackets'      : {
+                                        },
+                'receiveErrors'       : {
+                                        },
+                'transmitBytes'       : {
+                                        },
+                'transmitPackets'     : {
+                                        },
+                'transmitErrors'      : {
+                                        },
+                },
+            },
+
+        'controller_switches' : {
+            'source'          : 'user-config',
+            
+            'fields' : {
+                'dpid' : { 'primary_key' : True,
+                         },
+                }
+            },
+    
+        'host-config' : {
+            'source'          : 'show',
+            'url'             : 'device',
+
+            'fields' : {
+                'Idx'                : {
+                                          'edit' : False,
+                                          'type' : 'CharField'
+                                       },
+                'mac'                : { 
+                                          'json_serialize_string': True,
+                                          'max_length': 17,
+                                          'null': False,
+                                          'type': 'CharField',
+                                          'edit' : False,
+                                        },
+                'vendor'              : {
+                                          'edit' : False,
+                                        },
+                'ips'                 : {
+                                          'edit' : False
+                                        },
+                'attachment-points'   : {
+                                          'edit' : False
+                                        },
+                'tag'                 : {
+                                          'edit' : False
+                                        },
+                'host-alias'          : { 'help_text' : 'Host alias',
+                                          'edit' : False,
+                                        },
+                'last-seen'           : {
+                                          'help_text': 'Last time a packet was seen by the controller',
+                                          'json_serialize_string': True,
+                                          'null': True,
+                                          'type': 'DateTimeField',
+                                        },
+                },
+            },
+
+        'host': {
+            # hosts are now directly fetched via rest api. 'has_rest_model' isn't set
+            # for this table.
+            # XXX perhaps these types of descriptions need to be
+            # in a file other than climodelinfo?
+            'source'          : 'user-config',
+            'source'          : 'display',
+            'url'             : 'device',
+            'config-obj-type' : 'host-config',
+
+            'fields': {
+                'mac'                : { 
+                                          'json_serialize_string': True,
+                                          'max_length': 17,
+                                          'null': False,
+                                          'primary_key': True,
+                                          'type': 'CharField',
+                                          'edit' : False,
+                                        },
+                'vlan'                : {
+                                          'help_text'            : 'VLAN Associated with host',
+                                          'json_serialize_string': False,
+                                          'null'                 : True,
+                                          'type'                 : 'IntegerField',
+                                          'edit'                 : False,
+                                          'searchable'           : True,
+                                        },
+                'dpid'                : {
+                                           'edit'           : False,
+                                           'type'           : 'ForeignKey',
+                                           'rel_field_name' : 'dpid',
+                                           'rel_obj_type'   : 'switches',
+                                        },
+                'ipv4'                : {
+                                           'edit' : False,
+                                        },
+                # Attachment point isn't searchable
+                #'attachment-points'  : {
+                                           #'edit' : False
+                                        #},
+                'last-seen'           : {
+                                          'help_text': 'Last time a packet was seen by the controller',
+                                          'json_serialize_string': True,
+                                          'null': True,
+                                          'type': 'DateTimeField',
+                                        },
+                 },
+            },
+
+
+        'host-attachment-point' : {
+            # directly fetched via rest api. 
+            # 'has_rest_model' isn't set for this table.
+            'source'          : 'controller',
+            'url'             : 'device',
+
+             'fields': {
+                'mac'          : {
+                                  'json_serialize_string': True,
+                                  'null': True,
+                                  'rel_field_name': 'mac',
+                                  'rel_obj_type': 'host',
+                                  'type': 'ForeignKey',
+                                 },
+                'vlan'         : {
+                                   'help_text': 'VLAN Associated with host',
+                                   'json_serialize_string': False,
+                                   'null': True,
+                                   'type': 'IntegerField',
+                                   'edit' : False,
+                                    'searchable' : True,
+                                 },
+                'id'           : {
+                                  'help_text': '#|mac|dpid|ingress-port',
+                                  'json_serialize_string': True,
+                                  'max_length': 64,
+                                  'null': False,
+                                  'primary_key': True,
+                                  'type': 'CharField',
+                                 },
+                'dpid'         : { 'json_serialize_string': True,
+                                   'null': True,
+                                   'rel_field_name': 'dpid',
+                                   'rel_obj_type': 'switch',
+                                   'type': 'ForeignKey',
+                                 },
+                'ingress-port' : {
+                                  'help_text': 'Open flow port number of ingress port',
+                                  'json_serialize_string': False,
+                                  'null': True,
+                                  'type': 'IntegerField',
+                                 },
+                'status'       : {
+                                   'help_text': 'Error description, blank mean no error ',
+                                   'json_serialize_string': True,
+                                   'max_length': 64,
+                                   'null': True,
+                                   'type': 'CharField',
+                                 },
+                'last-seen'    : {
+                                   'help_text': 'Last time a packet was seen by the controller',
+                                   'json_serialize_string': True,
+                                   'null': True,
+                                   'type': 'DateTimeField',
+                                 },
+                'ipv4'         : { # added to enable searching
+                                    'edit' : False,
+                                    'searchable' : True,
+                                 },
+                 },
+             },
+
+        'host-network-address': {
+            # directly fetched via rest api. 
+            # 'has_rest_model' isn't set for this table.
+            'source'          : 'switch',
+            'url'             : 'device',
+
+            'fields': {
+                'mac'        : { 'json_serialize_string': True,
+                                 'null': True,
+                                 'rel_field_name': 'mac',
+                                 'rel_obj_type': 'host',
+                                 'type': 'ForeignKey',
+                                 'edit' : False,
+                               },
+                'vlan'       : {
+                                 'help_text': 'VLAN Associated with host',
+                                 'json_serialize_string': False,
+                                 'null': True,
+                                 'type': 'IntegerField',
+                                 'edit' : False,
+                                 'searchable' : True,
+                               },
+                'id'         : {
+                                 'help_text': '#|mac|ipv4',
+                                 'json_serialize_string': True,
+                                 'max_length': 64,
+                                 'null': False,
+                                 'primary_key': True,
+                                 'type': 'CharField',
+                               },
+                'ip-address':  {
+                                 'help_text': 'IP Address of host',
+                                 'json_serialize_string': True,
+                                 'max_length': 15,
+                                 'null': True,
+                                 'type': 'CharField',
+                                 'edit' : False,
+                              },
+                'last-seen' : {
+                                'help_text': 'Last time a packet was seen by the controller',
+                                'json_serialize_string': True,
+                                'null': True,
+                                'type': 'DateTimeField',
+                              },
+                'ipv4'      : { # added to enable searching
+                                 'max_length': 15,
+                                 'null': True,
+                                 'type': 'CharField',
+                                 'edit' : False,
+                              },
+                'dpid'      : {
+                                 'edit' : False,
+                                 'searchable' : True,
+                              },
+                },
+            }
+        }
+    else:
+        additional_model_info_dict = {
         'flow-entry' : {
             'source'          : 'user-config',
-            'update-alias'    : ['switch', 'port'],
+           'update-alias'    : ['switch', 'port'],
             },
 
 
@@ -160,7 +625,6 @@ class CliModelInfo():
                                },
                 }
             },
-
 
         'switches' : {
             # switches are now directly fetched via rest api.
@@ -425,7 +889,6 @@ class CliModelInfo():
                          },
                 }
             },
-
 
         'test-pktin-route' : {
             'source' : 'debug-only',
@@ -1322,12 +1785,7 @@ class CliModelInfo():
                                   'type': 'DateTimeField',
                                 },
                 }
-            },
-
-
-        'global-config' : {
-            'source'        : 'controller',
-        },
+            }
 
         # done.
         }

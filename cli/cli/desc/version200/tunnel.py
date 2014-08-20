@@ -15,7 +15,7 @@
 #
 
 import fmtcnv
-
+"""
 TUNNEL_COMMAND_DESCRIPTION = {
     'name'          : 'tunnel-link',
     'feature'      : 'vns',
@@ -105,3 +105,4 @@ TUNNEL_EVENT_FORMAT = {
             }
         },
 }
+"""

@@ -38,6 +38,7 @@ import url_cache
 from midw import *
 from vnsw import *
 
+onos=1
 #
 # ACTION PROCS
 #
@@ -1542,7 +1543,20 @@ def command_query_rest(data,
                 print "command_query_rest: %s #entries %d " % (url, len(entries))
                 print result
         else:
-            result = entries
+            result = []
+            if (onos == 1) and (url == 'links'):
+                for entry in entries:
+                    result.append({
+                       'src-switch'          : entry['src']['dpid'],
+                       'src-port'            : entry['src']['portNumber'],
+                       'src-port-state'      : 0,
+                       'dst-switch'          : entry['dst']['dpid'],
+                       'dst-port'            : entry['dst']['portNumber'],
+                       'dst-port-state'      : 0,
+                       'type'                : entry['type'],
+                    })
+            else:
+                result = entries
         
     if append:
         for entry in result:
