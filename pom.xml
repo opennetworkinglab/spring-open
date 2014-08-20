@@ -60,6 +60,7 @@
     <metrics.version>3.0.2</metrics.version>
     <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
     <curator.version>2.6.0</curator.version>
+    <argLine/>
   </properties>
   <build>
     <plugins>
@@ -156,7 +157,7 @@
         <configuration>
           <!-- FIXME -XX:-UseSplitVerifier added as workaround for JDK 1.7.0u65 + PowerMock issue
                  https://issues.jboss.org/browse/JASSIST-228 -->
-          <argLine>-XX:MaxPermSize=256m -Dhazelcast.logging.type=slf4j -XX:-UseSplitVerifier</argLine>
+          <argLine>-XX:MaxPermSize=256m -Dhazelcast.logging.type=slf4j -XX:-UseSplitVerifier -Dnet.onrc.onos.core.datastore.hazelcast.baseConfig=${project.basedir}/conf/hazelcast.default.xml ${argLine}</argLine>
           <redirectTestOutputToFile>false</redirectTestOutputToFile>
           <excludedGroups>net.onrc.onos.core.util.IntegrationTest</excludedGroups>
         </configuration>
