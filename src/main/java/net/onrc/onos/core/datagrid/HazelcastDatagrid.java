@@ -6,8 +6,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentMap;
-
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
@@ -23,6 +21,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.FileSystemXmlConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
 
 /**
  * A datagrid service that uses Hazelcast as a datagrid.
@@ -41,7 +40,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService,
     private IRestApiService restApi;
 
     static final String HAZELCAST_CONFIG_FILE = "datagridConfig";
-    private static final String HAZELCAST_DEFAULT_XML = "conf/hazelcast.default.xml";
+    public static final String HAZELCAST_DEFAULT_XML = "conf/hazelcast.default.xml";
     private HazelcastInstance hazelcastInstance;
     private Config hazelcastConfig;
 
@@ -321,7 +320,7 @@ public class HazelcastDatagrid implements IFloodlightModule, IDatagridService,
      * @return the shared map for the channel name.
      */
     @Override
-    public <K, V> ConcurrentMap<K, V> getConcurrentMap(String mapName, Class<K> typeK,
+    public <K, V> IMap<K, V> getConcurrentMap(String mapName, Class<K> typeK,
             Class<V> typeV) {
         return hazelcastInstance.getMap(mapName);
     }

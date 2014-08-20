@@ -1,7 +1,7 @@
 package net.onrc.onos.core.datagrid;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentMap;
+import com.hazelcast.core.IMap;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 
@@ -9,6 +9,8 @@ import net.floodlightcontroller.core.module.IFloodlightService;
  * Interface for providing shared maps and queues to other modules.
  */
 public interface ISharedCollectionsService extends IFloodlightService {
+
+    // FIXME Refactor and change IMap to interface defined by us later.
     /**
      * Create an shared, concurrent map.
      *
@@ -17,7 +19,7 @@ public interface ISharedCollectionsService extends IFloodlightService {
      * @param typeV the type of the Value in the map.
      * @return the shared map for the channel name.
      */
-    <K, V> ConcurrentMap<K, V> getConcurrentMap(String mapName,
+    <K, V> IMap<K, V> getConcurrentMap(String mapName,
             Class<K> typeK, Class<V> typeV);
 
     /**
