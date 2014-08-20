@@ -115,6 +115,10 @@ public class TopologyManagerTest extends UnitTest {
             .andReturn(ONOS_INSTANCE_ID_1.toString()).anyTimes();
         expect(registryService.getControllerForSwitch(DPID_2.value()))
             .andReturn(ONOS_INSTANCE_ID_2.toString()).anyTimes();
+        expect(registryService.hasControl(DPID_1.value()))
+            .andReturn(true).anyTimes();
+        expect(registryService.hasControl(DPID_2.value()))
+            .andReturn(false).anyTimes();
 
         allTopologyEvents = new CopyOnWriteArrayList<>();
         expect(eventChannel.getAllEntries())
@@ -128,13 +132,29 @@ public class TopologyManagerTest extends UnitTest {
     /**
      * Setup the Topology Publisher.
      */
-    private void setupTopologyPublisher() {
+    private void setupTopologyPublisher() throws RegistryException {
         // Create a TopologyPublisher object for testing
         theTopologyPublisher = new TopologyPublisher();
 
         // Setup the registry service
         TestUtils.setField(theTopologyPublisher, "registryService",
                            registryService);
+
+        //
+        // Update the Registry Service, so the ONOS instance is the
+        // Master for both switches.
+        //
+        reset(registryService);
+        expect(registryService.getOnosInstanceId()).andReturn(ONOS_INSTANCE_ID_1).anyTimes();
+        expect(registryService.getControllerForSwitch(DPID_1.value()))
+            .andReturn(ONOS_INSTANCE_ID_1.toString()).anyTimes();
+        expect(registryService.getControllerForSwitch(DPID_2.value()))
+            .andReturn(ONOS_INSTANCE_ID_2.toString()).anyTimes();
+        expect(registryService.hasControl(DPID_1.value()))
+            .andReturn(true).anyTimes();
+        expect(registryService.hasControl(DPID_2.value()))
+            .andReturn(true).anyTimes();
+        replay(registryService);
 
         // Setup the event channel
         TestUtils.setField(theTopologyPublisher, "eventChannel", eventChannel);
@@ -184,26 +204,26 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
-     * Test the Switch Mastership Updated Event.
+     * Tests the publishing of Add Switch Mastership Event.
      */
     @Test
-    public void testPutSwitchMastershipEvent() {
-        // Mock the eventChannel functions first
+    public void testPublishAddSwitchMastershipEvent() throws RegistryException {
+        setupTopologyPublisher();
+
+        // Mock the eventChannel functions
         eventChannel.addEntry(anyObject(byte[].class),
                               anyObject(TopologyEvent.class));
         expectLastCall().times(1, 1);          // 1 event
         replay(eventChannel);
 
-        setupTopologyPublisher();
-
-        // Generate a new Switch Mastership event
+        // Generate the Switch Mastership event
         Role role = Role.MASTER;
         MastershipEvent mastershipEvent =
             new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
 
         // Call the TopologyPublisher function for adding the event
         TestUtils.callMethod(theTopologyPublisher,
-                             "putSwitchMastershipEvent",
+                             "publishAddSwitchMastershipEvent",
                              MastershipEvent.class, mastershipEvent);
 
         // Verify the function calls
@@ -211,25 +231,30 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
-     * Test the Switch Mastership Removed Event.
+     * Tests the publishing of Remove Switch Mastership Event.
      */
     @Test
-    public void testRemoveSwitchMastershipEvent() {
-        // Mock the eventChannel functions first
+    public void testPublishRemoveSwitchMastershipEvent() throws RegistryException {
+        setupTopologyPublisher();
+
+        // Mock the eventChannel functions
         eventChannel.removeEntry(anyObject(byte[].class));
         expectLastCall().times(1, 1);          // 1 event
         replay(eventChannel);
 
-        setupTopologyPublisher();
-
-        // Generate a new Switch Mastership Event
+        // Generate the Switch Mastership Event
         Role role = Role.MASTER;
         MastershipEvent mastershipEvent =
             new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
 
+        // Call the TopologyPublisher function for adding the event
+        TestUtils.callMethod(theTopologyPublisher,
+                             "publishAddSwitchMastershipEvent",
+                             MastershipEvent.class, mastershipEvent);
+
         // Call the TopologyPublisher function for removing the event
         TestUtils.callMethod(theTopologyPublisher,
-                             "removeSwitchMastershipEvent",
+                             "publishRemoveSwitchMastershipEvent",
                              MastershipEvent.class, mastershipEvent);
 
         // Verify the function calls
@@ -237,38 +262,36 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
-     * Test the Switch discovered and Port discovered functions.
+     * Tests the publishing of Add Switch and Port Events.
      */
     @Test
-    public void testPutSwitchAndPortDiscoveryEvent() {
-        // Mock the eventChannel functions first
+    public void testPublishAddSwitchAndPortEvent() throws RegistryException {
+        setupTopologyPublisher();
+
+        // Mock the eventChannel functions
         eventChannel.addEntry(anyObject(byte[].class),
                               anyObject(TopologyEvent.class));
-        expectLastCall().times(3, 3);  // (1 Switch + 1 Port), 1 Port
+        expectLastCall().times(3, 3);           // (1 Switch + 1 Port), 1 Port
         replay(eventChannel);
-
-        setupTopologyPublisher();
 
         // Mock Switch has one Port
         PortNumber portNumber = PortNumber.uint32(1);
 
-        // Generate a new Switch Event along with a Port Event
+        // Generate the Switch Event along with a Port Event
         SwitchEvent switchEvent = new SwitchEvent(DPID_1);
-
         Collection<PortEvent> portEvents = new ArrayList<PortEvent>();
         portEvents.add(new PortEvent(DPID_1, portNumber));
 
         // Call the TopologyPublisher function for adding a Switch
         TestUtils.callMethod(theTopologyPublisher,
-                             "putSwitchDiscoveryEvent",
+                             "publishAddSwitchEvent",
                              new Class<?>[] {SwitchEvent.class,
                                      Collection.class},
                              switchEvent, portEvents);
-
+        // Call the TopologyPublisher function for adding a Port
         for (PortEvent portEvent : portEvents) {
-            // Call the TopologyPublisher function for adding a Port
             TestUtils.callMethod(theTopologyPublisher,
-                                 "putPortDiscoveryEvent",
+                                 "publishAddPortEvent",
                                  PortEvent.class, portEvent);
         }
 
@@ -278,34 +301,40 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
-     * Test the Switch and Port removed functions.
+     * Tests the publishing of Remove Switch and Port Events.
      */
     @Test
-    public void testRemoveSwitchAndPortDiscoveryEvent() {
-        // Mock the eventChannel functions first
+    public void testPublishRemoveSwitchAndPortEvent() throws RegistryException {
+        setupTopologyPublisher();
+
+        // Mock the eventChannel functions
         eventChannel.removeEntry(anyObject(byte[].class));
         expectLastCall().times(2, 2);          // 1 Switch, 1 Port
         replay(eventChannel);
 
-        setupTopologyPublisher();
-
         PortNumber portNumber = PortNumber.uint32(1);
 
-        // Generate a Port Event
+        // Generate the Switch Event along with a Port Event
+        SwitchEvent switchEvent = new SwitchEvent(DPID_1);
         Collection<PortEvent> portEvents = new ArrayList<PortEvent>();
         portEvents.add(new PortEvent(DPID_1, portNumber));
+
+        // Call the TopologyPublisher function for adding a Switch and Ports
+        TestUtils.callMethod(theTopologyPublisher,
+                             "publishAddSwitchEvent",
+                             new Class<?>[] {SwitchEvent.class,
+                                     Collection.class},
+                             switchEvent, portEvents);
 
         // Call the TopologyPublisher function for removing a Port
         for (PortEvent portEvent : portEvents) {
             TestUtils.callMethod(theTopologyPublisher,
-                                 "removePortDiscoveryEvent",
+                                 "publishRemovePortEvent",
                                  PortEvent.class, portEvent);
         }
-
         // Call the TopologyPublisher function for removing a Switch
-        SwitchEvent switchEvent = new SwitchEvent(DPID_1);
         TestUtils.callMethod(theTopologyPublisher,
-                             "removeSwitchDiscoveryEvent",
+                             "publishRemoveSwitchEvent",
                              SwitchEvent.class, switchEvent);
 
         // Verify the function calls
@@ -314,17 +343,17 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
-     * Test the Link discovered function.
+     * Tests the publishing of Add Link Event.
      */
     @Test
-    public void testPutLinkDiscoveryEvent() {
-        // Mock the eventChannel functions first
+    public void testPublishAddLinkEvent() throws RegistryException {
+        setupTopologyPublisher();
+
+        // Mock the eventChannel functions
         eventChannel.addEntry(anyObject(byte[].class),
                               anyObject(TopologyEvent.class));
         expectLastCall().times(5, 5);  // (2 Switch + 2 Port + 1 Link)
         replay(eventChannel);
-
-        setupTopologyPublisher();
 
         // Generate the Switch and Port Events
         PortNumber portNumber1 = PortNumber.uint32(1);
@@ -334,7 +363,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Call the TopologyPublisher function for adding a Switch
         TestUtils.callMethod(theTopologyPublisher,
-                             "putSwitchDiscoveryEvent",
+                             "publishAddSwitchEvent",
                              new Class<?>[] {SwitchEvent.class,
                                      Collection.class},
                              switchEvent1, portEvents1);
@@ -347,17 +376,19 @@ public class TopologyManagerTest extends UnitTest {
 
         // Call the TopologyPublisher function for adding a Switch
         TestUtils.callMethod(theTopologyPublisher,
-                             "putSwitchDiscoveryEvent",
+                             "publishAddSwitchEvent",
                              new Class<?>[] {SwitchEvent.class,
                                      Collection.class},
                              switchEvent2, portEvents2);
 
-        // Create the Link Event
+        // Generate the Link Event
         LinkEvent linkEvent =
             new LinkEvent(new SwitchPort(DPID_1, portNumber1),
                           new SwitchPort(DPID_2, portNumber2));
+
+        // Call the TopologyPublisher function for adding a Link
         TestUtils.callMethod(theTopologyPublisher,
-                             "putLinkDiscoveryEvent",
+                             "publishAddLinkEvent",
                              LinkEvent.class, linkEvent);
 
         // Verify the function calls
@@ -365,16 +396,16 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
-     * Test the Link removed function.
+     * Tests the publishing of Remove Link Event.
      */
     @Test
-    public void testRemoveLinkDiscoveryEvent() {
-        // Mock the eventChannel functions first
+    public void testPublishRemoveLinkEvent() throws RegistryException {
+        setupTopologyPublisher();
+
+        // Mock the eventChannel functions
         eventChannel.removeEntry(anyObject(byte[].class));
         expectLastCall().times(1, 1);          // (1 Link)
         replay(eventChannel);
-
-        setupTopologyPublisher();
 
         // Generate the Switch and Port Events
         PortNumber portNumber1 = PortNumber.uint32(1);
@@ -384,7 +415,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Call the TopologyPublisher function for adding a Switch
         TestUtils.callMethod(theTopologyPublisher,
-                             "putSwitchDiscoveryEvent",
+                             "publishAddSwitchEvent",
                              new Class<?>[] {SwitchEvent.class,
                                      Collection.class},
                              switchEvent1, portEvents1);
@@ -397,37 +428,57 @@ public class TopologyManagerTest extends UnitTest {
 
         // Call the TopologyPublisher function for adding a Switch
         TestUtils.callMethod(theTopologyPublisher,
-                             "putSwitchDiscoveryEvent",
+                             "publishAddSwitchEvent",
                              new Class<?>[] {SwitchEvent.class,
                                      Collection.class},
                              switchEvent2, portEvents2);
 
-        // Remove the Link
-        LinkEvent linkEventRemove =
+        // Generate the Link Event
+        LinkEvent linkEvent =
             new LinkEvent(new SwitchPort(DPID_1, portNumber1),
                           new SwitchPort(DPID_2, portNumber2));
+
+        // Call the TopologyPublisher function for adding a Link
         TestUtils.callMethod(theTopologyPublisher,
-                             "removeLinkDiscoveryEvent",
-                             LinkEvent.class, linkEventRemove);
+                             "publishAddLinkEvent",
+                             LinkEvent.class, linkEvent);
+
+        // Call the TopologyPublisher function for removing a Link
+        TestUtils.callMethod(theTopologyPublisher,
+                             "publishRemoveLinkEvent",
+                             LinkEvent.class, linkEvent);
 
         // Verify the function calls
         verify(eventChannel);
     }
 
     /**
-     * Test the Host discovered function.
+     * Tests the publishing of Add Host Event.
      */
     @Test
-    public void testPutHostDiscoveryEvent() {
-        // Mock the eventChannel functions first
-        eventChannel.addEntry(anyObject(byte[].class),
-                              anyObject(TopologyEvent.class));
-        expectLastCall().times(1, 1);          // 1 Host
-        replay(eventChannel);
-
+    public void testPublishAddHostEvent() throws RegistryException {
         setupTopologyPublisher();
 
-        // Generate a new Host Event
+        // Mock the eventChannel functions
+        eventChannel.addEntry(anyObject(byte[].class),
+                              anyObject(TopologyEvent.class));
+        expectLastCall().times(3, 3);  // (1 Switch + 1 Port + 1 Host)
+        replay(eventChannel);
+
+        // Generate the Switch and Port Events
+        PortNumber portNumber1 = PortNumber.uint32(1);
+        SwitchEvent switchEvent1 = new SwitchEvent(DPID_1);
+        Collection<PortEvent> portEvents1 = new ArrayList<PortEvent>();
+        portEvents1.add(new PortEvent(DPID_1, portNumber1));
+
+        // Call the TopologyPublisher function for adding a Switch
+        TestUtils.callMethod(theTopologyPublisher,
+                             "publishAddSwitchEvent",
+                             new Class<?>[] {SwitchEvent.class,
+                                     Collection.class},
+                             switchEvent1, portEvents1);
+
+        // Generate the Host Event
         PortNumber portNumber = PortNumber.uint32(1);
         MACAddress hostMac = MACAddress.valueOf("00:AA:11:BB:33:CC");
         SwitchPort sp = new SwitchPort(DPID_1, portNumber);
@@ -438,7 +489,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Call the TopologyPublisher function for adding a Host
         TestUtils.callMethod(theTopologyPublisher,
-                             "putHostDiscoveryEvent",
+                             "publishAddHostEvent",
                              HostEvent.class, hostEvent);
 
         // Verify the function calls
@@ -446,18 +497,31 @@ public class TopologyManagerTest extends UnitTest {
     }
 
     /**
-     * Test the Host removed function.
+     * Tests the publising of Remove Host Event.
      */
     @Test
-    public void testRemoveHostDiscoveryEvent() {
-        // Mock the eventChannel functions first
+    public void testPublishRemoveHostEvent() throws RegistryException {
+        setupTopologyPublisher();
+
+        // Mock the eventChannel functions
         eventChannel.removeEntry(anyObject(byte[].class));
         expectLastCall().times(1, 1);          // 1 Host
         replay(eventChannel);
 
-        setupTopologyPublisher();
+        // Generate the Switch and Port Events
+        PortNumber portNumber1 = PortNumber.uint32(1);
+        SwitchEvent switchEvent1 = new SwitchEvent(DPID_1);
+        Collection<PortEvent> portEvents1 = new ArrayList<PortEvent>();
+        portEvents1.add(new PortEvent(DPID_1, portNumber1));
 
-        // Generate a new Host Event
+        // Call the TopologyPublisher function for adding a Switch
+        TestUtils.callMethod(theTopologyPublisher,
+                             "publishAddSwitchEvent",
+                             new Class<?>[] {SwitchEvent.class,
+                                     Collection.class},
+                             switchEvent1, portEvents1);
+
+        // Generate the Host Event
         PortNumber portNumber = PortNumber.uint32(1);
         MACAddress hostMac = MACAddress.valueOf("00:AA:11:BB:33:CC");
         SwitchPort sp = new SwitchPort(DPID_1, portNumber);
@@ -466,9 +530,14 @@ public class TopologyManagerTest extends UnitTest {
         HostEvent hostEvent = new HostEvent(hostMac);
         hostEvent.setAttachmentPoints(spLists);
 
+        // Call the TopologyPublisher function for adding a Host
+        TestUtils.callMethod(theTopologyPublisher,
+                             "publishAddHostEvent",
+                             HostEvent.class, hostEvent);
+
         // Call the TopologyPublisher function for removing a Host
         TestUtils.callMethod(theTopologyPublisher,
-                             "removeHostDiscoveryEvent",
+                             "publishRemoveHostEvent",
                              HostEvent.class, hostEvent);
 
         // Verify the function calls

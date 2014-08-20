@@ -353,14 +353,7 @@ public class Controller implements IFloodlightProviderService {
                 return false;
             activeMasterSwitches.put(dpid, sw);
         }
-        // XXX Workaround to prevent race condition where a link is detected
-        // and attempted to be written to the database before the port is in
-        // the database. We now suppress link discovery on ports until we're
-        // sure they're in the database.
-        for (OFPortDesc port : sw.getPorts()) {
-            linkDiscovery.disableDiscoveryOnPort(sw.getId(),
-                    port.getPortNo().getShortPortNumber());
-        }
+
         // update counters and events
         counters.switchActivated.updateCounterWithFlush();
         evSwitch.updateEventWithFlush(new SwitchEvent(dpid, "activeMaster"));
@@ -461,15 +454,6 @@ public class Controller implements IFloodlightProviderService {
             log.warn("Port change update on switch {} not connected or activated "
                     + "... Aborting.", HexString.toHexString(dpid));
             return;
-        }
-
-        if (changeType == PortChangeType.ADD) {
-            // XXX Workaround to prevent race condition where a link is detected
-            // and attempted to be written to the database before the port is in
-            // the database. We now suppress link discovery on ports until we're
-            // sure they're in the database.
-            linkDiscovery.disableDiscoveryOnPort(dpid, port.getPortNo()
-                    .getShortPortNumber());
         }
 
         SwitchUpdate update = new SwitchUpdate(dpid, SwitchUpdateType.PORTCHANGED,
