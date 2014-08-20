@@ -25,8 +25,8 @@ public class SingleSrcTreeFlowIntentTest extends IntentTest {
 
     private final IntentId intentId1 = new IntentId(1L);
     private final IntentId intentId2 = new IntentId(2L);
-    private final FlowId flowId1 = new FlowId("tree1");
-    private final FlowId flowId2 = new FlowId("tree2");
+    private final FlowId flowId1 = new FlowId(1L);
+    private final FlowId flowId2 = new FlowId(2L);
     private final Dpid dpid1 = new Dpid(1);
     private final Dpid dpid2 = new Dpid(2);
     private final Dpid dpid3 = new Dpid(3);

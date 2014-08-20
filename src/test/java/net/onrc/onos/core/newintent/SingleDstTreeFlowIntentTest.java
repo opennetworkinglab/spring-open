@@ -22,7 +22,7 @@ public class SingleDstTreeFlowIntentTest extends IntentTest {
 
     private final IntentId intentId1 = new IntentId(1L);
     private final IntentId intentId2 = new IntentId(2L);
-    private final FlowId flowId1 = new FlowId("intent1");
+    private final FlowId flowId1 = new FlowId(1L);
     private final PacketMatch match = new PacketMatchBuilder().build();
     private final short port1 = (short) 1;
     private final short port2 = (short) 2;

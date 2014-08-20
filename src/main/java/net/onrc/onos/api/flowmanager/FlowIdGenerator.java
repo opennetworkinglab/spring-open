@@ -5,9 +5,9 @@ package net.onrc.onos.api.flowmanager;
  */
 public interface FlowIdGenerator {
     /**
-     * Generates a globally unique {@link FlowId} instance.
+     * Generates a global unique {@link FlowId} instance.
      *
-     * @return a globally unique {@link FlowId} instance.
+     * @return a global unique {@link FlowId} instance.
      */
-    FlowId getNextId();
+    FlowId getNewId();
 }
