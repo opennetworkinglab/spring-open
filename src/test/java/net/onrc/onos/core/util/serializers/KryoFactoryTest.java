@@ -6,7 +6,9 @@ import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.HostEvent;
@@ -27,6 +29,7 @@ import org.junit.Test;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.google.common.collect.Sets;
 
 /**
  * Tests to capture Kryo serialization characteristics.
@@ -56,6 +59,87 @@ public class KryoFactoryTest {
     @Before
     public void setUp() throws Exception {
         kryoFactory = new KryoFactory(1);
+    }
+
+    /**
+     * Test case to check recycling behavior of KryoFactory.
+     */
+    @Test
+    public void testReallocation() {
+        final int poolSize = 3;
+        KryoFactory pool = new KryoFactory(poolSize);
+
+
+        // getting Kryo instance smaller than pool size should work just fine
+        Set<Kryo> kryos = new HashSet<>();
+        for (int i = 0; i < poolSize - 1; ++i) {
+            Kryo kryo = pool.newKryo();
+            assertNotNull(kryo);
+            assertTrue("KryoFactory should return unique instances",
+                        kryos.add(kryo));
+        }
+
+        // recycle Kryo instance
+        for (Kryo kryo : kryos) {
+            pool.deleteKryo(kryo);
+        }
+
+
+        // recycling behavior check
+        Set<Kryo> kryos2 = new HashSet<>();
+        for (int i = 0; i < poolSize - 1; ++i) {
+            Kryo kryo = pool.newKryo();
+            assertNotNull(kryo);
+            assertTrue("KryoFactory should return unique instances",
+                        kryos2.add(kryo));
+        }
+        // should at least have some recycled instances
+        assertTrue("Kryo instances should be reused after deleting",
+                    !Sets.difference(kryos2, kryos).isEmpty());
+
+        for (Kryo kryo : kryos2) {
+            pool.deleteKryo(kryo);
+        }
+
+
+        // pool expansion behavior check
+        Set<Kryo> kryos3 = new HashSet<>();
+        // it should be able to get Kryo instances larger than pool size set
+        for (int i = 0; i < poolSize * 2; ++i) {
+            Kryo kryo = pool.newKryo();
+            assertNotNull(kryo);
+            assertTrue("KryoFactory should return unique instances",
+                        kryos3.add(kryo));
+        }
+        // recycle Kryo instance (should trigger pool expansion)
+        for (Kryo kryo : kryos3) {
+            pool.deleteKryo(kryo);
+        }
+
+        // should at least have some Kryo instances we haven't seen initially.
+        assertTrue("New Kryo instances should be added to the pool",
+                !Sets.difference(kryos3, kryos).isEmpty());
+    }
+
+    /**
+     * Tests static serialize/deserialize methods.
+     */
+    @Test
+    public void testStaticSerializeDeserialize() {
+
+        final List<Object> objects = new ArrayList<>();
+        Dpid dpid1 = new Dpid(1);
+        PortNumber port10 = PortNumber.uint32(10);
+        SwitchPort switchPort = new SwitchPort(dpid1, port10);
+
+        objects.add(dpid1);
+        objects.add(port10);
+        objects.add(switchPort);
+
+        final byte[] bytes = KryoFactory.serialize(objects);
+        final List<Object> deserialized = KryoFactory.deserialize(bytes);
+
+        assertEquals(objects, deserialized);
     }
 
     /**

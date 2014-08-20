@@ -49,8 +49,7 @@ public class PersistIntent {
         table = DataStoreClient.getClient().getTable(INTENT_JOURNAL);
         stream = new ByteArrayOutputStream(1024);
         output = new Output(stream);
-        // FIXME Using KryoFactory only to register classes and not using the pool.
-        kryo = new KryoFactory(1).newKryo();
+        kryo = KryoFactory.newKryoObject();
     }
 
     private long getNextBlock() {
