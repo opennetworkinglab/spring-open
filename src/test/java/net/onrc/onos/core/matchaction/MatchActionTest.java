@@ -22,7 +22,7 @@ public class MatchActionTest {
         builder.setDstTcpPort((short) 80);
         List<Action> actions = new LinkedList<Action>();
         actions.add(new ModifyDstMacAction(MACAddress.valueOf("00:01:02:03:04:05")));
-        MatchAction ma = new MatchAction("1", port, builder.build(), actions);
+        MatchAction ma = new MatchAction(new MatchActionId(1L), port, builder.build(), actions);
 
         assertEquals(actions, ma.getActions());
         assertEquals("1", ma.getId().toString());

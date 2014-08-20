@@ -23,12 +23,13 @@ public class TestOperationsCreation {
     public void testOperationsCreation() {
         //  Create the MatchActionOperations
         final MatchActionOperationsId operationsId =
-            MatchActionOperationsId.createNewOperationsId();
+            new MatchActionOperationsId(1L);
         final MatchActionOperations operations =
-                MatchActionOperations.createMatchActionsOperations(operationsId);
+                new MatchActionOperations(operationsId);
 
         //  Create one MatchActionEntry and add it to the Operations
-        final String matchActionId1 = "MA1";
+
+        final MatchActionId matchActionId1 = new MatchActionId(1L);
         final MatchAction action1 = new MatchAction(matchActionId1, null, null, null);
 
         final MatchActionOperationEntry entry1 =
@@ -47,7 +48,8 @@ public class TestOperationsCreation {
         assertThat(loadedEntry1, is(notNullValue()));
 
         final MatchAction loadedAction1 = loadedEntry1.getTarget();
-        assertThat(loadedAction1.getId().toString(), is(equalTo(matchActionId1)));
+        assertThat(loadedAction1.getId().toString(),
+                   is(equalTo(matchActionId1.toString())));
 
         final MatchActionOperations.Operator loadedOperator1 = loadedEntry1.getOperator();
         assertThat(loadedOperator1, is(equalTo(MatchActionOperations.Operator.ADD)));

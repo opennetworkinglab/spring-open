@@ -33,19 +33,20 @@ public class MatchActionModuleTest {
              operationsIteration <= iterations;
              operationsIteration++) {
             final MatchActionOperationsId id =
-                    MatchActionOperationsId.createNewOperationsId();
+                    new MatchActionOperationsId(1L);
             assertThat(id, is(notNullValue()));
             final MatchActionOperations operations =
-                    MatchActionOperations.createMatchActionsOperations(id);
+                    new MatchActionOperations(id);
             assertThat(operations, is(notNullValue()));
 
             for (int entriesIteration = 1;
                  entriesIteration <= iterations;
                  entriesIteration++) {
 
-                final String entryId = "MA" +
-                        Integer.toString(operationsIteration) +
-                        Integer.toString(entriesIteration);
+                final MatchActionId entryId =
+                        new MatchActionId(
+                        (operationsIteration * 10) +
+                        entriesIteration);
                 final MatchAction matchAction =
                         new MatchAction(entryId, null, null, null);
                 final MatchActionOperationEntry entry =
@@ -74,7 +75,7 @@ public class MatchActionModuleTest {
         //  Make sure that the returned list cannot be modified
         Throwable errorThrown = null;
         try {
-            matchActions.add(new MatchAction("", null, null, null));
+            matchActions.add(new MatchAction(new MatchActionId(1L), null, null, null));
         } catch (UnsupportedOperationException e) {
             errorThrown = e;
         }
@@ -90,9 +91,9 @@ public class MatchActionModuleTest {
 
         // Create two MatchAction objects using the same ID
         final MatchAction matchAction =
-                new MatchAction("ID", null, null, null);
+                new MatchAction(new MatchActionId(111L), null, null, null);
         final MatchAction duplicateMatchAction =
-                new MatchAction("ID", null, null, null);
+                new MatchAction(new MatchActionId(111L), null, null, null);
 
         // create Operation Entries for the two MatchAction objects
         final MatchActionOperationEntry entry =
@@ -104,10 +105,10 @@ public class MatchActionModuleTest {
 
         // Create an Operations object to execute the first MatchAction
         final MatchActionOperationsId id =
-                MatchActionOperationsId.createNewOperationsId();
+                new MatchActionOperationsId(11L);
         assertThat(id, is(notNullValue()));
         final MatchActionOperations operations =
-                MatchActionOperations.createMatchActionsOperations(id);
+                new MatchActionOperations(id);
         operations.addOperation(entry);
 
         // Create a module to use to execute the Operations.
@@ -120,10 +121,10 @@ public class MatchActionModuleTest {
 
         // Now add the duplicate entry.  This should fail.
         final MatchActionOperationsId idForDuplicate =
-                MatchActionOperationsId.createNewOperationsId();
+                new MatchActionOperationsId(22L);
         assertThat(idForDuplicate, is(notNullValue()));
         final MatchActionOperations operationsForDuplicate =
-                MatchActionOperations.createMatchActionsOperations(idForDuplicate);
+                new MatchActionOperations(idForDuplicate);
         operationsForDuplicate.addOperation(duplicateEntry);
 
         final boolean resultForDuplicate =

@@ -21,16 +21,16 @@ public class MatchActionOperationsTest {
     @Test
     public void testMatchActionoperationsCreate() {
         final MatchActionOperationsId id1 =
-            MatchActionOperationsId.createNewOperationsId();
+            new MatchActionOperationsId(1L);
         final MatchActionOperations operations1 =
-            MatchActionOperations.createMatchActionsOperations(id1);
+            new MatchActionOperations(id1);
         assertThat(id1, is(notNullValue()));
         assertThat(id1, is(equalTo(operations1.getOperationsId())));
 
         final MatchActionOperationsId id2 =
-            MatchActionOperationsId.createNewOperationsId();
+            new MatchActionOperationsId(2L);
         final MatchActionOperations operations2 =
-            MatchActionOperations.createMatchActionsOperations(id2);
+            new MatchActionOperations(id2);
         assertThat(id2, is(notNullValue()));
         assertThat(id2, is(equalTo(operations2.getOperationsId())));
 
@@ -45,11 +45,11 @@ public class MatchActionOperationsTest {
     @Test
     public void testMatchActionOperationsIdEquals() {
         final MatchActionOperationsId id1 =
-                MatchActionOperationsId.createNewOperationsId();
+                new MatchActionOperationsId(1L);
         final MatchActionOperationsId id2 =
-                MatchActionOperationsId.createNewOperationsId();
+                new MatchActionOperationsId(2L);
         final MatchActionOperationsId id1Copy =
-                MatchActionOperationsId.createNewOperationsId();
+                new MatchActionOperationsId(1L);
 
 
         // Check that null does not match
@@ -73,7 +73,7 @@ public class MatchActionOperationsTest {
     @Test
     public void testMatchActionOperationsIdHashCode() {
         final MatchActionOperationsId id1 =
-                MatchActionOperationsId.createNewOperationsId();
-        assertThat(id1.hashCode(), is(equalTo(id1.getId().hashCode())));
+                new MatchActionOperationsId(22L);
+        assertThat(id1.hashCode(), is(equalTo(22)));
     }
 }

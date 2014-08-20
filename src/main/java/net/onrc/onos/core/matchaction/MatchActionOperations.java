@@ -28,19 +28,8 @@ public final class MatchActionOperations
      *
      * @param newId match action operations identifier for this instance
      */
-    private MatchActionOperations(final MatchActionOperationsId newId) {
+    public MatchActionOperations(final MatchActionOperationsId newId) {
         id = checkNotNull(newId);
-    }
-
-    /**
-     * Creates a MatchActionOperations object from an id.
-     *
-     * @param newId match action operations identifier to use for the new object
-     * @return Match Action Operations object
-     */
-    public static MatchActionOperations createMatchActionsOperations(
-            final MatchActionOperationsId newId) {
-        return new MatchActionOperations(newId);
     }
 
     /**

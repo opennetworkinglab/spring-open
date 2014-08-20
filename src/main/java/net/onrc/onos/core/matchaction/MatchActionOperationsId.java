@@ -1,6 +1,6 @@
 package net.onrc.onos.core.matchaction;
 
-import java.util.UUID;
+import java.util.Objects;
 
 /**
  * Identifier for a MatchActionOperations object.  This is an immutable class
@@ -9,15 +9,13 @@ import java.util.UUID;
  */
 public final class MatchActionOperationsId {
 
-    private static final String OPERATIONS_ID_PREFIX = "MatchActionOperationsId-";
-    private final String id;
+    private final long id;
 
     /**
-     * Constructs an Operations identifier and allocates a unique identifier
-     * for it.
+     * Constructs an Operations identifier and from a unique identifier.
      */
-    private MatchActionOperationsId() {
-        id = OPERATIONS_ID_PREFIX + UUID.randomUUID();
+    public MatchActionOperationsId(final long newId) {
+        id = newId;
     }
 
     /**
@@ -25,7 +23,7 @@ public final class MatchActionOperationsId {
      *
      * @return Operations object identifier as a string
      */
-    public String getId() {
+    public long getId() {
         return id;
     }
 
@@ -39,24 +37,13 @@ public final class MatchActionOperationsId {
             return false;
         }
 
-        final MatchActionOperationsId otherMatchActionOperationsId =
-                (MatchActionOperationsId) other;
+        final MatchActionOperationsId that = (MatchActionOperationsId) other;
 
-        return otherMatchActionOperationsId.getId().equals(getId());
+        return this.getId() == that.getId();
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return Objects.hashCode(id);
     }
-
-    /**
-     * Creates a new Id for a MatchActionOperation.
-     *
-     * @return new Id for a MatchActionOperation
-     */
-    public static MatchActionOperationsId createNewOperationsId() {
-        return new MatchActionOperationsId();
-    }
-
 }
