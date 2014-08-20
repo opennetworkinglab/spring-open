@@ -55,6 +55,19 @@ public class PacketConnectivityIntent extends AbstractIntent {
     }
 
     /**
+     * Constructor for serializer.
+     */
+    protected PacketConnectivityIntent() {
+        super();
+        this.srcSwitchPorts = null;
+        this.match = null;
+        this.dstSwitchPorts = null;
+        this.canSetupOpticalFlow = false;
+        this.idleTimeoutValue = 0;
+        this.hardTimeoutValue = 0;
+    }
+
+    /**
      * Gets the set of source switch ports.
      *
      * @return the set of source switch ports.

@@ -16,6 +16,13 @@ public abstract class AbstractIntent implements Intent {
         this.id = id;
     }
 
+    /**
+     * Constructor for serializer.
+     */
+    protected AbstractIntent() {
+        this.id = null;
+    }
+
     @Override
     public IntentId getId() {
         return id;

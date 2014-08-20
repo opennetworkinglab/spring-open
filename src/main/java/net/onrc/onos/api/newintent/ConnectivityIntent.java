@@ -39,6 +39,15 @@ public abstract class ConnectivityIntent extends AbstractIntent {
     }
 
     /**
+     * Constructor for serializer.
+     */
+    protected ConnectivityIntent() {
+        super();
+        this.match = null;
+        this.action = null;
+    }
+
+    /**
      * Returns the match specifying the type of traffic.
      *
      * @return traffic match

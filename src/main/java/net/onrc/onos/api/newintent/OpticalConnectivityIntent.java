@@ -30,6 +30,15 @@ public class OpticalConnectivityIntent extends AbstractIntent {
     }
 
     /**
+     * Constructor for serializer.
+     */
+    protected OpticalConnectivityIntent() {
+        super();
+        this.srcSwitchPort = null;
+        this.dstSwitchPort = null;
+    }
+
+    /**
      * Gets source transponder port.
      *
      * @return The source transponder port.

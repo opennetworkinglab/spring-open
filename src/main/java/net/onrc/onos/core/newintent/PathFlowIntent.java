@@ -23,13 +23,20 @@ public class PathFlowIntent extends AbstractIntent implements InstallableIntent 
     }
 
     /**
+     * Constructor for serializer.
+     */
+    protected PathFlowIntent() {
+        super();
+        this.flow = null;
+    }
+
+    /**
      * Returns {@link PacketPathFlow} object, which defines an explicit path.
      *
      * @return {@link PacketPathFlow path}
      */
     public PacketPathFlow getFlow() {
         return flow;
-
     }
 
     @Override

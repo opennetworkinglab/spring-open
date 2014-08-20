@@ -12,6 +12,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
+import net.onrc.onos.api.newintent.AbstractIntent;
+import net.onrc.onos.api.newintent.ConnectivityIntent;
+import net.onrc.onos.api.newintent.IntentEvent;
+import net.onrc.onos.api.newintent.IntentId;
+import net.onrc.onos.api.newintent.MultiPointToSinglePointIntent;
+import net.onrc.onos.api.newintent.OpticalConnectivityIntent;
+import net.onrc.onos.api.newintent.PacketConnectivityIntent;
+import net.onrc.onos.api.newintent.PointToPointIntent;
+import net.onrc.onos.api.newintent.SinglePointToMultiPointIntent;
 import net.onrc.onos.apps.proxyarp.ArpCacheNotification;
 import net.onrc.onos.apps.proxyarp.ArpReplyNotification;
 import net.onrc.onos.core.hostmanager.Host;
@@ -24,6 +33,9 @@ import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IntentStateList;
+import net.onrc.onos.core.newintent.PathFlowIntent;
+import net.onrc.onos.core.newintent.SingleDstTreeFlowIntent;
+import net.onrc.onos.core.newintent.SingleSrcTreeFlowIntent;
 import net.onrc.onos.core.packetservice.BroadcastPacketOutNotification;
 import net.onrc.onos.core.packetservice.PacketOutNotification;
 import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
@@ -195,6 +207,19 @@ public class KryoFactory {
 
         // New intent-related classes
         kryo.register(BatchOperationEntry.class);
+        kryo.register(IntentId.class);
+        kryo.register(IntentEvent.class);
+        kryo.register(AbstractIntent.class);
+        kryo.register(ConnectivityIntent.class);
+        kryo.register(PointToPointIntent.class);
+        kryo.register(MultiPointToSinglePointIntent.class);
+        kryo.register(SinglePointToMultiPointIntent.class);
+        kryo.register(net.onrc.onos.api.newintent.PathIntent.class);
+        kryo.register(PathFlowIntent.class);
+        kryo.register(SingleSrcTreeFlowIntent.class);
+        kryo.register(SingleDstTreeFlowIntent.class);
+        kryo.register(PacketConnectivityIntent.class);
+        kryo.register(OpticalConnectivityIntent.class);
 
         // Host-related classes
         kryo.register(HashSet.class);

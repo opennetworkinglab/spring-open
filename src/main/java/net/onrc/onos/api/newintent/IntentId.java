@@ -27,6 +27,12 @@ public final class IntentId implements BatchOperationTarget {
         return new IntentId(id);
     }
 
+    /**
+     * Constructor for serializer.
+     */
+    protected IntentId() {
+        this.id = 0;
+    }
 
     /**
      * Constructs the ID corresponding to a given long value.

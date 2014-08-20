@@ -33,6 +33,14 @@ public class PointToPointIntent extends ConnectivityIntent {
         this.egressPort = checkNotNull(egressPort);
     }
 
+    /**
+     * Constructor for serializer.
+     */
+    protected PointToPointIntent() {
+        super();
+        this.ingressPort = null;
+        this.egressPort = null;
+    }
 
     /**
      * Returns the port on which the ingress traffic should be connected to

@@ -33,6 +33,16 @@ public class IntentEvent {
     }
 
     /**
+     * Constructor for serializer.
+     */
+    protected IntentEvent() {
+        this.intent = null;
+        this.state = null;
+        this.previous = null;
+        this.time = 0;
+    }
+
+    /**
      * Returns the state of the intent which caused the event.
      *
      * @return the state of the intent

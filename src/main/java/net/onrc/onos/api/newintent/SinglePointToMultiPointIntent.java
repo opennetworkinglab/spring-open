@@ -44,6 +44,15 @@ public class SinglePointToMultiPointIntent extends ConnectivityIntent {
     }
 
     /**
+     * Constructor for serializer.
+     */
+    protected SinglePointToMultiPointIntent() {
+        super();
+        this.ingressPort = null;
+        this.egressPorts = null;
+    }
+
+    /**
      * Returns the port on which the ingress traffic should be connected to the egress.
      *
      * @return ingress port

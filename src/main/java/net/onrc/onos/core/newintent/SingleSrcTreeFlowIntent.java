@@ -29,6 +29,14 @@ public class SingleSrcTreeFlowIntent extends AbstractIntent implements Installab
     }
 
     /**
+     * Constructor for serializer.
+     */
+    protected SingleSrcTreeFlowIntent() {
+        super();
+        this.tree = null;
+    }
+
+    /**
      * Returns the tree.
      *
      * @return tree

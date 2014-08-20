@@ -37,6 +37,11 @@ public class PathIntent extends PointToPointIntent {
         this.path = ImmutableList.copyOf(checkNotNull(path));
     }
 
+    protected PathIntent() {
+        super();
+        this.path = null;
+    }
+
     /**
      * Returns the links which the traffic goes along.
      *
