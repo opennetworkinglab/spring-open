@@ -22,11 +22,6 @@ import org.junit.Test;
 
 public class AtomicCounterTest {
 
-    static {
-        // configuration to quickly fall back to instance mode for faster test run
-        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
-    }
-
     private static final String TEST_COUNTER = "TestCounter" + UUID.randomUUID();
     private static final byte[] LONG_ZERO = {0, 0, 0, 0, 0, 0, 0, 0}; // 0L
     private IKVTableID counterID;

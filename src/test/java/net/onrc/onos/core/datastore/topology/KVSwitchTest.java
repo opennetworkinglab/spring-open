@@ -27,11 +27,6 @@ public class KVSwitchTest {
 
     private static final Logger log = LoggerFactory.getLogger(KVSwitchTest.class);
 
-    static {
-        // configuration to quickly fall back to instance mode for faster test run
-        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
-    }
-
     private static final String NAMESPACE = UUID.randomUUID().toString();
 
     IKVTable switchTable;

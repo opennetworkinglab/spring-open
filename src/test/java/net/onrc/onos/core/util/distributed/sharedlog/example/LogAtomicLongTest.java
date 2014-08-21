@@ -23,12 +23,6 @@ import com.hazelcast.core.HazelcastInstance;
  */
 public class LogAtomicLongTest {
 
-    static {
-        // configuration to quickly fall back to instance mode for faster test run
-        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
-    }
-
-
     private LogAtomicLong along;
 
     /**

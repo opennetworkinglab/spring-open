@@ -25,10 +25,6 @@ import org.junit.Test;
  * Test cases for HZDistributedAtomicLong.
  */
 public class HZDistributedAtomicLongTest {
-    static {
-        // configuration to quickly fall back to instance mode for faster test run
-        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
-    }
 
     static final String TEST_COUNTER_NAME = "Counter" + UUID.randomUUID();
 

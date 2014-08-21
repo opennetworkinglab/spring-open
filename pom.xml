@@ -525,12 +525,6 @@
       <version>${hazelcast.version}</version>
     </dependency>
     <dependency>
-      <!-- Required for backend datastore as Hazelcast -->
-      <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast-client</artifactId>
-      <version>${hazelcast.version}</version>
-    </dependency>
-    <dependency>
       <groupId>javax.websocket</groupId>
       <artifactId>javax.websocket-api</artifactId>
       <version>1.0</version>

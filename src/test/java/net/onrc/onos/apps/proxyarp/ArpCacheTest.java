@@ -18,11 +18,6 @@ import org.junit.Test;
 
 public class ArpCacheTest {
 
-    static {
-        // configuration to quickly fall back to instance mode for faster test run
-        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
-    }
-
     private static final int SHORTENED_TIMEOUT_MS = 500;
 
     ArpCache arpCache;

@@ -31,11 +31,6 @@ public class HZTableTest {
     @Rule
     public TestName name = new TestName();
 
-    static {
-        // configuration to quickly fall back to instance mode for faster test run
-        System.setProperty("net.onrc.onos.core.datastore.hazelcast.client.attemptLimit", "0");
-    }
-
     static final String TEST_TABLE_NAME = "TableForUnitTest" + UUID.randomUUID();
     HZTable table;
 
