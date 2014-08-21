@@ -38,6 +38,8 @@ import net.onrc.onos.core.newintent.IntentCompilationResult;
 import net.onrc.onos.core.newintent.PathFlowIntent;
 import net.onrc.onos.core.newintent.SingleDstTreeFlowIntent;
 import net.onrc.onos.core.newintent.SingleSrcTreeFlowIntent;
+import net.onrc.onos.core.newintent.TestIntent;
+import net.onrc.onos.core.newintent.TestSubclassIntent;
 import net.onrc.onos.core.packetservice.BroadcastPacketOutNotification;
 import net.onrc.onos.core.packetservice.PacketOutNotification;
 import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
@@ -224,6 +226,12 @@ public class KryoFactory {
         kryo.register(SingleDstTreeFlowIntent.class);
         kryo.register(PacketConnectivityIntent.class);
         kryo.register(OpticalConnectivityIntent.class);
+        // FIXME: due to lack of functionality to register a serializer
+        // in API user side, we added the following two classes.
+        // Theoretically the classes are only for test. we should create
+        // a way to register serializer without editing source code
+        kryo.register(TestIntent.class);
+        kryo.register(TestSubclassIntent.class);
 
         // Host-related classes
         kryo.register(HashSet.class);

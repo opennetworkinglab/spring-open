@@ -1,5 +1,7 @@
 package net.onrc.onos.api.newintent;
 
+import net.onrc.onos.core.newintent.TestIntent;
+import net.onrc.onos.core.newintent.TestSubclassIntent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -253,18 +255,6 @@ public class IntentServiceTest {
         @Override
         public void event(IntentEvent event) {
             events.add(event);
-        }
-    }
-
-    private class TestIntent extends AbstractIntent implements InstallableIntent {
-        TestIntent(IntentId id) {
-            super(id);
-        }
-    }
-
-    private class TestSubclassIntent extends TestIntent {
-        TestSubclassIntent(IntentId id) {
-            super(id);
         }
     }
 
