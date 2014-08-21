@@ -30,7 +30,7 @@ public class SwitchPortTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testSwitchPortDpidPortNumberFailOnNull1() {
         new SwitchPort(null, PORT_NUM);
     }
@@ -38,7 +38,7 @@ public class SwitchPortTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testSwitchPortDpidPortNumberFailOnNull2() {
         new SwitchPort(DPID, null);
     }

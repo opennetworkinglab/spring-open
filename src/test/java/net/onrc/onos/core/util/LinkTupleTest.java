@@ -49,7 +49,7 @@ public class LinkTupleTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testLinkTupleSwitchPortSwitchPortFailsOnNull1() {
         new LinkTuple(null, DST);
     }
@@ -57,7 +57,7 @@ public class LinkTupleTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testLinkTupleSwitchPortSwitchPortFailsOnNull2() {
         new LinkTuple(SRC, null);
     }
@@ -79,7 +79,7 @@ public class LinkTupleTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testLinkTupleDpidPortNumberDpidPortNumberFailOnNull1() {
         new LinkTuple(null, SRC_PORT_NUM, DST_DPID, DST_PORT_NUM);
     }
@@ -87,7 +87,7 @@ public class LinkTupleTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testLinkTupleDpidPortNumberDpidPortNumberFailOnNull2() {
         new LinkTuple(SRC_DPID, null, DST_DPID, DST_PORT_NUM);
     }
@@ -95,7 +95,7 @@ public class LinkTupleTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testLinkTupleDpidPortNumberDpidPortNumberFailOnNull3() {
         new LinkTuple(SRC_DPID, SRC_PORT_NUM, null, DST_PORT_NUM);
     }
@@ -103,7 +103,7 @@ public class LinkTupleTest {
     /**
      * Tests to confirm constructors input validation.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testLinkTupleDpidPortNumberDpidPortNumberFailOnNull4() {
         new LinkTuple(SRC_DPID, SRC_PORT_NUM, DST_DPID, null);
     }

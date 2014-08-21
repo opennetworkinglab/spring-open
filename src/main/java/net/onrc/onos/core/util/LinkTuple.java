@@ -1,8 +1,8 @@
 package net.onrc.onos.core.util;
 
-import java.util.Objects;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.lang.Validate;
+import java.util.Objects;
 
 
 /**
@@ -28,11 +28,8 @@ public final class LinkTuple {
      * @param dst destination port
      */
     public LinkTuple(SwitchPort src, SwitchPort dst) {
-        Validate.notNull(src);
-        Validate.notNull(dst);
-
-        this.src = src;
-        this.dst = dst;
+        this.src = checkNotNull(src);
+        this.dst = checkNotNull(dst);
     }
 
     /**
