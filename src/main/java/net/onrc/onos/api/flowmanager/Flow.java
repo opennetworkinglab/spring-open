@@ -5,7 +5,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 
 import net.onrc.onos.api.batchoperation.BatchOperationTarget;
+import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
+import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
 import net.onrc.onos.core.matchaction.match.Match;
 
 /**
@@ -46,10 +48,19 @@ public abstract class Flow implements BatchOperationTarget {
      * This method is called by FlowManagerModule to create MatchAction
      * operations.
      *
-     * @param op FlowBatchOperation.Operator to be used for compiling this object
-     * @return a list of MatchActionOperations objects to realize this flow
+     * @param op {@link FlowBatchOperation}'s operator to be used for compiling
+     *        this object
+     * @param maIdGenerator ID generator to be used for generating MatchAction
+     *        objects.
+     * @param maoIdGenerator ID generator to be used for generating
+     *        {@link MatchActionOperations} objects.
+     * @return a list of {@link MatchActionOperations} objects to realize this
+     *         flow
      */
-    public abstract List<MatchActionOperations> compile(FlowBatchOperation.Operator op);
+    public abstract List<MatchActionOperations> compile(
+            FlowBatchOperation.Operator op,
+            MatchActionIdGenerator maIdGenerator,
+            MatchActionOperationsIdGenerator maoIdGenerator);
 
     /**
      * Generates a hash code using the FlowId.

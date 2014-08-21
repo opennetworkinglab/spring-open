@@ -4,7 +4,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
+import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
+import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
+import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.PortNumber;
@@ -64,7 +67,9 @@ public class PacketPathFlow extends PathFlow {
     }
 
     @Override
-    public List<MatchActionOperations> compile(FlowBatchOperation.Operator op) {
+    public List<MatchActionOperations> compile(Operator op,
+            MatchActionIdGenerator maIdGenerator,
+            MatchActionOperationsIdGenerator maoIdGenerator) {
         // TODO Auto-generated method stub
         return null;
     }
