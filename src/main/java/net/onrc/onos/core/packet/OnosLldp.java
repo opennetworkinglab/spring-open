@@ -22,7 +22,7 @@ import java.util.List;
 
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import com.google.common.base.Charsets;
 

@@ -19,7 +19,7 @@ import net.onrc.onos.core.datastore.WrongVersionException;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
 import net.onrc.onos.core.util.serializers.HazelcastSerializationConstants;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

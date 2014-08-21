@@ -25,7 +25,7 @@ import net.onrc.onos.core.registry.web.RegistryWebRoutable;
 import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.OnosInstanceId;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
