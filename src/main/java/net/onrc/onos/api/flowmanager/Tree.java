@@ -16,8 +16,6 @@ import net.onrc.onos.core.util.SwitchPort;
  */
 public class Tree extends FlowLinks {
     Map<Dpid, Set<PortNumber>> ports = new HashMap<Dpid, Set<PortNumber>>();
-    Map<SwitchPort, FlowLink> inLinks = new HashMap<SwitchPort, FlowLink>();
-    Map<SwitchPort, FlowLink> outLinks = new HashMap<SwitchPort, FlowLink>();
 
     /**
      * Creates new instance.
@@ -102,30 +100,39 @@ public class Tree extends FlowLinks {
         addPort(link.getSrcSwitchPort());
         addPort(link.getDstSwitchPort());
 
-        inLinks.put(link.getDstSwitchPort(), link);
-        outLinks.put(link.getSrcSwitchPort(), link);
-
         return true;
     }
 
     /**
      * Checks if specified dpid exists in this tree.
      *
-     * @param dpid DPID to be checked.
-     * @return true if found, false otherwise.
+     * @param dpid DPID to be checked
+     * @return true if found, false otherwise
      */
     public boolean hasDpid(Dpid dpid) {
         return ports.containsKey(dpid);
     }
 
     /**
+     * Gets a set of {@link PortNumber}s associated with specified DPID.
+     *
+     * @param dpid the DPID
+     * @return a set of {@link PortNumber}s associated with the DPID, or null if
+     *         the dpid does not exist in this tree
+     */
+    public Set<PortNumber> getPortNumbersOf(Dpid dpid) {
+        return ports.get(dpid);
+    }
+
+    /**
      * Checks if specified switch-port exists in this tree.
      *
-     * @param port SwitchPort object to be checked.
-     * @return true if found, false otherwise.
+     * @param port SwitchPort object to be checked
+     * @return true if found, false otherwise
      */
     public boolean hasSwitchPort(SwitchPort port) {
-        return inLinks.containsKey(port) || outLinks.containsKey(port);
+        Set<PortNumber> portNumbers = getPortNumbersOf(port.getDpid());
+        return portNumbers != null && portNumbers.contains(port.getPortNumber());
     }
 
     @Override
