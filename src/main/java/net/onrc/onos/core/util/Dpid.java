@@ -20,7 +20,7 @@ public final class Dpid {
     /**
      * Default constructor.
      */
-    public Dpid() {
+    protected Dpid() {
         this.value = Dpid.UNKNOWN;
     }
 
