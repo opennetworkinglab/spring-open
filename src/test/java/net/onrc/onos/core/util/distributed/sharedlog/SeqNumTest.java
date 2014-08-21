@@ -154,4 +154,24 @@ public class SeqNumTest {
         assertThat(negOne.compareTo(negOne.step(Long.MAX_VALUE).next().next()), greaterThan(0));
         assertThat(negOne.step(Long.MAX_VALUE).next().next().compareTo(negOne), lessThan(0));
     }
+
+    /**
+     * Tests parsing decimal unsigned long.
+     */
+    @Test
+    public void testDecStr() {
+        final SeqNum ref = SeqNum.valueOf(Long.MAX_VALUE + 1);
+        assertEquals(ref, SeqNum.valueOf("9223372036854775808"));
+        assertEquals(ref, SeqNum.anyValueOf("9223372036854775808"));
+    }
+
+    /**
+     * Tests parsing hexadecimal unsigned long.
+     */
+    @Test
+    public void testHexStr() {
+        final SeqNum ref = SeqNum.valueOf(Long.MAX_VALUE + 1);
+        assertEquals(ref, SeqNum.valueOf("0x8000000000000000"));
+        assertEquals(ref, SeqNum.anyValueOf("0x8000000000000000"));
+    }
 }

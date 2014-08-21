@@ -65,6 +65,26 @@ public final class SeqNum extends Number implements Comparable<SeqNum> {
     }
 
     /**
+     * Gets an instance for specified string.
+     *
+     * @param str parsed result must not be {@link #ZERO}
+     * @return SeqNum
+     */
+    public static SeqNum valueOf(final String str) {
+        return valueOf(UnsignedLongs.decode(str));
+    }
+
+    /**
+     * Gets an instance for specified string.
+     *
+     * @param str string representation of unsigned long
+     * @return SeqNum
+     */
+    public static SeqNum anyValueOf(final String str) {
+        return anyValueOf(UnsignedLongs.decode(str));
+    }
+
+    /**
      * Gets the next sequence number.
      * <p>
      * WARN: This is not a atomic sequencer,
