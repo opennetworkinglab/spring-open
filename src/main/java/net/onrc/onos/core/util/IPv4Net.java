@@ -1,5 +1,7 @@
 package net.onrc.onos.core.util;
 
+import java.util.Objects;
+
 import net.onrc.onos.core.util.serializers.IPv4NetDeserializer;
 import net.onrc.onos.core.util.serializers.IPv4NetSerializer;
 
@@ -90,5 +92,40 @@ public final class IPv4Net {
     @Override
     public String toString() {
         return this.address.toString() + "/" + this.prefixLen;
+    }
+
+    /**
+     * Compares the value of two IPv4Net objects.
+     * <p/>
+     * Note the value of the IPv4 address is compared directly between the
+     * objects, and must match exactly for the objects to be considered equal.
+     * This may result in objects which represent the same IP prefix being
+     * classified as unequal, because the unsignificant bits of the address
+     * field don't match (the bits to the right of the prefix length).
+     * <p/>
+     * TODO Change this behavior so that objects that represent the same prefix
+     * are classified as equal according to this equals method.
+     *
+     * @see Object#equals(Object)
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+
+        if (!(other instanceof IPv4Net)) {
+            return false;
+        }
+
+        IPv4Net otherIpv4Net = (IPv4Net) other;
+
+        return Objects.equals(this.address, otherIpv4Net.address)
+                && this.prefixLen == otherIpv4Net.prefixLen;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(address, prefixLen);
     }
 }

@@ -1,5 +1,7 @@
 package net.onrc.onos.core.util;
 
+import java.util.Objects;
+
 import net.onrc.onos.core.util.serializers.IPv6Deserializer;
 import net.onrc.onos.core.util.serializers.IPv6Serializer;
 
@@ -86,5 +88,20 @@ public final class IPv6 {
     public String toString() {
         return HexString.toHexString(this.valueHigh) + ":" +
                 HexString.toHexString(this.valueLow);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof IPv6)) {
+            return false;
+        }
+        IPv6 other = (IPv6) o;
+        return this.valueHigh == other.valueHigh
+                && this.valueLow == other.valueLow;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(valueHigh, valueLow);
     }
 }
