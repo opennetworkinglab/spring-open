@@ -360,7 +360,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
      *
      * @param update RIB update
      */
-    private void processRibAdd(RibUpdate update) {
+    protected void processRibAdd(RibUpdate update) {
         synchronized (this) {
             Prefix prefix = update.getPrefix();
 
@@ -404,9 +404,32 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         InetAddress nextHopIpAddress = rib.getNextHop();
 
-        // Find the attachment point (egress interface) of the next hop
-        Interface egressInterface = null;
+        // See if we know the MAC address of the next hop
+        MACAddress nextHopMacAddress = proxyArp.getMacAddress(nextHopIpAddress);
 
+        if (nextHopMacAddress == null) {
+            prefixesWaitingOnArp.put(nextHopIpAddress,
+                    new RibUpdate(Operation.UPDATE, prefix, rib));
+            proxyArp.sendArpRequest(nextHopIpAddress, this, true);
+            return;
+        }
+
+        addRouteIntentToNextHop(prefix, nextHopIpAddress, nextHopMacAddress);
+    }
+
+    /**
+     * Adds a route intent given a prefix and a next hop IP address. This
+     * method will find the egress interface for the intent.
+     *
+     * @param prefix IP prefix of the route to add
+     * @param nextHopIpAddress IP address of the next hop
+     * @param nextHopMacAddress MAC address of the next hop
+     */
+    private void addRouteIntentToNextHop(Prefix prefix, InetAddress nextHopIpAddress,
+            MACAddress nextHopMacAddress) {
+
+        // Find the attachment point (egress interface) of the next hop
+        Interface egressInterface;
         if (bgpPeers.containsKey(nextHopIpAddress)) {
             // Route to a peer
             log.debug("Route to peer {}", nextHopIpAddress);
@@ -423,21 +446,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             }
         }
 
-        // See if we know the MAC address of the next hop
-        MACAddress nextHopMacAddress = proxyArp.getMacAddress(nextHopIpAddress);
-
-        if (nextHopMacAddress == null) {
-            prefixesWaitingOnArp.put(nextHopIpAddress,
-                    new RibUpdate(Operation.UPDATE, prefix, rib));
-            proxyArp.sendArpRequest(nextHopIpAddress, this, true);
-            return;
-        } else {
-
-            //For all prefixes we need to add a intent for each of them
-            addRouteIntent(prefix, egressInterface, nextHopMacAddress);
-
-        }
-
+        doAddRouteIntent(prefix, egressInterface, nextHopMacAddress);
     }
 
     /**
@@ -449,7 +458,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
      * @param egressInterface egress Interface connected to next hop router
      * @param nextHopMacAddress MAC address of next hop router
      */
-    private void addRouteIntent(Prefix prefix, Interface egressInterface,
+    private void doAddRouteIntent(Prefix prefix, Interface egressInterface,
             MACAddress nextHopMacAddress) {
         log.debug("Adding intent for prefix {}, next hop mac {}",
                 prefix, nextHopMacAddress);
@@ -518,6 +527,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 executeDeleteRoute(prefix, update.getRibEntry());
 
             }
+
+            prefixesWaitingOnArp.removeAll(prefix.getInetAddress());
+            // TODO cancel the request in the ARP manager as well
         }
     }
 
@@ -620,7 +632,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                     // InvertedRadixTree and the next hop is the same as our update.
                     // The prefix could have been removed while we were waiting
                     // for the ARP, or the next hop could have changed.
-                    executeRibAdd(update);
+                    addRouteIntentToNextHop(update.getPrefix(), ipAddress,
+                            macAddress);
                 } else {
                     log.debug("Received ARP response, but {},{} is no longer in " +
                             "InvertedRadixTree", update.getPrefix(),
