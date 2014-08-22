@@ -33,14 +33,6 @@ public class TestImmutableClasses {
     }
 
     /**
-     * MatchActionOperations objects should be immutable.
-     */
-    @Test
-    public void checkMatchActionOperations() {
-        ImmutableClassChecker.assertThatClassIsImmutable(MatchActionOperations.class);
-    }
-
-    /**
      * MatchActionOperationsId objects should be immutable.
      */
     @Test

@@ -1,13 +1,18 @@
 package net.onrc.onos.core.matchaction;
 
+import net.onrc.onos.core.util.TestUtils;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+
+import java.util.Set;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-
-import net.onrc.onos.core.util.TestUtils;
-import org.junit.Test;
 
 /**
  * Unit tests for Match Action Operations.
@@ -75,5 +80,37 @@ public class MatchActionOperationsTest {
         final MatchActionOperationsId id1 =
                 new MatchActionOperationsId(22L);
         assertThat(id1.hashCode(), is(equalTo(22)));
+    }
+
+    /**
+     * Test that dependencies can be added to operations.
+     */
+    @Test
+    public void testMatchActionOperationsDependencies() {
+        final MatchActionOperationsId id =
+                new MatchActionOperationsId(12345678L);
+        final MatchActionOperations operations =
+                new MatchActionOperations(id);
+
+        assertThat(operations.getDependencies(), hasSize(0));
+
+        operations.addDependency(new MatchActionOperationsId(1L));
+        assertThat(operations.getDependencies(), hasSize(1));
+
+        operations.addDependency(new MatchActionOperationsId(2L));
+        assertThat(operations.getDependencies(), hasSize(2));
+
+        operations.addDependency(new MatchActionOperationsId(3L));
+
+        final Set<MatchActionOperationsId> operationEntries =
+                operations.getDependencies();
+        assertThat(operationEntries, hasSize(3));
+        final long[] expectedIds = {1, 2, 3};
+
+        for (long expectedId : expectedIds) {
+            assertThat(operationEntries,
+                       hasItem(Matchers.<MatchActionOperationsId>hasProperty("id",
+                               equalTo(expectedId))));
+        }
     }
 }

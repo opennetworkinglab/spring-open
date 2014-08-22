@@ -1,5 +1,11 @@
 package net.onrc.onos.core.matchaction;
 
-public interface MatchActionOperationsState {
-    // TODO waiting on MatchActionOperations
+
+public enum MatchActionOperationsState {
+    INIT,
+    RESOLVED,
+    PENDING,
+    INSTALLED,
+    FAILED
 }
+

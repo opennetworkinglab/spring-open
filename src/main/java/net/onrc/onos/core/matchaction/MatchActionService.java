@@ -1,10 +1,10 @@
 package net.onrc.onos.core.matchaction;
 
-import java.util.EventListener;
-import java.util.Set;
-
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.core.util.IdGenerator;
+
+import java.util.EventListener;
+import java.util.Set;
 
 /**
  * An interface for the match-action service.
