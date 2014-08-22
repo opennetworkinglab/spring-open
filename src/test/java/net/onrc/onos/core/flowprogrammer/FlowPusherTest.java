@@ -408,8 +408,8 @@ public class FlowPusherTest {
         /*
         flowEntry1.setDpid(new Dpid(DPID_TO_VERIFY));
         flowEntry1.setFlowId(new FlowId(1));
-        flowEntry1.setInPort(new PortNumber((short) 1));
-        flowEntry1.setOutPort(new PortNumber((short) 11));
+        flowEntry1.setInPort(PortNumber.uint16((short) 1));
+        flowEntry1.setOutPort(PortNumber.uint16((short) 11));
         flowEntry1.setFlowEntryId(new FlowEntryId(1));
         flowEntry1.setFlowEntryMatch(new FlowEntryMatch());
         flowEntry1.setFlowEntryActions(new FlowEntryActions());

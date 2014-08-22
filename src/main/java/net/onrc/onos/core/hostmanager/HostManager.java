@@ -29,6 +29,7 @@ import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Topology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.PortNumberUtils;
 
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
@@ -121,11 +122,13 @@ IHostService {
     protected Command processPacketIn(IOFSwitch sw, OFPacketIn pi, Ethernet eth,
             short inport) {
         if (log.isTraceEnabled()) {
-            log.trace("Receive PACKET_IN swId {}, portId {}", sw.getId(), pi.getInPort());
+            log.trace("Receive PACKET_IN swId {}, portId {}", sw.getId(), inport);
         }
 
         final Dpid dpid = new Dpid(sw.getId());
-        final PortNumber portNum = new PortNumber(inport);
+        // FIXME method signature needs to be fixed. losing port number precision
+        final PortNumber portNum = PortNumberUtils
+                            .openFlow(sw.getOFVersion(), inport);
 
         Host srcHost =
                 getSourceHostFromPacket(eth, dpid.value(), portNum.value());

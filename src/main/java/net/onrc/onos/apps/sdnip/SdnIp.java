@@ -203,7 +203,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
             bgpdAttachmentPoint = new SwitchPort(
                     new Dpid(config.getBgpdAttachmentDpid()),
-                    new PortNumber(config.getBgpdAttachmentPort()));
+                    PortNumber.uint16(config.getBgpdAttachmentPort()));
 
             bgpdMacAddress = config.getBgpdMacAddress();
             vlan = config.getVlan();

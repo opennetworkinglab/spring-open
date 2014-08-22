@@ -121,8 +121,8 @@ public class ProxyArpManagerTest {
         cachedIp2 = InetAddress.getByAddress(IPv4.toIPv4AddressBytes(cachedStrIp2));
 
         sw1Dpid = new Dpid(1L);
-        sw1Inport = new PortNumber((short) 1);
-        sw1Outport = new PortNumber((short) 2);
+        sw1Inport = PortNumber.uint16((short) 1);
+        sw1Outport = PortNumber.uint16((short) 2);
         vlanId = 1;
 
         //Made tested packets

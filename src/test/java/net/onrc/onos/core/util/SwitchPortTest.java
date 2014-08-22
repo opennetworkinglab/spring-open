@@ -10,11 +10,11 @@ import org.junit.Test;
 public class SwitchPortTest {
 
     private static final Dpid DPID = new Dpid(9);
-    private static final PortNumber PORT_NUM = new PortNumber((short) 56);
+    private static final PortNumber PORT_NUM = PortNumber.uint16((short) 56);
 
     private static final SwitchPort SWP1 = new SwitchPort(DPID, PORT_NUM);
     private static final SwitchPort SWP2 = new SwitchPort(new Dpid(1),
-                                                 new PortNumber((short) 65535));
+                                                 PortNumber.uint16((short) 65535));
 
     /**
      * Tests to confirm 2-arg constructor.

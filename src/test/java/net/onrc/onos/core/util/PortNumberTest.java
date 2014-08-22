@@ -102,9 +102,9 @@ public class PortNumberTest {
      */
     @Test
     public void testShortValue() {
-        assertEquals(0L, new PortNumber((short) 0).shortValue());
+        assertEquals(0L, PortNumber.uint16((short) 0).shortValue());
 
-        assertEquals(1L, new PortNumber((short) 1).shortValue());
+        assertEquals(1L, PortNumber.uint16((short) 1).shortValue());
 
         // user of #shortValue() needs to be careful
         // simply widening them will result in negative value
@@ -121,9 +121,9 @@ public class PortNumberTest {
      */
     @Test
     public void testLongValue() {
-        assertEquals(0L, new PortNumber((short) 0).value());
+        assertEquals(0L, PortNumber.uint16((short) 0).value());
 
-        assertEquals(1L, new PortNumber((short) 1).value());
+        assertEquals(1L, PortNumber.uint16((short) 1).value());
 
         assertEquals(0xffffL, new PortNumber(PORT_NONE).value());
     }
@@ -133,9 +133,9 @@ public class PortNumberTest {
      */
     @Test
     public void testToString() {
-        assertEquals("0", new PortNumber((short) 0).toString());
+        assertEquals("0", PortNumber.uint16((short) 0).toString());
 
-        assertEquals("1", new PortNumber((short) 1).toString());
+        assertEquals("1", PortNumber.uint16((short) 1).toString());
 
         // 0xffff in decimal
         assertEquals("65535", new PortNumber(PORT_NONE).toString());
@@ -147,11 +147,11 @@ public class PortNumberTest {
     @Test
     public void testEqualsObject() {
         // Some trivial
-        assertTrue(new PortNumber(PORT_NONE).equals(new PortNumber((short) 0xffff)));
-        assertFalse(new PortNumber((short) 0).equals(new PortNumber((short) 1)));
+        assertTrue(new PortNumber(PORT_NONE).equals(PortNumber.uint16((short) 0xffff)));
+        assertFalse(PortNumber.uint16((short) 0).equals(PortNumber.uint16((short) 1)));
 
         // different type
-        assertFalse(new PortNumber((short) 0).equals(Short.valueOf((short) 0)));
+        assertFalse(PortNumber.uint16((short) 0).equals(Short.valueOf((short) 0)));
 
     }
 

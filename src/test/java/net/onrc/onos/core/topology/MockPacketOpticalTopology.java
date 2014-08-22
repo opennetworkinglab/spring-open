@@ -36,8 +36,7 @@ public class MockPacketOpticalTopology extends MockTopology {
     @Override
     public Port addPort(Switch sw, Long portNumber) {
         PortEvent portEvent = new PortEvent(sw.getDpid(),
-                                            new PortNumber(portNumber
-                                                                   .shortValue()));
+                                    PortNumber.uint16(portNumber.shortValue()));
         portEvent.createStringAttribute(TopologyElement.TYPE,
                                         TopologyElement.TYPE_PACKET_LAYER);
         portEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
@@ -85,8 +84,7 @@ public class MockPacketOpticalTopology extends MockTopology {
     //todo - add t-port specific properties
     public Port addTPort(Switch sw, Long portNumber) {
         PortEvent portEvent = new PortEvent(sw.getDpid(),
-                                            new PortNumber(portNumber
-                                                                   .shortValue()));
+                                    PortNumber.uint16(portNumber.shortValue()));
         portEvent.createStringAttribute(TopologyElement.TYPE,
                                         TopologyElement.TYPE_OPTICAL_LAYER);
         portEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
@@ -109,8 +107,7 @@ public class MockPacketOpticalTopology extends MockTopology {
     //todo - add w-port specific properties
     public Port addWPort(Switch sw, Long portNumber) {
         PortEvent portEvent = new PortEvent(sw.getDpid(),
-                                            new PortNumber(portNumber
-                                                                   .shortValue()));
+                                    PortNumber.uint16(portNumber.shortValue()));
         portEvent.createStringAttribute(TopologyElement.TYPE,
                                         TopologyElement.TYPE_OPTICAL_LAYER);
         portEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
@@ -146,8 +143,8 @@ public class MockPacketOpticalTopology extends MockTopology {
 
         final Dpid srcDpidObj = new Dpid(srcDpid);
         final Dpid dstDpidObj = new Dpid(dstDpid);
-        final PortNumber srcPortNum = new PortNumber(srcPortNo.shortValue());
-        final PortNumber dstPortNum = new PortNumber(dstPortNo.shortValue());
+        final PortNumber srcPortNum = PortNumber.uint16(srcPortNo.shortValue());
+        final PortNumber dstPortNum = PortNumber.uint16(dstPortNo.shortValue());
         LinkEvent linkEvent = new LinkEvent(new SwitchPort(srcDpidObj,
                                                            srcPortNum),
                                             new SwitchPort(dstDpidObj,

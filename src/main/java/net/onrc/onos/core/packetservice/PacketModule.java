@@ -157,6 +157,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
 
         Ethernet eth = IFloodlightProviderService.bcStore.
                 get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+        // FIXME losing port number precision
         short inport = (short) cntx.getStorage()
                 .get(IFloodlightProviderService.CONTEXT_PI_INPORT);
 
@@ -165,7 +166,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
         try {
             topology.acquireReadLock();
             Dpid dpid = new Dpid(sw.getId());
-            PortNumber p = new PortNumber(inport);
+            PortNumber p = PortNumber.uint16(inport);
             topologySwitch = topology.getSwitch(dpid);
             inPort = topology.getPort(dpid, p);
         } finally {

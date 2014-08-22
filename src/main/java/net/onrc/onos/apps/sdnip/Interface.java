@@ -73,7 +73,7 @@ public class Interface {
     public SwitchPort getSwitchPort() {
         //TODO SwitchPort, Dpid and Port are mutable, but they could probably
         //be made immutable which would prevent the need to copy
-        return new SwitchPort(new Dpid(dpid), new PortNumber(port));
+        return new SwitchPort(new Dpid(dpid), PortNumber.uint16(port));
     }
 
     /**

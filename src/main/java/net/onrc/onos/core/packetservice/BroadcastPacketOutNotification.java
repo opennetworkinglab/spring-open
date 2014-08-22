@@ -92,7 +92,7 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
             topology.acquireReadLock();
             try {
                 globalPort = topology.getPort(new Dpid(entry.getKey()),
-                    new PortNumber(entry.getValue()));
+                    PortNumber.uint16(entry.getValue()));
             } finally {
                 topology.releaseReadLock();
             }

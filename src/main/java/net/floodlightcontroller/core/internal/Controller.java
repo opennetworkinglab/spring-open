@@ -614,6 +614,7 @@ public class Controller implements IFloodlightProviderService {
             FloodlightContext bContext)
             throws IOException {
         Ethernet eth = null;
+        // FIXME losing port number precision here
         short inport = -1;
 
         switch (m.getType()) {

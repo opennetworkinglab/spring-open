@@ -21,7 +21,7 @@ public class PathFlowIntentTest extends IntentTest {
     private final IntentId intentId2 = new IntentId(456);
     private final FlowId flowId1 = new FlowId(1L);
     private final PacketMatch match = new PacketMatchBuilder().build();
-    private final PortNumber port = new PortNumber((short) 1);
+    private final PortNumber port = PortNumber.uint16((short) 1);
 
     /**
      * Creates a PathFlowIntent.

@@ -25,8 +25,8 @@ public class PathIntentTest {
     private static final Dpid DPID_3 = new Dpid(3L);
     private static final Dpid DPID_4 = new Dpid(4L);
 
-    private static final PortNumber PORT_NUMBER_1 = new PortNumber((short) 1);
-    private static final PortNumber PORT_NUMBER_2 = new PortNumber((short) 2);
+    private static final PortNumber PORT_NUMBER_1 = PortNumber.uint16((short) 1);
+    private static final PortNumber PORT_NUMBER_2 = PortNumber.uint16((short) 2);
 
     @Before
     public void setUp() throws Exception {

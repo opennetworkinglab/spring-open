@@ -48,8 +48,8 @@ public class KryoFactoryTest {
 
     private static final Dpid DPID_A = new Dpid(0x1234L);
     private static final Dpid DPID_B = new Dpid(Long.MAX_VALUE);
-    private static final PortNumber PORT_NO_A = new PortNumber((short) 42);
-    private static final PortNumber PORT_NO_B = new PortNumber((short) 65534);
+    private static final PortNumber PORT_NO_A = PortNumber.uint16((short) 42);
+    private static final PortNumber PORT_NO_B = PortNumber.uint16((short) 65534);
     private static final String ONOS_INSTANCE_NAME = "ONOS-Instance-Test";
 
     private static final double SEC_IN_NANO = 1000 * 1000 * 1000.0;

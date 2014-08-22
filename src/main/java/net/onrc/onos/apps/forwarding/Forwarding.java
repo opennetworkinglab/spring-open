@@ -397,6 +397,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
                     boolean isflowEntryForThisSwitch = false;
                     net.onrc.onos.core.intent.Path path = pathIntent.getPath();
+                    // FIXME should switch to PortNumber, etc.
                     long outPort = -1;
 
                     if (spfIntent.getDstSwitchDpid() == sw.getDpid().value()) {
@@ -430,7 +431,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
                         log.debug("Sending packet out from sw {}, outport{}", sw.getDpid(), outPort);
                         packetService.sendPacket(eth, new SwitchPort(
-                                sw.getDpid(), new PortNumber((short) outPort)));
+                                sw.getDpid(), PortNumber.uint16((short) outPort)));
                     }
                 } else {
                     // Flow path has not yet been installed to switches so save the

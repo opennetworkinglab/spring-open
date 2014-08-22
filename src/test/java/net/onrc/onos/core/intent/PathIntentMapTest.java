@@ -22,8 +22,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class PathIntentMapTest {
-    private static final PortNumber PORT_NUMBER_1 = new PortNumber((short) 1);
-    private static final PortNumber PORT_NUMBER_3 = new PortNumber((short) 3);
+    private static final PortNumber PORT_NUMBER_1 = PortNumber.uint16((short) 1);
+    private static final PortNumber PORT_NUMBER_3 = PortNumber.uint16((short) 3);
     private static final Dpid DPID_1 = new Dpid(1L);
     private static final Dpid DPID_2 = new Dpid(2L);
     private static final Dpid DPID_3 = new Dpid(3L);
@@ -55,12 +55,12 @@ public class PathIntentMapTest {
         port23 = createMock(Port.class);
         port31 = createMock(Port.class);
         port41 = createMock(Port.class);
-        expect(port11.getNumber()).andReturn(new PortNumber((short) 1)).anyTimes();
-        expect(port22.getNumber()).andReturn(new PortNumber((short) 2)).anyTimes();
-        expect(port21.getNumber()).andReturn(new PortNumber((short) 1)).anyTimes();
-        expect(port23.getNumber()).andReturn(new PortNumber((short) 3)).anyTimes();
-        expect(port31.getNumber()).andReturn(new PortNumber((short) 1)).anyTimes();
-        expect(port41.getNumber()).andReturn(new PortNumber((short) 1)).anyTimes();
+        expect(port11.getNumber()).andReturn(PortNumber.uint16((short) 1)).anyTimes();
+        expect(port22.getNumber()).andReturn(PortNumber.uint16((short) 2)).anyTimes();
+        expect(port21.getNumber()).andReturn(PortNumber.uint16((short) 1)).anyTimes();
+        expect(port23.getNumber()).andReturn(PortNumber.uint16((short) 3)).anyTimes();
+        expect(port31.getNumber()).andReturn(PortNumber.uint16((short) 1)).anyTimes();
+        expect(port41.getNumber()).andReturn(PortNumber.uint16((short) 1)).anyTimes();
         replay(port11);
         replay(port22);
         replay(port21);

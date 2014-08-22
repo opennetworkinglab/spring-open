@@ -112,7 +112,7 @@ public class SingleDstTreeFlowTest {
      */
     private List<Action> outputAction(int outputPort) {
         return Arrays.asList(
-                (Action) new OutputAction(new PortNumber((short) outputPort)));
+                (Action) new OutputAction(PortNumber.uint16((short) outputPort)));
     }
 
     /**

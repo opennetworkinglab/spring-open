@@ -37,7 +37,7 @@ public class SingleDstTreeFlowIntentTest extends IntentTest {
                 match,
                 Arrays.asList(switchPort1, switchPort2),
                 createTree(),
-                Arrays.asList((Action) new OutputAction(new PortNumber(port3))));
+                Arrays.asList((Action) new OutputAction(PortNumber.uint16(port3))));
         return new SingleDstTreeFlowIntent(intentId1, treeFlow);
     }
 
@@ -47,7 +47,7 @@ public class SingleDstTreeFlowIntentTest extends IntentTest {
                 match,
                 Arrays.asList(switchPort1, switchPort3),
                 createTree(),
-                Arrays.asList((Action) new OutputAction(new PortNumber(port2))));
+                Arrays.asList((Action) new OutputAction(PortNumber.uint16(port2))));
         return new SingleDstTreeFlowIntent(intentId2, treeFlow);
     }
 

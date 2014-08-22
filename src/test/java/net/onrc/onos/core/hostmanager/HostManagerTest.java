@@ -92,7 +92,7 @@ public class HostManagerTest extends FloodlightTestCase {
 
         expect(datagridService.createChannel("onos.host", Long.class, Host.class))
         .andReturn(eventChannel).once();
-        expect(topology.getOutgoingLink(new Dpid(1L), new PortNumber((short) 100))).andReturn(null).anyTimes();
+        expect(topology.getOutgoingLink(new Dpid(1L), PortNumber.uint16((short) 100))).andReturn(null).anyTimes();
         expect(datagridService.addListener(
                 eq("onos.host"),
                 anyObject(IEventChannelListener.class),

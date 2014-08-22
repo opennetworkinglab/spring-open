@@ -21,7 +21,6 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.hostmanager.Host;
@@ -35,7 +34,7 @@ import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallb
 import net.onrc.onos.core.registry.RegistryException;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
-import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.PortNumberUtils;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
@@ -260,7 +259,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         List<PortEvent> portEvents = new ArrayList<PortEvent>();
         for (OFPortDesc port : sw.getPorts()) {
             PortEvent portEvent = new PortEvent(dpid,
-                    new PortNumber(port.getPortNo().getShortPortNumber()));
+                                                PortNumberUtils.openFlow(port));
             // FIXME should be merging, with existing attrs, etc..
             // TODO define attr name as constant somewhere.
             // TODO populate appropriate attributes.
@@ -349,8 +348,8 @@ public class TopologyPublisher implements IOFSwitchListener,
      */
     private void switchPortAdded(long switchId, OFPortDesc port) {
         final Dpid dpid = new Dpid(switchId);
-        PortEvent portEvent = new PortEvent(dpid,
-                new PortNumber(port.getPortNo().getShortPortNumber()));
+        final PortEvent portEvent = new PortEvent(dpid,
+                                        PortNumberUtils.openFlow(port));
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
@@ -371,8 +370,8 @@ public class TopologyPublisher implements IOFSwitchListener,
     private void switchPortRemoved(long switchId, OFPortDesc port) {
         final Dpid dpid = new Dpid(switchId);
 
-        PortEvent portEvent = new PortEvent(dpid, new PortNumber(
-                port.getPortNo().getShortPortNumber()));
+        final PortEvent portEvent = new PortEvent(dpid,
+                                        PortNumberUtils.openFlow(port));
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.

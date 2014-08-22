@@ -11,9 +11,9 @@ import org.junit.Test;
 public class LinkTupleTest {
 
     private static final Dpid SRC_DPID = new Dpid(9);
-    private static final PortNumber SRC_PORT_NUM = new PortNumber((short) 56);
+    private static final PortNumber SRC_PORT_NUM = PortNumber.uint16((short) 56);
     private static final Dpid DST_DPID = new Dpid(12);
-    private static final PortNumber DST_PORT_NUM = new PortNumber((short) 81);
+    private static final PortNumber DST_PORT_NUM = PortNumber.uint16((short) 81);
 
     private static final SwitchPort SRC = new SwitchPort(SRC_DPID, SRC_PORT_NUM);
     private static final SwitchPort DST = new SwitchPort(DST_DPID, DST_PORT_NUM);
@@ -21,8 +21,8 @@ public class LinkTupleTest {
 
     private static final LinkTuple L1 = new LinkTuple(SRC, DST);
     private static final LinkTuple L2 = new LinkTuple(
-            new SwitchPort(new Dpid(1), new PortNumber((short) 65535)),
-            new SwitchPort(new Dpid(2), new PortNumber((short) 65534)));
+            new SwitchPort(new Dpid(1), PortNumber.uint16((short) 65535)),
+            new SwitchPort(new Dpid(2), PortNumber.uint16((short) 65534)));
 
     /**
      * Test to confirm class definition is immutable.

@@ -29,7 +29,7 @@ public class MockTopology extends TopologyImpl {
 
     public Port addPort(Switch sw, Long portNumber) {
         PortEvent port = new PortEvent(sw.getDpid(),
-                                new PortNumber(portNumber.shortValue()));
+                                PortNumber.uint16(portNumber.shortValue()));
         ((TopologyImpl) this).putPort(port);
         return this.getPort(port.getSwitchPort());
     }
@@ -149,9 +149,9 @@ public class MockTopology extends TopologyImpl {
     public void removeLink(Long srcDpid, Long srcPortNo, Long dstDpid,
                            Long dstPortNo) {
         this.removeLink(new Dpid(srcDpid),
-                           new PortNumber(srcPortNo.shortValue()),
+                           PortNumber.uint16(srcPortNo.shortValue()),
                            new Dpid(dstDpid),
-                           new PortNumber(dstPortNo.shortValue()));
+                           PortNumber.uint16(dstPortNo.shortValue()));
     }
 
     public void removeLink(Dpid srcDpid, PortNumber srcPortNo,

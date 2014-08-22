@@ -22,13 +22,13 @@ public class ConstrainedBFSTreeTest {
     private static final Dpid DPID_3 = new Dpid(3L);
     private static final Dpid DPID_4 = new Dpid(4L);
 
-    private static final PortNumber PORT_NUMBER_12 = new PortNumber((short) 12);
-    private static final PortNumber PORT_NUMBER_14 = new PortNumber((short) 14);
-    private static final PortNumber PORT_NUMBER_21 = new PortNumber((short) 21);
-    private static final PortNumber PORT_NUMBER_23 = new PortNumber((short) 23);
-    private static final PortNumber PORT_NUMBER_41 = new PortNumber((short) 41);
-    private static final PortNumber PORT_NUMBER_42 = new PortNumber((short) 42);
-    private static final PortNumber PORT_NUMBER_43 = new PortNumber((short) 43);
+    private static final PortNumber PORT_NUMBER_12 = PortNumber.uint16((short) 12);
+    private static final PortNumber PORT_NUMBER_14 = PortNumber.uint16((short) 14);
+    private static final PortNumber PORT_NUMBER_21 = PortNumber.uint16((short) 21);
+    private static final PortNumber PORT_NUMBER_23 = PortNumber.uint16((short) 23);
+    private static final PortNumber PORT_NUMBER_41 = PortNumber.uint16((short) 41);
+    private static final PortNumber PORT_NUMBER_42 = PortNumber.uint16((short) 42);
+    private static final PortNumber PORT_NUMBER_43 = PortNumber.uint16((short) 43);
 
     static final long LOCAL_PORT = 0xFFFEL;
 

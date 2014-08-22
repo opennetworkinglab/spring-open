@@ -35,7 +35,7 @@ public final class PortNumber {
      *
      * @param value the value to use.
      */
-    public PortNumber(short value) {
+    protected PortNumber(short value) {
         this.value = (int) shortToUnsignedLong(value);
     }
 
