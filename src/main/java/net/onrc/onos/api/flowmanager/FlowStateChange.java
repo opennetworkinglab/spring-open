@@ -15,7 +15,7 @@ public class FlowStateChange {
      * @param current the current state of the flow
      * @param previous the previous state of the flow
      */
-    FlowStateChange(FlowId flowId, FlowState current, FlowState previous) {
+    public FlowStateChange(FlowId flowId, FlowState current, FlowState previous) {
         this.flowId = flowId;
         this.current = current;
         this.previous = previous;

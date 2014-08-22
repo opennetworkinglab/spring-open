@@ -19,7 +19,7 @@ public class FlowStatesChangedEvent {
      * @param time the time at which the event was created in milliseconds since start of epoch
      * @param changes the set of {@link FlowStateChange} objects
      */
-    FlowStatesChangedEvent(long time, Set<FlowStateChange> changes) {
+    public FlowStatesChangedEvent(long time, Set<FlowStateChange> changes) {
         this.time = time;
         this.changes = ImmutableSet.copyOf(checkNotNull(changes));
     }

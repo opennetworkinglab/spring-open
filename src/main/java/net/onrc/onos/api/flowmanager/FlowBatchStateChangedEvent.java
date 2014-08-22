@@ -18,7 +18,7 @@ public class FlowBatchStateChangedEvent {
      * @param current the current state of the flow batch operation
      * @param previous the previous state of the flow batch operation
      */
-    FlowBatchStateChangedEvent(long time, FlowBatchHandle handle,
+    public FlowBatchStateChangedEvent(long time, FlowBatchHandle handle,
             FlowBatchState current, FlowBatchState previous) {
         this.time = time;
         this.handle = handle;

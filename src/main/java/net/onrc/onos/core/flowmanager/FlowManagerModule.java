@@ -52,6 +52,7 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     private ISharedCollectionsService sharedCollectionService;
     private FlowMap flowMap;
     private FlowBatchMap flowBatchMap;
+    private FlowEventDispatcher flowEventDispatcher;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -96,6 +97,9 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
 
         flowMap = new SharedFlowMap(sharedCollectionService);
         flowBatchMap = new SharedFlowBatchMap(sharedCollectionService);
+        flowEventDispatcher =
+                new FlowEventDispatcher(flowMap, flowBatchMap, matchActionService);
+        flowEventDispatcher.start();
     }
 
     /**
@@ -172,14 +176,12 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
 
     @Override
     public void addListener(FlowManagerListener listener) {
-        // TODO Auto-generated method stub
-
+        flowEventDispatcher.addListener(listener);
     }
 
     @Override
     public void removeListener(FlowManagerListener listener) {
-        // TODO Auto-generated method stub
-
+        flowEventDispatcher.removeListener(listener);
     }
 
     private MatchActionOperations createNewMatchActionOperations() {
