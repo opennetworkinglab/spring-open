@@ -1,40 +1,25 @@
 package net.onrc.onos.api.flowmanager;
 
-import net.onrc.onos.core.flowmanager.FlowOperationMap;
-
-
 /**
- * Handle class to handle flow batch operation.
+ * An interface for handling flow batch operation.
  */
-public class FlowBatchHandle {
-    private final FlowOperationMap flowOperationMap;
-    private final FlowBatchId batchId;
+public interface FlowBatchHandle {
+    /**
+     * Gets the flow batch operation.
+     *
+     * @return the flow batch operation
+     */
+    public FlowBatchOperation getFlowBatchOperation();
 
     /**
-     * Creates a handle using batch operation ID.
-     * <p>
-     * The ID is automatically generated and assigned by FlowManager, and used
-     * as an internal key for the flow batch operation map.
+     * Gets the state for the flow batch operation.
      *
-     * @param opMap the FlowOperationMap object which maintains the flow batch
-     *        operation
-     * @param id the batch operation ID
+     * @return the state for the flow batch operation
      */
-    public FlowBatchHandle(FlowOperationMap opMap, FlowBatchId id) {
-        flowOperationMap = opMap;
-        batchId = id;
-    }
+    public FlowBatchState getState();
 
     /**
-     * Gets the flow batch operation ID.
-     *
-     * @return the flow batch operation ID
+     * Purge the flow batch operation from the map.
      */
-    public FlowBatchId getBatchOperationId() {
-        return batchId;
-    }
-
-    public FlowBatchState getState() {
-        return flowOperationMap.getState(batchId);
-    }
+    public void purge();
 }

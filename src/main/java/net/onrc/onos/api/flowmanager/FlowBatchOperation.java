@@ -1,5 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
+import java.util.List;
+
 import net.onrc.onos.api.batchoperation.BatchOperation;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 
@@ -21,6 +23,24 @@ public class FlowBatchOperation extends
          * Removes the existing flow.
          */
         REMOVE,
+    }
+
+    /**
+     * Creates new {@link FlowBatchOperation} object.
+     */
+    public FlowBatchOperation() {
+        super();
+    }
+
+    /**
+     * Creates new {@link FlowBatchOperation} object from a list of flow batch
+     * operation entries.
+     *
+     * @param batchOperations the list of flow batch operation entries
+     */
+    public FlowBatchOperation(
+            List<BatchOperationEntry<FlowBatchOperation.Operator, ?>> batchOperations) {
+        super(batchOperations);
     }
 
     /**

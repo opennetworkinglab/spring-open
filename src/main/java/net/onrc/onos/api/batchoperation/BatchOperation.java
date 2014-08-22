@@ -1,5 +1,7 @@
 package net.onrc.onos.api.batchoperation;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,10 +17,20 @@ public abstract class BatchOperation<T extends BatchOperationEntry<?, ?>> {
     private List<T> ops;
 
     /**
-     * Constructor.
+     * Creates new {@link BatchOperation} object.
      */
     public BatchOperation() {
         ops = new LinkedList<>();
+    }
+
+    /**
+     * Creates {@link BatchOperation} object from a list of batch operation
+     * entries.
+     *
+     * @param batchOperations the list of batch operation entries.
+     */
+    public BatchOperation(List<T> batchOperations) {
+        ops = new LinkedList<>(checkNotNull(batchOperations));
     }
 
     /**

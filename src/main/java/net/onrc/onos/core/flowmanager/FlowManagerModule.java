@@ -43,7 +43,7 @@ public class FlowManagerModule implements FlowManagerService {
         this.flowIdGenerator =
                 new FlowIdGeneratorWithIdBlockAllocator(idBlockAllocator);
         this.conflictDetectionPolicy = ConflictDetectionPolicy.FREE;
-        this.flowOperationMap = new FlowOperationMap();
+        this.flowOperationMap = new FlowOperationMap(idBlockAllocator);
 
         // TODO: MatchActionOperationsIdGenerator should be retrieved from MatchAction Module.
         this.maIdGenerator =
@@ -94,7 +94,7 @@ public class FlowManagerModule implements FlowManagerService {
      */
     @Override
     public FlowBatchHandle executeBatch(FlowBatchOperation ops) {
-        return flowOperationMap.putOperation(ops);
+        return flowOperationMap.putBatchOperation(ops);
     }
 
     @Override
