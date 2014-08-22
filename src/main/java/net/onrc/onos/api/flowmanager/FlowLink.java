@@ -1,5 +1,6 @@
 package net.onrc.onos.api.flowmanager;
 
+import com.google.common.base.Objects;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
@@ -98,5 +99,24 @@ public class FlowLink {
     @Override
     public String toString() {
         return srcSwitchPort + "-->" + dstSwitchPort;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        FlowLink that = (FlowLink) o;
+        return Objects.equal(this.srcSwitchPort, that.srcSwitchPort)
+                && Objects.equal(this.dstSwitchPort, that.dstSwitchPort);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(srcSwitchPort, dstSwitchPort);
     }
 }
