@@ -49,4 +49,10 @@ public class OutputAction implements Action {
         return Objects.equal(this.portNumber, that.portNumber);
     }
 
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(getClass())
+                .add("portNumber", portNumber)
+                .toString();
+    }
 }
