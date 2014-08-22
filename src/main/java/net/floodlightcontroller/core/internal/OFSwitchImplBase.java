@@ -64,6 +64,7 @@ import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFFlowDelete.Builder;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortConfig;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
@@ -580,20 +581,20 @@ public class OFSwitchImplBase implements IOFSwitch {
 
     /**
      * Manages the ports of this switch.
-     * 
+     *
      * Provides methods to query and update the stored ports. The class ensures
      * that every port name and port number is unique. When updating ports the
      * class checks if port number <-> port name mappings have change due to the
      * update. If a new port P has number and port that are inconsistent with
      * the previous mapping(s) the class will delete all previous ports with
      * name or number of the new port and then add the new port.
-     * 
+     *
      * Port names are stored as-is but they are compared case-insensitive
-     * 
+     *
      * The methods that change the stored ports return a list of
      * PortChangeEvents that represent the changes that have been applied to the
      * port list so that IOFSwitchListeners can be notified about the changes.
-     * 
+     *
      * Implementation notes: - We keep several different representations of the
      * ports to allow for fast lookups - Ports are stored in unchangeable lists.
      * When a port is modified new data structures are allocated. - We use a
@@ -620,9 +621,9 @@ public class OFSwitchImplBase implements IOFSwitch {
         /**
          * Set the internal data structure storing this switch's port to the
          * ports specified by newPortsByNumber
-         * 
+         *
          * CALLER MUST HOLD WRITELOCK
-         * 
+         *
          * @param newPortsByNumber
          * @throws IllegaalStateException if called without holding the
          *         writelock
@@ -666,9 +667,9 @@ public class OFSwitchImplBase implements IOFSwitch {
          * it, it will be deleted. If the name<->number for the given port is
          * inconsistent with the ports stored by this switch the method will
          * delete all ports with the number or name of the given port.
-         * 
+         *
          * This method will increment error/warn counters and log
-         * 
+         *
          * @param delPort the port from the port status message that should be
          *        deleted.
          * @return ordered collection of port changes applied to this switch
@@ -721,9 +722,9 @@ public class OFSwitchImplBase implements IOFSwitch {
         /**
          * Handle a OFPortStatus message, update the internal data structures
          * that store ports and return the list of OFChangeEvents.
-         * 
+         *
          * This method will increment error/warn counters and log
-         * 
+         *
          * @param ps
          * @return
          */
@@ -795,12 +796,12 @@ public class OFSwitchImplBase implements IOFSwitch {
          * PortChangeEvents to "transform" the current ports stored by this
          * switch to include / represent the new port. The ports stored by this
          * switch are <b>NOT</b> updated.
-         * 
+         *
          * This method acquires the readlock and is thread-safe by itself. Most
          * callers will need to acquire the write lock before calling this
          * method though (if the caller wants to update the ports stored by this
          * switch)
-         * 
+         *
          * @param newPort the new or modified port.
          * @return the list of changes
          */
@@ -873,7 +874,7 @@ public class OFSwitchImplBase implements IOFSwitch {
          * return the changes that would be applied to transfort the current
          * ports to the new ports. No internal data structures are updated see
          * {@link #compareAndUpdatePorts(List, boolean)}
-         * 
+         *
          * @param newPorts the list of new ports
          * @return The list of differences between the current ports and
          *         newPortList
@@ -888,7 +889,7 @@ public class OFSwitchImplBase implements IOFSwitch {
          * return the changes that would be applied to transform the current
          * ports to the new ports. No internal data structures are updated see
          * {@link #compareAndUpdatePorts(List, boolean)}
-         * 
+         *
          * @param newPorts the list of new ports
          * @return The list of differences between the current ports and
          *         newPortList
@@ -903,14 +904,14 @@ public class OFSwitchImplBase implements IOFSwitch {
          * port list given and return the differences in the form of
          * PortChangeEvents. If the doUpdate flag is true, newPortList will
          * replace the current list of this switch (and update the port maps)
-         * 
+         *
          * Implementation note: Since this method can optionally modify the
          * current ports and since it's not possible to upgrade a read-lock to a
          * write-lock we need to hold the write-lock for the entire operation.
          * If this becomes a problem and if compares() are common we can
          * consider splitting in two methods but this requires lots of code
          * duplication
-         * 
+         *
          * @param newPorts the list of new ports.
          * @param doUpdate If true the newPortList will replace the current port
          *        list for this switch. If false this switch will not be
@@ -1222,13 +1223,16 @@ public class OFSwitchImplBase implements IOFSwitch {
 
         // by default if match is not specified, then an empty list of matches
         // is sent, resulting in a wildcard-all flows
-        // XXX fix this later to be sure it works for both 1.0 and 1.3
-        OFMessage fm = getFactory()
+        Builder builder = getFactory()
                 .buildFlowDelete()
-                .setOutPort(OFPort.ANY)
-                .setOutGroup(OFGroup.ANY)
-                .setTableId(TableId.ALL)
-                .build();
+                .setOutPort(OFPort.ANY);
+
+        if (ofversion.wireVersion >= OFVersion.OF_13.wireVersion) {
+            builder.setOutGroup(OFGroup.ANY)
+                   .setTableId(TableId.ALL);
+        }
+
+        OFMessage fm = builder.build();
 
         try {
             channel.write(Collections.singletonList(fm));
@@ -1262,7 +1266,7 @@ public class OFSwitchImplBase implements IOFSwitch {
      * Return a read lock that must be held while calling the listeners for
      * messages from the switch. Holding the read lock prevents the active
      * switch list from being modified out from under the listeners.
-     * 
+     *
      * @return listener read lock
      */
     @JsonIgnore
@@ -1275,7 +1279,7 @@ public class OFSwitchImplBase implements IOFSwitch {
      * list of active switches. This is to ensure that the active switch list
      * doesn't change out from under the listeners as they are handling a
      * message from the switch.
-     * 
+     *
      * @return listener write lock
      */
     @JsonIgnore
