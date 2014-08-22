@@ -1,14 +1,15 @@
 package net.onrc.onos.core.util;
 
+import javax.annotation.concurrent.Immutable;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.primitives.UnsignedInts;
 
 /**
  * Immutable class representing a port number.
- * <p/>
- * Current implementation supports only OpenFlow 1.0 (16 bit unsigned) port number.
  */
+@Immutable
 public final class PortNumber {
 
     private final int value;

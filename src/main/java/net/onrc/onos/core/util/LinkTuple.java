@@ -4,10 +4,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Objects;
 
+import javax.annotation.concurrent.Immutable;
+
 
 /**
  * Immutable class to identify a Link between 2 ports.
  */
+@Immutable
 public final class LinkTuple {
 
     private final SwitchPort src;
@@ -66,11 +69,7 @@ public final class LinkTuple {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((src == null) ? 0 : src.hashCode());
-        result = prime * result + ((dst == null) ? 0 : dst.hashCode());
-        return result;
+        return Objects.hash(src, dst);
     }
 
     @Override

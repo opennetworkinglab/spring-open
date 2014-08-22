@@ -3,11 +3,14 @@ package net.onrc.onos.core.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkArgument;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * The class representing an ONOS Instance ID.
  *
  * This class is immutable.
  */
+@Immutable
 public final class OnosInstanceId {
     private final String id;
 

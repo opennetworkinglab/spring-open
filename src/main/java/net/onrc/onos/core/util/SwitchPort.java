@@ -2,6 +2,10 @@ package net.onrc.onos.core.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Objects;
+
+import javax.annotation.concurrent.Immutable;
+
 import net.onrc.onos.core.util.serializers.SwitchPortSerializer;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -11,6 +15,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * This class is immutable.
  */
 @JsonSerialize(using = SwitchPortSerializer.class)
+@Immutable
 public final class SwitchPort {
     private final Dpid dpid;            // The DPID of the switch
     private final PortNumber port;      // The port number on the switch
@@ -101,9 +106,6 @@ public final class SwitchPort {
 
     @Override
     public int hashCode() {
-        int hash = 17;
-        hash += 31 * hash + dpid.hashCode();
-        hash += 31 * hash + port.hashCode();
-        return hash;
+        return Objects.hash(dpid, port);
     }
 }

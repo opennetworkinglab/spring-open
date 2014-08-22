@@ -1,5 +1,7 @@
 package net.onrc.onos.core.util;
 
+import javax.annotation.concurrent.Immutable;
+
 import net.onrc.onos.core.util.serializers.DpidDeserializer;
 import net.onrc.onos.core.util.serializers.DpidSerializer;
 
@@ -7,12 +9,15 @@ import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.projectfloodlight.openflow.util.HexString;
 
+import com.google.common.primitives.Longs;
+
 /**
  * The class representing a network switch DPID.
  * This class is immutable.
  */
 @JsonDeserialize(using = DpidDeserializer.class)
 @JsonSerialize(using = DpidSerializer.class)
+@Immutable
 public final class Dpid {
     private static final long UNKNOWN = 0;
     private final long value;
@@ -74,8 +79,6 @@ public final class Dpid {
 
     @Override
     public int hashCode() {
-        int hash = 17;
-        hash += 31 * hash + (int) (value ^ value >>> 32);
-        return hash;
+        return Longs.hashCode(value);
     }
 }
