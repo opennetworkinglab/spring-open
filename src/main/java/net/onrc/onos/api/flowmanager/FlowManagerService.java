@@ -62,6 +62,12 @@ public interface FlowManagerService {
     FlowBatchHandle executeBatch(FlowBatchOperation ops);
 
     /**
+     * Gets ID generator for Flow objects.
+     * @return the ID generator for Flow objects
+     */
+    FlowIdGenerator getFlowIdGenerator();
+
+    /**
      * Sets a conflict detection policy.
      *
      * @param policy ConflictDetectionPolicy object to be set

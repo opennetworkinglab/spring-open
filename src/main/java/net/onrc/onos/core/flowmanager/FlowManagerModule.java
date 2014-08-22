@@ -14,6 +14,7 @@ import net.onrc.onos.api.flowmanager.FlowBatchHandle;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.api.flowmanager.FlowId;
+import net.onrc.onos.api.flowmanager.FlowIdGenerator;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
 import net.onrc.onos.api.flowmanager.FlowManagerService;
 import net.onrc.onos.core.matchaction.MatchActionIdGeneratorWithIdBlockAllocator;
@@ -31,19 +32,24 @@ import net.onrc.onos.core.util.IdBlockAllocator;
 public class FlowManagerModule implements FlowManagerService {
     private ConflictDetectionPolicy conflictDetectionPolicy;
     private FlowOperationMap flowOperationMap;
-    private MatchActionIdGeneratorWithIdBlockAllocator maIdAllocator;
-    private MatchActionOperationsIdGeneratorWithIdBlockAllocator maoIdAllocator;
+    private MatchActionIdGeneratorWithIdBlockAllocator maIdGenerator;
+    private MatchActionOperationsIdGeneratorWithIdBlockAllocator maoIdGenerator;
+    private FlowIdGeneratorWithIdBlockAllocator flowIdGenerator;
 
     /**
      * Constructs FlowManagerModule with {@link IdBlockAllocator}.
      */
     public FlowManagerModule(IdBlockAllocator idBlockAllocator) {
-        this.maIdAllocator =
-                new MatchActionIdGeneratorWithIdBlockAllocator(idBlockAllocator);
-        this.maoIdAllocator =
-                new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
+        this.flowIdGenerator =
+                new FlowIdGeneratorWithIdBlockAllocator(idBlockAllocator);
         this.conflictDetectionPolicy = ConflictDetectionPolicy.FREE;
         this.flowOperationMap = new FlowOperationMap();
+
+        // TODO: MatchActionOperationsIdGenerator should be retrieved from MatchAction Module.
+        this.maIdGenerator =
+                new MatchActionIdGeneratorWithIdBlockAllocator(idBlockAllocator);
+        this.maoIdGenerator =
+                new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
     }
 
     @Override
@@ -92,6 +98,11 @@ public class FlowManagerModule implements FlowManagerService {
     }
 
     @Override
+    public FlowIdGenerator getFlowIdGenerator() {
+        return flowIdGenerator;
+    }
+
+    @Override
     public void setConflictDetectionPolicy(ConflictDetectionPolicy policy) {
         if (policy == ConflictDetectionPolicy.FREE) {
             conflictDetectionPolicy = policy;
@@ -119,7 +130,7 @@ public class FlowManagerModule implements FlowManagerService {
     }
 
     private MatchActionOperations createNewMatchActionOperations() {
-        return new MatchActionOperations(maoIdAllocator.getNewId());
+        return new MatchActionOperations(maoIdGenerator.getNewId());
     }
 
     /**
@@ -150,7 +161,7 @@ public class FlowManagerModule implements FlowManagerService {
 
             Flow flow = (Flow) e.getTarget();
             List<MatchActionOperations> maOps = flow.compile(
-                    e.getOperator(), maIdAllocator, maoIdAllocator);
+                    e.getOperator(), maIdGenerator, maoIdGenerator);
             checkNotNull(maOps, "Could not compile the flow: " + flow);
             checkState(maOps.size() == 2,
                     "The flow generates unspported match-action operations.");
