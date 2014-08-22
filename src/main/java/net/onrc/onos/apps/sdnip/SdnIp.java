@@ -513,7 +513,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
      *
      * @param update RIB update
      */
-    private void processRibDelete(RibUpdate update) {
+    protected void processRibDelete(RibUpdate update) {
         synchronized (this) {
             Prefix prefix = update.getPrefix();
 
