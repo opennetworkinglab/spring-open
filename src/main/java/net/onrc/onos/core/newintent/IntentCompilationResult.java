@@ -24,7 +24,7 @@ public class IntentCompilationResult {
         checkNotNull(result);
         checkArgument(result.size() > 0,
                 "result of intent compilation should be " +
-                "more than 1 installable intents or more, but %s", result.size());
+                "at least one installable intent, but %s", result.size());
 
         this.result = new ArrayList<>(checkNotNull(result));
     }
