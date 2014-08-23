@@ -18,6 +18,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowLink;
+import net.onrc.onos.api.flowmanager.FlowState;
 import net.onrc.onos.api.flowmanager.OpticalPathFlow;
 import net.onrc.onos.api.flowmanager.PacketPathFlow;
 import net.onrc.onos.api.flowmanager.SingleDstTreeFlow;
@@ -252,6 +253,7 @@ public class KryoFactory {
 
         // New flow manager related classes
         kryo.register(FlowId.class);
+        kryo.register(FlowState.class);
         kryo.register(net.onrc.onos.api.flowmanager.Path.class);
         kryo.register(Tree.class);
         kryo.register(FlowLink.class);
