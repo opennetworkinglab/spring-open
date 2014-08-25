@@ -11,7 +11,7 @@ public interface ITopologyService extends IFloodlightService {
      *
      * @return the global Topology object
      */
-    public Topology getTopology();
+    public MutableTopology getTopology();
 
     /**
      * Adds a listener for topology events.

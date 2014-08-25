@@ -69,7 +69,7 @@ public class TopologyPublisher implements IOFSwitchListener,
 
     private IHostService hostService;
 
-    private Topology topology;
+    private MutableTopology mutableTopology;
 
     private static final String ENABLE_CLEANUP_PROPERTY = "EnableCleanup";
     private boolean cleanupEnabled = true;
@@ -142,7 +142,7 @@ public class TopologyPublisher implements IOFSwitchListener,
          * registry.
          */
         private void switchCleanup() {
-            Iterable<Switch> switches = topology.getSwitches();
+            Iterable<Switch> switches = mutableTopology.getSwitches();
 
             if (log.isTraceEnabled()) {
                 log.trace("Checking for inactive switches");
@@ -440,7 +440,7 @@ public class TopologyPublisher implements IOFSwitchListener,
                                 byte[].class,
                                 TopologyEvent.class);
 
-        topology = topologyService.getTopology();
+        mutableTopology = topologyService.getTopology();
 
         // Run the cleanup thread
         String enableCleanup =

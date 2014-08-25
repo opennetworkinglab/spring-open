@@ -37,7 +37,7 @@ import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortEvent;
 import net.onrc.onos.core.topology.SwitchEvent;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public class UseCaseTest extends UnitTest {
     private static final Logger log = LoggerFactory.getLogger(UseCaseTest.class);
 
-    private Topology topology;
+    private MutableTopology mutableTopology;
     private FloodlightModuleContext modContext;
     private IDatagridService datagridService;
     private ITopologyService topologyService;
@@ -79,7 +79,7 @@ public class UseCaseTest extends UnitTest {
     public void setUp() throws Exception {
         MockTopology mockTopology = new MockTopology();
         mockTopology.createSampleTopology1();
-        this.topology = mockTopology;
+        this.mutableTopology = mockTopology;
 
         datagridService = createMock(IDatagridService.class);
         topologyService = createMock(ITopologyService.class);
@@ -277,8 +277,8 @@ public class UseCaseTest extends UnitTest {
         runtime1.getPathIntents().changeStates(states);
 
         // link down
-        ((MockTopology) topology).removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
-        ((MockTopology) topology).removeLink(2L, 21L, 1L, 12L);
+        ((MockTopology) mutableTopology).removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
+        ((MockTopology) mutableTopology).removeLink(2L, 21L, 1L, 12L);
         LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
         LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
         removedLinkEvents.clear();
@@ -312,7 +312,7 @@ public class UseCaseTest extends UnitTest {
         showResult((PathIntentMap) runtime1.getPathIntents());
 
         // link up
-        ((MockTopology) topology).addBidirectionalLinks(1L, 12L, 2L, 21L);
+        ((MockTopology) mutableTopology).addBidirectionalLinks(1L, 12L, 2L, 21L);
         linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
         linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
         removedLinkEvents.clear();

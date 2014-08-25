@@ -2,7 +2,7 @@ package net.onrc.onos.core.topology.web;
 
 import static net.onrc.onos.core.topology.web.TopologyResource.eval;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
@@ -24,12 +24,12 @@ public class HostsResource extends ServerResource {
             (ITopologyService) getContext().getAttributes()
                 .get(ITopologyService.class.getCanonicalName());
 
-        Topology topology = topologyService.getTopology();
-        topology.acquireReadLock();
+        MutableTopology mutableTopology = topologyService.getTopology();
+        mutableTopology.acquireReadLock();
         try {
-            return eval(toRepresentation(topology.getHosts(), null));
+            return eval(toRepresentation(mutableTopology.getHosts(), null));
         } finally {
-            topology.releaseReadLock();
+            mutableTopology.releaseReadLock();
         }
     }
 }

@@ -26,7 +26,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.PortNumberUtils;
@@ -52,7 +52,7 @@ IHostService {
             Executors.newSingleThreadScheduledExecutor();
 
     private ITopologyService topologyService;
-    private Topology topology;
+    private MutableTopology mutableTopology;
 
     public enum HostUpdateType {
         ADD, DELETE, UPDATE;
@@ -141,17 +141,17 @@ IHostService {
         // then don't add the host
         // TODO We probably don't need to check this here, it should be done in
         // the Topology module.
-        topology.acquireReadLock();
+        mutableTopology.acquireReadLock();
         try {
-            if (topology.getOutgoingLink(dpid, portNum) != null ||
-                    topology.getIncomingLink(dpid, portNum) != null) {
+            if (mutableTopology.getOutgoingLink(dpid, portNum) != null ||
+                    mutableTopology.getIncomingLink(dpid, portNum) != null) {
                 log.debug("Not adding host {} as " +
                         "there is a link on the port: dpid {} port {}",
                         srcHost.getMacAddress(), dpid, portNum);
                 return Command.CONTINUE;
             }
         } finally {
-            topology.releaseReadLock();
+            mutableTopology.releaseReadLock();
         }
 
         Long mac = eth.getSourceMAC().toLong();
@@ -175,10 +175,10 @@ IHostService {
         @Override
         public void run() {
             log.debug("called HostCleaner");
-            topology.acquireReadLock();
+            mutableTopology.acquireReadLock();
             try {
                 Set<net.onrc.onos.core.topology.Host> deleteSet = new HashSet<>();
-                for (net.onrc.onos.core.topology.Host host : topology.getHosts()) {
+                for (net.onrc.onos.core.topology.Host host : mutableTopology.getHosts()) {
                     long now = System.currentTimeMillis();
                     if ((now - host.getLastSeenTime() > agingMillisecConfig)) {
                         if (log.isTraceEnabled()) {
@@ -198,7 +198,7 @@ IHostService {
                 // all exceptions here.
                 log.error("Exception in host cleanup thread:", e);
             } finally {
-                topology.releaseReadLock();
+                mutableTopology.releaseReadLock();
             }
         }
     }
@@ -259,7 +259,7 @@ IHostService {
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         hostListeners = new CopyOnWriteArrayList<IHostListener>();
         topologyService = context.getServiceImpl(ITopologyService.class);
-        topology = topologyService.getTopology();
+        mutableTopology = topologyService.getTopology();
 
         setHostManagerProperties(context);
     }
@@ -280,9 +280,9 @@ IHostService {
     @Override
     public void deleteHostByMac(MACAddress mac) {
         Host deleteHost = null;
-        topology.acquireReadLock();
+        mutableTopology.acquireReadLock();
         try {
-            net.onrc.onos.core.topology.Host host = topology.getHostByMac(mac);
+            net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(mac);
 
             for (Port switchPort : host.getAttachmentPoints()) {
                 // We don't handle vlan now and multiple attachment points.
@@ -295,7 +295,7 @@ IHostService {
                 break; // NOPMD
             }
         } finally {
-            topology.releaseReadLock();
+            mutableTopology.releaseReadLock();
         }
 
         if (deleteHost != null) {

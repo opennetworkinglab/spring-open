@@ -1,7 +1,7 @@
 package net.onrc.onos.core.topology.web;
 
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 
 import org.restlet.engine.io.BufferingRepresentation;
 import org.restlet.representation.Representation;
@@ -23,12 +23,12 @@ public class TopologyResource extends ServerResource {
             (ITopologyService) getContext().getAttributes()
                 .get(ITopologyService.class.getCanonicalName());
 
-        Topology topology = topologyService.getTopology();
-        topology.acquireReadLock();
+        MutableTopology mutableTopology = topologyService.getTopology();
+        mutableTopology.acquireReadLock();
         try {
-            return eval(toRepresentation(topology, null));
+            return eval(toRepresentation(mutableTopology, null));
         } finally {
-            topology.releaseReadLock();
+            mutableTopology.releaseReadLock();
         }
     }
 

@@ -3,7 +3,7 @@ package net.onrc.onos.core.packetservice;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 
 import com.google.common.collect.Multimap;
 
@@ -54,11 +54,11 @@ public abstract class PacketOutNotification implements Serializable {
      * instance.
      *
      * @param localPorts the map of locally-controlled ports
-     * @param topology an instance of the global topology
+     * @param mutableTopology an instance of the global topology
      * @return a multimap of ports that the packet should be sent out,
      * in the form
      * {@code {dpid1 => {portnum1, portnum2, ...}, dpid2 => {portnum1}, ...}}
      */
     public abstract Multimap<Long, Short> calculateOutPorts(
-            Multimap<Long, Short> localPorts, Topology topology);
+            Multimap<Long, Short> localPorts, MutableTopology mutableTopology);
 }

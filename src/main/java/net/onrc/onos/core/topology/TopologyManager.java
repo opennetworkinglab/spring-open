@@ -130,11 +130,11 @@ public class TopologyManager {
     }
 
     /**
-     * Get the Topology.
+     * Get the MutableTopology.
      *
-     * @return the Topology.
+     * @return the MutableTopology.
      */
-    Topology getTopology() {
+    MutableTopology getTopology() {
         return topology;
     }
 

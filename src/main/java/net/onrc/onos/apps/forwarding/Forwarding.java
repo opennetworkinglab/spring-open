@@ -35,7 +35,7 @@ import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -66,7 +66,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
     private IControllerRegistryService controllerRegistryService;
 
     private ITopologyService topologyService;
-    private Topology topology;
+    private MutableTopology mutableTopology;
     private IPathCalcRuntimeService pathRuntime;
     private IntentMap pathIntentMap;
     private IntentMap highLevelIntentMap;
@@ -218,7 +218,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         packetService.registerPacketListener(this);
 
-        topology = topologyService.getTopology();
+        mutableTopology = topologyService.getTopology();
         highLevelIntentMap = pathRuntime.getHighLevelIntents();
         highLevelIntentMap.addChangeListener(highLevelIntentChangedHandler);
         pathIntentMap = pathRuntime.getPathIntents();
@@ -263,7 +263,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         // FIXME #getHostByMac() is a blocking call, so it may be better way
         // to handle it to avoid the condition.
-        Host hostObject = topology.getHostByMac(
+        Host hostObject = mutableTopology.getHostByMac(
                 MACAddress.valueOf(destinationMac));
 
         if (hostObject == null) {
@@ -293,7 +293,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
 
         @Override
         public void run() {
-            Host hostObject = topology.getHostByMac(MACAddress.valueOf(eth.getDestinationMACAddress()));
+            Host hostObject = mutableTopology.getHostByMac(MACAddress.valueOf(eth.getDestinationMACAddress()));
             if (hostObject == null) {
                 log.debug("wait {}ms and host was not found. " +
                         "Send broadcast packet and the thread finish.",

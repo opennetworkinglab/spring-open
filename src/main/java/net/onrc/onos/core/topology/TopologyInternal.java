@@ -8,10 +8,13 @@ import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
+// FIXME This Class hierarchy is wrong.
+// - We need BaseTopology + access to self-contained *Event objects.
+//   abstract class implementing BaseTopology?
 /**
  * Interface to reference internal self-contained elements.
  */
-public interface TopologyInternal extends Topology {
+public interface TopologyInternal extends MutableTopology {
     /**
      * Gets a SwitchEvent.
      *

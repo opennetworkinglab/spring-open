@@ -33,7 +33,7 @@ import com.google.common.collect.Multimaps;
 /**
  * Class to represent an instance of Topology Snapshot.
  */
-public class TopologyImpl implements Topology, TopologyInternal {
+public class TopologyImpl implements MutableTopology, TopologyInternal {
 
     private static final Logger log = LoggerFactory.getLogger(TopologyImpl.class);
 

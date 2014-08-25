@@ -2,7 +2,7 @@ package net.onrc.onos.core.packetservice;
 
 import java.util.Map;
 
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
@@ -84,17 +84,17 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
 
     @Override
     public Multimap<Long, Short> calculateOutPorts(
-            Multimap<Long, Short> localPorts, Topology topology) {
+            Multimap<Long, Short> localPorts, MutableTopology mutableTopology) {
         Multimap<Long, Short> outPorts = HashMultimap.create();
 
         for (Map.Entry<Long, Short> entry : localPorts.entries()) {
             Port globalPort;
-            topology.acquireReadLock();
+            mutableTopology.acquireReadLock();
             try {
-                globalPort = topology.getPort(new Dpid(entry.getKey()),
+                globalPort = mutableTopology.getPort(new Dpid(entry.getKey()),
                     PortNumber.uint16(entry.getValue()));
             } finally {
-                topology.releaseReadLock();
+                mutableTopology.releaseReadLock();
             }
 
             if ((!entry.getKey().equals(inSwitch) ||

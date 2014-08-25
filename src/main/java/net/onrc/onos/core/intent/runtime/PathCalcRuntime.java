@@ -18,7 +18,7 @@ import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
@@ -30,16 +30,16 @@ import org.slf4j.LoggerFactory;
  * It calculates shortest-path and constrained-shortest-path.
  */
 public class PathCalcRuntime implements IFloodlightService {
-    private Topology topology;
+    private MutableTopology mutableTopology;
     private static final Logger log = LoggerFactory.getLogger(PathCalcRuntime.class);
 
     /**
      * Constructor.
      *
-     * @param topology a topology object to use for the path calculation.
+     * @param mutableTopology a topology object to use for the path calculation.
      */
-    public PathCalcRuntime(Topology topology) {
-        this.topology = topology;
+    public PathCalcRuntime(MutableTopology mutableTopology) {
+        this.mutableTopology = mutableTopology;
     }
 
     /**
@@ -55,7 +55,7 @@ public class PathCalcRuntime implements IFloodlightService {
         HashMap<Switch, ConstrainedBFSTree> spfTrees = new HashMap<>();
 
         // TODO optimize locking of Topology
-        topology.acquireReadLock();
+        mutableTopology.acquireReadLock();
 
         for (IntentOperation intentOp : intentOpList) {
             switch (intentOp.operator) {
@@ -70,8 +70,8 @@ public class PathCalcRuntime implements IFloodlightService {
                     }
 
                     ShortestPathIntent spIntent = (ShortestPathIntent) intentOp.intent;
-                    Switch srcSwitch = topology.getSwitch(new Dpid(spIntent.getSrcSwitchDpid()));
-                    Switch dstSwitch = topology.getSwitch(new Dpid(spIntent.getDstSwitchDpid()));
+                    Switch srcSwitch = mutableTopology.getSwitch(new Dpid(spIntent.getSrcSwitchDpid()));
+                    Switch dstSwitch = mutableTopology.getSwitch(new Dpid(spIntent.getDstSwitchDpid()));
                     if (srcSwitch == null || dstSwitch == null) {
                         log.debug("Switch not found. src:{}, dst:{}",
                                 spIntent.getSrcSwitchDpid(),
@@ -163,7 +163,7 @@ public class PathCalcRuntime implements IFloodlightService {
             }
         }
         // TODO optimize locking of Topology
-        topology.releaseReadLock();
+        mutableTopology.releaseReadLock();
 
         return pathIntentOpList;
     }

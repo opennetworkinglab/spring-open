@@ -1,6 +1,6 @@
 package net.onrc.onos.core.packetservice;
 
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -72,7 +72,7 @@ public class SinglePacketOutNotification extends PacketOutNotification {
 
     @Override
     public Multimap<Long, Short> calculateOutPorts(
-            Multimap<Long, Short> localPorts, Topology topology) {
+            Multimap<Long, Short> localPorts, MutableTopology mutableTopology) {
         Multimap<Long, Short> outPorts = HashMultimap.create();
 
         if (localPorts.containsEntry(outSwitch, outPort)) {

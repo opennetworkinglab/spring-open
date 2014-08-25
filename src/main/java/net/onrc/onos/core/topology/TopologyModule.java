@@ -67,7 +67,7 @@ public class TopologyModule implements IFloodlightModule, ITopologyService {
     }
 
     @Override
-    public Topology getTopology() {
+    public MutableTopology getTopology() {
         return topologyManager.getTopology();
     }
 

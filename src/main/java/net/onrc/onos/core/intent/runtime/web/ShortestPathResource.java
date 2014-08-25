@@ -10,7 +10,7 @@ import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.util.Dpid;
 
 import org.restlet.representation.Representation;
@@ -51,11 +51,11 @@ public class ShortestPathResource extends ServerResource {
         // Do the Shortest Path computation and return the result: a list of
         // links.
         //
-        Topology topology = topologyService.getTopology();
-        topology.acquireReadLock();
+        MutableTopology mutableTopology = topologyService.getTopology();
+        mutableTopology.acquireReadLock();
         try {
-            Switch srcSwitch = topology.getSwitch(srcDpid);
-            Switch dstSwitch = topology.getSwitch(dstDpid);
+            Switch srcSwitch = mutableTopology.getSwitch(srcDpid);
+            Switch dstSwitch = mutableTopology.getSwitch(dstDpid);
             if ((srcSwitch == null) || (dstSwitch == null)) {
                 return null;
             }
@@ -66,7 +66,7 @@ public class ShortestPathResource extends ServerResource {
             }
             List<Link> links = new LinkedList<>();
             for (LinkEvent linkEvent : path) {
-                Link link = topology.getLink(
+                Link link = mutableTopology.getLink(
                         linkEvent.getSrc().getDpid(),
                         linkEvent.getSrc().getPortNumber(),
                         linkEvent.getDst().getDpid(),
@@ -78,7 +78,7 @@ public class ShortestPathResource extends ServerResource {
             }
             return eval(toRepresentation(links, null));
         } finally {
-            topology.releaseReadLock();
+            mutableTopology.releaseReadLock();
         }
     }
 }

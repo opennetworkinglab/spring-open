@@ -32,7 +32,7 @@ import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
@@ -67,7 +67,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
     private IRestApiService restApi;
 
     private ITopologyService topologyService;
-    private Topology topology;
+    private MutableTopology mutableTopology;
     private IPacketService packetService;
 
     private short vlan;
@@ -283,7 +283,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
 
         restApi.addRestletRoutable(new ArpWebRoutable());
         packetService.registerPacketListener(this);
-        topology = topologyService.getTopology();
+        mutableTopology = topologyService.getTopology();
 
         //
         // Event notification setup: channels and event handlers
@@ -432,10 +432,10 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         arpRequests.put(target, new ArpRequest(
                 new HostArpRequester(arp, dpid, inPort), false));
 
-        topology.acquireReadLock();
-        Host targetHost = topology.getHostByMac(
+        mutableTopology.acquireReadLock();
+        Host targetHost = mutableTopology.getHostByMac(
                 MACAddress.valueOf(arp.getTargetHardwareAddress()));
-        topology.releaseReadLock();
+        mutableTopology.releaseReadLock();
 
         if (targetHost == null) {
             if (log.isTraceEnabled()) {

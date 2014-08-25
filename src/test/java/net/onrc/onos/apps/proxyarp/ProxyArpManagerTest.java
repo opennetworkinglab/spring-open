@@ -37,7 +37,7 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.Dpid;
@@ -80,7 +80,7 @@ public class ProxyArpManagerTest {
     ARP arpRequest, arpReply, rarpRequest;
     Ethernet ethArpRequest, ethArpReply, ethRarpRequest, ethArpOtherOp;
 
-    Topology topology;
+    MutableTopology mutableTopology;
     IEventChannel eg;
     IEventChannelListener el;
     Host host1;
@@ -222,7 +222,7 @@ public class ProxyArpManagerTest {
         el = createMock(IEventChannelListener.class);
 
         //Mock Topology related data
-        topology = createMock(Topology.class);
+        mutableTopology = createMock(MutableTopology.class);
         host1 = createMock(Host.class);
         inPort1 = createMock(Port.class);
         outPort1 = createMock(Port.class);
@@ -262,7 +262,7 @@ public class ProxyArpManagerTest {
         expectLastCall();
         packetService.registerPacketListener(arpManager);
         expectLastCall();
-        expect(topologyService.getTopology()).andReturn(topology);
+        expect(topologyService.getTopology()).andReturn(mutableTopology);
         expect(datagridService.addListener(EasyMock.<String>anyObject(),
                 isA(IEventChannelListener.class),
                 (Class) anyObject(), (Class) anyObject())).andReturn(eg).anyTimes();
@@ -287,7 +287,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology, eg,
+                topologyService, hostService, packetService, mutableTopology, eg,
                 el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -306,7 +306,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -324,7 +324,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -339,7 +339,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -358,7 +358,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -375,7 +375,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -391,7 +391,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -413,7 +413,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -432,7 +432,7 @@ public class ProxyArpManagerTest {
 
         replay(context, floodligthProviderService, configInfoService,
                 restApiService, datagridService, flowPusherService,
-                topologyService, hostService, packetService, topology,
+                topologyService, hostService, packetService, mutableTopology,
                 eg, el, host1, inPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
@@ -451,17 +451,17 @@ public class ProxyArpManagerTest {
 
         expect(configInfoService.fromExternalNetwork(
                 anyLong(), anyShort())).andReturn(false);
-        topology.acquireReadLock();
+        mutableTopology.acquireReadLock();
         expectLastCall();
-        expect(topology.getHostByMac(dstMac)).andReturn(host1);
-        topology.releaseReadLock();
+        expect(mutableTopology.getHostByMac(dstMac)).andReturn(host1);
+        mutableTopology.releaseReadLock();
         expectLastCall();
         expect(host1.getAttachmentPoints()).andReturn(portList);
         eg.addTransientEntry(anyLong(), anyObject());
         expectLastCall();
 
         replay(context, configInfoService, restApiService, floodligthProviderService,
-                topologyService, datagridService, eg, topology, host1, inPort1, outPort1, sw1);
+                topologyService, datagridService, eg, mutableTopology, host1, inPort1, outPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
         arpManager.receive(sw1, inPort1, ethArpRequest);

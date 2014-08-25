@@ -25,7 +25,7 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.topology.Topology;
+import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
@@ -51,7 +51,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     private final CopyOnWriteArrayList<IPacketListener> listeners;
 
     private IFloodlightProviderService floodlightProvider;
-    private Topology topology;
+    private MutableTopology mutableTopology;
     private IDatagridService datagrid;
     private IFlowPusherService flowPusher;
 
@@ -76,7 +76,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                 }
             }
             Multimap<Long, Short> outPorts = value.calculateOutPorts(
-                    localPorts, topology);
+                    localPorts, mutableTopology);
             sendPacketToSwitches(outPorts, value.getPacketData());
         }
 
@@ -164,13 +164,13 @@ public class PacketModule implements IOFMessageListener, IPacketService,
         Switch topologySwitch;
         Port inPort;
         try {
-            topology.acquireReadLock();
+            mutableTopology.acquireReadLock();
             Dpid dpid = new Dpid(sw.getId());
             PortNumber p = PortNumber.uint16(inport);
-            topologySwitch = topology.getSwitch(dpid);
-            inPort = topology.getPort(dpid, p);
+            topologySwitch = mutableTopology.getSwitch(dpid);
+            inPort = mutableTopology.getPort(dpid, p);
         } finally {
-            topology.releaseReadLock();
+            mutableTopology.releaseReadLock();
         }
 
         if (topologySwitch == null || inPort == null) {
@@ -217,7 +217,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
             throws FloodlightModuleException {
         floodlightProvider =
                 context.getServiceImpl(IFloodlightProviderService.class);
-        topology = context.getServiceImpl(ITopologyService.class)
+        mutableTopology = context.getServiceImpl(ITopologyService.class)
                 .getTopology();
         datagrid = context.getServiceImpl(IDatagridService.class);
         flowPusher = context.getServiceImpl(IFlowPusherService.class);
