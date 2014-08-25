@@ -533,8 +533,8 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             // TODO handle the case where the controller needs to send an ARP
             // request but there's not IP configuration. In this case the
             // request should be broadcast out all edge ports in the network.
-            log.warn("Sending ARP requests with default configuration "
-                    + "not supported");
+            log.warn("Cannot send ARP: there is no outgoing interface in the "
+                    + "configuration");
             return;
         }
 
