@@ -6,8 +6,10 @@ import net.onrc.onos.core.topology.TopologyEvents;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
@@ -58,6 +60,10 @@ public class TopologyWebSocket extends Thread implements ITopologyListener {
         new LinkedBlockingQueue<>();
     private Session socketSession;
     private boolean isOpen = false;
+    // Ping-related state
+    private static final int PING_INTERVAL_SEC = 30;   // Ping every 30 secs
+    private static final int MAX_MISSING_PING = 3;
+    private int missingPing = 0;        // Pings to the client without a pong
 
     /**
      * Shutdown the socket.
@@ -76,7 +82,7 @@ public class TopologyWebSocket extends Thread implements ITopologyListener {
      */
     @Override
     public void topologyEvents(TopologyEvents topologyEvents) {
-        // The topologyEvents object is a deep copy so we can add it as-is
+        // The topologyEvents object is immutable, so we can add it as-is
         this.topologyEventsQueue.add(topologyEvents);
     }
 
@@ -89,18 +95,39 @@ public class TopologyWebSocket extends Thread implements ITopologyListener {
         ObjectMapper mapper = new ObjectMapper();
 
         //
-        // The main loop for sending events to the clients
+        // The main loop for sending events to the clients.
+        //
+        // If there are no events, we send periodic PING messages to discover
+        // unreachable clients.
         //
         while (this.isOpen && (!this.isInterrupted())) {
             String eventsJson = null;
             try {
-                TopologyEvents events = topologyEventsQueue.take();
-                eventsJson = mapper.writeValueAsString(events);
-                if (eventsJson != null) {
+                TopologyEvents events =
+                    topologyEventsQueue.poll(PING_INTERVAL_SEC,
+                                             TimeUnit.SECONDS);
+                if (events != null) {
+                    // Send the event
+                    eventsJson = mapper.writeValueAsString(events);
                     socketSession.getBasicRemote().sendText(eventsJson);
+                    continue;
+                }
+                // Send a PING message
+                missingPing++;
+                if (missingPing > MAX_MISSING_PING) {
+                    // Timeout
+                    log.debug("WebSocket session timeout");
+                    shutdown();
+                } else {
+                    String msg = "PING(TopologyWebsocket)";
+                    ByteBuffer pingBuffer =
+                        ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+                    socketSession.getBasicRemote().sendPing(pingBuffer);
                 }
             } catch (IOException e) {
                 log.debug("Exception sending TopologyWebSocket events: ", e);
+            } catch (InterruptedException e) {
+                log.debug("TopologyWebSocket interrupted while waiting: ", e);
             } catch (Exception exception) {
                 log.debug("Exception processing TopologyWebSocket events: ",
                           exception);
@@ -174,8 +201,9 @@ public class TopologyWebSocket extends Thread implements ITopologyListener {
      */
     @OnMessage
     public void onPongMessage(Session session, PongMessage msg) {
-        log.debug("WebSocket Pong message received: {}",
-                  msg.getApplicationData());
+        log.trace("WebSocket Pong message received for session: {}",
+                  session.getId());
+        missingPing = 0;
     }
 
     /**
