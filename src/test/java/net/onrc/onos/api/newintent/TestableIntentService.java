@@ -1,7 +1,5 @@
 package net.onrc.onos.api.newintent;
 
-import net.onrc.onos.core.newintent.IntentManager;
-
 import java.util.List;
 
 /**

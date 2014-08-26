@@ -11,6 +11,7 @@ import net.onrc.onos.api.newintent.IntentEventListener;
 import net.onrc.onos.api.newintent.IntentException;
 import net.onrc.onos.api.newintent.IntentId;
 import net.onrc.onos.api.newintent.IntentInstaller;
+import net.onrc.onos.api.newintent.IntentManager;
 import net.onrc.onos.api.newintent.IntentOperations;
 import net.onrc.onos.api.newintent.IntentState;
 import net.onrc.onos.core.datagrid.ISharedCollectionsService;

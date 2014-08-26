@@ -6,5 +6,5 @@ import net.floodlightcontroller.core.module.IFloodlightService;
  * Intent service as {@link IFloodlightService}.
  */
 public interface IntentFloodlightService
-        extends IFloodlightService, IntentService, IntentExtensionService {
+        extends IFloodlightService, IntentManager {
 }
