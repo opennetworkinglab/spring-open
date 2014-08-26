@@ -2,8 +2,6 @@ package net.onrc.onos.apps.sdnip;
 
 import java.net.InetAddress;
 
-import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.annotate.JsonCreator;
@@ -33,6 +31,7 @@ public class Interface {
     private final short port;
     private final InetAddress ipAddress;
     private final int prefixLength;
+    private final SwitchPort switchPort;
 
     /**
      * Class constructor used by the JSON library to create an object.
@@ -54,6 +53,7 @@ public class Interface {
         this.port = port;
         this.ipAddress = InetAddresses.forString(ipAddress);
         this.prefixLength = prefixLength;
+        switchPort = new SwitchPort(this.dpid, this.port);
     }
 
     /**
@@ -71,9 +71,7 @@ public class Interface {
      * @return the switch port
      */
     public SwitchPort getSwitchPort() {
-        //TODO SwitchPort, Dpid and Port are mutable, but they could probably
-        //be made immutable which would prevent the need to copy
-        return new SwitchPort(new Dpid(dpid), PortNumber.uint16(port));
+        return switchPort;
     }
 
     /**
@@ -120,7 +118,7 @@ public class Interface {
 
         Interface otherInterface = (Interface) other;
 
-        //Don't check switchPort as it's comprised of dpid and port
+        // Don't check switchPort as it is comprised of dpid and port
         return (name.equals(otherInterface.name)) &&
                 (dpid == otherInterface.dpid) &&
                 (port == otherInterface.port) &&

@@ -1,5 +1,8 @@
 package net.onrc.onos.apps.sdnip;
 
+import java.util.Objects;
+
+
 /**
  * Represents a route update received from BGPd. An update has an operation
  * describing whether the update is adding a route or revoking a route. It also
@@ -69,5 +72,22 @@ public class RibUpdate {
      */
     public RibEntry getRibEntry() {
         return ribEntry;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof RibUpdate)) {
+            return false;
+        }
+
+        RibUpdate otherUpdate = (RibUpdate) o;
+        return Objects.equals(this.operation, otherUpdate.operation)
+                && Objects.equals(this.prefix, otherUpdate.prefix)
+                && Objects.equals(this.ribEntry, otherUpdate.ribEntry);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(operation, prefix, ribEntry);
     }
 }
