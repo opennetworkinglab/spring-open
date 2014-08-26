@@ -3,10 +3,17 @@ package net.onrc.onos.core.flowmanager;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import net.floodlightcontroller.core.module.FloodlightModuleContext;
+import net.floodlightcontroller.core.module.FloodlightModuleException;
+import net.floodlightcontroller.core.module.IFloodlightModule;
+import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.Flow;
@@ -15,12 +22,14 @@ import net.onrc.onos.api.flowmanager.FlowBatchOperation;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowIdGenerator;
+import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
-import net.onrc.onos.api.flowmanager.FlowManagerService;
+import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.matchaction.MatchActionIdGeneratorWithIdBlockAllocator;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.MatchActionOperationsIdGeneratorWithIdBlockAllocator;
+import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.IdBlockAllocator;
 
 /**
@@ -29,27 +38,66 @@ import net.onrc.onos.core.util.IdBlockAllocator;
  * <p>
  * TODO: Make all methods thread-safe
  */
-public class FlowManagerModule implements FlowManagerService {
+public class FlowManagerModule implements FlowManagerFloodlightService, IFloodlightModule {
     private ConflictDetectionPolicy conflictDetectionPolicy;
     private FlowOperationMap flowOperationMap;
     private MatchActionIdGeneratorWithIdBlockAllocator maIdGenerator;
     private MatchActionOperationsIdGeneratorWithIdBlockAllocator maoIdGenerator;
     private FlowIdGeneratorWithIdBlockAllocator flowIdGenerator;
+    private IControllerRegistryService registryService;
 
-    /**
-     * Constructs FlowManagerModule with {@link IdBlockAllocator}.
-     */
-    public FlowManagerModule(IdBlockAllocator idBlockAllocator) {
+    @Override
+    public Collection<Class<? extends IFloodlightService>> getModuleServices() {
+        List<Class<? extends IFloodlightService>> services =
+                new ArrayList<Class<? extends IFloodlightService>>();
+        services.add(FlowManagerFloodlightService.class);
+        return services;
+    }
+
+    @Override
+    public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
+        Map<Class<? extends IFloodlightService>, IFloodlightService> impls =
+                new HashMap<Class<? extends IFloodlightService>, IFloodlightService>();
+        impls.put(FlowManagerFloodlightService.class, this);
+        return impls;
+    }
+
+    @Override
+    public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
+        return Arrays.asList(
+                IDatagridService.class,
+                IControllerRegistryService.class);
+    }
+
+    @Override
+    public void init(FloodlightModuleContext context) throws FloodlightModuleException {
+        registryService = context.getServiceImpl(IControllerRegistryService.class);
+    }
+
+    @Override
+    public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
+
+        IdBlockAllocator idBlockAllocator = registryService;
         this.flowIdGenerator =
                 new FlowIdGeneratorWithIdBlockAllocator(idBlockAllocator);
-        this.conflictDetectionPolicy = ConflictDetectionPolicy.FREE;
-        this.flowOperationMap = new FlowOperationMap(idBlockAllocator);
 
-        // TODO: MatchActionOperationsIdGenerator should be retrieved from MatchAction Module.
+        // TODO: MatchActionOperationsIdGenerator should be retrieved from
+        // MatchAction Module.
         this.maIdGenerator =
                 new MatchActionIdGeneratorWithIdBlockAllocator(idBlockAllocator);
         this.maoIdGenerator =
                 new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
+
+        // TODO: datagridService =
+        // context.getServiceImpl(IDatagridService.class);
+        this.flowOperationMap = new FlowOperationMap(idBlockAllocator);
+    }
+
+    /**
+     * Constructs FlowManagerModule.
+     */
+    public FlowManagerModule() {
+        this.conflictDetectionPolicy = ConflictDetectionPolicy.FREE;
     }
 
     @Override

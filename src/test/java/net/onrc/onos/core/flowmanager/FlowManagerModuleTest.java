@@ -2,8 +2,8 @@ package net.onrc.onos.core.flowmanager;
 
 import static org.junit.Assert.assertEquals;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
+import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.StandaloneRegistry;
-import net.onrc.onos.core.util.IdBlockAllocator;
 
 import org.junit.After;
 import org.junit.Before;
@@ -11,8 +11,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+/**
+ * Unit tests for {@link FlowManagerModule}.
+ */
 public class FlowManagerModuleTest {
-    IdBlockAllocator idBlockAllocator;
+    IControllerRegistryService idBlockAllocator;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -32,7 +35,7 @@ public class FlowManagerModuleTest {
      */
     @Test
     public void testConflictDetectionPolicy() {
-        FlowManagerModule flowManager = new FlowManagerModule(idBlockAllocator);
+        FlowManagerModule flowManager = new FlowManagerModule();
         assertEquals(ConflictDetectionPolicy.FREE,
                 flowManager.getConflictDetectionPolicy());
 
