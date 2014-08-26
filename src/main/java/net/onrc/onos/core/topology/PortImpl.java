@@ -4,14 +4,12 @@ import java.util.Collection;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * Handler to Port object stored in In-memory Topology snapshot.
- * <p/>
  */
 public class PortImpl extends TopologyObject implements Port {
 
@@ -24,7 +22,7 @@ public class PortImpl extends TopologyObject implements Port {
      * @param topology Topology instance this object belongs to
      * @param switchPort SwitchPort
      */
-    PortImpl(TopologyInternal topology, SwitchPort switchPort) {
+    PortImpl(BaseInternalTopology topology, SwitchPort switchPort) {
         super(topology);
         this.id = checkNotNull(switchPort);
     }
@@ -36,7 +34,7 @@ public class PortImpl extends TopologyObject implements Port {
      * @param dpid DPID
      * @param number PortNumber
      */
-    PortImpl(TopologyInternal topology, Dpid dpid, PortNumber number) {
+    PortImpl(BaseInternalTopology topology, Dpid dpid, PortNumber number) {
         this(topology, new SwitchPort(dpid, number));
     }
 
@@ -73,82 +71,43 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public Switch getSwitch() {
-        topology.acquireReadLock();
-        try {
-            return topology.getSwitch(getDpid());
-        } finally {
-            topology.releaseReadLock();
-        }
+        // TODO Cache BaseTopologyAdaptor instance?
+        return new BaseTopologyAdaptor(topology).getSwitch(getDpid());
     }
 
     @Override
     public Link getOutgoingLink() {
-        topology.acquireReadLock();
-        try {
-            return topology.getOutgoingLink(getSwitchPort());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getOutgoingLink(getSwitchPort());
     }
 
     @Override
     public Link getOutgoingLink(String type) {
-        topology.acquireReadLock();
-        try {
-            return topology.getOutgoingLink(getSwitchPort(), type);
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getOutgoingLink(getSwitchPort(), type);
     }
 
     @Override
     public Collection<Link> getOutgoingLinks() {
-        topology.acquireReadLock();
-        try {
-            return topology.getOutgoingLinks(getSwitchPort());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getOutgoingLinks(getSwitchPort());
     }
 
     @Override
     public Link getIncomingLink() {
-        topology.acquireReadLock();
-        try {
-            return topology.getIncomingLink(getSwitchPort());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getIncomingLink(getSwitchPort());
     }
 
     @Override
     public Link getIncomingLink(String type) {
-        topology.acquireReadLock();
-        try {
-            return topology.getIncomingLink(getSwitchPort(), type);
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getIncomingLink(getSwitchPort(), type);
     }
 
     @Override
     public Collection<Link> getIncomingLinks() {
-        topology.acquireReadLock();
-        try {
-            return topology.getIncomingLinks(getSwitchPort());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getIncomingLinks(getSwitchPort());
     }
 
     @Override
     public Collection<Host> getHosts() {
-        topology.acquireReadLock();
-        try {
-            return topology.getHosts(this.getSwitchPort());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getHosts(this.getSwitchPort());
     }
 
     /**

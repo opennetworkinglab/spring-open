@@ -8,13 +8,11 @@ import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
-// FIXME This Class hierarchy is wrong.
-// - We need BaseTopology + access to self-contained *Event objects.
-//   abstract class implementing BaseTopology?
 /**
  * Interface to reference internal self-contained elements.
  */
-public interface TopologyInternal extends MutableTopology {
+public interface BaseInternalTopology {
+
     /**
      * Gets a SwitchEvent.
      *
@@ -80,6 +78,22 @@ public interface TopologyInternal extends MutableTopology {
     public LinkEvent getLinkEvent(final LinkTuple linkId, final String type);
 
     /**
+     * Gets all the LinkEvent departing from specified port.
+     *
+     * @param srcPort source port identifier
+     * @return Collection of LinkEvent entries
+     */
+    public Collection<LinkEvent> getLinkEventsFrom(final SwitchPort srcPort);
+
+    /**
+     * Gets all the LinkEvent pointing toward specified port.
+     *
+     * @param dstPort destination port identifier
+     * @return Collection of LinkEvent entries
+     */
+    public Collection<LinkEvent> getLinkEventsTo(final SwitchPort dstPort);
+
+    /**
      * Gets a collection of LinkEvent entries.
      *
      * @param linkId Link identifier
@@ -101,6 +115,14 @@ public interface TopologyInternal extends MutableTopology {
      * @return the HostEvent for the MACAddress if found, otherwise null
      */
     public HostEvent getHostEvent(MACAddress mac);
+
+    /**
+     * Gets all HostEvent entries attached to specified port.
+     *
+     * @param port attachment point identifier
+     * @return Collection of HostEvent entries.
+     */
+    public Collection<HostEvent> getHostEvents(SwitchPort port);
 
     /**
      * Gets all HostEvent entries.

@@ -3,12 +3,10 @@ package net.onrc.onos.core.topology;
 import java.util.Map;
 
 import net.onrc.onos.core.util.LinkTuple;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Handler to Link object stored in In-memory Topology snapshot.
- * <p/>
  */
 public class LinkImpl extends TopologyObject implements Link {
 
@@ -21,7 +19,7 @@ public class LinkImpl extends TopologyObject implements Link {
      * @param topology Topology instance this object belongs to
      * @param linkTuple Link identifier
      */
-    LinkImpl(TopologyInternal topology, LinkTuple linkTuple) {
+    LinkImpl(BaseInternalTopology topology, LinkTuple linkTuple) {
         super(topology);
         this.id = checkNotNull(linkTuple);
     }
@@ -33,47 +31,27 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Switch getSrcSwitch() {
-        topology.acquireReadLock();
-        try {
-            return topology.getSwitch(id.getSrc().getDpid());
-        } finally {
-            topology.releaseReadLock();
-        }
+        // TODO Cache BaseTopologyAdaptor instance?
+        return new BaseTopologyAdaptor(topology).getSwitch(id.getSrc().getDpid());
     }
 
     @Override
     public Port getSrcPort() {
-        topology.acquireReadLock();
-        try {
-            return topology.getPort(id.getSrc());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getPort(id.getSrc());
     }
 
     @Override
     public Switch getDstSwitch() {
-        topology.acquireReadLock();
-        try {
-            return topology.getSwitch(id.getDst().getDpid());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getSwitch(id.getDst().getDpid());
     }
 
     @Override
     public Port getDstPort() {
-        topology.acquireReadLock();
-        try {
-            return topology.getPort(id.getDst());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getPort(id.getDst());
     }
 
     @Override
     public long getLastSeenTime() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

@@ -11,7 +11,7 @@ public abstract class TopologyObject implements ITopologyElement {
     /**
      * Topology snapshot this object belongs to.
      */
-    protected volatile TopologyInternal topology;
+    protected volatile BaseInternalTopology topology;
 
     // XXX Updater to be used once we implement snapshot update.
     // Should it be static or not.
@@ -27,14 +27,13 @@ public abstract class TopologyObject implements ITopologyElement {
      *
      * @param topology Topology instance this object belongs to
      */
-    protected TopologyObject(TopologyInternal topology) {
+    protected TopologyObject(BaseInternalTopology topology) {
         this.topology = checkNotNull(topology);
     }
 
     // TODO Add method to replace topology snapshot
     //  - Request TopologyManager for latest TopologyImpl and swap?
     //  - Make caller specify TopologyImpl instance?
-    //  -
 
 
     /**
@@ -44,6 +43,4 @@ public abstract class TopologyObject implements ITopologyElement {
      */
     @Override
     public abstract String getType();
-
-
 }

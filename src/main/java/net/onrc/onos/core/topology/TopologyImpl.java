@@ -33,7 +33,7 @@ import com.google.common.collect.Multimaps;
 /**
  * Class to represent an instance of Topology Snapshot.
  */
-public class TopologyImpl implements MutableTopology, TopologyInternal {
+public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     private static final Logger log = LoggerFactory.getLogger(TopologyImpl.class);
 
@@ -51,10 +51,10 @@ public class TopologyImpl implements MutableTopology, TopologyInternal {
     private final ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkEvent>> outgoingLinks;
     private final ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkEvent>> incomingLinks;
 
-    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private Lock readLock = readWriteLock.readLock();
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private final Lock readLock = readWriteLock.readLock();
     // TODO use the write lock after refactor
-    private Lock writeLock = readWriteLock.writeLock();
+    private final Lock writeLock = readWriteLock.writeLock();
 
     /**
      * Create an empty Topology.
@@ -429,6 +429,24 @@ public class TopologyImpl implements MutableTopology, TopologyInternal {
     }
 
     @Override
+    public Collection<LinkEvent> getLinkEventsFrom(SwitchPort srcPort) {
+        ConcurrentMap<String, LinkEvent> links = this.outgoingLinks.get(srcPort);
+        if (links == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableCollection(links.values());
+    }
+
+    @Override
+    public Collection<LinkEvent> getLinkEventsTo(SwitchPort dstPort) {
+        ConcurrentMap<String, LinkEvent> links = this.incomingLinks.get(dstPort);
+        if (links == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableCollection(links.values());
+    }
+
+    @Override
     public Collection<LinkEvent> getLinkEvents(final LinkTuple linkId) {
         ConcurrentMap<String, LinkEvent> links = this.outgoingLinks.get(linkId.getSrc());
         if (links == null) {
@@ -451,6 +469,11 @@ public class TopologyImpl implements MutableTopology, TopologyInternal {
     @Override
     public HostEvent getHostEvent(final MACAddress mac) {
         return this.mac2Host.get(mac);
+    }
+
+    @Override
+    public Collection<HostEvent> getHostEvents(SwitchPort port) {
+        return Collections.unmodifiableCollection(hosts.get(port));
     }
 
     @Override

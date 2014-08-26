@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * Handler to Host object stored in In-memory Topology snapshot.
- * <p/>
  */
 public class HostImpl extends TopologyObject implements Host {
 
@@ -23,7 +21,7 @@ public class HostImpl extends TopologyObject implements Host {
      * @param topology Topology instance this object belongs to
      * @param mac MAC address of the host
      */
-    HostImpl(TopologyInternal topology, MACAddress mac) {
+    HostImpl(BaseInternalTopology topology, MACAddress mac) {
         super(topology);
         this.id = checkNotNull(mac);
     }
@@ -36,16 +34,12 @@ public class HostImpl extends TopologyObject implements Host {
     @Override
     public Iterable<Port> getAttachmentPoints() {
         List<Port> ports = new ArrayList<>();
-        topology.acquireReadLock();
-        try {
-            for (SwitchPort swp : getHostEvent().getAttachmentPoints()) {
-                Port p = this.topology.getPort(swp);
-                if (p != null) {
-                    ports.add(p);
-                }
+        final BaseTopologyAdaptor topo = new BaseTopologyAdaptor(topology);
+        for (SwitchPort swp : getHostEvent().getAttachmentPoints()) {
+            Port port = topo.getPort(swp);
+            if (port != null) {
+                ports.add(port);
             }
-        } finally {
-            topology.releaseReadLock();
         }
         return ports;
     }

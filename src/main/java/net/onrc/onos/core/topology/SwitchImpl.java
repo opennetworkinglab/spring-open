@@ -15,8 +15,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Handler to Switch object stored in In-memory Topology snapshot.
- * <p/>
- *
  */
 public class SwitchImpl extends TopologyObject implements Switch {
 
@@ -29,7 +27,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
      * @param topology Topology instance this object belongs to
      * @param dpid DPID
      */
-    SwitchImpl(TopologyInternal topology, Dpid dpid) {
+    SwitchImpl(BaseInternalTopology topology, Dpid dpid) {
         super(topology);
         this.id = checkNotNull(dpid);
     }
@@ -41,22 +39,12 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public Collection<Port> getPorts() {
-        topology.acquireReadLock();
-        try {
-            return topology.getPorts(getDpid());
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getPorts(getDpid());
     }
 
     @Override
     public Port getPort(PortNumber number) {
-        topology.acquireReadLock();
-        try {
-            return topology.getPort(getDpid(), number);
-        } finally {
-            topology.releaseReadLock();
-        }
+        return new BaseTopologyAdaptor(topology).getPort(getDpid(), number);
     }
 
     @Override

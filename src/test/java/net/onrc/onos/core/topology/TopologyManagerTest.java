@@ -620,8 +620,8 @@ public class TopologyManagerTest extends UnitTest {
                              SwitchEvent.class, sw);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -653,8 +653,8 @@ public class TopologyManagerTest extends UnitTest {
                              PortEvent.class, port);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -693,8 +693,8 @@ public class TopologyManagerTest extends UnitTest {
                              PortEvent.class, port);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -743,8 +743,8 @@ public class TopologyManagerTest extends UnitTest {
                              PortEvent.class, port);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -812,8 +812,8 @@ public class TopologyManagerTest extends UnitTest {
                              LinkEvent.class, linkB);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -914,8 +914,8 @@ public class TopologyManagerTest extends UnitTest {
                              LinkEvent.class, linkB);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -1007,8 +1007,8 @@ public class TopologyManagerTest extends UnitTest {
                              LinkEvent.class, linkB);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -1129,8 +1129,8 @@ public class TopologyManagerTest extends UnitTest {
                              HostEvent.class, hostB);
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
@@ -1230,8 +1230,8 @@ public class TopologyManagerTest extends UnitTest {
 
 
         // Check the topology structure
-        TopologyInternal topology =
-            (TopologyInternal) theTopologyManager.getTopology();
+        BaseInternalTopology topology =
+            (BaseInternalTopology) theTopologyManager.getTopology();
         SwitchEvent swInTopo = topology.getSwitchEvent(DPID_1);
         assertEquals(sw, swInTopo);
         assertTrue(swInTopo.isFrozen());
