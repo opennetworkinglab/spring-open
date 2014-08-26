@@ -18,5 +18,5 @@ public interface ITopologyListener2 {
      * @param changes topology events
      */
     public void topologyEvent(ImmutableTopology updated,
-            List<BatchOperationEntry<Operator, TopologyBatchTarget>> changes);
+            List<BatchOperationEntry<Operator, TopologyEvent>> changes);
 }
