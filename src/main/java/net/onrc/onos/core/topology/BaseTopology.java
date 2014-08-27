@@ -11,7 +11,7 @@ import net.onrc.onos.core.util.SwitchPort;
 /**
  * BaseTopology interface common to both {@link ImmutableTopology} and {@link MutableTopology}.
  */
-public interface BaseTopology {
+public interface BaseTopology extends BaseMastership {
 
     /**
      * Gets the switch for a given switch DPID.

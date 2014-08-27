@@ -1,12 +1,17 @@
 package net.onrc.onos.core.topology;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -16,9 +21,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.concurrent.GuardedBy;
 
+import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.LinkTuple;
+import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -30,6 +37,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 
+// TODO add TopologyManager, etc. to populate Mastership information.
 /**
  * Class to represent an instance of Topology Snapshot.
  */
@@ -38,6 +46,10 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     private static final Logger log = LoggerFactory.getLogger(TopologyImpl.class);
 
     // TODO Revisit Map types after implementing CoW/lock-free
+
+    // Mastership info
+    // Dpid -> [ (InstanceID, Role) ]
+    private final Map<Dpid, SortedSet<MastershipEvent>> mastership;
 
     // DPID -> Switch
     private final ConcurrentMap<Dpid, SwitchEvent> switches;
@@ -60,6 +72,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
      * Create an empty Topology.
      */
     public TopologyImpl() {
+        mastership = new HashMap<>();
         // TODO: Does these object need to be stored in Concurrent Collection?
         switches = new ConcurrentHashMap<>();
         ports = new ConcurrentHashMap<>();
@@ -78,6 +91,13 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     public TopologyImpl(TopologyImpl original) {
         original.acquireReadLock();
         try {
+            // shallow copy Set in Map
+            this.mastership = new HashMap<>(original.mastership.size());
+            for (Entry<Dpid, SortedSet<MastershipEvent>> e
+                        : original.mastership.entrySet()) {
+                this.mastership.put(e.getKey(), new TreeSet<>(e.getValue()));
+            }
+
             this.switches = new ConcurrentHashMap<>(original.switches);
 
             // shallow copy Map in Map
@@ -481,6 +501,20 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
         return Collections.unmodifiableCollection(mac2Host.values());
     }
 
+    @Override
+    public OnosInstanceId getSwitchMaster(Dpid dpid) {
+        final SortedSet<MastershipEvent> candidates = mastership.get(dpid);
+        if (candidates == null) {
+            return null;
+        }
+        for (MastershipEvent candidate : candidates) {
+            if (candidate.getRole() == Role.MASTER) {
+                return candidate.getOnosInstanceId();
+            }
+        }
+        return null;
+    }
+
     /**
      * Puts a SwitchEvent.
      *
@@ -668,6 +702,49 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
                 hosts.remove(port, host);
             }
         }
+    }
+
+    /**
+     * Puts a mastership change event.
+     *
+     * @param master MastershipEvent
+     */
+    @GuardedBy("writeLock")
+    protected void putSwitchMastershipEvent(MastershipEvent master) {
+        checkNotNull(master);
+
+        SortedSet<MastershipEvent> candidates
+            = mastership.get(master.getDpid());
+        if (candidates == null) {
+            // SortedSet, customized so that MASTER MastershipEvent appear
+            // earlier during iteration.
+            candidates = new TreeSet<>(new MastershipEvent.MasterFirstComparator());
+        }
+
+        // always replace
+        candidates.remove(master);
+        candidates.add(master);
+    }
+
+    /**
+     * Removes a mastership change event.
+     * <p>
+     * Note: Only Dpid and OnosInstanceId will be used to identify the
+     * {@link MastershipEvent} to remove.
+     *
+     * @param master {@link MastershipEvent} to remove. (Role is ignored)
+     */
+    @GuardedBy("writeLock")
+    protected void removeSwitchMastershipEvent(MastershipEvent master) {
+        checkNotNull(master);
+
+        SortedSet<MastershipEvent> candidates
+            = mastership.get(master.getDpid());
+        if (candidates == null) {
+            // nothing to do
+            return;
+        }
+        candidates.remove(master);
     }
 
 

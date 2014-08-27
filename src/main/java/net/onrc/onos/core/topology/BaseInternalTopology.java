@@ -11,7 +11,7 @@ import net.onrc.onos.core.util.SwitchPort;
 /**
  * Interface to reference internal self-contained elements.
  */
-public interface BaseInternalTopology {
+public interface BaseInternalTopology extends BaseMastership {
 
     /**
      * Gets a SwitchEvent.

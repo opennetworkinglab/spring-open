@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -267,5 +269,11 @@ public class BaseTopologyAdaptor implements BaseTopology {
     @Override
     public Collection<Host> getHosts(SwitchPort port) {
         return toHostImpls(internal, internal.getHostEvents(port));
+    }
+
+
+    @Override
+    public OnosInstanceId getSwitchMaster(Dpid dpid) {
+        return internal.getSwitchMaster(dpid);
     }
 }
