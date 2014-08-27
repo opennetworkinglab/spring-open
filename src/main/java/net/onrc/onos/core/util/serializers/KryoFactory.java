@@ -16,6 +16,8 @@ import javax.annotation.concurrent.ThreadSafe;
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
+import net.onrc.onos.api.flowmanager.FlowBatchOperation;
+import net.onrc.onos.api.flowmanager.FlowBatchState;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowLink;
 import net.onrc.onos.api.flowmanager.FlowState;
@@ -254,6 +256,9 @@ public class KryoFactory {
         // New flow manager related classes
         kryo.register(FlowId.class);
         kryo.register(FlowState.class);
+        kryo.register(FlowBatchOperation.class);
+        kryo.register(FlowBatchOperation.Operator.class);
+        kryo.register(FlowBatchState.class);
         kryo.register(net.onrc.onos.api.flowmanager.Path.class);
         kryo.register(Tree.class);
         kryo.register(FlowLink.class);

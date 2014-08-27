@@ -41,7 +41,7 @@ interface FlowBatchMap {
      * Gets all {@link FlowBatchOperation} objects existing in the map.
      * <p>
      * The changes to the returned set does not affect the original map.
-
+     *
      * @return a set of {@link FlowBatchOperation} objects
      */
     Set<FlowBatchOperation> getAll();
@@ -84,9 +84,10 @@ interface FlowBatchMap {
     void removeListener(FlowBatchMapEventListener listener);
 
     /**
-     * Checks if this instance is a leader of the map.
+     * Checks if the specified flow batch operation is stored in local storage.
      *
-     * @return true if it is leader, false otherwise
+     * @param id the ID of the batch operation
+     * @return true if the specified batch operation is stored in local storage
      */
-    boolean isLeader();
+    boolean isLocal(FlowBatchId id);
 }

@@ -28,7 +28,7 @@ interface FlowBatchMapEventListener {
      * @param oldState the old state of the {@link FlowBatchOperation}
      * @param currentState the current state of the {@link FlowBatchOperation}
      */
-    void flowStateChanged(FlowBatchId id,
+    void flowBatchOperationStateChanged(FlowBatchId id,
             FlowBatchState oldState, FlowBatchState currentState);
 
 }
