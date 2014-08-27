@@ -47,11 +47,13 @@ public interface IPacketService extends IFloodlightService {
      * Broadcast the packet out all edge ports in the network. An edge port is
      * defined as any port that doesn't have a link to another switch.
      * <p/>
+     * By default, this function does not broadcast to external networks.
+     * <p/>
      * NOTE: currently unimplemented.
      *
      * @param eth the packet to broadcast
      */
-    public void broadcastPacketOutEdge(Ethernet eth);
+    public void broadcastPacketOutInternalEdge(Ethernet eth);
 
     /**
      * Broadcast the packet out all edge ports in the network, except for the
@@ -61,10 +63,12 @@ public interface IPacketService extends IFloodlightService {
      * This is useful for packets that are received from a host in the
      * dataplane, where we want to broadcast the packet to everyone apart from
      * the host that sent it.
+     * <p/>
+     * By default, this function does not broadcast to external networks.
      *
      * @param eth the packet to broadcast
      * @param inSwitchPort the exception port that the packet is not
      * broadcast out
      */
-    public void broadcastPacketOutEdge(Ethernet eth, SwitchPort inSwitchPort);
+    public void broadcastPacketOutInternalEdge(Ethernet eth, SwitchPort inSwitchPort);
 }

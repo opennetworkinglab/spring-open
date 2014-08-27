@@ -249,7 +249,7 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
             log.trace("Sending broadcast packet to other ONOS instances");
         }
 
-        packetService.broadcastPacketOutEdge(eth,
+        packetService.broadcastPacketOutInternalEdge(eth,
                 new SwitchPort(sw.getDpid(), inPort.getNumber()));
     }
 

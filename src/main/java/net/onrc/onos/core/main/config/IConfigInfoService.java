@@ -1,10 +1,12 @@
 package net.onrc.onos.core.main.config;
 
 import java.net.InetAddress;
+import java.util.Set;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.sdnip.Interface;
+import net.onrc.onos.core.util.SwitchPort;
 
 /**
  * Provides information about the layer 3 properties of the network.
@@ -47,6 +49,17 @@ public interface IConfigInfoService extends IFloodlightService {
      * or 0 if no vlan is configured.
      */
     public short getVlan();
+
+    /**
+     * Gets the external-facing switch ports in the network.
+     * <p/>
+     * We treat the switch ports (in SDN network) connected to other networks
+     * as external networks switch ports.
+     *
+     * @return all the switch ports connected to external networks
+     */
+    public Set<SwitchPort> getExternalSwitchPorts();
+
 
 
 }

@@ -404,13 +404,17 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
         }
 
         InetAddress target;
+        InetAddress sender;
         try {
             target = InetAddress.getByAddress(arp.getTargetProtocolAddress());
+            sender = InetAddress.getByAddress(arp.getSenderProtocolAddress());
+
         } catch (UnknownHostException e) {
             log.debug("Invalid address in ARP request", e);
             return;
         }
 
+        // Handle ARP from external network
         if (configService.fromExternalNetwork(dpid, inPort)) {
             // If the request came from outside our network, we only care if
             // it was a request for one of our interfaces.
@@ -420,10 +424,22 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                         target.getHostAddress(),
                         configService.getRouterMacAddress());
 
+                //TODO: learn MAC address dynamically rather than from configuration
                 sendArpReply(arp, dpid, inPort,
                         configService.getRouterMacAddress());
             }
 
+            return;
+        }
+
+        // Handle ARP to external network
+        if (configService.inConnectedNetwork(target)
+                && configService.isInterfaceAddress(sender)) {
+            SwitchPort switchPort =
+                    configService.getOutgoingInterface(target).getSwitchPort();
+            arpRequests.put(target, new ArpRequest(
+                    new HostArpRequester(arp, dpid, inPort), false));
+            packetService.sendPacket(eth, switchPort);
             return;
         }
 
@@ -444,7 +460,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
             }
 
             // We don't know the device so broadcast the request out
-            packetService.broadcastPacketOutEdge(eth,
+            packetService.broadcastPacketOutInternalEdge(eth,
                     new SwitchPort(dpid, inPort));
         } else {
             // Even if the device exists in our database, we do not reply to
@@ -468,7 +484,7 @@ public class ProxyArpManager implements IProxyArpService, IFloodlightModule,
                             " - broadcasting", macAddress);
                 }
 
-                packetService.broadcastPacketOutEdge(eth,
+                packetService.broadcastPacketOutInternalEdge(eth,
                         new SwitchPort(dpid, inPort));
             } else {
                 for (Port portObject : outPorts) {

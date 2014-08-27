@@ -1,11 +1,15 @@
 package net.onrc.onos.core.packetservice;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
+import net.onrc.onos.core.util.SwitchPort;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -21,11 +25,8 @@ import com.google.common.collect.Multimap;
  */
 public class BroadcastPacketOutNotification extends PacketOutNotification {
 
-    private static final long serialVersionUID = 1L;
-
     private final int address;
-    private final long inSwitch;
-    private final short inPort;
+    private final Set<SwitchPort> blacklistSwitchPorts;
 
     /**
      * Default constructor, used for deserialization.
@@ -33,8 +34,7 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
     protected BroadcastPacketOutNotification() {
         super();
         this.address = 0;
-        this.inSwitch = 0;
-        this.inPort = 0;
+        this.blacklistSwitchPorts = null;
     }
 
     /**
@@ -42,34 +42,39 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
      *
      * @param packet   packet data to send in the packet-out
      * @param address  target IP address if the packet is an ARP packet
-     * @param inSwitch dpid of the switch the packet was received on
-     * @param inPort   port number of the receiving port
+     * @param inSwitchPort switch port the packet was received on
      */
     public BroadcastPacketOutNotification(byte[] packet, int address,
-                                          long inSwitch, short inPort) {
+            SwitchPort inSwitchPort) {
         super(packet);
 
         this.address = address;
-        this.inSwitch = inSwitch;
-        this.inPort = inPort;
+        this.blacklistSwitchPorts =  new HashSet<SwitchPort>();
+        blacklistSwitchPorts.add(inSwitchPort);
     }
 
     /**
-     * Get the dpid of the switch the packet was received on.
+     * Class constructor.
      *
-     * @return receiving switch dpid
+     * @param packet   packet data to send in the packet-out
+     * @param address  target IP address if the packet is an ARP packet
+     * @param blacklistSwitchPorts switch ports will not be broadcasted to
      */
-    public long getInSwitch() {
-        return inSwitch;
+    public BroadcastPacketOutNotification(byte[] packet, int address,
+            Set<SwitchPort> blacklistSwitchPorts) {
+        super(packet);
+
+        this.address = address;
+        this.blacklistSwitchPorts = new HashSet<SwitchPort>(blacklistSwitchPorts);
     }
 
     /**
-     * Get the port number of the port the packet was received on.
+     * Get the blacklist SwitchPorts.
      *
-     * @return receiving port number
+     * @return blacklist SwitchPorts
      */
-    public short getInPort() {
-        return inPort;
+    public Set<SwitchPort> getInSwitchPort() {
+        return Collections.unmodifiableSet(blacklistSwitchPorts);
     }
 
     /**
@@ -96,9 +101,11 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
             } finally {
                 mutableTopology.releaseReadLock();
             }
+            SwitchPort switchPort =  new SwitchPort(entry.getKey(), entry.getValue());
 
-            if ((!entry.getKey().equals(inSwitch) ||
-                    !entry.getValue().equals(inPort)) &&
+
+            if ((blacklistSwitchPorts == null || !blacklistSwitchPorts
+                    .contains(switchPort)) &&
                     globalPort != null &&
                     globalPort.getOutgoingLink() == null) {
 
@@ -108,4 +115,5 @@ public class BroadcastPacketOutNotification extends PacketOutNotification {
 
         return outPorts;
     }
+
 }

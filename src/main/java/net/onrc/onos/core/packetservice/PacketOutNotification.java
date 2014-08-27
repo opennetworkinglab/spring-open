@@ -1,6 +1,5 @@
 package net.onrc.onos.core.packetservice;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 import net.onrc.onos.core.topology.MutableTopology;
@@ -13,9 +12,7 @@ import com.google.common.collect.Multimap;
  * abstract base class that will be subclassed by specific types of
  * notifications.
  */
-public abstract class PacketOutNotification implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public abstract class PacketOutNotification {
 
     private final byte[] packet;
 

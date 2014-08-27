@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -108,6 +109,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     private SwitchPort bgpdAttachmentPoint;
     private MACAddress bgpdMacAddress;
     private short vlan;
+    private Set<SwitchPort> externalNetworkSwitchPorts;
 
     private SetMultimap<InetAddress, RibUpdate> prefixesWaitingOnArp;
 
@@ -132,6 +134,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
             interfaces = new HashMap<>();
             for (Interface intf : config.getInterfaces()) {
                 interfaces.put(intf.getName(), intf);
+                externalNetworkSwitchPorts.add(new SwitchPort(intf.getDpid(),
+                        intf.getPort()));
             }
             bgpPeers = new HashMap<>();
             for (BgpPeer peer : config.getPeers()) {
@@ -193,6 +197,7 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
                 new DefaultByteArrayNodeFactory());
         interfaceRoutes = new ConcurrentInvertedRadixTree<>(
                 new DefaultByteArrayNodeFactory());
+        externalNetworkSwitchPorts = new HashSet<SwitchPort>();
 
         ribUpdates = new LinkedBlockingQueue<>();
 
@@ -904,6 +909,11 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     @Override
     public short getVlan() {
         return vlan;
+    }
+
+    @Override
+    public Set<SwitchPort> getExternalSwitchPorts() {
+        return Collections.unmodifiableSet(externalNetworkSwitchPorts);
     }
 
 }

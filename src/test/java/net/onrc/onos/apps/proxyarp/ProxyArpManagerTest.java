@@ -451,6 +451,9 @@ public class ProxyArpManagerTest {
 
         expect(configInfoService.fromExternalNetwork(
                 anyLong(), anyShort())).andReturn(false);
+
+        expect(configInfoService.inConnectedNetwork(
+                dstIp)).andReturn(false);
         mutableTopology.acquireReadLock();
         expectLastCall();
         expect(mutableTopology.getHostByMac(dstMac)).andReturn(host1);
@@ -464,6 +467,7 @@ public class ProxyArpManagerTest {
                 topologyService, datagridService, eg, mutableTopology, host1, inPort1, outPort1, sw1);
         arpManager.init(context);
         arpManager.startUp(context);
+
         arpManager.receive(sw1, inPort1, ethArpRequest);
     }
 }

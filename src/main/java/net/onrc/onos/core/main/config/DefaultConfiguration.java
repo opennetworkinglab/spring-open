@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
@@ -12,6 +13,7 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.sdnip.Interface;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.projectfloodlight.openflow.util.HexString;
 
@@ -82,6 +84,11 @@ public class DefaultConfiguration implements IConfigInfoService, IFloodlightModu
     @Override
     public void startUp(FloodlightModuleContext context) {
         // no-op
+    }
+
+    @Override
+    public Set<SwitchPort> getExternalSwitchPorts() {
+        return null;
     }
 
 }

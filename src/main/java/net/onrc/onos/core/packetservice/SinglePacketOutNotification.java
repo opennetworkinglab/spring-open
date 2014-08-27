@@ -10,8 +10,6 @@ import com.google.common.collect.Multimap;
  */
 public class SinglePacketOutNotification extends PacketOutNotification {
 
-    private static final long serialVersionUID = 1L;
-
     private final int address;
     private final long outSwitch;
     private final short outPort;

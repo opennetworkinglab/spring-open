@@ -3,8 +3,10 @@ package net.onrc.onos.core.packetservice;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import net.floodlightcontroller.core.FloodlightContext;
@@ -21,6 +23,7 @@ import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
+import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Port;
@@ -54,6 +57,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     private MutableTopology mutableTopology;
     private IDatagridService datagrid;
     private IFlowPusherService flowPusher;
+    private IConfigInfoService configService;
 
     private IEventChannel<Long, PacketOutNotification> packetOutEventChannel;
 
@@ -69,12 +73,14 @@ public class PacketModule implements IOFMessageListener, IPacketService,
         @Override
         public void entryAdded(PacketOutNotification value) {
             Multimap<Long, Short> localPorts = HashMultimap.create();
+
             for (IOFSwitch sw : floodlightProvider.getSwitches().values()) {
                 for (OFPortDesc port : sw.getEnabledPorts()) {
                     // XXX S fix this to int
                     localPorts.put(sw.getId(), port.getPortNo().getShortPortNumber());
                 }
             }
+
             Multimap<Long, Short> outPorts = value.calculateOutPorts(
                     localPorts, mutableTopology);
             sendPacketToSwitches(outPorts, value.getPacketData());
@@ -118,16 +124,21 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     }
 
     @Override
-    public void broadcastPacketOutEdge(Ethernet eth) {
+    public void broadcastPacketOutInternalEdge(Ethernet eth) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
-    public void broadcastPacketOutEdge(Ethernet eth, SwitchPort inSwitchPort) {
+    public void broadcastPacketOutInternalEdge(Ethernet eth, SwitchPort inSwitchPort) {
+
+        Set<SwitchPort> blacklistSwitchPorts = new HashSet<SwitchPort>(configService
+                .getExternalSwitchPorts());
+        blacklistSwitchPorts.add(inSwitchPort);
+
         BroadcastPacketOutNotification notification =
                 new BroadcastPacketOutNotification(eth.serialize(), 0,
-                        inSwitchPort.getDpid().value(), inSwitchPort.getPortNumber().shortValue());
+                        blacklistSwitchPorts);
 
         long dstMac = eth.getDestinationMAC().toLong();
         packetOutEventChannel.addTransientEntry(dstMac, notification);
@@ -209,6 +220,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
         dependencies.add(ITopologyService.class);
         dependencies.add(IDatagridService.class);
         dependencies.add(IFlowPusherService.class);
+        dependencies.add(IConfigInfoService.class);
         return dependencies;
     }
 
@@ -221,6 +233,7 @@ public class PacketModule implements IOFMessageListener, IPacketService,
                 .getTopology();
         datagrid = context.getServiceImpl(IDatagridService.class);
         flowPusher = context.getServiceImpl(IFlowPusherService.class);
+        configService = context.getServiceImpl(IConfigInfoService.class);
     }
 
     @Override
