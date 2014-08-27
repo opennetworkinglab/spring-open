@@ -12,26 +12,26 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class MatchActionIdGeneratorWithIdBlockAllocator
         implements MatchActionIdGenerator {
 
-        private final IdBlockAllocator allocator;
-        private IdBlock idBlock;
+    private final IdBlockAllocator allocator;
+    private IdBlock idBlock;
 
-        /**
-          * Creates a FlowId generator instance using specified ID block allocator.
-          *
-          * @param allocator the ID block allocator to be used
-          */
-        public MatchActionIdGeneratorWithIdBlockAllocator(IdBlockAllocator allocator) {
-            this.allocator = checkNotNull(allocator);
-            this.idBlock = allocator.allocateUniqueIdBlock();
-        }
+    /**
+     * Creates a FlowId generator instance using specified ID block allocator.
+     *
+     * @param allocator the ID block allocator to be used
+     */
+    public MatchActionIdGeneratorWithIdBlockAllocator(IdBlockAllocator allocator) {
+        this.allocator = checkNotNull(allocator);
+        this.idBlock = allocator.allocateUniqueIdBlock();
+    }
 
-        @Override
-        public synchronized MatchActionId getNewId() {
-            try {
-                return new MatchActionId(idBlock.getNextId());
-            } catch (UnavailableIdException e) {
-                idBlock = allocator.allocateUniqueIdBlock();
-                return new MatchActionId(idBlock.getNextId());
-            }
+    @Override
+    public synchronized MatchActionId getNewId() {
+        try {
+            return new MatchActionId(idBlock.getNextId());
+        } catch (UnavailableIdException e) {
+            idBlock = allocator.allocateUniqueIdBlock();
+            return new MatchActionId(idBlock.getNextId());
         }
+    }
 }
