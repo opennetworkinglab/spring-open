@@ -25,7 +25,6 @@ import static net.onrc.onos.api.flowmanager.FlowState.WITHDRAWN;
 
 // TODO: consider naming because to call Flow manager's API will be removed
 // in long-term refactoring
-// TODO: consider unifying the install() and remove() by pulling up to this class
 /**
  * Base class for implementing an intent installer, which use Flow Manager's API.
  *
