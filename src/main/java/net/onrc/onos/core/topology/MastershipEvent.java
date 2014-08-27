@@ -1,7 +1,11 @@
 package net.onrc.onos.core.topology;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.Objects;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
@@ -9,7 +13,6 @@ import net.onrc.onos.core.topology.web.serializers.MastershipEventSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
@@ -135,6 +138,37 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
         MastershipEvent other = (MastershipEvent) o;
         return Objects.equals(dpid, other.dpid) &&
             Objects.equals(onosInstanceId, other.onosInstanceId);
+    }
+
+    /**
+     * Comparator to bring {@link MastershipEvent} with MASTER role up front.
+     * <p>
+     * Note: expected to be used against Collection of MastershipEvents
+     * about same Dpid.
+     */
+    public static final class MasterFirstComparator
+                implements Comparator<MastershipEvent>, Serializable {
+        @Override
+        public int compare(MastershipEvent o1, MastershipEvent o2) {
+            // MastershipEvent for same ONOS Instance
+            //  => treat as equal regardless of Role
+            // Note: MastershipEvent#equals() does not use Role
+            if (o1.equals(o2)) {
+                return 0;
+            }
+
+            // MASTER Role instance is considered smaller.
+            // (appears earlier in SortedSet iteration, etc.)
+            if (o1.getRole() == Role.MASTER) {
+                return -1;
+            }
+            if (o2.getRole() == Role.MASTER) {
+                return 1;
+            }
+
+            return o1.getOnosInstanceId().toString()
+                    .compareTo(o2.getOnosInstanceId().toString());
+        }
     }
 
     @Override
