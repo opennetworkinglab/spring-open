@@ -18,13 +18,14 @@ import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowBatchHandle;
+import net.onrc.onos.api.flowmanager.FlowBatchId;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowIdGenerator;
 import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
-import net.onrc.onos.core.datagrid.IDatagridService;
+import net.onrc.onos.core.datagrid.ISharedCollectionsService;
 import net.onrc.onos.core.matchaction.MatchActionIdGeneratorWithIdBlockAllocator;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
@@ -40,11 +41,14 @@ import net.onrc.onos.core.util.IdBlockAllocator;
  */
 public class FlowManagerModule implements FlowManagerFloodlightService, IFloodlightModule {
     private ConflictDetectionPolicy conflictDetectionPolicy;
-    private FlowOperationMap flowOperationMap;
+    private FlowIdGeneratorWithIdBlockAllocator flowIdGenerator;
+    private FlowBatchIdGeneratorWithIdBlockAllocator flowBatchIdGenerator;
     private MatchActionIdGeneratorWithIdBlockAllocator maIdGenerator;
     private MatchActionOperationsIdGeneratorWithIdBlockAllocator maoIdGenerator;
-    private FlowIdGeneratorWithIdBlockAllocator flowIdGenerator;
     private IControllerRegistryService registryService;
+    private ISharedCollectionsService sharedCollectionService;
+    private FlowMap flowMap;
+    private FlowBatchMap flowBatchMap;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -65,32 +69,36 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         return Arrays.asList(
-                IDatagridService.class,
+                // TODO: Add MatchActionService.class.
+                // The class has to be an instance of IFloodlightService.
+                ISharedCollectionsService.class,
                 IControllerRegistryService.class);
     }
 
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         registryService = context.getServiceImpl(IControllerRegistryService.class);
+        sharedCollectionService = context.getServiceImpl(ISharedCollectionsService.class);
     }
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
 
         IdBlockAllocator idBlockAllocator = registryService;
-        this.flowIdGenerator =
+        flowIdGenerator =
                 new FlowIdGeneratorWithIdBlockAllocator(idBlockAllocator);
+        flowBatchIdGenerator =
+                new FlowBatchIdGeneratorWithIdBlockAllocator(idBlockAllocator);
 
-        // TODO: MatchActionOperationsIdGenerator should be retrieved from
+        // TODO: MatchAction related ID generator should be retrieved from
         // MatchAction Module.
-        this.maIdGenerator =
+        maIdGenerator =
                 new MatchActionIdGeneratorWithIdBlockAllocator(idBlockAllocator);
-        this.maoIdGenerator =
+        maoIdGenerator =
                 new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
 
-        // TODO: datagridService =
-        // context.getServiceImpl(IDatagridService.class);
-        this.flowOperationMap = new FlowOperationMap(idBlockAllocator);
+        flowMap = new SharedFlowMap(sharedCollectionService);
+        flowBatchMap = new SharedFlowBatchMap(sharedCollectionService);
     }
 
     /**
@@ -116,14 +124,12 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
 
     @Override
     public Flow getFlow(FlowId id) {
-        // TODO Auto-generated method stub
-        return null;
+        return flowMap.get(id);
     }
 
     @Override
     public Collection<Flow> getFlows() {
-        // TODO Auto-generated method stub
-        return null;
+        return flowMap.getAll();
     }
 
     /**
@@ -131,18 +137,20 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
      * <p>
      * To track the execution result, use the returned FlowBatchHandle object.
      * <p>
-     * This method just put the batch-operation object to the global flow
+     * This method just put the batch-operation object to the global flow batch
      * operation map with unique ID. The worker process for execution and
      * installation will get the appended operation when it gets events from the
      * map. This method returns a handler for obtaining the result of this
      * operation, control the executing process, etc.
      *
      * @param ops flow operations to be executed
-     * @return FlowBatchHandle object if succeeded, null otherwise
+     * @return {@link FlowBatchHandle} object if succeeded, null otherwise
      */
     @Override
     public FlowBatchHandle executeBatch(FlowBatchOperation ops) {
-        return flowOperationMap.putBatchOperation(ops);
+        FlowBatchId id = flowBatchIdGenerator.getNewId();
+        flowBatchMap.put(id, ops);
+        return new FlowBatchHandleImpl(flowBatchMap, id);
     }
 
     @Override
