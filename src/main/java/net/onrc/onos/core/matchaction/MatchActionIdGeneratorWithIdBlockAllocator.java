@@ -7,7 +7,7 @@ import net.onrc.onos.core.util.UnavailableIdException;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Generates a global unique MatchActionIdId.
+ * Generates a global unique MatchActionId.
  */
 public class MatchActionIdGeneratorWithIdBlockAllocator
         implements MatchActionIdGenerator {
