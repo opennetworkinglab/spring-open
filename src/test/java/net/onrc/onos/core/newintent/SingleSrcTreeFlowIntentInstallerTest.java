@@ -10,8 +10,8 @@ import net.onrc.onos.api.newintent.IntentId;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatchBuilder;
 import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.Pair;
 import net.onrc.onos.core.util.SwitchPort;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -90,8 +90,8 @@ public class SingleSrcTreeFlowIntentInstallerTest {
         tree.add(new FlowLink(port13, port31));
 
         Set<Pair<Dpid, OutputAction>> actions = new HashSet<>();
-        actions.add(new Pair<>(egress1.getDpid(), new OutputAction(egress1.getPortNumber())));
-        actions.add(new Pair<>(egress2.getDpid(), new OutputAction(egress2.getPortNumber())));
+        actions.add(Pair.of(egress1.getDpid(), new OutputAction(egress1.getPortNumber())));
+        actions.add(Pair.of(egress2.getDpid(), new OutputAction(egress2.getPortNumber())));
 
         return new SingleSrcTreeFlow(
                 flowId,

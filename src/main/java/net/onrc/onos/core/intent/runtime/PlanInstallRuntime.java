@@ -14,8 +14,8 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.FlowEntry;
-import net.onrc.onos.core.util.Pair;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,7 +182,7 @@ public class PlanInstallRuntime {
                     log.debug("Skipping flow entry: {}", entry);
                     continue;
                 }
-                entries.add(new Pair<>(sw, entry));
+                entries.add(Pair.of(sw, entry));
                 modifiedSwitches.add(sw);
                 FlowModCount.countFlowEntry(sw, entry);
             }
@@ -197,11 +197,11 @@ public class PlanInstallRuntime {
             // wait for confirmation messages before proceeding
             List<Pair<IOFSwitch, OFMessageFuture<OFBarrierReply>>> barriers = new ArrayList<>();
             for (IOFSwitch sw : modifiedSwitches) {
-                barriers.add(new Pair<>(sw, pusher.barrierAsync(sw)));
+                barriers.add(Pair.of(sw, pusher.barrierAsync(sw)));
             }
             for (Pair<IOFSwitch, OFMessageFuture<OFBarrierReply>> pair : barriers) {
-                IOFSwitch sw = pair.getFirst();
-                OFMessageFuture<OFBarrierReply> future = pair.getSecond();
+                IOFSwitch sw = pair.getLeft();
+                OFMessageFuture<OFBarrierReply> future = pair.getRight();
                 try {
                     future.get();
                 } catch (InterruptedException | ExecutionException e) {

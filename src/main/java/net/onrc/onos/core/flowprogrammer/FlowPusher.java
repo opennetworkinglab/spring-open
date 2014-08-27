@@ -25,8 +25,8 @@ import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.onrc.onos.core.intent.FlowEntry;
-import net.onrc.onos.core.util.Pair;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.protocol.OFBarrierRequest;
 import org.projectfloodlight.openflow.protocol.OFFactory;
@@ -85,8 +85,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         boolean toBeDeleted = false;
 
         SwitchQueue() {
-            rawQueues = new ArrayList<Queue<SwitchQueueEntry>>(
-                    MsgPriority.values().length);
+            rawQueues = new ArrayList<>(MsgPriority.values().length);
             for (int i = 0; i < MsgPriority.values().length; ++i) {
                 rawQueues.add(i, new ArrayDeque<SwitchQueueEntry>());
             }
@@ -410,7 +409,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
      * Begin processing queue.
      */
     public void start() {
-        threadMap = new HashMap<Long, FlowPusherThread>();
+        threadMap = new HashMap<>();
         for (long i = 0; i < numberThread; ++i) {
             FlowPusherThread thread = new FlowPusherThread();
 
@@ -572,7 +571,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
             Collection<Pair<IOFSwitch, FlowEntry>> entries, MsgPriority priority) {
 
         for (Pair<IOFSwitch, FlowEntry> entry : entries) {
-            add(entry.getFirst(), entry.getSecond(), priority);
+            add(entry.getLeft(), entry.getRight(), priority);
         }
     }
 
@@ -583,10 +582,9 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
 
     @Override
     public void pushFlowEntry(IOFSwitch sw, FlowEntry flowEntry, MsgPriority priority) {
-        Collection<Pair<IOFSwitch, FlowEntry>> entries =
-                new LinkedList<Pair<IOFSwitch, FlowEntry>>();
+        Collection<Pair<IOFSwitch, FlowEntry>> entries = new LinkedList<>();
 
-        entries.add(new Pair<IOFSwitch, FlowEntry>(sw, flowEntry));
+        entries.add(Pair.of(sw, flowEntry));
         pushFlowEntries(entries, priority);
     }
 

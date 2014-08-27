@@ -6,8 +6,8 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.core.intent.FlowEntry;
-import net.onrc.onos.core.util.Pair;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 

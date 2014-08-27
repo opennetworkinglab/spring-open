@@ -10,9 +10,10 @@ import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.matchaction.match.PacketMatchBuilder;
 import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.Pair;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,8 +42,8 @@ public class SingleSrcTreeFlowIntentTest extends IntentTest {
     @Override
     protected SingleSrcTreeFlowIntent createOne() {
         Set<Pair<Dpid, OutputAction>> actions = new HashSet<>(Arrays.asList(
-                new Pair<>(dpid2, action2),
-                new Pair<>(dpid3, action3)
+                Pair.of(dpid2, action2),
+                Pair.of(dpid3, action3)
         ));
         SingleSrcTreeFlow tree = new SingleSrcTreeFlow(flowId1, match,
                 new SwitchPort(dpid1, port3), createTree(), actions
@@ -53,8 +54,8 @@ public class SingleSrcTreeFlowIntentTest extends IntentTest {
     @Override
     protected SingleSrcTreeFlowIntent createAnother() {
         Set<Pair<Dpid, OutputAction>> actions = new HashSet<>(Arrays.asList(
-                new Pair<>(dpid1, action1),
-                new Pair<>(dpid3, action3)
+                Pair.of(dpid1, action1),
+                Pair.of(dpid3, action3)
         ));
         SingleSrcTreeFlow tree = new SingleSrcTreeFlow(flowId2, match,
                 new SwitchPort(dpid2, port3), createTree(), actions

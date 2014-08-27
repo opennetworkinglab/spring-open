@@ -12,8 +12,9 @@ import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.Dpid;
-import net.onrc.onos.core.util.Pair;
 import net.onrc.onos.core.util.SwitchPort;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A Flow object expressing the point-to-multipoints tree flow for the packet
