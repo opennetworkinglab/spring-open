@@ -24,7 +24,6 @@ import org.restlet.representation.Representation;
  * used on the class in different contexts.
  */
 public class CustomSerializerHelper {
-    private final ObjectMapper mapper;
     private final SimpleModule customSerializerModule;
     private CustomSerializerFactory sf;
 
@@ -32,9 +31,7 @@ public class CustomSerializerHelper {
      * Constructor.
      */
     public CustomSerializerHelper() {
-        mapper = new ObjectMapper();
         customSerializerModule = new SimpleModule("custom-serializers", new Version(1, 0, 0, null));
-        mapper.registerModule(customSerializerModule);
         sf =  new CustomSerializerFactory();
     }
 
@@ -58,9 +55,12 @@ public class CustomSerializerHelper {
      * @return a representation with the custom serializers applied
      */
     public Representation applySerializers(JacksonRepresentation<?> jacksonRepresentation) {
+        ObjectMapper mapper = jacksonRepresentation.getObjectMapper();
+
         mapper.registerModule(customSerializerModule);
-        jacksonRepresentation.setObjectMapper(mapper);
         mapper.setSerializerFactory(sf);
+        jacksonRepresentation.setObjectMapper(mapper);
+
         return jacksonRepresentation;
     }
 }

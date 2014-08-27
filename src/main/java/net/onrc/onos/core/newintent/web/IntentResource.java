@@ -5,8 +5,8 @@ import java.util.Set;
 
 import net.floodlightcontroller.restserver.CustomSerializerHelper;
 import net.onrc.onos.api.newintent.Intent;
+import net.onrc.onos.api.newintent.IntentFloodlightService;
 import net.onrc.onos.api.newintent.IntentId;
-import net.onrc.onos.api.newintent.IntentService;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonProcessingException;
@@ -50,9 +50,9 @@ public class IntentResource extends ServerResource {
      */
     @Get("json")
     public Representation retrieve() {
-        IntentService intentService =
-                (IntentService) getContext().getAttributes()
-                    .get(IntentService.class.getCanonicalName());
+        IntentFloodlightService intentService =
+                (IntentFloodlightService) getContext().getAttributes()
+                    .get(IntentFloodlightService.class.getCanonicalName());
 
         Set<Intent> intents = intentService.getIntents();
 

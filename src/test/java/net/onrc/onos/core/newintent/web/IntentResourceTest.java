@@ -15,8 +15,8 @@ import java.util.Set;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.newintent.Intent;
+import net.onrc.onos.api.newintent.IntentFloodlightService;
 import net.onrc.onos.api.newintent.IntentId;
-import net.onrc.onos.api.newintent.IntentService;
 import net.onrc.onos.api.newintent.MultiPointToSinglePointIntent;
 import net.onrc.onos.api.newintent.PointToPointIntent;
 import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
@@ -45,13 +45,14 @@ public class IntentResourceTest {
         Set<Intent> intentSet = createIntents();
 
         // Create a mock intent service that will return the intents
-        IntentService intentService = createMock(IntentService.class);
+        IntentFloodlightService intentService =
+                createMock(IntentFloodlightService.class);
         expect(intentService.getIntents()).andReturn(intentSet).anyTimes();
         replay(intentService);
 
         // Inject the intent service into a Restlet context
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(IntentService.class.getCanonicalName(), intentService);
+        attributes.put(IntentFloodlightService.class.getCanonicalName(), intentService);
         Context context = new Context();
         context.setAttributes(attributes);
 

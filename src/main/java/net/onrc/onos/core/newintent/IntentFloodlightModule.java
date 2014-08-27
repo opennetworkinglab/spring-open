@@ -1,9 +1,17 @@
 package net.onrc.onos.core.newintent;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerService;
@@ -21,17 +29,11 @@ import net.onrc.onos.api.newintent.MultiPointToSinglePointIntent;
 import net.onrc.onos.api.newintent.PathIntent;
 import net.onrc.onos.api.newintent.PointToPointIntent;
 import net.onrc.onos.core.datagrid.ISharedCollectionsService;
+import net.onrc.onos.core.newintent.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.util.IdBlockAllocator;
 import net.onrc.onos.core.util.IdGenerator;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A Floodlight module for Intent Service.
@@ -49,7 +51,7 @@ public class IntentFloodlightModule implements IntentFloodlightService, IFloodli
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
         Map<Class<? extends IFloodlightService>, IFloodlightService> impls = new HashMap<>();
-        impls.put(IFloodlightService.class, this);
+        impls.put(IntentFloodlightService.class, this);
         return impls;
     }
 
@@ -88,6 +90,9 @@ public class IntentFloodlightModule implements IntentFloodlightService, IFloodli
 
         registerDefaultCompilers(intentIdGenerator, flowIdGenerator, topologyService);
         registerDefaultInstallers(flowManagerService);
+
+        IRestApiService restApi = context.getServiceImpl(IRestApiService.class);
+        restApi.addRestletRoutable(new IntentWebRoutable());
     }
 
     private void registerDefaultCompilers(IdGenerator<IntentId> intentIdGenerator,

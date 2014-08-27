@@ -13,7 +13,7 @@ public class FlowManagerWebRoutable implements RestletRoutable {
 
     @Override
     public Restlet getRestlet(Context context) {
-        Router router = new Router();
+        Router router = new Router(context);
         router.attach("", FlowResource.class);
         return router;
     }

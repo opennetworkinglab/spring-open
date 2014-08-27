@@ -6,7 +6,7 @@ import java.util.Collection;
 import net.floodlightcontroller.restserver.CustomSerializerHelper;
 import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowId;
-import net.onrc.onos.api.flowmanager.FlowManagerService;
+import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
@@ -22,7 +22,7 @@ import org.restlet.resource.ServerResource;
  */
 public class FlowResource extends ServerResource {
 
-    private final CustomSerializerHelper flowSerializers;
+    private CustomSerializerHelper flowSerializers;
 
     /**
      * Constructs a FlowResource.
@@ -49,13 +49,14 @@ public class FlowResource extends ServerResource {
      */
     @Get("json")
     public Representation retrieve() {
-        FlowManagerService flowService =
-                (FlowManagerService) getContext().getAttributes()
-                    .get(FlowManagerService.class.getCanonicalName());
+        FlowManagerFloodlightService flowService =
+                (FlowManagerFloodlightService) getContext().getAttributes()
+                    .get(FlowManagerFloodlightService.class.getCanonicalName());
 
         Collection<Flow> flows = flowService.getFlows();
 
         return flowSerializers.applySerializers(
                 (JacksonRepresentation<?>) toRepresentation(flows, null));
     }
+
 }

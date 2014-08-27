@@ -24,3 +24,4 @@ net.onrc.onos.core.packetservice.PacketModule
 net.onrc.onos.core.metrics.OnosMetricsModule
 net.onrc.onos.core.newintent.IntentFloodlightModule
 net.onrc.onos.core.matchaction.MatchActionModule
+net.onrc.onos.core.flowmanager.FlowManagerModule

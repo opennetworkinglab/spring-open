@@ -20,7 +20,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowLink;
-import net.onrc.onos.api.flowmanager.FlowManagerService;
+import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.OpticalPathFlow;
 import net.onrc.onos.api.flowmanager.PacketPathFlow;
 import net.onrc.onos.api.flowmanager.Path;
@@ -53,13 +53,15 @@ public class FlowResourceTest {
         Set<Flow> flowSet = createFlows();
 
         // Create a mock flow manager service that will return the flows
-        FlowManagerService flowManager = createMock(FlowManagerService.class);
+        FlowManagerFloodlightService flowManager =
+                createMock(FlowManagerFloodlightService.class);
         expect(flowManager.getFlows()).andReturn(flowSet);
         replay(flowManager);
 
         // Inject the flow manager service into a Restlet context
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(FlowManagerService.class.getCanonicalName(), flowManager);
+        attributes.put(FlowManagerFloodlightService.class.getCanonicalName(),
+                flowManager);
         Context context = new Context();
         context.setAttributes(attributes);
 
@@ -87,8 +89,8 @@ public class FlowResourceTest {
 
         PacketPathFlow packetFlow = new PacketPathFlow(new FlowId(1L),
                 match, PortNumber.uint32(1), path,
-                Collections.<Action>singletonList(new ModifyDstMacAction(MACAddress.valueOf(4L))),
-                0, 0);
+                Collections.<Action>singletonList(
+                        new ModifyDstMacAction(MACAddress.valueOf(4L))), 0, 0);
 
         OpticalPathFlow opticalFlow = new OpticalPathFlow(new FlowId(2L),
                 PortNumber.uint32(3), path,

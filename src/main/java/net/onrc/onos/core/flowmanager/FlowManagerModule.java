@@ -11,6 +11,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowBatchHandle;
@@ -20,6 +21,7 @@ import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
 import net.onrc.onos.core.datagrid.ISharedCollectionsService;
+import net.onrc.onos.core.flowmanager.web.FlowManagerWebRoutable;
 import net.onrc.onos.core.matchaction.MatchActionFloodlightService;
 import net.onrc.onos.core.matchaction.MatchActionService;
 import net.onrc.onos.core.registry.IControllerRegistryService;
@@ -43,6 +45,7 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     private FlowBatchMap flowBatchMap;
     private FlowEventDispatcher flowEventDispatcher;
     private FlowBatchOperationExecutor flowBatchOperationExecutor;
+    private IRestApiService restApi;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -65,7 +68,8 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
         return Arrays.asList(
                 MatchActionFloodlightService.class,
                 ISharedCollectionsService.class,
-                IControllerRegistryService.class);
+                IControllerRegistryService.class,
+                IRestApiService.class);
     }
 
     @Override
@@ -73,6 +77,7 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
         matchActionService = context.getServiceImpl(MatchActionFloodlightService.class);
         registryService = context.getServiceImpl(IControllerRegistryService.class);
         sharedCollectionService = context.getServiceImpl(ISharedCollectionsService.class);
+        restApi = context.getServiceImpl(IRestApiService.class);
     }
 
     @Override
@@ -91,6 +96,8 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
         flowBatchOperationExecutor =
                 new FlowBatchOperationExecutor(matchActionService, flowMap, flowBatchMap);
         flowBatchOperationExecutor.start();
+
+        restApi.addRestletRoutable(new FlowManagerWebRoutable());
     }
 
     /**
