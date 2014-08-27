@@ -143,6 +143,24 @@ public class KryoFactoryTest {
     }
 
     /**
+     * Tests deserializing to wrong type result in ClassCastException.
+     */
+    @Test
+    public void testStaticSerializeDeserializeCastFailure() {
+        final Integer integer = 42;
+        final byte[] integerBytes = KryoFactory.serialize(integer);
+
+        final Number validSuperType = KryoFactory.deserialize(integerBytes);
+        assertEquals(integer, validSuperType);
+
+        try {
+            final String wrongType = KryoFactory.deserialize(integerBytes);
+            fail("Should have thrown exception" + wrongType);
+        } catch (ClassCastException e) { // CHECKSTYLE IGNORE THIS LINE
+        }
+    }
+
+    /**
      * Benchmark result.
      */
     private static final class Result {
