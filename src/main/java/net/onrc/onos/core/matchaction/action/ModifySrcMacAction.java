@@ -15,6 +15,14 @@ public class ModifySrcMacAction implements Action {
     private final MACAddress srcMac;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected ModifySrcMacAction() {
+        srcMac = null;
+    }
+
+    /**
      * Constructor.
      *
      * @param srcMac source MAC address after the modification

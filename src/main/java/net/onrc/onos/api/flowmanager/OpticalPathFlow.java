@@ -23,6 +23,14 @@ public class OpticalPathFlow extends PathFlow {
     private final int lambda;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected OpticalPathFlow() {
+        lambda = 0;
+    }
+
+    /**
      * Constructor.
      *
      * @param id the ID for this new Flow object

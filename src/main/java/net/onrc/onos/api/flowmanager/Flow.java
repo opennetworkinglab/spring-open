@@ -18,6 +18,14 @@ public abstract class Flow implements BatchOperationTarget {
     private final FlowId id;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected Flow() {
+        id = null;
+    }
+
+    /**
      * Creates Flow object using specified ID.
      *
      * @param id the ID to be assigned

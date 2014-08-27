@@ -1,6 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
 import com.google.common.base.Objects;
+
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
@@ -14,6 +15,15 @@ import net.onrc.onos.core.util.SwitchPort;
 public class FlowLink {
     protected SwitchPort srcSwitchPort;
     protected SwitchPort dstSwitchPort;
+
+    /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected FlowLink() {
+        srcSwitchPort = null;
+        dstSwitchPort = null;
+    }
 
     /**
      * Creates new FlowLink object using source/destination switch port pair.

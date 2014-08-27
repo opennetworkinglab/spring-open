@@ -15,6 +15,14 @@ public class OutputAction implements Action {
     private final PortNumber portNumber;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected OutputAction() {
+        portNumber = null;
+    }
+
+    /**
      * Constructor.
      *
      * @param dstPort The port number of the target output port.

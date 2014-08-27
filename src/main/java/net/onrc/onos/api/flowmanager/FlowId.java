@@ -11,6 +11,14 @@ public class FlowId implements BatchOperationTarget {
     private final long value;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected FlowId() {
+        value = 0;
+    }
+
+    /**
      * Creates new instance with string ID.
      * <p>
      * This FlowId instance should be generated with {@link FlowIdGenerator}.

@@ -28,6 +28,7 @@ import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.IdBlockAllocator;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
+import net.onrc.onos.core.util.serializers.KryoFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -205,5 +206,26 @@ public class SingleDstTreeFlowTest {
         MatchAction ma25 = maMap2.get(new SwitchPort(5L, (short) 105));
         assertEquals(match, ma25.getMatch());
         assertEquals(egressActions, ma25.getActions());
+    }
+
+    /**
+     * Tests if the object can be serialized and deserialized properly with
+     * Kryo.
+     */
+    @Test
+    public void testKryo() {
+        SingleDstTreeFlow originalFlow = new SingleDstTreeFlow(
+                new FlowId(1L), match, ingressPorts, tree, egressActions);
+
+        assertNotNull(originalFlow);
+        byte[] buf = KryoFactory.serialize(originalFlow);
+
+        final SingleDstTreeFlow obtainedFlow = KryoFactory.deserialize(buf);
+
+        assertEquals(new FlowId(1L), obtainedFlow.getId());
+        assertEquals(match, obtainedFlow.getMatch());
+        assertEquals(ingressPorts, obtainedFlow.getIngressPorts());
+        assertEquals(tree, obtainedFlow.getTree());
+        assertEquals(egressActions, obtainedFlow.getEgressActions());
     }
 }

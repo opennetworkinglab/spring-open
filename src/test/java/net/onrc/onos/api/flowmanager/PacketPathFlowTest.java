@@ -25,6 +25,7 @@ import net.onrc.onos.core.util.IdBlock;
 import net.onrc.onos.core.util.IdBlockAllocator;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
+import net.onrc.onos.core.util.serializers.KryoFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -230,5 +231,32 @@ public class PacketPathFlowTest {
                 ma4.getActions().get(0));
         assertEquals(new OutputAction(PortNumber.uint32(101)),
                 ma4.getActions().get(1));
+    }
+
+    /**
+     * Tests if the object can be serialized and deserialized properly with
+     * Kryo.
+     */
+    @Test
+    public void testKryo() {
+        final FlowId id = new FlowId(1);
+        final PortNumber ingressPort = PortNumber.uint32(12345);
+
+        final PacketPathFlow originalFlow =
+                new PacketPathFlow(id, match, ingressPort, pathWith4Switches,
+                        actions, 1000, 100);
+
+        assertNotNull(originalFlow);
+        byte[] buf = KryoFactory.serialize(originalFlow);
+
+        final PacketPathFlow obtainedFlow = KryoFactory.deserialize(buf);
+
+        assertEquals(id, obtainedFlow.getId());
+        assertEquals(match, obtainedFlow.getMatch());
+        assertEquals(ingressPort, obtainedFlow.getIngressPortNumber());
+        assertEquals(pathWith4Switches, obtainedFlow.getPath());
+        assertEquals(actions, obtainedFlow.getEgressActions());
+        assertEquals(1000, obtainedFlow.getHardTimeout());
+        assertEquals(100, obtainedFlow.getIdleTimeout());
     }
 }

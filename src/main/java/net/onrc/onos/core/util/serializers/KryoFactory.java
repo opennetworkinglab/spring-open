@@ -16,6 +16,12 @@ import javax.annotation.concurrent.ThreadSafe;
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
+import net.onrc.onos.api.flowmanager.FlowId;
+import net.onrc.onos.api.flowmanager.FlowLink;
+import net.onrc.onos.api.flowmanager.OpticalPathFlow;
+import net.onrc.onos.api.flowmanager.PacketPathFlow;
+import net.onrc.onos.api.flowmanager.SingleDstTreeFlow;
+import net.onrc.onos.api.flowmanager.Tree;
 import net.onrc.onos.api.newintent.AbstractIntent;
 import net.onrc.onos.api.newintent.ConnectivityIntent;
 import net.onrc.onos.api.newintent.IntentEvent;
@@ -38,6 +44,10 @@ import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IntentStateList;
+import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
+import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
+import net.onrc.onos.core.matchaction.action.OutputAction;
+import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.newintent.IntentCompilationResult;
 import net.onrc.onos.core.newintent.PathFlowIntent;
 import net.onrc.onos.core.newintent.SingleDstTreeFlowIntent;
@@ -239,6 +249,21 @@ public class KryoFactory {
         // a way to register serializer without editing source code
         kryo.register(TestIntent.class);
         kryo.register(TestSubclassIntent.class);
+
+        // New flow manager related classes
+        kryo.register(FlowId.class);
+        kryo.register(net.onrc.onos.api.flowmanager.Path.class);
+        kryo.register(Tree.class);
+        kryo.register(FlowLink.class);
+        kryo.register(OpticalPathFlow.class);
+        kryo.register(PacketPathFlow.class);
+        kryo.register(SingleDstTreeFlow.class);
+
+        // New match action related classes
+        kryo.register(PacketMatch.class);
+        kryo.register(OutputAction.class);
+        kryo.register(ModifyDstMacAction.class);
+        kryo.register(ModifySrcMacAction.class);
 
         // Host-related classes
         kryo.register(HashSet.class);

@@ -31,6 +31,16 @@ public class PacketPathFlow extends PathFlow {
     private final int idleTimeout;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected PacketPathFlow() {
+        match = null;
+        hardTimeout = 0;
+        idleTimeout = 0;
+    }
+
+    /**
      * Constructor.
      *
      * @param id ID for this new Flow object

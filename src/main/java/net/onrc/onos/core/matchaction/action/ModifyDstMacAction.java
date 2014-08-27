@@ -15,6 +15,14 @@ public class ModifyDstMacAction implements Action {
     private final MACAddress dstMac;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected ModifyDstMacAction() {
+        dstMac = null;
+    }
+
+    /**
      * Constructor.
      *
      * @param dstMac destination MAC address after the modification

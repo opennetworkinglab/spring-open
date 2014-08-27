@@ -2,6 +2,7 @@ package net.onrc.onos.api.flowmanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import net.onrc.onos.core.matchaction.action.Action;
@@ -16,6 +17,16 @@ public abstract class PathFlow extends Flow {
     private final List<Action> egressActions;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected PathFlow() {
+        ingressPort = null;
+        path = null;
+        egressActions = null;
+    }
+
+    /**
      * Creates the new flow instance.
      *
      * @param id ID for this new PathFlow object
@@ -28,8 +39,8 @@ public abstract class PathFlow extends Flow {
             PortNumber ingressPort, Path path, List<Action> egressActions) {
         super(id);
         this.ingressPort = checkNotNull(ingressPort);
-        this.path = checkNotNull(path);
-        this.egressActions = checkNotNull(egressActions);
+        this.path = new Path(checkNotNull(path));
+        this.egressActions = new LinkedList<>(checkNotNull(egressActions));
     }
 
     /**

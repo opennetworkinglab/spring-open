@@ -26,6 +26,21 @@ public class PacketMatch implements Match {
     private final Short dstTcpPort;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected PacketMatch() {
+        srcMac = null;
+        dstMac = null;
+        etherType = null;
+        srcIp = null;
+        dstIp = null;
+        ipProto = null;
+        srcTcpPort = null;
+        dstTcpPort = null;
+    }
+
+    /**
      * Package private constructor.
      * <p>
      * This class should be instantiated by the builder.

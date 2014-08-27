@@ -7,10 +7,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.core.matchaction.MatchAction;
@@ -24,9 +28,6 @@ import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * A {@link Flow} object expressing the multipoints-to-point tree flow for the
@@ -43,6 +44,17 @@ public class SingleDstTreeFlow extends Flow {
     private final List<Action> egressActions;
 
     /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    protected SingleDstTreeFlow() {
+        match = null;
+        ingressPorts = null;
+        tree = null;
+        egressActions = null;
+    }
+
+    /**
      * Creates new instance using Tree object.
      *
      * @param id ID for this object
@@ -56,9 +68,9 @@ public class SingleDstTreeFlow extends Flow {
             Collection<SwitchPort> ingressPorts, Tree tree, List<Action> egressActions) {
         super(id);
         this.match = checkNotNull(match);
-        this.ingressPorts = ImmutableSet.copyOf(checkNotNull(ingressPorts));
+        this.ingressPorts = new HashSet<>(checkNotNull(ingressPorts));
         this.tree = checkNotNull(tree);
-        this.egressActions = ImmutableList.copyOf(checkNotNull(egressActions));
+        this.egressActions = new LinkedList<>(checkNotNull(egressActions));
 
         // TODO: check if the tree is a MP2P tree.
         // TODO: check consistency between ingressPorts and tree topology.
@@ -70,7 +82,7 @@ public class SingleDstTreeFlow extends Flow {
      * @return the ingress ports of the tree
      */
     public Collection<SwitchPort> getIngressPorts() {
-        return ingressPorts;
+        return ImmutableSet.copyOf(ingressPorts);
     }
 
     /**
@@ -88,7 +100,7 @@ public class SingleDstTreeFlow extends Flow {
      * @return the list of actions at the egress edge switch
      */
     public List<Action> getEgressActions() {
-        return egressActions;
+        return ImmutableList.copyOf(egressActions);
     }
 
     @Override
