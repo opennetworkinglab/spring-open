@@ -26,10 +26,12 @@ import net.onrc.onos.api.flowmanager.FlowIdGenerator;
 import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
 import net.onrc.onos.core.datagrid.ISharedCollectionsService;
-import net.onrc.onos.core.matchaction.MatchActionIdGeneratorWithIdBlockAllocator;
+import net.onrc.onos.core.matchaction.MatchActionFloodlightService;
+import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsIdGeneratorWithIdBlockAllocator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionService;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.IdBlockAllocator;
 
@@ -43,8 +45,9 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     private ConflictDetectionPolicy conflictDetectionPolicy;
     private FlowIdGeneratorWithIdBlockAllocator flowIdGenerator;
     private FlowBatchIdGeneratorWithIdBlockAllocator flowBatchIdGenerator;
-    private MatchActionIdGeneratorWithIdBlockAllocator maIdGenerator;
-    private MatchActionOperationsIdGeneratorWithIdBlockAllocator maoIdGenerator;
+    private MatchActionIdGenerator maIdGenerator;
+    private MatchActionOperationsIdGenerator maoIdGenerator;
+    private MatchActionService matchActionService;
     private IControllerRegistryService registryService;
     private ISharedCollectionsService sharedCollectionService;
     private FlowMap flowMap;
@@ -69,33 +72,27 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
         return Arrays.asList(
-                // TODO: Add MatchActionService.class.
-                // The class has to be an instance of IFloodlightService.
+                MatchActionFloodlightService.class,
                 ISharedCollectionsService.class,
                 IControllerRegistryService.class);
     }
 
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
+        matchActionService = context.getServiceImpl(MatchActionFloodlightService.class);
         registryService = context.getServiceImpl(IControllerRegistryService.class);
         sharedCollectionService = context.getServiceImpl(ISharedCollectionsService.class);
     }
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
-
         IdBlockAllocator idBlockAllocator = registryService;
         flowIdGenerator =
                 new FlowIdGeneratorWithIdBlockAllocator(idBlockAllocator);
         flowBatchIdGenerator =
                 new FlowBatchIdGeneratorWithIdBlockAllocator(idBlockAllocator);
-
-        // TODO: MatchAction related ID generator should be retrieved from
-        // MatchAction Module.
-        maIdGenerator =
-                new MatchActionIdGeneratorWithIdBlockAllocator(idBlockAllocator);
-        maoIdGenerator =
-                new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
+        maIdGenerator = matchActionService.getMatchActionIdGenerator();
+        maoIdGenerator = matchActionService.getMatchActionOperationsIdGenerator();
 
         flowMap = new SharedFlowMap(sharedCollectionService);
         flowBatchMap = new SharedFlowBatchMap(sharedCollectionService);

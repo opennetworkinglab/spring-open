@@ -5,6 +5,7 @@ import java.util.EventListener;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 
 /**
@@ -12,7 +13,7 @@ import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
  * <p>
  * TODO: Make all methods thread-safe
  */
-public class MatchActionModule implements MatchActionService {
+public class MatchActionModule implements MatchActionFloodlightService {
 
     private final HashSet<MatchAction> currentOperations = new HashSet<>();
 
@@ -51,6 +52,20 @@ public class MatchActionModule implements MatchActionService {
     @Override
     public ConflictDetectionPolicy getConflictDetectionPolicy() {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MatchActionIdGenerator getMatchActionIdGenerator() {
+        // TODO Auto-generated method stub
+        // use MatchActionIdGeneratorWithIdBlockAllocator.
+        return null;
+    }
+
+    @Override
+    public MatchActionOperationsIdGenerator getMatchActionOperationsIdGenerator() {
+        // TODO Auto-generated method stub
+        // use MatchActionOperationsIdGeneratorWithIdBlockAllocator.
         return null;
     }
 

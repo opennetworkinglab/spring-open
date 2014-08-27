@@ -47,6 +47,20 @@ public interface MatchActionService {
     ConflictDetectionPolicy getConflictDetectionPolicy();
 
     /**
+     * Gets the ID generator for MatchActionId.
+     *
+     * @return the ID generator for MatchActionId
+     */
+    MatchActionIdGenerator getMatchActionIdGenerator();
+
+    /**
+     * Gets the ID generator for MatchActionOperationsId.
+     *
+     * @return the ID generator for MatchActionOperationsId
+     */
+    MatchActionOperationsIdGenerator getMatchActionOperationsIdGenerator();
+
+    /**
      * Adds event listener to this service.
      *
      * @param listener EventListener to be added.
