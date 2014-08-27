@@ -3,15 +3,16 @@ package net.onrc.onos.core.newintent;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import net.onrc.onos.api.flowmanager.FlowIdGenerator;
+import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowLink;
 import net.onrc.onos.api.flowmanager.PacketPathFlow;
 import net.onrc.onos.api.flowmanager.Path;
 import net.onrc.onos.api.newintent.Intent;
-import net.onrc.onos.api.newintent.IntentIdGenerator;
+import net.onrc.onos.api.newintent.IntentId;
 import net.onrc.onos.api.newintent.PathIntent;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.LinkTuple;
 
 import java.util.Arrays;
@@ -30,8 +31,8 @@ public class PathIntentCompiler
      * @param intentIdGenerator intent ID generator
      * @param flowIdGenerator flow ID generator
      */
-    public PathIntentCompiler(IntentIdGenerator intentIdGenerator,
-                              FlowIdGenerator flowIdGenerator) {
+    public PathIntentCompiler(IdGenerator<IntentId> intentIdGenerator,
+                              IdGenerator<FlowId> flowIdGenerator) {
         super(intentIdGenerator, flowIdGenerator);
     }
 

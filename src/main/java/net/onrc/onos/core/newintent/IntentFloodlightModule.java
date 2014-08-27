@@ -4,7 +4,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.onrc.onos.api.flowmanager.FlowIdGenerator;
+import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerService;
 import net.onrc.onos.api.newintent.InstallableIntent;
@@ -13,7 +13,6 @@ import net.onrc.onos.api.newintent.IntentCompiler;
 import net.onrc.onos.api.newintent.IntentEventListener;
 import net.onrc.onos.api.newintent.IntentFloodlightService;
 import net.onrc.onos.api.newintent.IntentId;
-import net.onrc.onos.api.newintent.IntentIdGenerator;
 import net.onrc.onos.api.newintent.IntentInstaller;
 import net.onrc.onos.api.newintent.IntentManager;
 import net.onrc.onos.api.newintent.IntentOperations;
@@ -25,6 +24,7 @@ import net.onrc.onos.core.datagrid.ISharedCollectionsService;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.util.IdBlockAllocator;
+import net.onrc.onos.core.util.IdGenerator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,11 +76,11 @@ public class IntentFloodlightModule implements IntentFloodlightService, IFloodli
 
         IdBlockAllocator idBlockAllocator =
                 context.getServiceImpl(IControllerRegistryService.class);
-        IntentIdGenerator intentIdGenerator =
+        IdGenerator<IntentId> intentIdGenerator =
                 new IdBlockAllocatorBasedIntentIdGenerator(idBlockAllocator);
         FlowManagerService flowManagerService =
                 context.getServiceImpl(FlowManagerFloodlightService.class);
-        FlowIdGenerator flowIdGenerator =
+        IdGenerator<FlowId> flowIdGenerator =
                 flowManagerService.getFlowIdGenerator();
 
         ITopologyService topologyService =
@@ -90,8 +90,8 @@ public class IntentFloodlightModule implements IntentFloodlightService, IFloodli
         registerDefaultInstallers(flowManagerService);
     }
 
-    private void registerDefaultCompilers(IntentIdGenerator intentIdGenerator,
-                                          FlowIdGenerator flowIdGenerator,
+    private void registerDefaultCompilers(IdGenerator<IntentId> intentIdGenerator,
+                                          IdGenerator<FlowId> flowIdGenerator,
                                           ITopologyService topologyService) {
         intentManager.registerCompiler(PointToPointIntent.class,
                 new PointToPointIntentCompiler(intentIdGenerator,

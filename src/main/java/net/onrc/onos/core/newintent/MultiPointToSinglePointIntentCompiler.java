@@ -1,10 +1,10 @@
 package net.onrc.onos.core.newintent;
 
-import net.onrc.onos.api.flowmanager.FlowIdGenerator;
+import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.SingleDstTreeFlow;
 import net.onrc.onos.api.flowmanager.Tree;
 import net.onrc.onos.api.newintent.Intent;
-import net.onrc.onos.api.newintent.IntentIdGenerator;
+import net.onrc.onos.api.newintent.IntentId;
 import net.onrc.onos.api.newintent.MultiPointToSinglePointIntent;
 import net.onrc.onos.core.intent.ConstrainedBFSTree;
 import net.onrc.onos.core.intent.Path;
@@ -13,6 +13,7 @@ import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.topology.BaseTopology;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.SwitchPort;
 
 import java.util.Arrays;
@@ -37,8 +38,8 @@ public class MultiPointToSinglePointIntentCompiler
      * @param flowIdGenerator flow ID generator
      * @param topologyService topology service
      */
-    public MultiPointToSinglePointIntentCompiler(IntentIdGenerator intentIdGenerator,
-                                                 FlowIdGenerator flowIdGenerator,
+    public MultiPointToSinglePointIntentCompiler(IdGenerator<IntentId> intentIdGenerator,
+                                                 IdGenerator<FlowId> flowIdGenerator,
                                                  ITopologyService topologyService) {
         super(intentIdGenerator, flowIdGenerator);
         this.topologyService = checkNotNull(topologyService);

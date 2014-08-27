@@ -10,13 +10,14 @@ import java.util.List;
 
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.core.matchaction.MatchAction;
-import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -86,8 +87,8 @@ public class PacketPathFlow extends PathFlow {
 
     @Override
     public List<MatchActionOperations> compile(Operator op,
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         switch (op) {
         case ADD:
             return compileAddOperation(maIdGenerator, maoIdGenerator);
@@ -108,7 +109,7 @@ public class PacketPathFlow extends PathFlow {
      */
     private MatchAction createNextMatchAction(Iterator<SwitchPort> portIterator,
             Iterator<List<Action>> actionsIterator,
-            MatchActionIdGenerator maIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator) {
         if (portIterator == null || actionsIterator == null ||
                 !portIterator.hasNext() || !actionsIterator.hasNext()) {
             return null;
@@ -128,8 +129,8 @@ public class PacketPathFlow extends PathFlow {
      * @return the list of {@link MatchActionOperations} objects
      */
     private List<MatchActionOperations> compileAddOperation(
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         Path path = checkNotNull(getPath());
         checkState(path.size() > 0, "Path object has no link.");
 
@@ -183,8 +184,8 @@ public class PacketPathFlow extends PathFlow {
      * @return the list of {@link MatchActionOperations} objects
      */
     private List<MatchActionOperations> compileRemoveOperation(
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         // TODO implement it
         throw new UnsupportedOperationException(
                 "REMOVE operation is not implemented yet.");

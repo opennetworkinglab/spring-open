@@ -4,6 +4,7 @@ import java.util.EventListener;
 import java.util.Set;
 
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
+import net.onrc.onos.core.util.IdGenerator;
 
 /**
  * An interface for the match-action service.
@@ -51,14 +52,14 @@ public interface MatchActionService {
      *
      * @return the ID generator for MatchActionId
      */
-    MatchActionIdGenerator getMatchActionIdGenerator();
+    IdGenerator<MatchActionId> getMatchActionIdGenerator();
 
     /**
      * Gets the ID generator for MatchActionOperationsId.
      *
      * @return the ID generator for MatchActionOperationsId
      */
-    MatchActionOperationsIdGenerator getMatchActionOperationsIdGenerator();
+    IdGenerator<MatchActionOperationsId> getMatchActionOperationsIdGenerator();
 
     /**
      * Adds event listener to this service.

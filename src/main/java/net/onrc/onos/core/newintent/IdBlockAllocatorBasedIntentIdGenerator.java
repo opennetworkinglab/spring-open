@@ -1,21 +1,14 @@
 package net.onrc.onos.core.newintent;
 
 import net.onrc.onos.api.newintent.IntentId;
-import net.onrc.onos.api.newintent.IntentIdGenerator;
-import net.onrc.onos.core.util.IdBlock;
+import net.onrc.onos.core.util.AbstractBlockAllocatorBasedIdGenerator;
 import net.onrc.onos.core.util.IdBlockAllocator;
-import net.onrc.onos.core.util.UnavailableIdException;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * An implementation of {@link IntentIdGenerator},
- * which uses {@link IdBlockAllocator#allocateUniqueIdBlock()}.
+ * An implementation of {@link net.onrc.onos.core.util.IdGenerator} of intent ID,
+ * which uses {@link IdBlockAllocator}.
  */
-public class IdBlockAllocatorBasedIntentIdGenerator implements IntentIdGenerator {
-
-    private final IdBlockAllocator allocator;
-    private IdBlock idBlock;
+public class IdBlockAllocatorBasedIntentIdGenerator extends AbstractBlockAllocatorBasedIdGenerator<IntentId> {
 
     /**
      * Constructs an intent ID generator, which uses the specified ID block allocator
@@ -24,17 +17,11 @@ public class IdBlockAllocatorBasedIntentIdGenerator implements IntentIdGenerator
      * @param allocator the ID block allocator to use for generating intent IDs
      */
     public IdBlockAllocatorBasedIntentIdGenerator(IdBlockAllocator allocator) {
-        this.allocator = checkNotNull(allocator);
-        this.idBlock = allocator.allocateUniqueIdBlock();
+        super(allocator);
     }
 
     @Override
-    public synchronized IntentId getNewId() {
-        try {
-            return new IntentId(idBlock.getNextId());
-        } catch (UnavailableIdException e) {
-            idBlock = allocator.allocateUniqueIdBlock();
-            return new IntentId(idBlock.getNextId());
-        }
+    protected IntentId convertFrom(long value) {
+        return new IntentId(value);
     }
 }

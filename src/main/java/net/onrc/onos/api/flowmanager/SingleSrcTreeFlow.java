@@ -6,12 +6,13 @@ import java.util.List;
 import java.util.Set;
 
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
-import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -84,8 +85,8 @@ public class SingleSrcTreeFlow extends Flow {
 
     @Override
     public List<MatchActionOperations> compile(Operator op,
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         // TODO Auto-generated method stub
         return null;
     }

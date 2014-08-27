@@ -1,9 +1,9 @@
 package net.onrc.onos.core.newintent;
 
 import net.onrc.onos.api.flowmanager.FlowId;
-import net.onrc.onos.api.flowmanager.FlowIdGenerator;
 import net.onrc.onos.api.newintent.Intent;
-import net.onrc.onos.api.newintent.IntentIdGenerator;
+import net.onrc.onos.api.newintent.IntentId;
+import net.onrc.onos.core.util.IdGenerator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -15,17 +15,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class AbstractFlowGeneratingIntentCompiler<T extends Intent>
         extends AbstractIntentCompiler<T> {
 
-    private final FlowIdGenerator flowIdGenerator;
+    private final IdGenerator<FlowId> flowIdGenerator;
 
     /**
-     * Constructs an object with the specified {@link IntentIdGenerator}
-     * and {@link FlowIdGenerator}.
+     * Constructs an object with the specified {@link IdGenerator IdGenerators} of intent ID
+     * and flow ID.
      *
      * @param intentIdGenerator
      * @param flowIdGenerator
      */
-    protected AbstractFlowGeneratingIntentCompiler(IntentIdGenerator intentIdGenerator,
-                                                   FlowIdGenerator flowIdGenerator) {
+    protected AbstractFlowGeneratingIntentCompiler(IdGenerator<IntentId> intentIdGenerator,
+                                                   IdGenerator<FlowId> flowIdGenerator) {
         super(intentIdGenerator);
         this.flowIdGenerator = checkNotNull(flowIdGenerator);
     }

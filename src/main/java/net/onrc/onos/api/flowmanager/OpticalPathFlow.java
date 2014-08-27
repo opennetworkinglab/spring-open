@@ -3,12 +3,13 @@ package net.onrc.onos.api.flowmanager;
 import java.util.List;
 
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
-import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.matchaction.match.PacketMatchBuilder;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.PortNumber;
 
 /**
@@ -67,8 +68,8 @@ public class OpticalPathFlow extends PathFlow {
 
     @Override
     public List<MatchActionOperations> compile(Operator op,
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         // TODO Auto-generated method stub
         return null;
     }

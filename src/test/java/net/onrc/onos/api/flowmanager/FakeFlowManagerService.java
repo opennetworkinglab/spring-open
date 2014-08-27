@@ -2,6 +2,7 @@ package net.onrc.onos.api.flowmanager;
 
 import com.google.common.collect.ImmutableList;
 import net.onrc.onos.core.flowmanager.FlowBatchHandleImpl;
+import net.onrc.onos.core.util.IdGenerator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,7 +88,7 @@ public class FakeFlowManagerService implements FlowManagerService {
     }
 
     @Override
-    public FlowIdGenerator getFlowIdGenerator() {
+    public IdGenerator<FlowId> getFlowIdGenerator() {
         throw new UnsupportedOperationException();
     }
 

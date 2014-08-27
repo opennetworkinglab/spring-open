@@ -4,10 +4,10 @@ import net.onrc.onos.api.newintent.ConnectivityIntent;
 import net.onrc.onos.api.newintent.Intent;
 import net.onrc.onos.api.newintent.IntentCompiler;
 import net.onrc.onos.api.newintent.IntentId;
-import net.onrc.onos.api.newintent.IntentIdGenerator;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.Actions;
 import net.onrc.onos.core.matchaction.action.OutputAction;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.SwitchPort;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @param <T> the type of intent
  */
 public abstract class AbstractIntentCompiler<T extends Intent> implements IntentCompiler<T> {
-    private final IntentIdGenerator idGenerator;
+    private final IdGenerator<IntentId> idGenerator;
 
     /**
      * Constructs an instance with the specified Intent ID generator.
@@ -32,7 +32,7 @@ public abstract class AbstractIntentCompiler<T extends Intent> implements Intent
      * </p>
      * @param idGenerator intent ID generator
      */
-    protected AbstractIntentCompiler(IntentIdGenerator idGenerator) {
+    protected AbstractIntentCompiler(IdGenerator<IntentId> idGenerator) {
         this.idGenerator = checkNotNull(idGenerator);
     }
 

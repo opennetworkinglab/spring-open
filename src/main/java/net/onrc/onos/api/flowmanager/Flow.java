@@ -5,10 +5,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 
 import net.onrc.onos.api.batchoperation.BatchOperationTarget;
-import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.match.Match;
+import net.onrc.onos.core.util.IdGenerator;
 
 /**
  * An abstract class to define flow object which is managed by
@@ -67,8 +68,8 @@ public abstract class Flow implements BatchOperationTarget {
      */
     public abstract List<MatchActionOperations> compile(
             FlowBatchOperation.Operator op,
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator);
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator);
 
     /**
      * Generates a hash code using the FlowId.

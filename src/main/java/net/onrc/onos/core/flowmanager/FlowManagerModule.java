@@ -22,18 +22,18 @@ import net.onrc.onos.api.flowmanager.FlowBatchId;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.api.flowmanager.FlowId;
-import net.onrc.onos.api.flowmanager.FlowIdGenerator;
 import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
 import net.onrc.onos.core.datagrid.ISharedCollectionsService;
 import net.onrc.onos.core.matchaction.MatchActionFloodlightService;
-import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.MatchActionService;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.IdBlockAllocator;
+import net.onrc.onos.core.util.IdGenerator;
 
 /**
  * Manages a set of Flow objects, computes and maintains a set of Match-Action
@@ -45,8 +45,8 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     private ConflictDetectionPolicy conflictDetectionPolicy;
     private FlowIdGeneratorWithIdBlockAllocator flowIdGenerator;
     private FlowBatchIdGeneratorWithIdBlockAllocator flowBatchIdGenerator;
-    private MatchActionIdGenerator maIdGenerator;
-    private MatchActionOperationsIdGenerator maoIdGenerator;
+    private IdGenerator<MatchActionId> maIdGenerator;
+    private IdGenerator<MatchActionOperationsId> maoIdGenerator;
     private MatchActionService matchActionService;
     private IControllerRegistryService registryService;
     private ISharedCollectionsService sharedCollectionService;
@@ -155,7 +155,7 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     }
 
     @Override
-    public FlowIdGenerator getFlowIdGenerator() {
+    public IdGenerator<FlowId> getFlowIdGenerator() {
         return flowIdGenerator;
     }
 

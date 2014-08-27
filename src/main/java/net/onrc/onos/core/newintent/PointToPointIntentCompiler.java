@@ -4,12 +4,11 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import net.onrc.onos.api.flowmanager.FlowId;
-import net.onrc.onos.api.flowmanager.FlowIdGenerator;
 import net.onrc.onos.api.flowmanager.FlowLink;
 import net.onrc.onos.api.flowmanager.PacketPathFlow;
 import net.onrc.onos.api.flowmanager.Path;
 import net.onrc.onos.api.newintent.Intent;
-import net.onrc.onos.api.newintent.IntentIdGenerator;
+import net.onrc.onos.api.newintent.IntentId;
 import net.onrc.onos.api.newintent.PointToPointIntent;
 import net.onrc.onos.core.intent.ConstrainedBFSTree;
 import net.onrc.onos.core.matchaction.action.Action;
@@ -19,6 +18,7 @@ import net.onrc.onos.core.topology.BaseTopology;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkEvent;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.SwitchPort;
 
 import java.util.Arrays;
@@ -41,8 +41,8 @@ public class PointToPointIntentCompiler
      * @param intentIdGenerator intent ID generator
      * @param topologyService topology service
      */
-    public PointToPointIntentCompiler(IntentIdGenerator intentIdGenerator,
-                                      FlowIdGenerator flowIdGenerator,
+    public PointToPointIntentCompiler(IdGenerator<IntentId> intentIdGenerator,
+                                      IdGenerator<FlowId> flowIdGenerator,
                                       ITopologyService topologyService) {
         super(intentIdGenerator, flowIdGenerator);
         this.topologyService = checkNotNull(topologyService);

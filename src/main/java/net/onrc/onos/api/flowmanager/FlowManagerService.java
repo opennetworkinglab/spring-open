@@ -1,5 +1,7 @@
 package net.onrc.onos.api.flowmanager;
 
+import net.onrc.onos.core.util.IdGenerator;
+
 import java.util.Collection;
 
 /**
@@ -65,7 +67,7 @@ public interface FlowManagerService {
      * Gets ID generator for Flow objects.
      * @return the ID generator for Flow objects
      */
-    FlowIdGenerator getFlowIdGenerator();
+    IdGenerator<FlowId> getFlowIdGenerator();
 
     /**
      * Sets a conflict detection policy.

@@ -1,7 +1,10 @@
 package net.onrc.onos.api.newintent;
 
+import net.onrc.onos.core.util.IdGenerator;
+
 /**
- * This interface is for generator of IntentId.
+ * This interface is for generator of IntentId. It is defined only for
+ * testing purpose to keep type safety on mock creation.
  *
  * <p>
  * {@link #getNewId()} generates a globally unique {@link IntentId} instance
@@ -9,11 +12,5 @@ package net.onrc.onos.api.newintent;
  * by themselves. Instead use an implementation of this interface.
  * </p>
  */
-public interface IntentIdGenerator {
-    /**
-     * Generates a globally unique {@link IntentId} instance.
-     *
-     * @return a globally unique {@link IntentId} instance.
-     */
-    public IntentId getNewId();
+public interface IntentIdGenerator extends IdGenerator<IntentId> {
 }

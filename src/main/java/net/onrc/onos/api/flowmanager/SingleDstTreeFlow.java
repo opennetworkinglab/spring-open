@@ -18,14 +18,15 @@ import com.google.common.collect.ImmutableSet;
 
 import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.core.matchaction.MatchAction;
-import net.onrc.onos.core.matchaction.MatchActionIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsIdGenerator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -110,8 +111,8 @@ public class SingleDstTreeFlow extends Flow {
 
     @Override
     public List<MatchActionOperations> compile(Operator op,
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         switch (op) {
         case ADD:
             return compileAddOperation(maIdGenerator, maoIdGenerator);
@@ -123,7 +124,7 @@ public class SingleDstTreeFlow extends Flow {
     }
 
     private MatchAction createMatchAction(SwitchPort port, List<Action> actions,
-            MatchActionIdGenerator maIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator) {
         checkNotNull(port);
         checkNotNull(actions);
 
@@ -145,8 +146,8 @@ public class SingleDstTreeFlow extends Flow {
             Dpid egressSwitch,
             Map<Dpid, Set<PortNumber>> inPorts,
             Map<Dpid, PortNumber> outPorts,
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         MatchActionOperations firstOps =
                 new MatchActionOperations(maoIdGenerator.getNewId());
         for (Entry<Dpid, Set<PortNumber>> innerSw : inPorts.entrySet()) {
@@ -183,8 +184,8 @@ public class SingleDstTreeFlow extends Flow {
     private MatchActionOperations generateSecondAddOperations(
             Dpid egressSwitch,
             Map<Dpid, PortNumber> outPorts,
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         MatchActionOperations secondOps =
                 new MatchActionOperations(maoIdGenerator.getNewId());
         for (SwitchPort port : getIngressPorts()) {
@@ -213,8 +214,8 @@ public class SingleDstTreeFlow extends Flow {
     }
 
     private List<MatchActionOperations> compileAddOperation(
-            MatchActionIdGenerator maIdGenerator,
-            MatchActionOperationsIdGenerator maoIdGenerator) {
+            IdGenerator<MatchActionId> maIdGenerator,
+            IdGenerator<MatchActionOperationsId> maoIdGenerator) {
         checkNotNull(tree);
         checkState(tree.size() > 0, "Tree object has no link.");
 

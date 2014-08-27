@@ -1,20 +1,15 @@
 package net.onrc.onos.core.flowmanager;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import net.onrc.onos.api.flowmanager.FlowId;
-import net.onrc.onos.api.flowmanager.FlowIdGenerator;
-import net.onrc.onos.core.util.IdBlock;
+import net.onrc.onos.core.util.AbstractBlockAllocatorBasedIdGenerator;
 import net.onrc.onos.core.util.IdBlockAllocator;
-import net.onrc.onos.core.util.UnavailableIdException;
 
 /**
  * Generates a global unique FlowId using
  * {@link IdBlockAllocator#allocateUniqueIdBlock()}.
  */
-public class FlowIdGeneratorWithIdBlockAllocator implements FlowIdGenerator {
-
-    private final IdBlockAllocator allocator;
-    private IdBlock idBlock;
+public class FlowIdGeneratorWithIdBlockAllocator
+        extends AbstractBlockAllocatorBasedIdGenerator<FlowId> {
 
     /**
      * Creates a FlowId generator instance using specified ID block allocator.
@@ -22,17 +17,11 @@ public class FlowIdGeneratorWithIdBlockAllocator implements FlowIdGenerator {
      * @param allocator the ID block allocator to be used
      */
     public FlowIdGeneratorWithIdBlockAllocator(IdBlockAllocator allocator) {
-        this.allocator = checkNotNull(allocator);
-        this.idBlock = allocator.allocateUniqueIdBlock();
+        super(allocator);
     }
 
     @Override
-    public synchronized FlowId getNewId() {
-        try {
-            return new FlowId(idBlock.getNextId());
-        } catch (UnavailableIdException e) {
-            idBlock = allocator.allocateUniqueIdBlock();
-            return new FlowId(idBlock.getNextId());
-        }
+    protected FlowId convertFrom(long value) {
+        return new FlowId(value);
     }
 }

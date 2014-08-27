@@ -26,7 +26,8 @@ public final class FlowId implements BatchOperationTarget {
     /**
      * Creates new instance with string ID.
      * <p>
-     * This FlowId instance should be generated with {@link FlowIdGenerator}.
+     * This FlowId instance should be generated with
+     * {@link net.onrc.onos.core.util.IdGenerator} of flow ID.
      *
      * @param id String representation of the ID.
      */

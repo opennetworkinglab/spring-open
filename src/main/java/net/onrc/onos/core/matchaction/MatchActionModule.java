@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
+import net.onrc.onos.core.util.IdGenerator;
 
 /**
  * Manages Match-Action entries.
@@ -56,14 +57,14 @@ public class MatchActionModule implements MatchActionFloodlightService {
     }
 
     @Override
-    public MatchActionIdGenerator getMatchActionIdGenerator() {
+    public IdGenerator<MatchActionId> getMatchActionIdGenerator() {
         // TODO Auto-generated method stub
         // use MatchActionIdGeneratorWithIdBlockAllocator.
         return null;
     }
 
     @Override
-    public MatchActionOperationsIdGenerator getMatchActionOperationsIdGenerator() {
+    public IdGenerator<MatchActionOperationsId> getMatchActionOperationsIdGenerator() {
         // TODO Auto-generated method stub
         // use MatchActionOperationsIdGeneratorWithIdBlockAllocator.
         return null;
