@@ -16,12 +16,7 @@ public class DatagridWebRoutable implements RestletRoutable {
     @Override
     public Restlet getRestlet(Context context) {
         Router router = new Router(context);
-        router.attach("/add/intents/json", IntentResource.class);
-        router.attach("/get/intent/{intent_id}/json", IntentResource.class);
         router.attach("/get/ng-events/json", GetNGEventsResource.class);
-        router.attach("/get/intents/{category}/json", IntentResource.class);
-        router.attach("/get/intent/{category}/{intent_id}/json", IntentResource.class);
-        router.attach("/delete/intents/json", IntentResource.class);
         return router;
     }
 
