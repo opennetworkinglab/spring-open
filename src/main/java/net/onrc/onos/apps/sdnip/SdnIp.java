@@ -202,6 +202,8 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
 
         controllerRegistryService = context
                 .getServiceImpl(IControllerRegistryService.class);
+        pathRuntime = context.getServiceImpl(IPathCalcRuntimeService.class);
+        linkDiscoveryService = context.getServiceImpl(ILinkDiscoveryService.class);
 
         intentIdGenerator = new IdBlockAllocatorBasedIntentIdGenerator(
                 controllerRegistryService);
