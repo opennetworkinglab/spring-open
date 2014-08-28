@@ -54,7 +54,7 @@ public class IncomingRequestResource extends ServerResource {
                 }
 
                 output.append("    {\"prefix\": \"");
-                output.append(entry.getKey());
+                output.append(Prefix.fromBinaryString(entry.getKey().toString()));
                 output.append("\", \"nexthop\": \"");
                 output.append(entry.getValue().getNextHop().getHostAddress());
                 output.append("\"}");

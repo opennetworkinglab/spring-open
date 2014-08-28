@@ -4,10 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -69,11 +72,12 @@ public class PrefixTest {
         Prefix p3 = new Prefix(b3, 12);
         Prefix p4 = new Prefix(b4, 11);
 
-        //Have different input byte arrays, but should be equal after construction
+        // Different input byte arrays, but Prefixes should be equal after
+        // construction
         assertTrue(p1.equals(p2));
         assertTrue(p2.equals(p3));
 
-        //Same input byte array, but should be false
+        // Same input byte array, but should be false
         assertFalse(p1.equals(p4));
 
         assertTrue(Arrays.equals(p1.getAddress(), p3.getAddress()));
@@ -104,8 +108,8 @@ public class PrefixTest {
 
     @Test
     public void testPrefixReturnsSame() {
-        //Create a prefix of all ones for each prefix length.
-        //Check that Prefix doesn't mangle it
+        // Create a prefix of all ones for each prefix length.
+        // Check that Prefix doesn't mangle it
         for (int prefixLength = 1; prefixLength <= Prefix.MAX_PREFIX_LENGTH; prefixLength++) {
             byte[] address = new byte[Prefix.ADDRESS_LENGTH_BYTES];
 
@@ -190,5 +194,52 @@ public class PrefixTest {
 
         // Should throw IllegalArgumentException
         new Prefix(b, Prefix.MAX_PREFIX_LENGTH + 1);
+    }
+
+    @Test
+    public void testFromBinaryString() {
+        Map<String, String> binaryToDecimalDot = new HashMap<>();
+
+        binaryToDecimalDot.put("", "0.0.0.0/0");
+        binaryToDecimalDot.put("1", "128.0.0.0/1");
+        binaryToDecimalDot.put("10000001", "129.0.0.0/8");
+        binaryToDecimalDot.put("1011011110", "183.128.0.0/10");
+        binaryToDecimalDot.put("01001101000000001010010110110101", "77.0.165.181/32");
+
+        for (Map.Entry<String, String> entry : binaryToDecimalDot.entrySet()) {
+            Prefix p = Prefix.fromBinaryString(entry.getKey());
+            assertEquals(entry.getValue(), p.toString());
+        }
+    }
+
+    @Test
+    public void testFromBinaryStringInvalidInput() {
+        try {
+            Prefix.fromBinaryString("34102");
+            fail("Non-binary input should throw an exception");
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+
+        try {
+            Prefix.fromBinaryString("-0101");
+            fail("Non-binary input should throw an exception");
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+
+        try {
+            Prefix.fromBinaryString("01010101010101010101010101010102");
+            fail("Non-binary input should throw an exception");
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+
+        try {
+            Prefix.fromBinaryString("010101010101010101010101010101011");
+            fail("Input too long should throw an exception");
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
     }
 }

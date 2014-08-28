@@ -1,7 +1,9 @@
 package net.onrc.onos.apps.sdnip;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import com.google.common.net.InetAddresses;
@@ -27,6 +29,8 @@ public class Prefix {
     public static final int MAX_PREFIX_LENGTH = Byte.SIZE * ADDRESS_LENGTH_BYTES;
 
     public static final int MIN_PREFIX_LENGTH = 0;
+
+    private static final int BINARY_RADIX = 2;
 
     private final int prefixLength;
     private final byte[] address;
@@ -237,23 +241,46 @@ public class Prefix {
     }
 
     /**
-     * Print the prefix to a String showing the bits of the address.
+     * Creates a Prefix object from a binary string.
+     * <p/>
+     * This is the reverse operation of {@link Prefix#toBinaryString()}. It
+     * takes a binary string (a String containing only '0' and '1'
+     * characters) and parses it to create a corresponding Prefix object.
      *
-     * @return the bit-string of the prefix
+     * @param binaryString the binary string to convert to Prefix
+     * @return a Prefix object representing the same prefix as the input string
      */
-    public String printAsBits() {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < address.length; i++) {
-            byte b = address[i];
-            for (int j = 0; j < Byte.SIZE; j++) {
-                byte mask = (byte) (0x80 >>> j);
-                result.append(((b & mask) == 0) ? "0" : "1");
-                if (i * Byte.SIZE + j == prefixLength - 1) {
-                    return result.toString();
-                }
-            }
-            result.append(' ');
+    public static Prefix fromBinaryString(String binaryString) {
+        if (binaryString.length() > MAX_PREFIX_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Binary string length must not be greater than "
+                    + MAX_PREFIX_LENGTH);
         }
-        return result.substring(0, result.length() - 1);
+
+        for (int i = 0; i < binaryString.length(); i++) {
+            char character = binaryString.charAt(i);
+            if (character != '0' && character != '1') {
+                throw new IllegalArgumentException(
+                        "Binary string may only contain the characters "
+                        + "\'0\' or \'1\'");
+            }
+        }
+
+        // Pad the binary string out to be MAX_PREFIX_LENGTH bits long
+        StringBuilder paddedBinaryString = new StringBuilder(MAX_PREFIX_LENGTH);
+        paddedBinaryString.append(binaryString);
+        for (int i = binaryString.length(); i < MAX_PREFIX_LENGTH; i++) {
+            paddedBinaryString.append('0');
+        }
+
+        // BigInteger will parse the binary string to an integer using radix 2
+        BigInteger bigInteger =
+                new BigInteger(paddedBinaryString.toString(), BINARY_RADIX);
+
+        // Convert the integer to a byte array
+        ByteBuffer bb = ByteBuffer.allocate(ADDRESS_LENGTH_BYTES);
+        bb.putInt(bigInteger.intValue());
+
+        return new Prefix(bb.array(), binaryString.length());
     }
 }
