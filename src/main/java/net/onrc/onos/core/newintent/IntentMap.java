@@ -1,8 +1,5 @@
 package net.onrc.onos.core.newintent;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.IMap;
@@ -32,9 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class IntentMap<V> {
     private static final Logger log = LoggerFactory.getLogger(IntentMap.class);
-    private static final int MAX_BUFFER_SIZE = 64 * 1024;
 
-    private final KryoFactory factory = new KryoFactory();
     private final Class<V> valueType;
     private final IMap<String, byte[]> map;
 
@@ -61,7 +56,7 @@ class IntentMap<V> {
         checkNotNull(id);
         checkNotNull(value);
 
-        map.set(id.toString(), serializeValue(value));
+        map.set(id.toString(), KryoFactory.serialize(value));
     }
 
     /**
@@ -78,7 +73,7 @@ class IntentMap<V> {
             return null;
         }
 
-        return deserializeValue(bytes);
+        return KryoFactory.deserialize(bytes);
     }
 
     /**
@@ -100,7 +95,7 @@ class IntentMap<V> {
     public Collection<V> values() {
         Collection<V> values = new ArrayList<>();
         for (byte[] bytes: map.values()) {
-            V value = deserializeValue(bytes);
+            V value = KryoFactory.deserialize(bytes);
             if (value == null) {
                 continue;
             }
@@ -153,7 +148,7 @@ class IntentMap<V> {
                                 internalEvent.getMember(),
                                 internalEvent.getEventType().getType(),
                                 IntentId.valueOf(internalEvent.getKey()),
-                                deserializeValue(internalEvent.getValue())
+                                KryoFactory.<V>deserialize(internalEvent.getValue())
                         );
                 return converted;
             }
@@ -167,54 +162,5 @@ class IntentMap<V> {
      */
     void destroy() {
         map.destroy();
-    }
-
-    // NOTE: this method was copied from HazelcastEventChannel due to necessity of quick hack
-    // TODO: remove the code duplication
-    /**
-     * Serialize the value.
-     *
-     * @param value the value to serialize.
-     * @return the serialized value.
-     */
-    private byte[] serializeValue(V value) {
-        //
-        // Encode the value
-        //
-        byte[] buffer = new byte[MAX_BUFFER_SIZE];
-        Kryo kryo = factory.newKryo();
-        try {
-            Output output = new Output(buffer, -1);
-            kryo.writeClassAndObject(output, value);
-            return output.toBytes();
-        } finally {
-            factory.deleteKryo(kryo);
-        }
-    }
-
-    // NOTE: this method was copied from HazelcastEventChannel due to necessity of quick hack
-    // TODO: remove the code duplication
-    /**
-     * Deserialize the value.
-     *
-     * @param bytes the buffer with the serialized value.
-     * @return the deserialized value.
-     */
-    private V deserializeValue(byte[] bytes) {
-        V value;
-
-        Kryo kryo = factory.newKryo();
-        try {
-            Input input = new Input(bytes);
-            Object objValue = kryo.readClassAndObject(input);
-            value = valueType.cast(objValue);
-        } catch (ClassCastException e) {
-            log.error("Received notification value cast failed", e);
-            return null;
-        } finally {
-            factory.deleteKryo(kryo);
-        }
-
-        return value;
     }
 }
