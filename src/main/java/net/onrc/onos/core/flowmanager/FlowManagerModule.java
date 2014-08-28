@@ -1,8 +1,5 @@
 package net.onrc.onos.core.flowmanager;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,22 +11,16 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowBatchHandle;
 import net.onrc.onos.api.flowmanager.FlowBatchId;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
-import net.onrc.onos.api.flowmanager.FlowBatchOperation.Operator;
 import net.onrc.onos.api.flowmanager.FlowId;
 import net.onrc.onos.api.flowmanager.FlowManagerFloodlightService;
 import net.onrc.onos.api.flowmanager.FlowManagerListener;
 import net.onrc.onos.core.datagrid.ISharedCollectionsService;
 import net.onrc.onos.core.matchaction.MatchActionFloodlightService;
-import net.onrc.onos.core.matchaction.MatchActionId;
-import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
-import net.onrc.onos.core.matchaction.MatchActionOperations;
-import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.MatchActionService;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.IdBlockAllocator;
@@ -45,14 +36,13 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     private ConflictDetectionPolicy conflictDetectionPolicy;
     private FlowIdGeneratorWithIdBlockAllocator flowIdGenerator;
     private FlowBatchIdGeneratorWithIdBlockAllocator flowBatchIdGenerator;
-    private IdGenerator<MatchActionId> maIdGenerator;
-    private IdGenerator<MatchActionOperationsId> maoIdGenerator;
     private MatchActionService matchActionService;
     private IControllerRegistryService registryService;
     private ISharedCollectionsService sharedCollectionService;
     private FlowMap flowMap;
     private FlowBatchMap flowBatchMap;
     private FlowEventDispatcher flowEventDispatcher;
+    private FlowBatchOperationExecutor flowBatchOperationExecutor;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -92,14 +82,15 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
                 new FlowIdGeneratorWithIdBlockAllocator(idBlockAllocator);
         flowBatchIdGenerator =
                 new FlowBatchIdGeneratorWithIdBlockAllocator(idBlockAllocator);
-        maIdGenerator = matchActionService.getMatchActionIdGenerator();
-        maoIdGenerator = matchActionService.getMatchActionOperationsIdGenerator();
 
         flowMap = new SharedFlowMap(sharedCollectionService);
         flowBatchMap = new SharedFlowBatchMap(sharedCollectionService);
         flowEventDispatcher =
                 new FlowEventDispatcher(flowMap, flowBatchMap, matchActionService);
         flowEventDispatcher.start();
+        flowBatchOperationExecutor =
+                new FlowBatchOperationExecutor(matchActionService, flowMap, flowBatchMap);
+        flowBatchOperationExecutor.start();
     }
 
     /**
@@ -182,56 +173,5 @@ public class FlowManagerModule implements FlowManagerFloodlightService, IFloodli
     @Override
     public void removeListener(FlowManagerListener listener) {
         flowEventDispatcher.removeListener(listener);
-    }
-
-    private MatchActionOperations createNewMatchActionOperations() {
-        return new MatchActionOperations(maoIdGenerator.getNewId());
-    }
-
-    /**
-     * Generates the series of MatchActionOperations from the
-     * {@link FlowBatchOperation}.
-     * <p>
-     * Note: Currently supporting ADD operations only.
-     * <p>
-     * Note: Currently supporting PacketPathFlow and SingleDstTreeFlow only.
-     *
-     * @param op the {@link FlowBatchOperation} object
-     * @return the list of {@link MatchActionOperations} objects
-     */
-    private List<MatchActionOperations>
-            generateMatchActionOperationsList(FlowBatchOperation op) {
-        MatchActionOperations firstOps = createNewMatchActionOperations();
-        MatchActionOperations secondOps = createNewMatchActionOperations();
-
-        for (BatchOperationEntry<Operator, ?> e : op.getOperations()) {
-            if (e.getOperator() != FlowBatchOperation.Operator.ADD) {
-                throw new UnsupportedOperationException(
-                        "FlowManager supports ADD operations only.");
-            }
-            if (!(e.getTarget() instanceof Flow)) {
-                throw new IllegalStateException(
-                        "The target is not Flow object: " + e.getTarget());
-            }
-
-            Flow flow = (Flow) e.getTarget();
-            List<MatchActionOperations> maOps = flow.compile(
-                    e.getOperator(), maIdGenerator, maoIdGenerator);
-            checkNotNull(maOps, "Could not compile the flow: " + flow);
-            checkState(maOps.size() == 2,
-                    "The flow generates unspported match-action operations.");
-
-            for (MatchActionOperationEntry mae : maOps.get(0).getOperations()) {
-                checkState(mae.getOperator() == MatchActionOperations.Operator.ADD);
-                firstOps.addOperation(mae);
-            }
-
-            for (MatchActionOperationEntry mae : maOps.get(1).getOperations()) {
-                checkState(mae.getOperator() == MatchActionOperations.Operator.ADD);
-                secondOps.addOperation(mae);
-            }
-        }
-
-        return Arrays.asList(firstOps, secondOps);
     }
 }
