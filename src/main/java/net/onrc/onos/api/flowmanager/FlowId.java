@@ -2,20 +2,25 @@ package net.onrc.onos.api.flowmanager;
 
 import java.util.Objects;
 
+import javax.annotation.concurrent.Immutable;
+
 import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 
 /**
  * Represents ID for Flow objects.
+ * <p>
+ * This class is immutable.
  */
-public class FlowId implements BatchOperationTarget {
-    private final long value;
+@Immutable
+public final class FlowId implements BatchOperationTarget {
+    private final long id;
 
     /**
      * Default constructor for Kryo deserialization.
      */
     @Deprecated
     protected FlowId() {
-        value = 0;
+        id = 0;
     }
 
     /**
@@ -26,24 +31,24 @@ public class FlowId implements BatchOperationTarget {
      * @param id String representation of the ID.
      */
     public FlowId(long id) {
-        value = id;
+        this.id = id;
     }
 
     @Override
     public String toString() {
-        return Long.toString(value);
+        return "0x" + Long.toHexString(id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(value);
+        return Objects.hashCode(id);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof FlowId) {
             FlowId that = (FlowId) obj;
-            return Objects.equals(this.value, that.value);
+            return Objects.equals(this.id, that.id);
         }
         return false;
     }
