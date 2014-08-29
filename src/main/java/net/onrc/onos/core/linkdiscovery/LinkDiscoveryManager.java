@@ -798,13 +798,7 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
      */
     @Override
     public void switchDisconnected(long swId) {
-        IOFSwitch sw = floodlightProvider.getSwitch(swId);
-        if (sw == null) {
-            log.warn("Removed switch not available {} ", swId);
-            return;
-        }
-        // Update event history
-
+        // Cleanup link state
         List<Link> eraseList = new ArrayList<Link>();
         lock.writeLock().lock();
         try {
