@@ -24,16 +24,42 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
+import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.intent.FlowEntry;
+import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
+import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
+import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
+import net.onrc.onos.core.matchaction.action.OutputAction;
+import net.onrc.onos.core.matchaction.match.Match;
+import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.IPv4Net;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.protocol.OFBarrierRequest;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.action.OFActions;
+import org.projectfloodlight.openflow.protocol.match.Match.Builder;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.types.EthType;
+import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.IpProtocol;
+import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.types.OFBufferId;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.TransportPort;
+import org.projectfloodlight.openflow.types.U64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -589,6 +615,144 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
 
         entries.add(Pair.of(dpid, flowEntry));
         pushFlowEntries(entries, priority);
+    }
+
+    public static final int PRIORITY_DEFAULT = 32768; // Default Flow Priority
+
+    @Override
+    public void pushMatchAction(MatchActionOperationEntry matchActionOp) {
+        final MatchAction matchAction = matchActionOp.getTarget();
+
+        // Get the switch and its OFFactory
+        final SwitchPort srcPort = matchAction.getSwitchPort();
+        final Dpid dpid = srcPort.getDpid();
+        IOFSwitch sw = floodlightProvider.getMasterSwitch(dpid.value());
+        if (sw == null) {
+            log.warn("Couldn't find switch {} when pushing message", dpid);
+            return;
+        }
+        OFFactory factory = sw.getFactory();
+
+        // Build Match
+        final Match match = matchAction.getMatch();
+        Builder matchBuilder = factory.buildMatch();
+        if (match instanceof PacketMatch) {
+            final PacketMatch packetMatch = (PacketMatch) match;
+            final MACAddress srcMac = packetMatch.getSrcMacAddress();
+            final MACAddress dstMac = packetMatch.getDstMacAddress();
+            final Short etherType = packetMatch.getEtherType();
+            final IPv4Net srcIp = packetMatch.getSrcIpAddress();
+            final IPv4Net dstIp = packetMatch.getDstIpAddress();
+            final Byte ipProto = packetMatch.getIpProtocolNumber();
+            final Short srcTcpPort = packetMatch.getSrcTcpPortNumber();
+            final Short dstTcpPort = packetMatch.getDstTcpPortNumber();
+
+            if (srcMac != null) {
+                matchBuilder.setExact(MatchField.ETH_SRC, MacAddress.of(srcMac.toLong()));
+            }
+            if (dstMac != null) {
+                matchBuilder.setExact(MatchField.ETH_DST, MacAddress.of(dstMac.toLong()));
+            }
+            if (etherType != null) {
+                matchBuilder.setExact(MatchField.ETH_TYPE, EthType.of(etherType));
+            }
+            if (srcIp != null) {
+                matchBuilder.setMasked(MatchField.IPV4_SRC,
+                        IPv4Address.of(srcIp.address().value())
+                                .withMaskOfLength(srcIp.prefixLen()));
+            }
+            if (dstIp != null) {
+                matchBuilder.setMasked(MatchField.IPV4_DST,
+                        IPv4Address.of(dstIp.address().value())
+                                .withMaskOfLength(dstIp.prefixLen()));
+            }
+            if (ipProto != null) {
+                matchBuilder.setExact(MatchField.IP_PROTO, IpProtocol.of(ipProto));
+            }
+            if (srcTcpPort != null) {
+                matchBuilder.setExact(MatchField.TCP_SRC, TransportPort.of(srcTcpPort));
+            }
+            if (dstTcpPort != null) {
+                matchBuilder.setExact(MatchField.TCP_DST, TransportPort.of(dstTcpPort));
+            }
+            matchBuilder.setExact(MatchField.IN_PORT,
+                    OFPort.of(srcPort.getPortNumber().shortValue()));
+        } else {
+            log.warn("Unsupported Match type: {}", match.getClass().getName());
+            return;
+        }
+
+        // Build Actions
+        List<OFAction> actionList = new ArrayList<>(matchAction.getActions().size());
+        OFActions ofActionTypes = factory.actions();
+        for (Action action : matchAction.getActions()) {
+            OFAction ofAction = null;
+            if (action instanceof OutputAction) {
+                OutputAction outputAction = (OutputAction) action;
+                // short or int?
+                OFPort port = OFPort.of((int) outputAction.getPortNumber().value());
+                ofAction = ofActionTypes.output(port, Short.MAX_VALUE);
+            } else if (action instanceof ModifyDstMacAction) {
+                ModifyDstMacAction dstMacAction = (ModifyDstMacAction) action;
+                ofActionTypes.setDlDst(MacAddress.of(dstMacAction.getDstMac().toLong()));
+            } else if (action instanceof ModifySrcMacAction) {
+                ModifySrcMacAction srcMacAction = (ModifySrcMacAction) action;
+                ofActionTypes.setDlSrc(MacAddress.of(srcMacAction.getSrcMac().toLong()));
+            } else {
+                log.warn("Unsupported Action type: {}", action.getClass().getName());
+                continue;
+            }
+            actionList.add(ofAction);
+        }
+
+        // Construct a FlowMod message builder
+        OFFlowMod.Builder fmBuilder = null;
+        switch (matchActionOp.getOperator()) {
+        case ADD:
+            fmBuilder = factory.buildFlowAdd();
+            break;
+        case REMOVE:
+            fmBuilder = factory.buildFlowDeleteStrict();
+            break;
+        // case MODIFY: // TODO
+        // fmBuilder = factory.buildFlowModifyStrict();
+        // break;
+        default:
+            log.warn("Unsupported MatchAction Operator: {}", matchActionOp.getOperator());
+            return;
+        }
+
+        // Add output port for OF1.0
+        OFPort outp = OFPort.of((short) 0xffff); // OF1.0 OFPP.NONE
+        if (matchActionOp.getOperator() == Operator.REMOVE) {
+            if (actionList.size() == 1) {
+                if (actionList.get(0).getType() == OFActionType.OUTPUT) {
+                    OFActionOutput oa = (OFActionOutput) actionList.get(0);
+                    outp = oa.getPort();
+                }
+            }
+        }
+
+
+        // Build OFFlowMod
+        fmBuilder.setMatch(matchBuilder.build())
+                .setActions(actionList)
+                .setIdleTimeout(0) // hardcoded to zero for now
+                .setHardTimeout(0) // hardcoded to zero for now
+                .setCookie(U64.of(matchAction.getId().value()))
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setPriority(PRIORITY_DEFAULT)
+                .setOutPort(outp);
+
+        // Build the message and add it to the queue
+        add(dpid, fmBuilder.build());
+    }
+
+    @Override
+    public void pushMatchActions(Collection<MatchActionOperationEntry> matchActionOps) {
+        for (MatchActionOperationEntry matchActionOp : matchActionOps) {
+            pushMatchAction(matchActionOp);
+        }
     }
 
     /**

@@ -1,8 +1,8 @@
 package net.onrc.onos.core.matchaction;
 
-import net.onrc.onos.api.batchoperation.BatchOperationTarget;
-
 import java.util.Objects;
+
+import net.onrc.onos.api.batchoperation.BatchOperationTarget;
 
 /**
  * A unique identifier for a MatchAction.  Objects of this class are immutable.
@@ -17,6 +17,15 @@ public final class MatchActionId implements BatchOperationTarget {
      */
     public MatchActionId(long id) {
         value = id;
+    }
+
+    /**
+     * Returns the MatchActionId as a long.
+     *
+     * @return MatchAction ID
+     */
+    public long value() {
+        return value;
     }
 
     @Override

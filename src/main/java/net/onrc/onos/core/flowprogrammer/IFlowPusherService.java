@@ -5,6 +5,7 @@ import java.util.Collection;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.core.intent.FlowEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.util.Dpid;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -133,6 +134,22 @@ public interface IFlowPusherService extends IFloodlightService {
      */
     void pushFlowEntry(Dpid dpid, FlowEntry flowEntry,
                        MsgPriority priority);
+
+    /**
+     * Create a message from MatchAction and add it to the queue of the switch
+     * with normal priority.
+     *
+     * @param matchActionOp MatchAction to use
+     */
+    void pushMatchAction(MatchActionOperationEntry matchActionOp);
+
+    /**
+     * Create messages for a collection of MatchActions and add them to the
+     * appropriate queue.
+     *
+     * @param matchActionOps Collection of MatchAction to use
+     */
+    void pushMatchActions(Collection<MatchActionOperationEntry> matchActionOps);
 
     /**
      * Set sending rate to a switch.
