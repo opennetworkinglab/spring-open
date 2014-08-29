@@ -2,6 +2,7 @@ package net.onrc.onos.core.topology;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -252,6 +253,7 @@ public final class ImmutableTopologySnapshot
             Map<String, LinkEvent> linksOnPort = linkMap.get(port);
             if (linksOnPort == null) {
                 linksOnPort = new HashMap<String, LinkEvent>();
+                linkMap.put(port, linksOnPort);
             }
             linksOnPort.put(link.getType(), link);
         }
@@ -364,6 +366,7 @@ public final class ImmutableTopologySnapshot
                 // SortedSet, customized so that MASTER MastershipEvent appear
                 // earlier during iteration.
                 candidates = new TreeSet<>(new MastershipEvent.MasterFirstComparator());
+                current.mastership.put(master.getDpid(), candidates);
             }
 
             // always replace
@@ -592,7 +595,11 @@ public final class ImmutableTopologySnapshot
         if (links == null) {
             return null;
         }
-        return links.get(type);
+        LinkEvent link = links.get(type);
+        if (link.getDst().equals(linkId.getDst())) {
+            return link;
+        }
+        return null;
     }
 
     @Override
@@ -622,8 +629,15 @@ public final class ImmutableTopologySnapshot
             return Collections.emptyList();
         }
 
+        List<LinkEvent> linkEvents = new ArrayList<>();
+        for (LinkEvent e : links.values()) {
+            if (e.getDst().equals(linkId.getDst())) {
+                linkEvents.add(e);
+            }
+        }
+
         // unless invariant is broken, this should contain at most 1 element.
-        return Collections.unmodifiableCollection(links.values());
+        return linkEvents;
     }
 
     @Override
@@ -656,6 +670,7 @@ public final class ImmutableTopologySnapshot
      * @param dpid switch dpid
      * @return master instance ID or null if there is no master
      */
+    @Override
     public OnosInstanceId getSwitchMaster(Dpid dpid) {
         final SortedSet<MastershipEvent> candidates = mastership.get(dpid);
         if (candidates == null) {

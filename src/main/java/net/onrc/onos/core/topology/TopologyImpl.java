@@ -445,7 +445,11 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
         if (links == null) {
             return null;
         }
-        return links.get(type);
+        LinkEvent link = links.get(type);
+        if (link.getDst().equals(linkId.getDst())) {
+            return link;
+        }
+        return null;
     }
 
     @Override
@@ -473,8 +477,15 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
             return Collections.emptyList();
         }
 
+        List<LinkEvent> linkEvents = new ArrayList<>();
+        for (LinkEvent e : links.values()) {
+            if (e.getDst().equals(linkId.getDst())) {
+                linkEvents.add(e);
+            }
+        }
+
         // unless invariant is broken, this should contain at most 1 element.
-        return Collections.unmodifiableCollection(links.values());
+        return linkEvents;
     }
 
     @Override
