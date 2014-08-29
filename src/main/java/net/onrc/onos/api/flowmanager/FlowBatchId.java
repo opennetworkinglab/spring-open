@@ -2,10 +2,15 @@ package net.onrc.onos.api.flowmanager;
 
 import java.util.Objects;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * Represents ID for {@link FlowBatchOperation}.
+ * <p>
+ * This class is immutable.
  */
-public class FlowBatchId {
+@Immutable
+public final class FlowBatchId {
     private final long id;
 
     /**
@@ -17,7 +22,7 @@ public class FlowBatchId {
 
     @Override
     public String toString() {
-        return Long.toString(id);
+        return "0x" + Long.toHexString(id);
     }
 
     @Override
