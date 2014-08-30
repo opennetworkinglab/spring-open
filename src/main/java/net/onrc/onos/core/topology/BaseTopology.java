@@ -55,9 +55,6 @@ public interface BaseTopology extends BaseMastership {
 
     /**
      * Gets the outgoing link from a switch port.
-     * <p/>
-     * FIXME As a temporary workaround, it will look for type "packet" and
-     * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
      * @param portNumber the switch port number.
@@ -77,9 +74,6 @@ public interface BaseTopology extends BaseMastership {
 
     /**
      * Gets the outgoing link from a switch port.
-     * <p/>
-     * FIXME As a temporary workaround, it will look for type "packet" and
-     * returns it if found, else return whichever link is found first.
      *
      * @param port port identifier
      * @return the outgoing link if found, otherwise null.
@@ -105,9 +99,6 @@ public interface BaseTopology extends BaseMastership {
 
     /**
      * Gets the incoming link to a switch port.
-     * <p/>
-     * FIXME As a temporary workaround, it will look for type "packet" and
-     * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
      * @param portNumber the switch port number.
@@ -117,9 +108,6 @@ public interface BaseTopology extends BaseMastership {
 
     /**
      * Gets the incoming link to a switch port.
-     * <p/>
-     * FIXME As a temporary workaround, it will look for type "packet" and
-     * returns it if found, else return whichever link is found first.
      *
      * @param dpid   the switch DPID.
      * @param portNumber the switch port number.
@@ -130,9 +118,6 @@ public interface BaseTopology extends BaseMastership {
 
     /**
      * Gets the incoming link to a switch port.
-     * <p/>
-     * FIXME As a temporary workaround, it will look for type "packet" and
-     * returns it if found, else return whichever link is found first.
      *
      * @param port port identifier
      * @return the incoming link if found, otherwise null.

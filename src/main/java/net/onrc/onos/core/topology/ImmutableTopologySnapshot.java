@@ -578,7 +578,7 @@ public final class ImmutableTopologySnapshot
             return null;
         }
 
-        // TODO Should we look for Packet link first?
+        // Should we look for Packet link first?
         //  => Not needed unless invariant is broken.
 
         for (LinkEvent link : links.values()) {

@@ -9,9 +9,6 @@ import net.onrc.onos.core.util.SwitchPort;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-//TODO Everything returned by these interfaces must be either Unmodifiable view,
-//immutable object, or a copy of the original "SB" In-memory Topology.
-
 /**
  * Interface of Port object in the topology.
  */
@@ -75,9 +72,6 @@ public interface Port extends ITopologyElement, StringAttributes {
 
     /**
      * Gets the outgoing link from this port.
-     * <p/>
-     * FIXME As a temporary workaround, it will look for type "packet" and
-     * returns it if found, else return whichever link is found first.
      *
      * @return {@link Link} if there exist a outgoing link from this,
      *         {@code null} otherwise.
@@ -102,9 +96,6 @@ public interface Port extends ITopologyElement, StringAttributes {
 
     /**
      * Gets the incoming link to this port.
-     * <p/>
-     * FIXME As a temporary workaround, it will look for type "packet" and
-     * returns it if found, else return whichever link is found first.
      *
      * @return {@link Link} if there exist a incoming link to this, {@code null}
      *         otherwise.

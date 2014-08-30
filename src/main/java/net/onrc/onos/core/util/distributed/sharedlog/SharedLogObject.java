@@ -68,7 +68,7 @@ public interface SharedLogObject {
     void apply(final SeqNum seq, final LogValue logValue);
 
     /**
-     * Tests if given LogValue is applicable to this .
+     * Tests if given LogValue is applicable to this instance.
      * <p/>
      * This method will be called before {@link #apply(SeqNum, LogValue)} call.
      * This method should be implemented to be side-effect free.
