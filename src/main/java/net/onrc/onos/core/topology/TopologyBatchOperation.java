@@ -49,4 +49,17 @@ public class TopologyBatchOperation extends
                 new BatchOperationEntry<Operator, TopologyEvent>(
                                         Operator.REMOVE, topologyEvent));
     }
+
+    /**
+     * Concatenates specified TopologyBatchOperation.
+     *
+     * @param ops TopologyBatchOperation to concatenate.
+     * @return this
+     */
+    public TopologyBatchOperation concat(final TopologyBatchOperation ops) {
+        for (BatchOperationEntry<Operator, TopologyEvent> e : ops.getOperations()) {
+            this.addOperation(e);
+        }
+        return this;
+    }
 }
