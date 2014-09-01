@@ -60,7 +60,7 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public String getDescription() {
-        return getStringAttribute(PortEvent.DESCRIPTION, "");
+        return getStringAttribute(PortData.DESCRIPTION, "");
     }
 
     @Override
@@ -124,7 +124,7 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public String getStringAttribute(String attr) {
-        return this.topology.getPortEvent(id).getStringAttribute(attr);
+        return this.topology.getPortData(id).getStringAttribute(attr);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class PortImpl extends TopologyObject implements Port {
 
     @Override
     public Map<String, String> getAllStringAttributes() {
-        return this.topology.getPortEvent(id).getAllStringAttributes();
+        return this.topology.getPortData(id).getAllStringAttributes();
     }
 
     @Override

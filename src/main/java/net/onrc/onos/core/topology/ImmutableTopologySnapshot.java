@@ -55,16 +55,16 @@ public final class ImmutableTopologySnapshot
     private final Map<Dpid, SortedSet<MastershipEvent>> mastership;
 
     // DPID -> Switch
-    private final Map<Dpid, SwitchEvent> switches;
-    private final Map<Dpid, Map<PortNumber, PortEvent>> ports;
+    private final Map<Dpid, SwitchData> switches;
+    private final Map<Dpid, Map<PortNumber, PortData>> ports;
 
     // Index from Port to Host
-    private final Multimap<SwitchPort, HostEvent> hosts;
-    private final Map<MACAddress, HostEvent> mac2Host;
+    private final Multimap<SwitchPort, HostData> hosts;
+    private final Map<MACAddress, HostData> mac2Host;
 
     // SwitchPort -> (type -> Link)
-    private final Map<SwitchPort, Map<String, LinkEvent>> outgoingLinks;
-    private final Map<SwitchPort, Map<String, LinkEvent>> incomingLinks;
+    private final Map<SwitchPort, Map<String, LinkData>> outgoingLinks;
+    private final Map<SwitchPort, Map<String, LinkData>> incomingLinks;
 
 
     // TODO Slice out Topology Builder interface.
@@ -129,23 +129,23 @@ public final class ImmutableTopologySnapshot
         //          Treat as error or silently remove?
 
         /**
-         * Puts a SwitchEvent.
+         * Puts a SwitchData.
          *
          * @param sw Switch to add. (Will be frozen if not already)
          * @return Builder
          */
-        public Builder putSwitch(SwitchEvent sw) {
+        public Builder putSwitch(SwitchData sw) {
             checkNotNull(sw);
 
             current.switches.put(sw.getDpid(), sw.freeze());
             if (current.ports.get(sw.getDpid()) == null) {
-                current.ports.put(sw.getDpid(), new HashMap<PortNumber, PortEvent>());
+                current.ports.put(sw.getDpid(), new HashMap<PortNumber, PortData>());
             }
             return this;
         }
 
         /**
-         * Removes a SwitchEvent from this snapshot.
+         * Removes a SwitchData from this snapshot.
          * <p>
          * Will also remove ports, if it has not been removed already.
          *
@@ -156,7 +156,7 @@ public final class ImmutableTopologySnapshot
             checkNotNull(dpid);
 
             current.switches.remove(dpid);
-            Map<PortNumber, PortEvent> removedPorts = current.ports.remove(dpid);
+            Map<PortNumber, PortData> removedPorts = current.ports.remove(dpid);
             if (removedPorts != null && !removedPorts.isEmpty()) {
                 log.warn("Some ports were removed as side-effect of #removeSwitch({})", dpid);
             }
@@ -164,17 +164,17 @@ public final class ImmutableTopologySnapshot
         }
 
         /**
-         * Puts a PortEvent.
+         * Puts a PortData.
          *
          * @param port Port to add. (Will be frozen if not already)
          * @return Builder
          */
-        public Builder putPort(PortEvent port) {
+        public Builder putPort(PortData port) {
             checkNotNull(port);
 
             // TODO check parent port and throw TopologyMutationFailed
 
-            Map<PortNumber, PortEvent> portMap = current.ports.get(port.getDpid());
+            Map<PortNumber, PortData> portMap = current.ports.get(port.getDpid());
             if (portMap == null) {
                 // shouldn't happen but just to be sure
                 portMap = new HashMap<>();
@@ -185,7 +185,7 @@ public final class ImmutableTopologySnapshot
         }
 
         /**
-         * Removes a PortEvent from this snapshot.
+         * Removes a PortData from this snapshot.
          *
          * @param port SwitchPort to remove
          * @return Builder
@@ -198,7 +198,7 @@ public final class ImmutableTopologySnapshot
         }
 
         /**
-         * Removes a PortEvent from this snapshot.
+         * Removes a PortData from this snapshot.
          * <p>
          * Will also remove ports, if it has not been removed already.
          *
@@ -213,7 +213,7 @@ public final class ImmutableTopologySnapshot
             // TODO sanity check:
             // - Links should be removed
             // - Host attachment point should be updated.
-            Map<PortNumber, PortEvent> portMap = current.ports.get(dpid);
+            Map<PortNumber, PortData> portMap = current.ports.get(dpid);
             if (portMap != null) {
                 portMap.remove(number);
             }
@@ -221,12 +221,12 @@ public final class ImmutableTopologySnapshot
         }
 
         /**
-         * Puts a LinkEvent.
+         * Puts a LinkData.
          *
-         * @param link LinkEvent
+         * @param link LinkData
          * @return Builder
          */
-        public Builder putLink(LinkEvent link) {
+        public Builder putLink(LinkData link) {
             checkNotNull(link);
 
             // TODO check ports and throw TopologyMutationFailed
@@ -247,19 +247,19 @@ public final class ImmutableTopologySnapshot
          * @param port {@code linkMap} key to update
          * @param link Link to add
          */
-        private void putLinkMap(Map<SwitchPort, Map<String, LinkEvent>> linkMap,
-                                SwitchPort port, LinkEvent link) {
+        private void putLinkMap(Map<SwitchPort, Map<String, LinkData>> linkMap,
+                                SwitchPort port, LinkData link) {
 
-            Map<String, LinkEvent> linksOnPort = linkMap.get(port);
+            Map<String, LinkData> linksOnPort = linkMap.get(port);
             if (linksOnPort == null) {
-                linksOnPort = new HashMap<String, LinkEvent>();
+                linksOnPort = new HashMap<String, LinkData>();
                 linkMap.put(port, linksOnPort);
             }
             linksOnPort.put(link.getType(), link);
         }
 
         /**
-         * Removes a LinkEvent from this snapshot.
+         * Removes a LinkData from this snapshot.
          *
          * @param link Link to remove
          * @param type type of link to remove
@@ -268,7 +268,7 @@ public final class ImmutableTopologySnapshot
         public Builder removeLink(LinkTuple link, String type) {
             checkNotNull(link);
 
-            Map<String, LinkEvent> portLinks
+            Map<String, LinkData> portLinks
                 = current.outgoingLinks.get(link.getSrc());
             if (portLinks != null) {
                 // no conditional update here
@@ -284,7 +284,7 @@ public final class ImmutableTopologySnapshot
         }
 
         /**
-         * Removes a LinkEvent from this snapshot.
+         * Removes a LinkData from this snapshot.
          *
          * @param link Link to remove
          * @return Builder
@@ -292,28 +292,28 @@ public final class ImmutableTopologySnapshot
         public Builder removeLink(LinkTuple link) {
             checkNotNull(link);
 
-            Map<String, LinkEvent> links = current.outgoingLinks.get(link.getSrc());
+            Map<String, LinkData> links = current.outgoingLinks.get(link.getSrc());
             if (links == null) {
                 // nothing to do
                 return this;
             }
 
-            for (LinkEvent linkEvt : links.values()) {
-                removeLink(linkEvt.getLinkTuple(), linkEvt.getType());
+            for (LinkData linkData : links.values()) {
+                removeLink(linkData.getLinkTuple(), linkData.getType());
             }
             return this;
         }
 
         /**
-         * Puts a HostEvent.
+         * Puts a HostData.
          * <p>
-         * Removes attachment points for previous HostEvent and update
-         * them with new HostEvent
+         * Removes attachment points for previous HostData and update
+         * them with new HostData
          *
-         * @param host HostEvent
+         * @param host HostData
          * @return Builder
          */
-        public Builder putHost(HostEvent host) {
+        public Builder putHost(HostData host) {
             checkNotNull(host);
 
             // TODO check Link does not exist on port and throw TopologyMutationFailed
@@ -334,7 +334,7 @@ public final class ImmutableTopologySnapshot
         }
 
         /**
-         * Removes a HostEvent from this snapshot.
+         * Removes a HostData from this snapshot.
          *
          * @param mac MACAddress of the Host to remove
          * @return Builder
@@ -342,7 +342,7 @@ public final class ImmutableTopologySnapshot
         public Builder removeHost(MACAddress mac) {
             checkNotNull(mac);
 
-            HostEvent host = current.mac2Host.remove(mac);
+            HostData host = current.mac2Host.remove(mac);
             if (host != null) {
                 for (SwitchPort port : host.getAttachmentPoints()) {
                     current.hosts.remove(port, host);
@@ -438,25 +438,25 @@ public final class ImmutableTopologySnapshot
 
         // shallow copy Map in Map
         this.ports = new HashMap<>(builder.current.ports.size());
-        for (Entry<Dpid, Map<PortNumber, PortEvent>> entry
+        for (Entry<Dpid, Map<PortNumber, PortData>> entry
                     : builder.current.ports.entrySet()) {
             this.ports.put(entry.getKey(), new HashMap<>(entry.getValue()));
         }
 
         this.hosts =
-                HashMultimap.<SwitchPort, HostEvent>create(builder.current.hosts);
+                HashMultimap.<SwitchPort, HostData>create(builder.current.hosts);
         this.mac2Host = new HashMap<>(builder.current.mac2Host);
 
         // shallow copy Map in Map
         this.outgoingLinks = new HashMap<>(builder.current.outgoingLinks.size());
-        for (Entry<SwitchPort, Map<String, LinkEvent>> entry
+        for (Entry<SwitchPort, Map<String, LinkData>> entry
                 : builder.current.outgoingLinks.entrySet()) {
             this.outgoingLinks.put(entry.getKey(), new HashMap<>(entry.getValue()));
         }
 
         // shallow copy Map in Map
         this.incomingLinks = new HashMap<>(builder.current.incomingLinks.size());
-        for (Entry<SwitchPort, Map<String, LinkEvent>> entry
+        for (Entry<SwitchPort, Map<String, LinkData>> entry
                 : builder.current.incomingLinks.entrySet()) {
             this.incomingLinks.put(entry.getKey(), new HashMap<>(entry.getValue()));
         }
@@ -484,25 +484,25 @@ public final class ImmutableTopologySnapshot
 
         // shallow copy Map in Map
         this.ports = new HashMap<>(original.ports.size());
-        for (Entry<Dpid, Map<PortNumber, PortEvent>> entry
+        for (Entry<Dpid, Map<PortNumber, PortData>> entry
                 : original.ports.entrySet()) {
             this.ports.put(entry.getKey(), new HashMap<>(entry.getValue()));
         }
 
         this.hosts =
-                HashMultimap.<SwitchPort, HostEvent>create(original.hosts);
+                HashMultimap.<SwitchPort, HostData>create(original.hosts);
         this.mac2Host = new HashMap<>(original.mac2Host);
 
         // shallow copy Map in Map
         this.outgoingLinks = new HashMap<>(original.outgoingLinks.size());
-        for (Entry<SwitchPort, Map<String, LinkEvent>> entry
+        for (Entry<SwitchPort, Map<String, LinkData>> entry
                 : original.outgoingLinks.entrySet()) {
             this.outgoingLinks.put(entry.getKey(), new HashMap<>(entry.getValue()));
         }
 
         // shallow copy Map in Map
         this.incomingLinks = new HashMap<>(original.incomingLinks.size());
-        for (Entry<SwitchPort, Map<String, LinkEvent>> entry
+        for (Entry<SwitchPort, Map<String, LinkData>> entry
                 : original.incomingLinks.entrySet()) {
             this.incomingLinks.put(entry.getKey(), new HashMap<>(entry.getValue()));
         }
@@ -530,23 +530,23 @@ public final class ImmutableTopologySnapshot
     }
 
     @Override
-    public SwitchEvent getSwitchEvent(final Dpid dpid) {
+    public SwitchData getSwitchData(final Dpid dpid) {
         return this.switches.get(dpid);
     }
 
     @Override
-    public Collection<SwitchEvent> getAllSwitchEvents() {
+    public Collection<SwitchData> getAllSwitchDataEntries() {
         return Collections.unmodifiableCollection(switches.values());
     }
 
     @Override
-    public PortEvent getPortEvent(final SwitchPort port) {
-        return getPortEvent(port.getDpid(), port.getPortNumber());
+    public PortData getPortData(final SwitchPort port) {
+        return getPortData(port.getDpid(), port.getPortNumber());
     }
 
     @Override
-    public PortEvent getPortEvent(final Dpid dpid, PortNumber portNumber) {
-        Map<PortNumber, PortEvent> portMap = this.ports.get(dpid);
+    public PortData getPortData(final Dpid dpid, PortNumber portNumber) {
+        Map<PortNumber, PortData> portMap = this.ports.get(dpid);
         if (portMap != null) {
             return portMap.get(portNumber);
         }
@@ -554,8 +554,8 @@ public final class ImmutableTopologySnapshot
     }
 
     @Override
-    public Collection<PortEvent> getPortEvents(final Dpid dpid) {
-        Map<PortNumber, PortEvent> portList = ports.get(dpid);
+    public Collection<PortData> getPortDataEntries(final Dpid dpid) {
+        Map<PortNumber, PortData> portList = ports.get(dpid);
         if (portList == null) {
             return Collections.emptyList();
         }
@@ -563,17 +563,17 @@ public final class ImmutableTopologySnapshot
     }
 
     @Override
-    public Collection<PortEvent> getAllPortEvents() {
-        List<PortEvent> events = new LinkedList<>();
-        for (Map<PortNumber, PortEvent> cm : ports.values()) {
-            events.addAll(cm.values());
+    public Collection<PortData> getAllPortDataEntries() {
+        List<PortData> dataEntries = new LinkedList<>();
+        for (Map<PortNumber, PortData> cm : ports.values()) {
+            dataEntries.addAll(cm.values());
         }
-        return Collections.unmodifiableCollection(events);
+        return Collections.unmodifiableCollection(dataEntries);
     }
 
     @Override
-    public LinkEvent getLinkEvent(final LinkTuple linkId) {
-        Map<String, LinkEvent> links = this.outgoingLinks.get(linkId.getSrc());
+    public LinkData getLinkData(final LinkTuple linkId) {
+        Map<String, LinkData> links = this.outgoingLinks.get(linkId.getSrc());
         if (links == null) {
             return null;
         }
@@ -581,7 +581,7 @@ public final class ImmutableTopologySnapshot
         // Should we look for Packet link first?
         //  => Not needed unless invariant is broken.
 
-        for (LinkEvent link : links.values()) {
+        for (LinkData link : links.values()) {
             if (link.getDst().equals(linkId.getDst())) {
                 return link;
             }
@@ -590,12 +590,12 @@ public final class ImmutableTopologySnapshot
     }
 
     @Override
-    public LinkEvent getLinkEvent(final LinkTuple linkId, final String type) {
-        Map<String, LinkEvent> links = this.outgoingLinks.get(linkId.getSrc());
+    public LinkData getLinkData(final LinkTuple linkId, final String type) {
+        Map<String, LinkData> links = this.outgoingLinks.get(linkId.getSrc());
         if (links == null) {
             return null;
         }
-        LinkEvent link = links.get(type);
+        LinkData link = links.get(type);
         if (link.getDst().equals(linkId.getDst())) {
             return link;
         }
@@ -603,8 +603,8 @@ public final class ImmutableTopologySnapshot
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEventsFrom(SwitchPort srcPort) {
-        Map<String, LinkEvent> links = this.outgoingLinks.get(srcPort);
+    public Collection<LinkData> getLinkDataEntriesFrom(SwitchPort srcPort) {
+        Map<String, LinkData> links = this.outgoingLinks.get(srcPort);
         if (links == null) {
             return Collections.emptyList();
         }
@@ -613,8 +613,8 @@ public final class ImmutableTopologySnapshot
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEventsTo(SwitchPort dstPort) {
-        Map<String, LinkEvent> links = this.incomingLinks.get(dstPort);
+    public Collection<LinkData> getLinkDataEntriesTo(SwitchPort dstPort) {
+        Map<String, LinkData> links = this.incomingLinks.get(dstPort);
         if (links == null) {
             return Collections.emptyList();
         }
@@ -623,44 +623,44 @@ public final class ImmutableTopologySnapshot
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEvents(final LinkTuple linkId) {
-        Map<String, LinkEvent> links = this.outgoingLinks.get(linkId.getSrc());
+    public Collection<LinkData> getLinkDataEntries(final LinkTuple linkId) {
+        Map<String, LinkData> links = this.outgoingLinks.get(linkId.getSrc());
         if (links == null) {
             return Collections.emptyList();
         }
 
-        List<LinkEvent> linkEvents = new ArrayList<>();
-        for (LinkEvent e : links.values()) {
-            if (e.getDst().equals(linkId.getDst())) {
-                linkEvents.add(e);
+        List<LinkData> linkDataEntries = new ArrayList<>();
+        for (LinkData ld : links.values()) {
+            if (ld.getDst().equals(linkId.getDst())) {
+                linkDataEntries.add(ld);
             }
         }
 
         // unless invariant is broken, this should contain at most 1 element.
-        return linkEvents;
+        return linkDataEntries;
     }
 
     @Override
-    public Collection<LinkEvent> getAllLinkEvents() {
-        List<LinkEvent> events = new LinkedList<>();
-        for (Map<String, LinkEvent> cm : outgoingLinks.values()) {
-            events.addAll(cm.values());
+    public Collection<LinkData> getAllLinkDataEntries() {
+        List<LinkData> dataEntries = new LinkedList<>();
+        for (Map<String, LinkData> cm : outgoingLinks.values()) {
+            dataEntries.addAll(cm.values());
         }
-        return Collections.unmodifiableCollection(events);
+        return Collections.unmodifiableCollection(dataEntries);
     }
 
     @Override
-    public HostEvent getHostEvent(final MACAddress mac) {
+    public HostData getHostData(final MACAddress mac) {
         return this.mac2Host.get(mac);
     }
 
     @Override
-    public Collection<HostEvent> getHostEvents(SwitchPort port) {
+    public Collection<HostData> getHostDataEntries(SwitchPort port) {
         return Collections.unmodifiableCollection(this.hosts.get(port));
     }
 
     @Override
-    public Collection<HostEvent> getAllHostEvents() {
+    public Collection<HostData> getAllHostDataEntries() {
         return Collections.unmodifiableCollection(mac2Host.values());
     }
 

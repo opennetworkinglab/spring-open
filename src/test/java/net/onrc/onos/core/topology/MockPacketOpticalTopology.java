@@ -16,37 +16,37 @@ public class MockPacketOpticalTopology extends MockTopology {
 
     @Override
     public Switch addSwitch(Long switchId) {
-        SwitchEvent switchEvent = new SwitchEvent(new Dpid(switchId));
-        switchEvent.createStringAttribute(TopologyElement.TYPE,
+        SwitchData switchData = new SwitchData(new Dpid(switchId));
+        switchData.createStringAttribute(TopologyElement.TYPE,
                                           TopologyElement.TYPE_PACKET_LAYER);
-        switchEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
+        switchData.createStringAttribute(TopologyElement.ELEMENT_TYPE,
                                           SwitchType.ETHERNET_SWITCH.
                                                   toString());
-        switchEvent.createStringAttribute(TopologyElement
+        switchData.createStringAttribute(TopologyElement
                                                   .ELEMENT_CONFIG_STATE,
                                           ConfigState.NOT_CONFIGURED.
                                                   toString());
-        switchEvent.createStringAttribute(TopologyElement
+        switchData.createStringAttribute(TopologyElement
                                                   .ELEMENT_ADMIN_STATUS,
                                           AdminStatus.ACTIVE.toString());
-        this.putSwitch(switchEvent);
-        return this.getSwitch(switchEvent.getDpid());
+        this.putSwitch(switchData);
+        return this.getSwitch(switchData.getDpid());
     }
 
     @Override
     public Port addPort(Switch sw, Long portNumber) {
-        PortEvent portEvent = new PortEvent(sw.getDpid(),
+        PortData portData = new PortData(sw.getDpid(),
                                     PortNumber.uint16(portNumber.shortValue()));
-        portEvent.createStringAttribute(TopologyElement.TYPE,
+        portData.createStringAttribute(TopologyElement.TYPE,
                                         TopologyElement.TYPE_PACKET_LAYER);
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
+        portData.createStringAttribute(TopologyElement.ELEMENT_TYPE,
                                         PortType.ETHERNET_PORT.toString());
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+        portData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                                         ConfigState.NOT_CONFIGURED.toString());
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+        portData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                                         AdminStatus.ACTIVE.toString());
-        this.putPort(portEvent);
-        return this.getPort(sw.getDpid(), portEvent.getPortNumber());
+        this.putPort(portData);
+        return this.getPort(sw.getDpid(), portData.getPortNumber());
     }
 
     /**
@@ -55,23 +55,23 @@ public class MockPacketOpticalTopology extends MockTopology {
      * @param switchId returns Switch
      */
     public Switch addOpticalSwitch(Long switchId) {
-        SwitchEvent switchEvent = new SwitchEvent(new Dpid(switchId));
-        switchEvent.createStringAttribute(TopologyElement.TYPE,
+        SwitchData switchData = new SwitchData(new Dpid(switchId));
+        switchData.createStringAttribute(TopologyElement.TYPE,
                                           TopologyElement.TYPE_OPTICAL_LAYER);
-        switchEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
+        switchData.createStringAttribute(TopologyElement.ELEMENT_TYPE,
                                           SwitchType.OPTICAL_SWITCH.toString());
-        switchEvent.createStringAttribute(TopologyElement
+        switchData.createStringAttribute(TopologyElement
                                                   .ELEMENT_CONFIG_STATE,
                                           ConfigState.CONFIGURED.toString());
-        switchEvent.createStringAttribute(TopologyElement
+        switchData.createStringAttribute(TopologyElement
                                                   .ELEMENT_ADMIN_STATUS,
                                           AdminStatus.INACTIVE.toString());
-        switchEvent.createStringAttribute(TOTAL_REGEN_COUNT,
+        switchData.createStringAttribute(TOTAL_REGEN_COUNT,
                                           Integer.toString(2));
-        switchEvent.createStringAttribute(REGEN_IN_USE_COUNT,
+        switchData.createStringAttribute(REGEN_IN_USE_COUNT,
                                           Integer.toString(2));
-        this.putSwitch(switchEvent);
-        return this.getSwitch(switchEvent.getDpid());
+        this.putSwitch(switchData);
+        return this.getSwitch(switchData.getDpid());
     }
 
     /**
@@ -83,18 +83,18 @@ public class MockPacketOpticalTopology extends MockTopology {
      */
     //todo - add t-port specific properties
     public Port addTPort(Switch sw, Long portNumber) {
-        PortEvent portEvent = new PortEvent(sw.getDpid(),
+        PortData portData = new PortData(sw.getDpid(),
                                     PortNumber.uint16(portNumber.shortValue()));
-        portEvent.createStringAttribute(TopologyElement.TYPE,
+        portData.createStringAttribute(TopologyElement.TYPE,
                                         TopologyElement.TYPE_OPTICAL_LAYER);
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
+        portData.createStringAttribute(TopologyElement.ELEMENT_TYPE,
                                         PortType.TRANSPONDER_PORT.toString());
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+        portData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                                         ConfigState.CONFIGURED.toString());
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+        portData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                                         AdminStatus.INACTIVE.toString());
-        this.putPort(portEvent);
-        return this.getPort(sw.getDpid(), portEvent.getPortNumber());
+        this.putPort(portData);
+        return this.getPort(sw.getDpid(), portData.getPortNumber());
     }
 
     /**
@@ -106,18 +106,18 @@ public class MockPacketOpticalTopology extends MockTopology {
      */
     //todo - add w-port specific properties
     public Port addWPort(Switch sw, Long portNumber) {
-        PortEvent portEvent = new PortEvent(sw.getDpid(),
+        PortData portData = new PortData(sw.getDpid(),
                                     PortNumber.uint16(portNumber.shortValue()));
-        portEvent.createStringAttribute(TopologyElement.TYPE,
+        portData.createStringAttribute(TopologyElement.TYPE,
                                         TopologyElement.TYPE_OPTICAL_LAYER);
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
+        portData.createStringAttribute(TopologyElement.ELEMENT_TYPE,
                                         PortType.WDM_PORT.toString());
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+        portData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                                         ConfigState.CONFIGURED.toString());
-        portEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+        portData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                                         AdminStatus.INACTIVE.toString());
-        this.putPort(portEvent);
-        return this.getPort(sw.getDpid(), portEvent.getPortNumber());
+        this.putPort(portData);
+        return this.getPort(sw.getDpid(), portData.getPortNumber());
     }
 
     /**
@@ -145,19 +145,19 @@ public class MockPacketOpticalTopology extends MockTopology {
         final Dpid dstDpidObj = new Dpid(dstDpid);
         final PortNumber srcPortNum = PortNumber.uint16(srcPortNo.shortValue());
         final PortNumber dstPortNum = PortNumber.uint16(dstPortNo.shortValue());
-        LinkEvent linkEvent = new LinkEvent(new SwitchPort(srcDpidObj,
+        LinkData linkData = new LinkData(new SwitchPort(srcDpidObj,
                                                            srcPortNum),
                                             new SwitchPort(dstDpidObj,
                                                            dstPortNum));
-        linkEvent.createStringAttribute(TopologyElement.TYPE, type);
-        linkEvent.createStringAttribute(TopologyElement.ELEMENT_TYPE,
+        linkData.createStringAttribute(TopologyElement.TYPE, type);
+        linkData.createStringAttribute(TopologyElement.ELEMENT_TYPE,
                                         linkType.toString());
-        linkEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+        linkData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                                         configState.toString());
-        linkEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+        linkData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                                         adminStatus.toString());
-        LinkEvent[] links = new LinkEvent[1];
-        links[0] = linkEvent;
+        LinkData[] links = new LinkData[1];
+        links[0] = linkData;
         putLink(links[0]);
 
     }

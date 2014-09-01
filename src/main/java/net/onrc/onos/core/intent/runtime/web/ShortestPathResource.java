@@ -8,7 +8,7 @@ import net.onrc.onos.core.intent.ConstrainedBFSTree;
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.Link;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.util.Dpid;
@@ -65,12 +65,12 @@ public class ShortestPathResource extends ServerResource {
                 return null;
             }
             List<Link> links = new LinkedList<>();
-            for (LinkEvent linkEvent : path) {
+            for (LinkData linkData : path) {
                 Link link = mutableTopology.getLink(
-                        linkEvent.getSrc().getDpid(),
-                        linkEvent.getSrc().getPortNumber(),
-                        linkEvent.getDst().getDpid(),
-                        linkEvent.getDst().getPortNumber());
+                        linkData.getSrc().getDpid(),
+                        linkData.getSrc().getPortNumber(),
+                        linkData.getDst().getDpid(),
+                        linkData.getDst().getPortNumber());
                 if (link == null) {
                     return null;
                 }

@@ -36,7 +36,7 @@ public class LinkSerializer extends SerializerBase<Link> {
 
         //
         // TODO: For now, the JSON format of the serialized output should
-        // be same as the JSON format of the corresponding class LinkEvent.
+        // be same as the JSON format of the corresponding class LinkData.
         // In the future, we will use a single serializer.
         //
 

@@ -18,12 +18,12 @@ import net.onrc.onos.core.intent.IntentMap;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
-import net.onrc.onos.core.topology.HostEvent;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.HostData;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.MockTopology;
-import net.onrc.onos.core.topology.PortEvent;
-import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.PortData;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
@@ -457,33 +457,33 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
 
         //  Remove one of the links and check results
         final List<MastershipEvent> emptyMastershipEvents = new LinkedList<>();
-        final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
-        final List<PortEvent> emptyPortEvents = new LinkedList<>();
-        final List<HostEvent> emptyHostEvents = new LinkedList<>();
-        final List<LinkEvent> addedLinkEvents = new LinkedList<>();
-        final List<LinkEvent> removedLinkEvents = new LinkedList<>();
+        final List<SwitchData> emptySwitchDataEntries = new LinkedList<>();
+        final List<PortData> emptyPortDataEntries = new LinkedList<>();
+        final List<HostData> emptyHostDataEntries = new LinkedList<>();
+        final List<LinkData> addedLinkDataEntries = new LinkedList<>();
+        final List<LinkData> removedLinkDataEntries = new LinkedList<>();
         TopologyEvents topologyEvents;
 
         final MockTopology topology = mocks.getTopology();
         topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
         topology.removeLink(2L, 21L, 1L, 12L);
-        LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
-        LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
-        linkEvent1.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
-        linkEvent2.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
-        removedLinkEvents.add(linkEvent1);
-        removedLinkEvents.add(linkEvent2);
+        LinkData linkData1 = new LinkData(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        LinkData linkData2 = new LinkData(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
+        linkData1.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+        linkData2.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+        removedLinkDataEntries.add(linkData1);
+        removedLinkDataEntries.add(linkData2);
 
         topologyEvents = new TopologyEvents(emptyMastershipEvents,
                                             emptyMastershipEvents,
-                                            emptySwitchEvents,
-                                            emptySwitchEvents,
-                                            emptyPortEvents,
-                                            emptyPortEvents,
-                                            addedLinkEvents,
-                                            removedLinkEvents,
-                                            emptyHostEvents,
-                                            emptyHostEvents);
+                                            emptySwitchDataEntries,
+                                            emptySwitchDataEntries,
+                                            emptyPortDataEntries,
+                                            emptyPortDataEntries,
+                                            addedLinkDataEntries,
+                                            removedLinkDataEntries,
+                                            emptyHostDataEntries,
+                                            emptyHostDataEntries);
 
         runtime.topologyEvents(topologyEvents);
 
@@ -695,33 +695,33 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
 
         //  Remove one of the links and check results
         final List<MastershipEvent> emptyMastershipEvents = new LinkedList<>();
-        final List<SwitchEvent> emptySwitchEvents = new LinkedList<>();
-        final List<PortEvent> emptyPortEvents = new LinkedList<>();
-        final List<HostEvent> emptyHostEvents = new LinkedList<>();
-        final List<LinkEvent> addedLinkEvents = new LinkedList<>();
-        final List<LinkEvent> removedLinkEvents = new LinkedList<>();
+        final List<SwitchData> emptySwitchDataEntries = new LinkedList<>();
+        final List<PortData> emptyPortDataEntries = new LinkedList<>();
+        final List<HostData> emptyHostDataEntries = new LinkedList<>();
+        final List<LinkData> addedLinkDataEntries = new LinkedList<>();
+        final List<LinkData> removedLinkDataEntries = new LinkedList<>();
         TopologyEvents topologyEvents;
 
         final MockTopology topology = mocks.getTopology();
         topology.removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
         topology.removeLink(2L, 21L, 1L, 12L);
-        final LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
-        final LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
-        linkEvent1.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
-        linkEvent2.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
-        removedLinkEvents.add(linkEvent1);
-        removedLinkEvents.add(linkEvent2);
+        final LinkData linkData1 = new LinkData(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        final LinkData linkData2 = new LinkData(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
+        linkData1.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+        linkData2.createStringAttribute(TopologyElement.TYPE, TopologyElement.TYPE_PACKET_LAYER);
+        removedLinkDataEntries.add(linkData1);
+        removedLinkDataEntries.add(linkData2);
 
         topologyEvents = new TopologyEvents(emptyMastershipEvents,
                                             emptyMastershipEvents,
-                                            emptySwitchEvents,
-                                            emptySwitchEvents,
-                                            emptyPortEvents,
-                                            emptyPortEvents,
-                                            addedLinkEvents,
-                                            removedLinkEvents,
-                                            emptyHostEvents,
-                                            emptyHostEvents);
+                                            emptySwitchDataEntries,
+                                            emptySwitchDataEntries,
+                                            emptyPortDataEntries,
+                                            emptyPortDataEntries,
+                                            addedLinkDataEntries,
+                                            removedLinkDataEntries,
+                                            emptyHostDataEntries,
+                                            emptyHostDataEntries);
 
         runtime.topologyEvents(topologyEvents);
 
@@ -760,22 +760,22 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
                 hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
 
         // Interrupt by topology changed event while the reroute
-        removedLinkEvents.clear();
-        addedLinkEvents.clear();
+        removedLinkDataEntries.clear();
+        addedLinkDataEntries.clear();
         topology.addBidirectionalLinks(1L, 12L, 2L, 21L); // Restoration of the failure
-        addedLinkEvents.add(linkEvent1);
-        addedLinkEvents.add(linkEvent2);
+        addedLinkDataEntries.add(linkData1);
+        addedLinkDataEntries.add(linkData2);
 
         topologyEvents = new TopologyEvents(emptyMastershipEvents,
                                             emptyMastershipEvents,
-                                            emptySwitchEvents,
-                                            emptySwitchEvents,
-                                            emptyPortEvents,
-                                            emptyPortEvents,
-                                            addedLinkEvents,
-                                            removedLinkEvents,
-                                            emptyHostEvents,
-                                            emptyHostEvents);
+                                            emptySwitchDataEntries,
+                                            emptySwitchDataEntries,
+                                            emptyPortDataEntries,
+                                            emptyPortDataEntries,
+                                            addedLinkDataEntries,
+                                            removedLinkDataEntries,
+                                            emptyHostDataEntries,
+                                            emptyHostDataEntries);
 
         runtime.topologyEvents(topologyEvents);
 

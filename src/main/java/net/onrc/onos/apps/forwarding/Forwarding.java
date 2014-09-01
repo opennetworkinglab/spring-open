@@ -32,7 +32,7 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.MutableTopology;
@@ -406,13 +406,13 @@ public class Forwarding implements /*IOFMessageListener,*/ IFloodlightModule,
                         outPort = spfIntent.getDstPortNumber();
                     }
 
-                    for (Iterator<LinkEvent> i = path.iterator(); i.hasNext();) {
-                        LinkEvent le = i.next();
+                    for (Iterator<LinkData> i = path.iterator(); i.hasNext();) {
+                        LinkData ld = i.next();
 
-                        if (le.getSrc().getDpid().equals(sw.getDpid())) {
+                        if (ld.getSrc().getDpid().equals(sw.getDpid())) {
                             log.trace("The packet-in sw dpid {} is on the path.", sw.getDpid());
                             isflowEntryForThisSwitch = true;
-                            outPort = le.getSrc().getPortNumber().value();
+                            outPort = ld.getSrc().getPortNumber().value();
                             break;
                         }
                     }

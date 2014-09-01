@@ -49,16 +49,16 @@ public class TopologyImplTest {
         // Create a number of switches and install two ports for each switch
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
             final Dpid dpid = new Dpid(switchID);
-            SwitchEvent testSwitch = new SwitchEvent(dpid);
+            SwitchData testSwitch = new SwitchData(dpid);
             testTopology.putSwitch(testSwitch);
-            testTopology.putPort(new PortEvent(dpid, PORT_NUMBER_1));
-            testTopology.putPort(new PortEvent(dpid, PORT_NUMBER_2));
-            PortEvent hostPort = new PortEvent(dpid, PORT_NUMBER_HOST);
+            testTopology.putPort(new PortData(dpid, PORT_NUMBER_1));
+            testTopology.putPort(new PortData(dpid, PORT_NUMBER_2));
+            PortData hostPort = new PortData(dpid, PORT_NUMBER_HOST);
             testTopology.putPort(hostPort);
 
             // Create a host for each switch
             MACAddress hostMac = MACAddress.valueOf(switchID);
-            HostEvent testHost = new HostEvent(hostMac);
+            HostData testHost = new HostData(hostMac);
             testHost.addAttachmentPoint(hostPort.getSwitchPort());
             testTopology.putHost(testHost);
         }
@@ -70,11 +70,11 @@ public class TopologyImplTest {
         for (long switchID = 1; switchID <= TEST_SWITCH_NUM; switchID++) {
             final Dpid dpidA = new Dpid(switchID);
             final Dpid dpidB = new Dpid(switchID % TEST_SWITCH_NUM + 1);
-            LinkEvent testLinkEast = new LinkEvent(
+            LinkData testLinkEast = new LinkData(
                     testTopology.getPort(dpidA, PORT_NUMBER_2).getSwitchPort(),
                     testTopology.getPort(dpidB, PORT_NUMBER_1).getSwitchPort()
                     );
-            LinkEvent testLinkWest = new LinkEvent(
+            LinkData testLinkWest = new LinkData(
                     testTopology.getPort(dpidB, PORT_NUMBER_1).getSwitchPort(),
                     testTopology.getPort(dpidA, PORT_NUMBER_2).getSwitchPort()
                     );

@@ -1,6 +1,6 @@
 package net.onrc.onos.core.topology;
 
-import net.onrc.onos.core.topology.web.serializers.SwitchEventSerializer;
+import net.onrc.onos.core.topology.web.serializers.SwitchDataSerializer;
 import net.onrc.onos.core.util.Dpid;
 
 import java.nio.ByteBuffer;
@@ -10,14 +10,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
- * Self-contained Switch Object.
- * <p/>
- * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
- * FIXME: Current implementation directly use this object as
- *        Replication message, but should be sending update operation info.
+ * Self-contained Switch object.
  */
-@JsonSerialize(using = SwitchEventSerializer.class)
-public class SwitchEvent extends TopologyElement<SwitchEvent> {
+@JsonSerialize(using = SwitchDataSerializer.class)
+public class SwitchData extends TopologyElement<SwitchData> {
     public static final int SWITCHID_BYTES = 2 + 8;
 
     private final Dpid dpid;
@@ -26,7 +22,7 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
      * Default constructor for Serializer to use.
      */
     @Deprecated
-    protected SwitchEvent() {
+    protected SwitchData() {
         dpid = null;
     }
 
@@ -35,18 +31,18 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
      *
      * @param dpid the switch DPID to identify the switch
      */
-    public SwitchEvent(Dpid dpid) {
+    public SwitchData(Dpid dpid) {
         this.dpid = checkNotNull(dpid);
     }
 
     /**
      * Copy constructor.
      * <p>
-     * Creates an unfrozen copy of the given SwitchEvent object.
+     * Creates an unfrozen copy of the given SwitchData object.
      *
      * @param original the object to make copy of
      */
-    public SwitchEvent(SwitchEvent original) {
+    public SwitchData(SwitchData original) {
         super(original);
         this.dpid = original.dpid;
     }
@@ -83,7 +79,7 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
         if (dpid == null) {
             throw new IllegalArgumentException("dpid cannot be null");
         }
-        return (ByteBuffer) ByteBuffer.allocate(SwitchEvent.SWITCHID_BYTES)
+        return (ByteBuffer) ByteBuffer.allocate(SwitchData.SWITCHID_BYTES)
                 .putChar('S').putLong(dpid).flip();
     }
 
@@ -117,12 +113,12 @@ public class SwitchEvent extends TopologyElement<SwitchEvent> {
             return false;
         }
 
-        SwitchEvent other = (SwitchEvent) o;
+        SwitchData other = (SwitchData) o;
         return Objects.equals(this.dpid, other.dpid);
     }
 
     @Override
     public String toString() {
-        return "[SwitchEvent " + dpid + "]";
+        return "[SwitchData " + dpid + "]";
     }
 }

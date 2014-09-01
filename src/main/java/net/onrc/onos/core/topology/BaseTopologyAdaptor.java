@@ -32,7 +32,7 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Switch getSwitch(Dpid dpid) {
-        final SwitchEvent sw = internal.getSwitchEvent(dpid);
+        final SwitchData sw = internal.getSwitchData(dpid);
         if (sw != null) {
             return new SwitchImpl(internal, dpid);
         }
@@ -41,9 +41,9 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Iterable<Switch> getSwitches() {
-        final Collection<SwitchEvent> switches = internal.getAllSwitchEvents();
+        final Collection<SwitchData> switches = internal.getAllSwitchDataEntries();
         List<Switch> list = new ArrayList<>(switches.size());
-        for (SwitchEvent elm : switches) {
+        for (SwitchData elm : switches) {
             list.add(new SwitchImpl(internal, elm.getDpid()));
         }
         return list;
@@ -51,7 +51,7 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Port getPort(Dpid dpid, PortNumber portNumber) {
-        final PortEvent port = internal.getPortEvent(dpid, portNumber);
+        final PortData port = internal.getPortData(dpid, portNumber);
         if (port != null) {
             return new PortImpl(internal, port.getSwitchPort());
         }
@@ -65,9 +65,9 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Collection<Port> getPorts(Dpid dpid) {
-        final Collection<PortEvent> ports = internal.getPortEvents(dpid);
+        final Collection<PortData> ports = internal.getPortDataEntries(dpid);
         List<Port> list = new ArrayList<>(ports.size());
-        for (PortEvent elm : ports) {
+        for (PortData elm : ports) {
             list.add(new PortImpl(internal, elm.getSwitchPort()));
         }
         return list;
@@ -86,8 +86,8 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Link getOutgoingLink(SwitchPort port) {
-        final Collection<LinkEvent> links = internal.getLinkEventsFrom(port);
-        LinkEvent link = getPacketLinkEventIfExists(links);
+        final Collection<LinkData> links = internal.getLinkDataEntriesFrom(port);
+        LinkData link = getPacketLinkDataIfExists(links);
         if (link != null) {
             return new LinkImpl(internal, link.getLinkTuple());
         }
@@ -96,8 +96,8 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Link getIncomingLink(SwitchPort port) {
-        final Collection<LinkEvent> links = internal.getLinkEventsTo(port);
-        LinkEvent link = getPacketLinkEventIfExists(links);
+        final Collection<LinkData> links = internal.getLinkDataEntriesTo(port);
+        LinkData link = getPacketLinkDataIfExists(links);
         if (link != null) {
             return new LinkImpl(internal, link.getLinkTuple());
         }
@@ -111,8 +111,8 @@ public class BaseTopologyAdaptor implements BaseTopology {
      * @param links Collection of links to search from
      * @return Link instance found or null if no link exists
      */
-    private static LinkEvent getPacketLinkEventIfExists(Collection<LinkEvent> links) {
-        for (LinkEvent link : links) {
+    private static LinkData getPacketLinkDataIfExists(Collection<LinkData> links) {
+        for (LinkData link : links) {
             if (TopologyElement.TYPE_PACKET_LAYER.equals(link.getType())) {
                 return link;
             }
@@ -136,8 +136,8 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Link getOutgoingLink(SwitchPort port, String type) {
-        final Collection<LinkEvent> links = internal.getLinkEventsFrom(port);
-        for (LinkEvent link : links) {
+        final Collection<LinkData> links = internal.getLinkDataEntriesFrom(port);
+        for (LinkData link : links) {
             if (link.getType().equals(type)) {
                 return new LinkImpl(internal, link.getLinkTuple());
             }
@@ -147,8 +147,8 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Link getIncomingLink(SwitchPort port, String type) {
-        final Collection<LinkEvent> links = internal.getLinkEventsTo(port);
-        for (LinkEvent link : links) {
+        final Collection<LinkData> links = internal.getLinkDataEntriesTo(port);
+        for (LinkData link : links) {
             if (link.getType().equals(type)) {
                 return new LinkImpl(internal, link.getLinkTuple());
             }
@@ -159,33 +159,33 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Collection<Link> getOutgoingLinks(SwitchPort port) {
-        final Collection<LinkEvent> links = internal.getLinkEventsFrom(port);
+        final Collection<LinkData> links = internal.getLinkDataEntriesFrom(port);
         return toLinkImpls(internal, links);
     }
 
     @Override
     public Collection<Link> getIncomingLinks(SwitchPort port) {
-        final Collection<LinkEvent> links = internal.getLinkEventsTo(port);
+        final Collection<LinkData> links = internal.getLinkDataEntriesTo(port);
         return toLinkImpls(internal, links);
     }
 
 
     /**
-     * Converts collection of LinkEvent to collection of LinkImpls.
+     * Converts collection of LinkData to collection of LinkImpls.
      *
      * @param internalTopology topology {@code links} resides
-     * @param links collection of LinkEvent
+     * @param links collection of LinkData
      * @return collection of {@link LinkImpl}s
      */
     private static Collection<Link> toLinkImpls(
                                 final BaseInternalTopology internalTopology,
-                                final Collection<LinkEvent> links) {
+                                final Collection<LinkData> links) {
 
         if (links == null) {
             return Collections.emptyList();
         }
         List<Link> list = new ArrayList<>(links.size());
-        for (LinkEvent elm : links) {
+        for (LinkData elm : links) {
             list.add(new LinkImpl(internalTopology, elm.getLinkTuple()));
         }
         return list;
@@ -228,14 +228,14 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Iterable<Link> getLinks() {
-        final Collection<LinkEvent> links = internal.getAllLinkEvents();
+        final Collection<LinkData> links = internal.getAllLinkDataEntries();
         return toLinkImpls(internal, links);
     }
 
     @Override
     public Host getHostByMac(MACAddress address) {
 
-        HostEvent host = internal.getHostEvent(address);
+        HostData host = internal.getHostData(address);
         if (host != null) {
             return new HostImpl(internal, address);
         }
@@ -244,23 +244,23 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Iterable<Host> getHosts() {
-        return toHostImpls(internal, internal.getAllHostEvents());
+        return toHostImpls(internal, internal.getAllHostDataEntries());
     }
 
     /**
-     * Converts collection of HostEvent to collection of HostImpl.
+     * Converts collection of HostData to collection of HostImpl.
      *
      * @param internalTopology topology {@code hosts} resides
-     * @param hosts collection of HostEvent
+     * @param hosts collection of HostData
      * @return collection of HostImpl
      */
     private static List<Host> toHostImpls(BaseInternalTopology internalTopology,
-                                          Collection<HostEvent> hosts) {
+                                          Collection<HostData> hosts) {
         if (hosts == null) {
             return Collections.emptyList();
         }
         List<Host> list = new ArrayList<>(hosts.size());
-        for (HostEvent elm : hosts) {
+        for (HostData elm : hosts) {
             list.add(new HostImpl(internalTopology, elm.getMac()));
         }
         return list;
@@ -268,7 +268,7 @@ public class BaseTopologyAdaptor implements BaseTopology {
 
     @Override
     public Collection<Host> getHosts(SwitchPort port) {
-        return toHostImpls(internal, internal.getHostEvents(port));
+        return toHostImpls(internal, internal.getHostDataEntries(port));
     }
 
 

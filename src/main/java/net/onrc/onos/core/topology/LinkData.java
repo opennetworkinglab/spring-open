@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-import net.onrc.onos.core.topology.web.serializers.LinkEventSerializer;
+import net.onrc.onos.core.topology.web.serializers.LinkDataSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
@@ -13,16 +13,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
- * Self-contained Link event Object.
- * <p/>
- * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
- * FIXME: Current implementation directly use this object as
- *        Replication message, but should be sending update operation info.
+ * Self-contained Link object.
  */
 
-@JsonSerialize(using = LinkEventSerializer.class)
-public class LinkEvent extends TopologyElement<LinkEvent> {
-    public static final int LINKID_BYTES = 2 + PortEvent.PORTID_BYTES * 2;
+@JsonSerialize(using = LinkDataSerializer.class)
+public class LinkData extends TopologyElement<LinkData> {
+    public static final int LINKID_BYTES = 2 + PortData.PORTID_BYTES * 2;
 
     private final LinkTuple id;
     // TODO add LastSeenTime, Capacity if appropriate
@@ -33,7 +29,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      * Default constructor for Serializer to use.
      */
     @Deprecated
-    protected LinkEvent() {
+    protected LinkData() {
         id = null;
     }
 
@@ -42,7 +38,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      *
      * @param id the link tuple to identify the link
      */
-    public LinkEvent(LinkTuple id) {
+    public LinkData(LinkTuple id) {
         this.id = checkNotNull(id);
     }
 
@@ -52,7 +48,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      * @param src the source SwitchPort to use
      * @param dst the destination SwitchPort to use
      */
-    public LinkEvent(SwitchPort src, SwitchPort dst) {
+    public LinkData(SwitchPort src, SwitchPort dst) {
         this(new LinkTuple(src, dst));
     }
 
@@ -63,7 +59,7 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      *
      * @param link the Link object to use.
      */
-    public LinkEvent(Link link) {
+    public LinkData(Link link) {
         this(link.getLinkTuple());
         // FIXME losing attributes here
     }
@@ -71,11 +67,11 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
     /**
      * Copy constructor.
      * <p>
-     * Creates an unfrozen copy of the given LinkEvent object.
+     * Creates an unfrozen copy of the given LinkData object.
      *
      * @param original the object ot make copy of
      */
-    public LinkEvent(LinkEvent original) {
+    public LinkData(LinkData original) {
         super(original);
         this.id = original.id;
     }
@@ -164,10 +160,10 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
      */
     public static ByteBuffer getLinkID(Long srcDpid, Long srcPortNo,
                                        Long dstDpid, Long dstPortNo) {
-        return (ByteBuffer) ByteBuffer.allocate(LinkEvent.LINKID_BYTES)
+        return (ByteBuffer) ByteBuffer.allocate(LinkData.LINKID_BYTES)
                 .putChar('L')
-                .put(PortEvent.getPortID(srcDpid, srcPortNo))
-                .put(PortEvent.getPortID(dstDpid, dstPortNo)).flip();
+                .put(PortData.getPortID(srcDpid, srcPortNo))
+                .put(PortData.getPortID(dstDpid, dstPortNo)).flip();
     }
 
     @Override
@@ -201,12 +197,12 @@ public class LinkEvent extends TopologyElement<LinkEvent> {
             return false;
         }
 
-        LinkEvent other = (LinkEvent) o;
+        LinkData other = (LinkData) o;
         return Objects.equals(this.id, other.id);
     }
 
     @Override
     public String toString() {
-        return "[LinkEvent " + getSrc() + "->" + getDst() + "]";
+        return "[LinkData " + getSrc() + "->" + getDst() + "]";
     }
 }

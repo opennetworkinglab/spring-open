@@ -43,9 +43,9 @@ import net.onrc.onos.core.metrics.OnosMetrics.MetricsFeature;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.PortEvent;
-import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.LinkData;
+import net.onrc.onos.core.topology.PortData;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.LinkTuple;
@@ -265,7 +265,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
     private static final String INTENT_STATE_EVENT_CHANNEL_NAME = "onos.pathintent_state";
     private static final Logger log = LoggerFactory.getLogger(PathCalcRuntimeModule.class);
 
-    private HashSet<LinkTuple> unmatchedLinkEvents = new HashSet<>();
+    private HashSet<LinkTuple> unmatchedLinkDataEntries = new HashSet<>();
     private ConcurrentMap<String, Set<Long>> intentInstalledMap = new ConcurrentHashMap<String, Set<Long>>();
     private ConcurrentMap<String, Intent> staleIntents = new ConcurrentHashMap<String, Intent>();
     private DeleteIntentsTracker deleteIntentsTracker = new DeleteIntentsTracker();
@@ -414,8 +414,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         Set<Long> allSwitchesForPath = new HashSet<Long>();
         ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
 
-        for (LinkEvent linkEvent : pathIntent.getPath()) {
-            long sw = linkEvent.getSrc().getDpid().value();
+        for (LinkData linkData : pathIntent.getPath()) {
+            long sw = linkData.getSrc().getDpid().value();
             allSwitchesForPath.add(sw);
         }
         allSwitchesForPath.add(spfIntent.getDstSwitchDpid());
@@ -446,8 +446,8 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         Set<Long> allSwitchesForPath = new HashSet<Long>();
         ShortestPathIntent spfIntent = (ShortestPathIntent) pathIntent.getParentIntent();
 
-        for (LinkEvent linkEvent : pathIntent.getPath()) {
-            long sw = linkEvent.getSrc().getDpid().value();
+        for (LinkData linkData : pathIntent.getPath()) {
+            long sw = linkData.getSrc().getDpid().value();
 
             if (domainSwitchDpids.contains(sw)) {
                 allSwitchesForPath.add(sw);
@@ -835,56 +835,56 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         HashSet<Intent> affectedPaths = new HashSet<>();
 
         boolean rerouteAll = false;
-        for (LinkEvent le : topologyEvents.getAddedLinkEvents()) {
-            final LinkTuple rev = new LinkTuple(le.getDst(), le.getSrc());
-            if (unmatchedLinkEvents.contains(rev)) {
+        for (LinkData ld : topologyEvents.getAddedLinkDataEntries()) {
+            final LinkTuple rev = new LinkTuple(ld.getDst(), ld.getSrc());
+            if (unmatchedLinkDataEntries.contains(rev)) {
                 rerouteAll = true;
-                unmatchedLinkEvents.remove(rev);
-                log.debug("Found matched LinkEvent: {} {}", rev, le);
+                unmatchedLinkDataEntries.remove(rev);
+                log.debug("Found matched LinkData: {} {}", rev, ld);
             } else {
-                unmatchedLinkEvents.add(le.getLinkTuple());
-                log.debug("Adding unmatched LinkEvent: {}", le);
+                unmatchedLinkDataEntries.add(ld.getLinkTuple());
+                log.debug("Adding unmatched LinkData: {}", ld);
             }
         }
-        for (LinkEvent le : topologyEvents.getRemovedLinkEvents()) {
-            if (unmatchedLinkEvents.contains(le.getLinkTuple())) {
-                unmatchedLinkEvents.remove(le.getLinkTuple());
-                log.debug("Removing LinkEvent: {}", le);
+        for (LinkData ld : topologyEvents.getRemovedLinkDataEntries()) {
+            if (unmatchedLinkDataEntries.contains(ld.getLinkTuple())) {
+                unmatchedLinkDataEntries.remove(ld.getLinkTuple());
+                log.debug("Removing LinkData: {}", ld);
             }
         }
-        if (unmatchedLinkEvents.size() > 0) {
-            log.debug("Unmatched link events: {} events", unmatchedLinkEvents.size());
+        if (unmatchedLinkDataEntries.size() > 0) {
+            log.debug("Unmatched link events: {} events", unmatchedLinkDataEntries.size());
         }
 
         if (rerouteAll) {
             //
-            // (topologyEvents.getAddedLinkEvents().size() > 0) ||
-            // (topologyEvents.getAddedPortEvents().size() > 0) ||
-            // (topologyEvents.getAddedSwitchEvents.size() > 0)
+            // (topologyEvents.getAddedLinkDataEntries().size() > 0) ||
+            // (topologyEvents.getAddedPortDataEntries().size() > 0) ||
+            // (topologyEvents.getAddedSwitchDataEntries().size() > 0)
             //
             p.log("begin_getAllIntents");
             affectedPaths.addAll(getPathIntents().getAllIntents());
             p.log("end_getAllIntents");
-        } else if (topologyEvents.getRemovedSwitchEvents().size() > 0 ||
-                   topologyEvents.getRemovedLinkEvents().size() > 0 ||
-                   topologyEvents.getRemovedPortEvents().size() > 0) {
+        } else if (topologyEvents.getRemovedSwitchDataEntries().size() > 0 ||
+                   topologyEvents.getRemovedLinkDataEntries().size() > 0 ||
+                   topologyEvents.getRemovedPortDataEntries().size() > 0) {
             p.log("begin_getIntentsByLink");
-            for (LinkEvent linkEvent : topologyEvents.getRemovedLinkEvents()) {
-                affectedPaths.addAll(pathIntents.getIntentsByLink(linkEvent.getLinkTuple()));
+            for (LinkData linkData : topologyEvents.getRemovedLinkDataEntries()) {
+                affectedPaths.addAll(pathIntents.getIntentsByLink(linkData.getLinkTuple()));
             }
             p.log("end_getIntentsByLink");
 
             p.log("begin_getIntentsByPort");
-            for (PortEvent portEvent : topologyEvents.getRemovedPortEvents()) {
+            for (PortData portData : topologyEvents.getRemovedPortDataEntries()) {
                 affectedPaths.addAll(pathIntents.getIntentsByPort(
-                        portEvent.getDpid(),
-                        portEvent.getPortNumber()));
+                        portData.getDpid(),
+                        portData.getPortNumber()));
             }
             p.log("end_getIntentsByPort");
 
             p.log("begin_getIntentsByDpid");
-            for (SwitchEvent switchEvent : topologyEvents.getRemovedSwitchEvents()) {
-                affectedPaths.addAll(pathIntents.getIntentsByDpid(switchEvent.getDpid()));
+            for (SwitchData switchData : topologyEvents.getRemovedSwitchDataEntries()) {
+                affectedPaths.addAll(pathIntents.getIntentsByDpid(switchData.getDpid()));
             }
             p.log("end_getIntentsByDpid");
         }

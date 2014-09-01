@@ -339,8 +339,8 @@ public class TopologyEventPreprocessor {
      * <p/>
      * The result events can be applied to the Topology in the following
      * order: REMOVE events followed by ADD events. The ADD events are in the
-     * natural order to build a Topology: MastershipEvent, SwitchEvent,
-     * PortEvent, LinkEvent, HostEvent. The REMOVE events are in the reverse
+     * natural order to build a Topology: MastershipEvent, SwitchData,
+     * PortData, LinkData, HostData. The REMOVE events are in the reverse
      * order.
      *
      * @param events the events to classify and reorder.
@@ -353,21 +353,21 @@ public class TopologyEventPreprocessor {
             new HashMap<>();
         Map<ByteBuffer, EventEntry<TopologyEvent>> removedMastershipEvents =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> addedSwitchEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> addedSwitchDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> removedSwitchEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> removedSwitchDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> addedPortEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> addedPortDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> removedPortEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> removedPortDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> addedLinkEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> addedLinkDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> removedLinkEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> removedLinkDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> addedHostEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> addedHostDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> removedHostEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> removedHostDataEntries =
             new HashMap<>();
 
         //
@@ -383,10 +383,10 @@ public class TopologyEventPreprocessor {
             // Get the event itself
             MastershipEvent mastershipEvent =
                 topologyEvent.getMastershipEvent();
-            SwitchEvent switchEvent = topologyEvent.getSwitchEvent();
-            PortEvent portEvent = topologyEvent.getPortEvent();
-            LinkEvent linkEvent = topologyEvent.getLinkEvent();
-            HostEvent hostEvent = topologyEvent.getHostEvent();
+            SwitchData switchData = topologyEvent.getSwitchData();
+            PortData portData = topologyEvent.getPortData();
+            LinkData linkData = topologyEvent.getLinkData();
+            HostData hostData = topologyEvent.getHostData();
 
             //
             // Extract the events
@@ -398,25 +398,25 @@ public class TopologyEventPreprocessor {
                     addedMastershipEvents.put(id, event);
                     removedMastershipEvents.remove(id);
                 }
-                if (switchEvent != null) {
-                    ByteBuffer id = switchEvent.getIDasByteBuffer();
-                    addedSwitchEvents.put(id, event);
-                    removedSwitchEvents.remove(id);
+                if (switchData != null) {
+                    ByteBuffer id = switchData.getIDasByteBuffer();
+                    addedSwitchDataEntries.put(id, event);
+                    removedSwitchDataEntries.remove(id);
                 }
-                if (portEvent != null) {
-                    ByteBuffer id = portEvent.getIDasByteBuffer();
-                    addedPortEvents.put(id, event);
-                    removedPortEvents.remove(id);
+                if (portData != null) {
+                    ByteBuffer id = portData.getIDasByteBuffer();
+                    addedPortDataEntries.put(id, event);
+                    removedPortDataEntries.remove(id);
                 }
-                if (linkEvent != null) {
-                    ByteBuffer id = linkEvent.getIDasByteBuffer();
-                    addedLinkEvents.put(id, event);
-                    removedLinkEvents.remove(id);
+                if (linkData != null) {
+                    ByteBuffer id = linkData.getIDasByteBuffer();
+                    addedLinkDataEntries.put(id, event);
+                    removedLinkDataEntries.remove(id);
                 }
-                if (hostEvent != null) {
-                    ByteBuffer id = hostEvent.getIDasByteBuffer();
-                    addedHostEvents.put(id, event);
-                    removedHostEvents.remove(id);
+                if (hostData != null) {
+                    ByteBuffer id = hostData.getIDasByteBuffer();
+                    addedHostDataEntries.put(id, event);
+                    removedHostDataEntries.remove(id);
                 }
                 break;
             case ENTRY_REMOVE:
@@ -425,25 +425,25 @@ public class TopologyEventPreprocessor {
                     addedMastershipEvents.remove(id);
                     removedMastershipEvents.put(id, event);
                 }
-                if (switchEvent != null) {
-                    ByteBuffer id = switchEvent.getIDasByteBuffer();
-                    addedSwitchEvents.remove(id);
-                    removedSwitchEvents.put(id, event);
+                if (switchData != null) {
+                    ByteBuffer id = switchData.getIDasByteBuffer();
+                    addedSwitchDataEntries.remove(id);
+                    removedSwitchDataEntries.put(id, event);
                 }
-                if (portEvent != null) {
-                    ByteBuffer id = portEvent.getIDasByteBuffer();
-                    addedPortEvents.remove(id);
-                    removedPortEvents.put(id, event);
+                if (portData != null) {
+                    ByteBuffer id = portData.getIDasByteBuffer();
+                    addedPortDataEntries.remove(id);
+                    removedPortDataEntries.put(id, event);
                 }
-                if (linkEvent != null) {
-                    ByteBuffer id = linkEvent.getIDasByteBuffer();
-                    addedLinkEvents.remove(id);
-                    removedLinkEvents.put(id, event);
+                if (linkData != null) {
+                    ByteBuffer id = linkData.getIDasByteBuffer();
+                    addedLinkDataEntries.remove(id);
+                    removedLinkDataEntries.put(id, event);
                 }
-                if (hostEvent != null) {
-                    ByteBuffer id = hostEvent.getIDasByteBuffer();
-                    addedHostEvents.remove(id);
-                    removedHostEvents.put(id, event);
+                if (hostData != null) {
+                    ByteBuffer id = hostData.getIDasByteBuffer();
+                    addedHostDataEntries.remove(id);
+                    removedHostDataEntries.put(id, event);
                 }
                 break;
             default:
@@ -459,17 +459,17 @@ public class TopologyEventPreprocessor {
         //    Host
         //
         List<EventEntry<TopologyEvent>> result = new LinkedList<>();
-        result.addAll(removedHostEvents.values());
-        result.addAll(removedLinkEvents.values());
-        result.addAll(removedPortEvents.values());
-        result.addAll(removedSwitchEvents.values());
+        result.addAll(removedHostDataEntries.values());
+        result.addAll(removedLinkDataEntries.values());
+        result.addAll(removedPortDataEntries.values());
+        result.addAll(removedSwitchDataEntries.values());
         result.addAll(removedMastershipEvents.values());
         //
         result.addAll(addedMastershipEvents.values());
-        result.addAll(addedSwitchEvents.values());
-        result.addAll(addedPortEvents.values());
-        result.addAll(addedLinkEvents.values());
-        result.addAll(addedHostEvents.values());
+        result.addAll(addedSwitchDataEntries.values());
+        result.addAll(addedPortDataEntries.values());
+        result.addAll(addedLinkDataEntries.values());
+        result.addAll(addedHostDataEntries.values());
 
         return result;
     }

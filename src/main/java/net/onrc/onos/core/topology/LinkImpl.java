@@ -57,7 +57,7 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Double getCapacity() {
-        return this.topology.getLinkEvent(id).getCapacity();
+        return this.topology.getLinkData(id).getCapacity();
     }
 
     /**
@@ -73,7 +73,7 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public String getStringAttribute(String attr) {
-        return this.topology.getLinkEvent(id).getStringAttribute(attr);
+        return this.topology.getLinkData(id).getStringAttribute(attr);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class LinkImpl extends TopologyObject implements Link {
 
     @Override
     public Map<String, String> getAllStringAttributes() {
-        return this.topology.getLinkEvent(id).getAllStringAttributes();
+        return this.topology.getLinkData(id).getAllStringAttributes();
     }
 
     @Override

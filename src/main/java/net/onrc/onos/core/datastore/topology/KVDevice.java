@@ -16,7 +16,7 @@ import net.onrc.onos.core.datastore.topology.KVLink.STATUS;
 import net.onrc.onos.core.datastore.utils.ByteArrayComparator;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
 import net.onrc.onos.core.datastore.utils.KVObject;
-import net.onrc.onos.core.topology.HostEvent;
+import net.onrc.onos.core.topology.HostData;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class KVDevice extends KVObject {
      * @return HostID
      */
     public static byte[] getHostID(final byte[] mac) {
-        return HostEvent.getHostID(mac).array();
+        return HostData.getHostID(mac).array();
     }
 
     /**

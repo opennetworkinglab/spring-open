@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology.web.serializers;
 import java.io.IOException;
 import java.util.Map.Entry;
 
-import net.onrc.onos.core.topology.HostEvent;
+import net.onrc.onos.core.topology.HostData;
 import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -12,26 +12,26 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * JSON serializer for HostEvent objects.
+ * JSON serializer for HostData objects.
  */
-public class HostEventSerializer extends SerializerBase<HostEvent> {
+public class HostDataSerializer extends SerializerBase<HostData> {
     /**
      * Default constructor.
      */
-    public HostEventSerializer() {
-        super(HostEvent.class);
+    public HostDataSerializer() {
+        super(HostData.class);
     }
 
     /**
-     * Serializes a HostEvent object in JSON.
+     * Serializes a HostData object in JSON.
      *
-     * @param hostEvent the HostEvent that is being converted to JSON
+     * @param hostData the HostData that is being converted to JSON
      * @param jsonGenerator generator to place the serialized JSON into
      * @param serializerProvider unused but required for method override
      * @throws IOException if the JSON serialization process fails
      */
     @Override
-    public void serialize(HostEvent hostEvent, JsonGenerator jsonGenerator,
+    public void serialize(HostData hostData, JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
         throws IOException {
 
@@ -42,16 +42,16 @@ public class HostEventSerializer extends SerializerBase<HostEvent> {
         //
 
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField(TopologyElement.TYPE, hostEvent.getType());
-        jsonGenerator.writeStringField("mac", hostEvent.getMac().toString());
+        jsonGenerator.writeStringField(TopologyElement.TYPE, hostData.getType());
+        jsonGenerator.writeStringField("mac", hostData.getMac().toString());
         jsonGenerator.writeFieldName("attachmentPoints");
         jsonGenerator.writeStartArray();
-        for (SwitchPort switchPort : hostEvent.getAttachmentPoints()) {
+        for (SwitchPort switchPort : hostData.getAttachmentPoints()) {
             jsonGenerator.writeObject(switchPort);
         }
         jsonGenerator.writeEndArray();
         jsonGenerator.writeObjectFieldStart("stringAttributes");
-        for (Entry<String, String> entry : hostEvent.getAllStringAttributes().entrySet()) {
+        for (Entry<String, String> entry : hostData.getAllStringAttributes().entrySet()) {
             jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
         }
         jsonGenerator.writeEndObject();         // stringAttributes

@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Set;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.topology.HostEvent;
-import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.topology.HostData;
+import net.onrc.onos.core.topology.LinkData;
+import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.topology.TopologyBatchOperation;
 import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvent;
-import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
@@ -275,7 +275,7 @@ public class KryoFactoryTest {
 
         // To be more strict, we should be checking serialized byte[].
         { // CHECKSTYLE IGNORE THIS LINE
-            HostEvent obj = new HostEvent(MACAddress.valueOf(0x12345678));
+            HostData obj = new HostData(MACAddress.valueOf(0x12345678));
             obj.createStringAttribute(TopologyElement.TYPE,
                                       TopologyElement.TYPE_PACKET_LAYER);
             obj.addAttachmentPoint(new SwitchPort(DPID_A, PORT_NO_A));
@@ -289,7 +289,7 @@ public class KryoFactoryTest {
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
-            LinkEvent obj = new LinkEvent(new SwitchPort(DPID_A, PORT_NO_A),
+            LinkData obj = new LinkData(new SwitchPort(DPID_A, PORT_NO_A),
                                           new SwitchPort(DPID_B, PORT_NO_B));
             obj.createStringAttribute(TopologyElement.TYPE,
                                       TopologyElement.TYPE_PACKET_LAYER);
@@ -301,7 +301,7 @@ public class KryoFactoryTest {
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
-            PortEvent obj = new PortEvent(DPID_A, PORT_NO_A);
+            PortData obj = new PortData(DPID_A, PORT_NO_A);
             obj.createStringAttribute(TopologyElement.TYPE,
                                       TopologyElement.TYPE_PACKET_LAYER);
             obj.freeze();
@@ -312,7 +312,7 @@ public class KryoFactoryTest {
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
-            SwitchEvent obj = new SwitchEvent(DPID_A);
+            SwitchData obj = new SwitchData(DPID_A);
             obj.createStringAttribute(TopologyElement.TYPE,
                                       TopologyElement.TYPE_PACKET_LAYER);
             obj.freeze();
@@ -323,7 +323,7 @@ public class KryoFactoryTest {
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
-            SwitchEvent evt = new SwitchEvent(DPID_A);
+            SwitchData evt = new SwitchData(DPID_A);
             evt.createStringAttribute(TopologyElement.TYPE,
                                       TopologyElement.TYPE_PACKET_LAYER);
             evt.freeze();
@@ -332,7 +332,7 @@ public class KryoFactoryTest {
 
             // using the back door to access package-scoped constructor
             Constructor<TopologyEvent> swConst
-                = TopologyEvent.class.getDeclaredConstructor(SwitchEvent.class,
+                = TopologyEvent.class.getDeclaredConstructor(SwitchData.class,
                         OnosInstanceId.class);
             swConst.setAccessible(true);
             TopologyEvent obj = swConst.newInstance(evt, onosInstanceId);
@@ -359,15 +359,15 @@ public class KryoFactoryTest {
 
             // using the back door to access package-scoped constructor
             Constructor<TopologyEvent> swConst
-                = TopologyEvent.class.getDeclaredConstructor(SwitchEvent.class,
+                = TopologyEvent.class.getDeclaredConstructor(SwitchData.class,
                         OnosInstanceId.class);
             swConst.setAccessible(true);
 
             for (int i = 1; i <= 10; i++) {
                 Dpid dpid = new Dpid(i);
-                SwitchEvent switchEvent = new SwitchEvent(dpid);
+                SwitchData switchData = new SwitchData(dpid);
                 TopologyEvent topologyEvent =
-                    swConst.newInstance(switchEvent, onosInstanceId);
+                    swConst.newInstance(switchData, onosInstanceId);
                 tbo.appendAddOperation(topologyEvent);
             }
 

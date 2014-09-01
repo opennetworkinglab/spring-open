@@ -22,13 +22,13 @@ public class MockTopology extends TopologyImpl {
     public SwitchImpl sw1, sw2, sw3, sw4;
 
     public Switch addSwitch(Long switchId) {
-        SwitchEvent sw = new SwitchEvent(new Dpid(switchId));
+        SwitchData sw = new SwitchData(new Dpid(switchId));
         this.putSwitch(sw);
         return this.getSwitch(sw.getDpid());
     }
 
     public Port addPort(Switch sw, Long portNumber) {
-        PortEvent port = new PortEvent(sw.getDpid(),
+        PortData port = new PortData(sw.getDpid(),
                                 PortNumber.uint16(portNumber.shortValue()));
         ((TopologyImpl) this).putPort(port);
         return this.getPort(port.getSwitchPort());
@@ -42,11 +42,11 @@ public class MockTopology extends TopologyImpl {
     public void addBidirectionalLinks(Long srcDpid, Long srcPortNo,
                                       Long dstDpid, Long dstPortNo,
                                       Double capacity) {
-        LinkEvent[] links = new LinkEvent[2];
+        LinkData[] links = new LinkData[2];
         final SwitchPort src = new SwitchPort(srcDpid, srcPortNo);
         final SwitchPort dst = new SwitchPort(dstDpid, dstPortNo);
-        links[0] = new LinkEvent(src, dst);
-        links[1] = new LinkEvent(dst, src);
+        links[0] = new LinkData(src, dst);
+        links[1] = new LinkData(dst, src);
         if (capacity != null) {
             links[0].setCapacity(capacity);
             links[1].setCapacity(capacity);
@@ -128,13 +128,13 @@ public class MockTopology extends TopologyImpl {
         Port port43 = addPort(sw4, 43L); // sw4 -> sw3
 
         MACAddress mac1 = MACAddress.valueOf("00:44:33:22:11:00");
-        HostEvent host1 = new HostEvent(mac1);
+        HostData host1 = new HostData(mac1);
         host1.addAttachmentPoint(port15.getSwitchPort());
         host1.setLastSeenTime(1L);
         this.putHost(host1);
 
         MACAddress mac3 = MACAddress.valueOf("00:11:22:33:44:55");
-        HostEvent host3 = new HostEvent(mac3);
+        HostData host3 = new HostData(mac3);
         host3.addAttachmentPoint(port35.getSwitchPort());
         host3.setLastSeenTime(1L);
         this.putHost(host3);

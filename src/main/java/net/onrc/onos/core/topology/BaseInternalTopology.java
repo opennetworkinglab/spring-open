@@ -14,120 +14,121 @@ import net.onrc.onos.core.util.SwitchPort;
 public interface BaseInternalTopology extends BaseMastership {
 
     /**
-     * Gets a SwitchEvent.
+     * Gets a SwitchData.
      *
      * @param dpid Switch DPID
-     * @return the SwitchEvent for the Switch DPID if found, otherwise null
+     * @return the SwitchData for the Switch DPID if found, otherwise null
      */
-    public SwitchEvent getSwitchEvent(Dpid dpid);
+    public SwitchData getSwitchData(Dpid dpid);
 
     /**
-     * Gets all SwitchEvent entries.
+     * Gets all SwitchData entries.
      *
-     * @return all SwitchEvent entries.
+     * @return all SwitchData entries.
      */
-    public Collection<SwitchEvent> getAllSwitchEvents();
+    public Collection<SwitchData> getAllSwitchDataEntries();
 
     /**
-     * Gets a PortEvent.
+     * Gets a PortData.
      *
      * @param port Port identifier
-     * @return the PortEvent for the Port identifier if found, otherwise null
+     * @return the PortData for the Port identifier if found, otherwise null
      */
-    public PortEvent getPortEvent(SwitchPort port);
+    public PortData getPortData(SwitchPort port);
 
     /**
-     * Gets a PortEvent.
+     * Gets a PortData.
      *
      * @param dpid Switch DPID
      * @param portNumber Port number
-     * @return the PortEvent for the (Dpid, PortNumber) if found, otherwise null
+     * @return the PortData for the (Dpid, PortNumber) if found, otherwise null
      */
-    public PortEvent getPortEvent(Dpid dpid, PortNumber portNumber);
+    public PortData getPortData(Dpid dpid, PortNumber portNumber);
 
     /**
-     * Gets all the PortEvents on a switch.
+     * Gets all PortData entries on a switch.
      *
      * @param dpid Switch DPID
-     * @return PortEvents
+     * @return all PortData entries on a switch.
      */
-    public Collection<PortEvent> getPortEvents(Dpid dpid);
+    public Collection<PortData> getPortDataEntries(Dpid dpid);
 
     /**
-     * Gets all PortEvent entries.
+     * Gets all PortData entries.
      *
-     * @return all PortEvent entries.
+     * @return all PortData entries.
      */
-    public Collection<PortEvent> getAllPortEvents();
+    public Collection<PortData> getAllPortDataEntries();
 
     /**
-     * Gets a LinkEvent.
+     * Gets a LinkData.
      *
      * @param linkId Link identifier
-     * @return the LinkEvent for the Link identifier if found, otherwise null
+     * @return the LinkData for the Link identifier if found, otherwise null
      */
-    public LinkEvent getLinkEvent(LinkTuple linkId);
+    public LinkData getLinkData(LinkTuple linkId);
 
     /**
-     * Gets a LinkEvent.
+     * Gets a LinkData.
      *
      * @param linkId Link identifier
      * @param type type
-     * @return the LinkEvent for the Link identifier and type if found, otherwise null
+     * @return the LinkData for the Link identifier and type if found,
+     * otherwise null
      */
-    public LinkEvent getLinkEvent(final LinkTuple linkId, final String type);
+    public LinkData getLinkData(final LinkTuple linkId, final String type);
 
     /**
-     * Gets all the LinkEvent departing from specified port.
+     * Gets all LinkData entries departing from a specified port.
      *
      * @param srcPort source port identifier
-     * @return Collection of LinkEvent entries
+     * @return Collection of LinkData entries
      */
-    public Collection<LinkEvent> getLinkEventsFrom(final SwitchPort srcPort);
+    public Collection<LinkData> getLinkDataEntriesFrom(final SwitchPort srcPort);
 
     /**
-     * Gets all the LinkEvent pointing toward specified port.
+     * Gets all LinkData entries pointing toward a specified port.
      *
      * @param dstPort destination port identifier
-     * @return Collection of LinkEvent entries
+     * @return Collection of LinkData entries
      */
-    public Collection<LinkEvent> getLinkEventsTo(final SwitchPort dstPort);
+    public Collection<LinkData> getLinkDataEntriesTo(final SwitchPort dstPort);
 
     /**
-     * Gets a collection of LinkEvent entries.
+     * Gets a collection of LinkData entries.
      *
      * @param linkId Link identifier
-     * @return Collection of LinkEvent entries.
+     * @return Collection of LinkData entries.
      */
-    public Collection<LinkEvent> getLinkEvents(LinkTuple linkId);
+    public Collection<LinkData> getLinkDataEntries(LinkTuple linkId);
 
     /**
-     * Gets all LinkEvent entries.
+     * Gets all LinkData entries.
      *
-     * @return all LinkEvent entries.
+     * @return all LinkData entries.
      */
-    public Collection<LinkEvent> getAllLinkEvents();
+    public Collection<LinkData> getAllLinkDataEntries();
 
     /**
-     * Gets a HostEvent.
+     * Gets a HostData.
      *
      * @param mac MACAddress of the host
-     * @return the HostEvent for the MACAddress if found, otherwise null
+     * @return the HostData for the MACAddress if found, otherwise null
      */
-    public HostEvent getHostEvent(MACAddress mac);
+    public HostData getHostData(MACAddress mac);
 
     /**
-     * Gets all HostEvent entries attached to specified port.
+     * Gets all HostData entries attached to a specified port.
      *
      * @param port attachment point identifier
-     * @return Collection of HostEvent entries.
+     * @return Collection of HostData entries.
      */
-    public Collection<HostEvent> getHostEvents(SwitchPort port);
+    public Collection<HostData> getHostDataEntries(SwitchPort port);
 
     /**
-     * Gets all HostEvent entries.
+     * Gets all HostData entries.
      *
-     * @return all HostEvent entries.
+     * @return all HostData entries.
      */
-    public Collection<HostEvent> getAllHostEvents();
+    public Collection<HostData> getAllHostDataEntries();
 }

@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology.web.serializers;
 import java.io.IOException;
 import java.util.Map.Entry;
 
-import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.TopologyElement;
 
 import org.codehaus.jackson.JsonGenerator;
@@ -11,45 +11,42 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * JSON serializer for PortEvent objects.
+ * JSON serializer for LinkData objects.
  */
-public class PortEventSerializer extends SerializerBase<PortEvent> {
+public class LinkDataSerializer extends SerializerBase<LinkData> {
     /**
      * Default constructor.
      */
-    public PortEventSerializer() {
-        super(PortEvent.class);
+    public LinkDataSerializer() {
+        super(LinkData.class);
     }
 
     /**
-     * Serializes a PortEvent object in JSON.
+     * Serializes a LinkData object in JSON.
      *
-     * @param portEvent the PortEvent that is being converted to JSON
+     * @param linkData the LinkData that is being converted to JSON
      * @param jsonGenerator generator to place the serialized JSON into
      * @param serializerProvider unused but required for method override
      * @throws IOException if the JSON serialization process fails
      */
     @Override
-    public void serialize(PortEvent portEvent, JsonGenerator jsonGenerator,
-                          SerializerProvider serializerProvider)
+    public void serialize(final LinkData linkData,
+                          final JsonGenerator jsonGenerator,
+                          final SerializerProvider serializerProvider)
         throws IOException {
 
         //
         // TODO: For now, the JSON format of the serialized output should
-        // be same as the JSON format of the corresponding class Port.
+        // be same as the JSON format of the corresponding class Link.
         // In the future, we will use a single serializer.
         //
 
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField(TopologyElement.TYPE, portEvent.getType());
-        jsonGenerator.writeStringField("state", "ACTIVE");
-        jsonGenerator.writeStringField("dpid", portEvent.getDpid().toString());
-        jsonGenerator.writeNumberField("portNumber",
-                                       portEvent.getPortNumber().value());
-        jsonGenerator.writeStringField("desc",
-                                       null /* port.getDescription() */);
+        jsonGenerator.writeStringField(TopologyElement.TYPE, linkData.getType());
+        jsonGenerator.writeObjectField("src", linkData.getSrc());
+        jsonGenerator.writeObjectField("dst", linkData.getDst());
         jsonGenerator.writeObjectFieldStart("stringAttributes");
-        for (Entry<String, String> entry : portEvent.getAllStringAttributes().entrySet()) {
+        for (Entry<String, String> entry : linkData.getAllStringAttributes().entrySet()) {
             jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
         }
         jsonGenerator.writeEndObject();         // stringAttributes

@@ -29,14 +29,14 @@ import net.onrc.onos.core.intent.PathIntentMap;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.web.IntentWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
-import net.onrc.onos.core.topology.HostEvent;
+import net.onrc.onos.core.topology.HostData;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MastershipEvent;
 import net.onrc.onos.core.topology.MockTopology;
-import net.onrc.onos.core.topology.PortEvent;
-import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.PortData;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.SwitchPort;
@@ -234,14 +234,14 @@ public class UseCaseTest extends UnitTest {
     public void rerouteShortestPaths() throws FloodlightModuleException {
         List<MastershipEvent> addedMastershipEvents = new LinkedList<>();
         List<MastershipEvent> removedMastershipEvents = new LinkedList<>();
-        List<SwitchEvent> addedSwitchEvents = new LinkedList<>();
-        List<SwitchEvent> removedSwitchEvents = new LinkedList<>();
-        List<PortEvent> addedPortEvents = new LinkedList<>();
-        List<PortEvent> removedPortEvents = new LinkedList<>();
-        List<LinkEvent> addedLinkEvents = new LinkedList<>();
-        List<LinkEvent> removedLinkEvents = new LinkedList<>();
-        List<HostEvent> addedHostEvents = new LinkedList<>();
-        List<HostEvent> removedHostEvents = new LinkedList<>();
+        List<SwitchData> addedSwitchDataEntries = new LinkedList<>();
+        List<SwitchData> removedSwitchDataEntries = new LinkedList<>();
+        List<PortData> addedPortDataEntries = new LinkedList<>();
+        List<PortData> removedPortDataEntries = new LinkedList<>();
+        List<LinkData> addedLinkDataEntries = new LinkedList<>();
+        List<LinkData> removedLinkDataEntries = new LinkedList<>();
+        List<HostData> addedHostDataEntries = new LinkedList<>();
+        List<HostData> removedHostDataEntries = new LinkedList<>();
         TopologyEvents topologyEvents;
 
         // create shortest path intents
@@ -279,22 +279,22 @@ public class UseCaseTest extends UnitTest {
         // link down
         ((MockTopology) mutableTopology).removeLink(1L, 12L, 2L, 21L); // This link is used by the intent "1"
         ((MockTopology) mutableTopology).removeLink(2L, 21L, 1L, 12L);
-        LinkEvent linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
-        LinkEvent linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
-        removedLinkEvents.clear();
-        removedLinkEvents.add(linkEvent1);
-        removedLinkEvents.add(linkEvent2);
+        LinkData linkData1 = new LinkData(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        LinkData linkData2 = new LinkData(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
+        removedLinkDataEntries.clear();
+        removedLinkDataEntries.add(linkData1);
+        removedLinkDataEntries.add(linkData2);
 
         topologyEvents = new TopologyEvents(addedMastershipEvents,
                                             removedMastershipEvents,
-                                            addedSwitchEvents,
-                                            removedSwitchEvents,
-                                            addedPortEvents,
-                                            removedPortEvents,
-                                            addedLinkEvents,
-                                            removedLinkEvents,
-                                            addedHostEvents,
-                                            removedHostEvents);
+                                            addedSwitchDataEntries,
+                                            removedSwitchDataEntries,
+                                            addedPortDataEntries,
+                                            removedPortDataEntries,
+                                            addedLinkDataEntries,
+                                            removedLinkDataEntries,
+                                            addedHostDataEntries,
+                                            removedHostDataEntries);
 
         runtime1.topologyEvents(topologyEvents);
         log.debug("*** Link goes down. ***");
@@ -313,23 +313,23 @@ public class UseCaseTest extends UnitTest {
 
         // link up
         ((MockTopology) mutableTopology).addBidirectionalLinks(1L, 12L, 2L, 21L);
-        linkEvent1 = new LinkEvent(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
-        linkEvent2 = new LinkEvent(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
-        removedLinkEvents.clear();
-        addedLinkEvents.clear();
-        addedLinkEvents.add(linkEvent1);
-        addedLinkEvents.add(linkEvent2);
+        linkData1 = new LinkData(new SwitchPort(1L, 12L), new SwitchPort(2L, 21L));
+        linkData2 = new LinkData(new SwitchPort(2L, 21L), new SwitchPort(1L, 12L));
+        removedLinkDataEntries.clear();
+        addedLinkDataEntries.clear();
+        addedLinkDataEntries.add(linkData1);
+        addedLinkDataEntries.add(linkData2);
 
         topologyEvents = new TopologyEvents(addedMastershipEvents,
                                             removedMastershipEvents,
-                                            addedSwitchEvents,
-                                            removedSwitchEvents,
-                                            addedPortEvents,
-                                            removedPortEvents,
-                                            addedLinkEvents,
-                                            removedLinkEvents,
-                                            addedHostEvents,
-                                            removedHostEvents);
+                                            addedSwitchDataEntries,
+                                            removedSwitchDataEntries,
+                                            addedPortDataEntries,
+                                            removedPortDataEntries,
+                                            addedLinkDataEntries,
+                                            removedLinkDataEntries,
+                                            addedHostDataEntries,
+                                            removedHostDataEntries);
 
         runtime1.topologyEvents(topologyEvents);
         log.debug("*** Link goes up. ***");

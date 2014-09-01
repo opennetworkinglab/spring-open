@@ -10,7 +10,7 @@ import java.util.Collection;
 
 import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.topology.Link;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.Dpid;
@@ -103,12 +103,12 @@ public class PathIntentMapTest {
         replay(link24);
 
         path1 = new Path();
-        path1.add(new LinkEvent(link12));
-        path1.add(new LinkEvent(link23));
+        path1.add(new LinkData(link12));
+        path1.add(new LinkData(link23));
 
         path2 = new Path();
-        path2.add(new LinkEvent(link12));
-        path2.add(new LinkEvent(link24));
+        path2.add(new LinkData(link12));
+        path2.add(new LinkData(link24));
 
         intent1 = new PathIntent("1", path1, 400.0, new Intent("_1"));
         intent2 = new PathIntent("2", path2, 400.0, new Intent("_2"));

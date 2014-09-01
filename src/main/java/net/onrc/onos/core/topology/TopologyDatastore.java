@@ -28,11 +28,11 @@ public class TopologyDatastore {
      * Add a switch to the database.
      *
      * @param sw         the switch to add.
-     * @param portEvents the corresponding switch ports to add.
+     * @param portDataEntries the corresponding switch ports to add.
      * @return true on success, otherwise false.
      */
-    public boolean addSwitch(SwitchEvent sw,
-                             Collection<PortEvent> portEvents) {
+    public boolean addSwitch(SwitchData sw,
+                             Collection<PortData> portDataEntries) {
         log.debug("Adding switch {}", sw);
         ArrayList<WriteOp> groupOp = new ArrayList<>();
 
@@ -46,8 +46,8 @@ public class TopologyDatastore {
         // to assure that DPID is unique cluster-wide, etc.
         groupOp.add(rcSwitch.forceCreateOp(client));
 
-        for (PortEvent portEvent : portEvents) {
-            KVPort rcPort = new KVPort(sw.getDpid(), portEvent.getPortNumber());
+        for (PortData portData : portDataEntries) {
+            KVPort rcPort = new KVPort(sw.getDpid(), portData.getPortNumber());
             rcPort.setStatus(KVPort.STATUS.ACTIVE);
 
             groupOp.add(rcPort.forceCreateOp(client));
@@ -71,11 +71,11 @@ public class TopologyDatastore {
      * Update a switch as inactive in the database.
      *
      * @param sw         the switch to update.
-     * @param portEvents the corresponding switch ports to update.
+     * @param portDataEntries the corresponding switch ports to update.
      * @return true on success, otherwise false.
      */
-    public boolean deactivateSwitch(SwitchEvent sw,
-                                    Collection<PortEvent> portEvents) {
+    public boolean deactivateSwitch(SwitchData sw,
+                                    Collection<PortData> portDataEntries) {
         log.debug("Deactivating switch {}", sw);
         KVSwitch rcSwitch = new KVSwitch(sw.getDpid());
 
@@ -86,8 +86,8 @@ public class TopologyDatastore {
 
         groupOp.add(rcSwitch.forceCreateOp(client));
 
-        for (PortEvent portEvent : portEvents) {
-            KVPort rcPort = new KVPort(sw.getDpid(), portEvent.getPortNumber());
+        for (PortData portData : portDataEntries) {
+            KVPort rcPort = new KVPort(sw.getDpid(), portData.getPortNumber());
             rcPort.setStatus(KVPort.STATUS.INACTIVE);
 
             groupOp.add(rcPort.forceCreateOp(client));
@@ -104,7 +104,7 @@ public class TopologyDatastore {
      * @param port the port to add.
      * @return true on success, otherwise false.
      */
-    public boolean addPort(PortEvent port) {
+    public boolean addPort(PortData port) {
         log.debug("Adding port {}", port);
 
         KVPort rcPort = new KVPort(port.getDpid(), port.getPortNumber());
@@ -122,7 +122,7 @@ public class TopologyDatastore {
      * @param port the port to update.
      * @return true on success, otherwise false.
      */
-    public boolean deactivatePort(PortEvent port) {
+    public boolean deactivatePort(PortData port) {
         log.debug("Deactivating port {}", port);
 
         KVPort rcPort = new KVPort(port.getDpid(), port.getPortNumber());
@@ -139,7 +139,7 @@ public class TopologyDatastore {
      * @param link the link to add.
      * @return true on success, otherwise false.
      */
-    public boolean addLink(LinkEvent link) {
+    public boolean addLink(LinkData link) {
         log.debug("Adding link {}", link);
 
         KVLink rcLink = new KVLink(link.getSrc().getDpid(),
@@ -158,11 +158,11 @@ public class TopologyDatastore {
         return true;                    // Success
     }
 
-    public boolean removeLink(LinkEvent linkEvent) {
-        log.debug("Removing link {}", linkEvent);
+    public boolean removeLink(LinkData linkData) {
+        log.debug("Removing link {}", linkData);
 
-        KVLink rcLink = new KVLink(linkEvent.getSrc().getDpid(), linkEvent.getSrc().getPortNumber(),
-                linkEvent.getDst().getDpid(), linkEvent.getDst().getPortNumber());
+        KVLink rcLink = new KVLink(linkData.getSrc().getDpid(), linkData.getSrc().getPortNumber(),
+                linkData.getDst().getDpid(), linkData.getDst().getPortNumber());
         rcLink.forceDelete();
 
         return true;
@@ -174,7 +174,7 @@ public class TopologyDatastore {
      * @param device the device to add.
      * @return true on success, otherwise false.
      */
-    public boolean addHost(HostEvent device) {
+    public boolean addHost(HostData device) {
         log.debug("Adding host into DB. mac {}", device.getMac());
 
         KVDevice rcDevice = new KVDevice(device.getMac().toBytes());
@@ -195,7 +195,7 @@ public class TopologyDatastore {
      * @param device the device to remove.
      * @return true on success, otherwise false.
      */
-    public boolean removeHost(HostEvent device) {
+    public boolean removeHost(HostData device) {
         log.debug("Removing host into DB. mac {}", device.getMac());
 
         KVDevice rcDevice = new KVDevice(device.getMac().toBytes());

@@ -122,7 +122,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public String getStringAttribute(String attr) {
-        return this.topology.getSwitchEvent(getDpid()).getStringAttribute(attr);
+        return this.topology.getSwitchData(getDpid()).getStringAttribute(attr);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class SwitchImpl extends TopologyObject implements Switch {
 
     @Override
     public Map<String, String> getAllStringAttributes() {
-        return this.topology.getSwitchEvent(getDpid()).getAllStringAttributes();
+        return this.topology.getSwitchData(getDpid()).getAllStringAttributes();
     }
 
     @Override

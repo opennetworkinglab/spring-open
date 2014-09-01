@@ -101,14 +101,14 @@ public class TopologyPublisher implements IOFSwitchListener,
     //
     private ConcurrentMap<Dpid, MastershipEvent> publishedMastershipEvents =
         new ConcurrentHashMap<>();
-    private ConcurrentMap<Dpid, SwitchEvent> publishedSwitchEvents =
+    private ConcurrentMap<Dpid, SwitchData> publishedSwitchDataEntries =
         new ConcurrentHashMap<>();
-    private ConcurrentMap<Dpid, ConcurrentMap<ByteBuffer, PortEvent>>
-        publishedPortEvents = new ConcurrentHashMap<>();
-    private ConcurrentMap<Dpid, ConcurrentMap<ByteBuffer, LinkEvent>>
-        publishedLinkEvents = new ConcurrentHashMap<>();
-    private ConcurrentMap<Dpid, ConcurrentMap<ByteBuffer, HostEvent>>
-        publishedHostEvents = new ConcurrentHashMap<>();
+    private ConcurrentMap<Dpid, ConcurrentMap<ByteBuffer, PortData>>
+        publishedPortDataEntries = new ConcurrentHashMap<>();
+    private ConcurrentMap<Dpid, ConcurrentMap<ByteBuffer, LinkData>>
+        publishedLinkDataEntries = new ConcurrentHashMap<>();
+    private ConcurrentMap<Dpid, ConcurrentMap<ByteBuffer, HostData>>
+        publishedHostDataEntries = new ConcurrentHashMap<>();
 
     private BlockingQueue<TopologyBatchOperation> delayedOperations =
         new LinkedBlockingQueue<>();
@@ -195,8 +195,8 @@ public class TopologyPublisher implements IOFSwitchListener,
                 log.debug("Got control to set switch {} INACTIVE",
                         HexString.toHexString(dpid));
 
-                SwitchEvent switchEvent = new SwitchEvent(new Dpid(dpid));
-                publishRemoveSwitchEvent(switchEvent);
+                SwitchData switchData = new SwitchData(new Dpid(dpid));
+                publishRemoveSwitchEvent(switchData);
                 registryService.releaseControl(dpid);
             }
         }
@@ -246,8 +246,8 @@ public class TopologyPublisher implements IOFSwitchListener,
                             switch (oper) {
                             case ADD:
                                 TopologyEvent topologyEvent = boe.getTarget();
-                                LinkEvent linkEvent =
-                                    topologyEvent.getLinkEvent();
+                                LinkData linkData =
+                                    topologyEvent.getLinkData();
                                 //
                                 // Test whether the Link Event still can be
                                 // published.
@@ -256,19 +256,19 @@ public class TopologyPublisher implements IOFSwitchListener,
                                 // removed in the middle of checking, we might
                                 // incorrectly publish it again from here.
                                 //
-                                if (linkEvent == null) {
+                                if (linkData == null) {
                                     break;
                                 }
-                                ConcurrentMap<ByteBuffer, LinkEvent>
-                                    linkEvents = publishedLinkEvents.get(
-                                                linkEvent.getDst().getDpid());
-                                if (linkEvents == null) {
+                                ConcurrentMap<ByteBuffer, LinkData>
+                                    linkDataEntries = publishedLinkDataEntries.get(
+                                                linkData.getDst().getDpid());
+                                if (linkDataEntries == null) {
                                     break;
                                 }
-                                if (linkEvents.get(linkEvent.getIDasByteBuffer()) == null) {
+                                if (linkDataEntries.get(linkData.getIDasByteBuffer()) == null) {
                                     break;
                                 }
-                                publishAddLinkEvent(linkEvent);
+                                publishAddLinkEvent(linkData);
                                 break;
                             case REMOVE:
                                 break;
@@ -288,38 +288,38 @@ public class TopologyPublisher implements IOFSwitchListener,
 
     @Override
     public void linkAdded(Link link) {
-        LinkEvent linkEvent = new LinkEvent(
+        LinkData linkData = new LinkData(
                 new SwitchPort(link.getSrc(), link.getSrcPort()),
                 new SwitchPort(link.getDst(), link.getDstPort()));
 
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
-        linkEvent.createStringAttribute(TopologyElement.TYPE,
+        linkData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_PACKET_LAYER);
-        linkEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+        linkData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                 ConfigState.NOT_CONFIGURED.toString());
-        linkEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+        linkData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                 AdminStatus.ACTIVE.toString());
-        linkEvent.freeze();
+        linkData.freeze();
 
-        publishAddLinkEvent(linkEvent);
+        publishAddLinkEvent(linkData);
     }
 
     @Override
     public void linkRemoved(Link link) {
-        LinkEvent linkEvent = new LinkEvent(
+        LinkData linkData = new LinkData(
                 new SwitchPort(link.getSrc(), link.getSrcPort()),
                 new SwitchPort(link.getDst(), link.getDstPort()));
 
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
-        linkEvent.createStringAttribute(TopologyElement.TYPE,
+        linkData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_PACKET_LAYER);
-        linkEvent.freeze();
+        linkData.freeze();
 
-        publishRemoveLinkEvent(linkEvent);
+        publishRemoveLinkEvent(linkData);
     }
 
     /* *****************
@@ -337,39 +337,39 @@ public class TopologyPublisher implements IOFSwitchListener,
 
         controllerRoleChanged(dpid, Role.MASTER);
 
-        SwitchEvent switchEvent = new SwitchEvent(dpid);
+        SwitchData switchData = new SwitchData(dpid);
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
-        switchEvent.createStringAttribute(TopologyElement.TYPE,
+        switchData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_PACKET_LAYER);
-        switchEvent.createStringAttribute("ConnectedSince",
+        switchData.createStringAttribute("ConnectedSince",
                 sw.getConnectedSince().toString());
-        switchEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+        switchData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                 ConfigState.NOT_CONFIGURED.toString());
-        switchEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+        switchData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                 AdminStatus.ACTIVE.toString());
-        switchEvent.freeze();
+        switchData.freeze();
         // The Port events
-        List<PortEvent> portEvents = new ArrayList<PortEvent>();
+        List<PortData> portDataEntries = new ArrayList<PortData>();
         for (OFPortDesc port : sw.getPorts()) {
-            PortEvent portEvent = new PortEvent(dpid,
+            PortData portData = new PortData(dpid,
                                                 PortNumberUtils.openFlow(port));
             // FIXME should be merging, with existing attrs, etc..
             // TODO define attr name as constant somewhere.
             // TODO populate appropriate attributes.
-            portEvent.createStringAttribute("name", port.getName());
-            portEvent.createStringAttribute(TopologyElement.TYPE,
+            portData.createStringAttribute("name", port.getName());
+            portData.createStringAttribute(TopologyElement.TYPE,
                     TopologyElement.TYPE_PACKET_LAYER);
-            portEvent.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
+            portData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                     ConfigState.NOT_CONFIGURED.toString());
-            portEvent.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
+            portData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                     AdminStatus.ACTIVE.toString());
 
-            portEvent.freeze();
-            portEvents.add(portEvent);
+            portData.freeze();
+            portDataEntries.add(portData);
         }
-        publishAddSwitchEvent(switchEvent, portEvents);
+        publishAddSwitchEvent(switchData, portDataEntries);
     }
 
     @Override
@@ -443,17 +443,17 @@ public class TopologyPublisher implements IOFSwitchListener,
      */
     private void switchPortAdded(long switchId, OFPortDesc port) {
         final Dpid dpid = new Dpid(switchId);
-        final PortEvent portEvent = new PortEvent(dpid,
+        final PortData portData = new PortData(dpid,
                                         PortNumberUtils.openFlow(port));
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
-        portEvent.createStringAttribute(TopologyElement.TYPE,
+        portData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_PACKET_LAYER);
-        portEvent.createStringAttribute("name", port.getName());
-        portEvent.freeze();
+        portData.createStringAttribute("name", port.getName());
+        portData.freeze();
 
-        publishAddPortEvent(portEvent);
+        publishAddPortEvent(portData);
     }
 
     /**
@@ -465,17 +465,17 @@ public class TopologyPublisher implements IOFSwitchListener,
     private void switchPortRemoved(long switchId, OFPortDesc port) {
         final Dpid dpid = new Dpid(switchId);
 
-        final PortEvent portEvent = new PortEvent(dpid,
+        final PortData portData = new PortData(dpid,
                                         PortNumberUtils.openFlow(port));
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
-        portEvent.createStringAttribute(TopologyElement.TYPE,
+        portData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_PACKET_LAYER);
-        portEvent.createStringAttribute("name", port.getName());
-        portEvent.freeze();
+        portData.createStringAttribute("name", port.getName());
+        portData.freeze();
 
-        publishRemovePortEvent(portEvent);
+        publishRemovePortEvent(portData);
     }
 
     @Override
@@ -573,13 +573,13 @@ public class TopologyPublisher implements IOFSwitchListener,
         SwitchPort sp = new SwitchPort(host.getSwitchDPID(), host.getSwitchPort());
         List<SwitchPort> spLists = new ArrayList<SwitchPort>();
         spLists.add(sp);
-        HostEvent event = new HostEvent(host.getMacAddress());
-        event.setAttachmentPoints(spLists);
-        event.setLastSeenTime(host.getLastSeenTimestamp().getTime());
+        HostData hostData = new HostData(host.getMacAddress());
+        hostData.setAttachmentPoints(spLists);
+        hostData.setLastSeenTime(host.getLastSeenTimestamp().getTime());
         // Does not use vlan info now.
-        event.freeze();
+        hostData.freeze();
 
-        publishAddHostEvent(event);
+        publishAddHostEvent(hostData);
     }
 
     @Override
@@ -587,26 +587,26 @@ public class TopologyPublisher implements IOFSwitchListener,
         log.debug("Host removed with MAC {}", host.getMacAddress());
 
         //
-        // Remove all previously added HostEvent for this MAC address
+        // Remove all previously added HostData for this MAC address
         //
         // TODO: Currently, the caller of hostRemoved() might not include
-        // the correct set of Attachment Points in the HostEvent entry itself.
-        // Also, we might have multiple HostEvent entries for the same
+        // the correct set of Attachment Points in the HostData entry itself.
+        // Also, we might have multiple HostData entries for the same
         // host (MAC address), each containing a single (different) Attachment
         // Point.
-        // Hence, here we have to cleanup all HostEvent entries for this
+        // Hence, here we have to cleanup all HostData entries for this
         // particular host, based on its MAC address.
         //
-        List<HostEvent> removeHostEvents = new LinkedList<>();
-        for (ConcurrentMap<ByteBuffer, HostEvent> cm : publishedHostEvents.values()) {
-            for (HostEvent hostEvent : cm.values()) {
-                if (hostEvent.getMac().equals(host.getMacAddress())) {
-                    removeHostEvents.add(hostEvent);
+        List<HostData> removeHostDataEntries = new LinkedList<>();
+        for (ConcurrentMap<ByteBuffer, HostData> cm : publishedHostDataEntries.values()) {
+            for (HostData hostData : cm.values()) {
+                if (hostData.getMac().equals(host.getMacAddress())) {
+                    removeHostDataEntries.add(hostData);
                 }
             }
         }
-        for (HostEvent event : removeHostEvents) {
-            publishRemoveHostEvent(event);
+        for (HostData hostData : removeHostDataEntries) {
+            publishRemoveHostEvent(hostData);
         }
     }
 
@@ -676,66 +676,66 @@ public class TopologyPublisher implements IOFSwitchListener,
     /**
      * Publishes ADD Switch Event.
      *
-     * @param switchEvent the switch event to publish
-     * @param portEvents the corresponding port events for the switch to
+     * @param switchData the switch event to publish
+     * @param portDataEntries the corresponding port events for the switch to
      * publish
      */
-    private void publishAddSwitchEvent(SwitchEvent switchEvent,
-                                       Collection<PortEvent> portEvents) {
-        if (!registryService.hasControl(switchEvent.getOriginDpid().value())) {
+    private void publishAddSwitchEvent(SwitchData switchData,
+                                       Collection<PortData> portDataEntries) {
+        if (!registryService.hasControl(switchData.getOriginDpid().value())) {
             log.debug("Not the master for switch {}. Suppressed switch add event {}.",
-                      switchEvent.getOriginDpid(), switchEvent);
+                      switchData.getOriginDpid(), switchData);
             return;
         }
 
         // Keep track of the old Port Events that should be removed
-        ConcurrentMap<ByteBuffer, PortEvent> oldPortEvents =
-            publishedPortEvents.get(switchEvent.getDpid());
-        if (oldPortEvents == null) {
-            oldPortEvents = new ConcurrentHashMap<>();
+        ConcurrentMap<ByteBuffer, PortData> oldPortDataEntries =
+            publishedPortDataEntries.get(switchData.getDpid());
+        if (oldPortDataEntries == null) {
+            oldPortDataEntries = new ConcurrentHashMap<>();
         }
 
         // Publish the information for the switch
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(switchEvent, getOnosInstanceId());
+            new TopologyEvent(switchData, getOnosInstanceId());
         tbo.appendAddOperation(topologyEvent);
 
         // Publish the information for each port
-        ConcurrentMap<ByteBuffer, PortEvent> newPortEvents =
+        ConcurrentMap<ByteBuffer, PortData> newPortDataEntries =
             new ConcurrentHashMap<>();
-        for (PortEvent portEvent : portEvents) {
+        for (PortData portData : portDataEntries) {
             topologyEvent =
-                new TopologyEvent(portEvent, getOnosInstanceId());
+                new TopologyEvent(portData, getOnosInstanceId());
             tbo.appendAddOperation(topologyEvent);
 
-            ByteBuffer id = portEvent.getIDasByteBuffer();
-            newPortEvents.put(id, portEvent);
-            oldPortEvents.remove(id);
+            ByteBuffer id = portData.getIDasByteBuffer();
+            newPortDataEntries.put(id, portData);
+            oldPortDataEntries.remove(id);
         }
         publishTopologyOperations(tbo);
-        publishedSwitchEvents.put(switchEvent.getDpid(), switchEvent);
-        publishedPortEvents.put(switchEvent.getDpid(), newPortEvents);
+        publishedSwitchDataEntries.put(switchData.getDpid(), switchData);
+        publishedPortDataEntries.put(switchData.getDpid(), newPortDataEntries);
 
         // Cleanup for each of the old removed port
-        for (PortEvent portEvent : oldPortEvents.values()) {
-            publishRemovePortEvent(portEvent);
+        for (PortData portData : oldPortDataEntries.values()) {
+            publishRemovePortEvent(portData);
         }
     }
 
     /**
      * Publishes REMOVE Switch Event.
      *
-     * @param switchEvent the switch event to publish
+     * @param switchData the switch event to publish
      */
-    private void publishRemoveSwitchEvent(SwitchEvent switchEvent) {
+    private void publishRemoveSwitchEvent(SwitchData switchData) {
         //
         // TODO: Removed the check for now, because currently this method is
         // also called by the SwitchCleanup thread, and in that case
         // the Switch Event was published by some other ONOS instance.
         //
         /*
-        if (publishedSwitchEvents.get(switchEvent.getDpid()) == null) {
+        if (publishedSwitchDataEntries.get(switchData.getDpid()) == null) {
             return;     // Nothing to do
         }
         */
@@ -743,210 +743,210 @@ public class TopologyPublisher implements IOFSwitchListener,
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(switchEvent, getOnosInstanceId());
+            new TopologyEvent(switchData, getOnosInstanceId());
         tbo.appendRemoveOperation(topologyEvent);
         publishTopologyOperations(tbo);
-        publishedSwitchEvents.remove(switchEvent.getDpid());
+        publishedSwitchDataEntries.remove(switchData.getDpid());
 
         // Cleanup for each port
-        ConcurrentMap<ByteBuffer, PortEvent> portEvents =
-            publishedPortEvents.get(switchEvent.getDpid());
-        if (portEvents != null) {
-            for (PortEvent portEvent : portEvents.values()) {
-                publishRemovePortEvent(portEvent);
+        ConcurrentMap<ByteBuffer, PortData> portDataEntries =
+            publishedPortDataEntries.get(switchData.getDpid());
+        if (portDataEntries != null) {
+            for (PortData portData : portDataEntries.values()) {
+                publishRemovePortEvent(portData);
             }
         }
 
-        publishedPortEvents.remove(switchEvent.getDpid());
-        publishedLinkEvents.remove(switchEvent.getDpid());
-        publishedHostEvents.remove(switchEvent.getDpid());
+        publishedPortDataEntries.remove(switchData.getDpid());
+        publishedLinkDataEntries.remove(switchData.getDpid());
+        publishedHostDataEntries.remove(switchData.getDpid());
     }
 
     /**
      * Publishes ADD Port Event.
      *
-     * @param portEvent the port event to publish
+     * @param portData the port event to publish
      */
-    private void publishAddPortEvent(PortEvent portEvent) {
-        if (!registryService.hasControl(portEvent.getOriginDpid().value())) {
+    private void publishAddPortEvent(PortData portData) {
+        if (!registryService.hasControl(portData.getOriginDpid().value())) {
             log.debug("Not the master for switch {}. Suppressed port add event {}.",
-                      portEvent.getOriginDpid(), portEvent);
+                      portData.getOriginDpid(), portData);
             return;
         }
 
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(portEvent, getOnosInstanceId());
+            new TopologyEvent(portData, getOnosInstanceId());
         tbo.appendAddOperation(topologyEvent);
         publishTopologyOperations(tbo);
 
         // Store the new Port Event in the local cache
-        ConcurrentMap<ByteBuffer, PortEvent> portEvents =
-            ConcurrentUtils.putIfAbsent(publishedPortEvents,
-                        portEvent.getDpid(),
-                        new ConcurrentHashMap<ByteBuffer, PortEvent>());
-        portEvents.put(portEvent.getIDasByteBuffer(), portEvent);
+        ConcurrentMap<ByteBuffer, PortData> portDataEntries =
+            ConcurrentUtils.putIfAbsent(publishedPortDataEntries,
+                        portData.getDpid(),
+                        new ConcurrentHashMap<ByteBuffer, PortData>());
+        portDataEntries.put(portData.getIDasByteBuffer(), portData);
     }
 
     /**
      * Publishes REMOVE Port Event.
      *
-     * @param portEvent the port event to publish
+     * @param portData the port event to publish
      */
-    private void publishRemovePortEvent(PortEvent portEvent) {
-        ConcurrentMap<ByteBuffer, PortEvent> portEvents =
-            publishedPortEvents.get(portEvent.getDpid());
-        if (portEvents == null) {
+    private void publishRemovePortEvent(PortData portData) {
+        ConcurrentMap<ByteBuffer, PortData> portDataEntries =
+            publishedPortDataEntries.get(portData.getDpid());
+        if (portDataEntries == null) {
             return;     // Nothing to do
         }
-        if (portEvents.get(portEvent.getIDasByteBuffer()) == null) {
+        if (portDataEntries.get(portData.getIDasByteBuffer()) == null) {
             return;     // Nothing to do
         }
 
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(portEvent, getOnosInstanceId());
+            new TopologyEvent(portData, getOnosInstanceId());
         tbo.appendRemoveOperation(topologyEvent);
         publishTopologyOperations(tbo);
 
         // Cleanup for the incoming link(s)
-        ConcurrentMap<ByteBuffer, LinkEvent> linkEvents =
-            publishedLinkEvents.get(portEvent.getDpid());
-        if (linkEvents != null) {
-            for (LinkEvent linkEvent : linkEvents.values()) {
-                if (linkEvent.getDst().equals(portEvent.getSwitchPort())) {
-                    publishRemoveLinkEvent(linkEvent);
+        ConcurrentMap<ByteBuffer, LinkData> linkDataEntries =
+            publishedLinkDataEntries.get(portData.getDpid());
+        if (linkDataEntries != null) {
+            for (LinkData linkData : linkDataEntries.values()) {
+                if (linkData.getDst().equals(portData.getSwitchPort())) {
+                    publishRemoveLinkEvent(linkData);
                 }
             }
         }
 
         // Cleanup for the connected hosts
-        ConcurrentMap<ByteBuffer, HostEvent> hostEvents =
-            publishedHostEvents.get(portEvent.getDpid());
-        if (hostEvents != null) {
-            for (HostEvent hostEvent : hostEvents.values()) {
-                for (SwitchPort swp : hostEvent.getAttachmentPoints()) {
-                    if (swp.equals(portEvent.getSwitchPort())) {
-                        publishRemoveHostEvent(hostEvent);
+        ConcurrentMap<ByteBuffer, HostData> hostDataEntries =
+            publishedHostDataEntries.get(portData.getDpid());
+        if (hostDataEntries != null) {
+            for (HostData hostData : hostDataEntries.values()) {
+                for (SwitchPort swp : hostData.getAttachmentPoints()) {
+                    if (swp.equals(portData.getSwitchPort())) {
+                        publishRemoveHostEvent(hostData);
                     }
                 }
             }
         }
 
-        portEvents.remove(portEvent.getIDasByteBuffer());
+        portDataEntries.remove(portData.getIDasByteBuffer());
     }
 
     /**
      * Publishes ADD Link Event.
      *
-     * @param linkEvent the link event to publish
+     * @param linkData the link event to publish
      */
-    private void publishAddLinkEvent(LinkEvent linkEvent) {
-        if (!registryService.hasControl(linkEvent.getOriginDpid().value())) {
+    private void publishAddLinkEvent(LinkData linkData) {
+        if (!registryService.hasControl(linkData.getOriginDpid().value())) {
             log.debug("Not the master for dst switch {}. Suppressed link add event {}.",
-                      linkEvent.getOriginDpid(), linkEvent);
+                      linkData.getOriginDpid(), linkData);
             return;
         }
 
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(linkEvent, getOnosInstanceId());
+            new TopologyEvent(linkData, getOnosInstanceId());
         tbo.appendAddOperation(topologyEvent);
         publishTopologyOperations(tbo);
 
         // Store the new Link Event in the local cache
-        ConcurrentMap<ByteBuffer, LinkEvent> linkEvents =
-            ConcurrentUtils.putIfAbsent(publishedLinkEvents,
-                        linkEvent.getDst().getDpid(),
-                        new ConcurrentHashMap<ByteBuffer, LinkEvent>());
-        linkEvents.put(linkEvent.getIDasByteBuffer(), linkEvent);
+        ConcurrentMap<ByteBuffer, LinkData> linkDataEntries =
+            ConcurrentUtils.putIfAbsent(publishedLinkDataEntries,
+                        linkData.getDst().getDpid(),
+                        new ConcurrentHashMap<ByteBuffer, LinkData>());
+        linkDataEntries.put(linkData.getIDasByteBuffer(), linkData);
     }
 
     /**
      * Publishes REMOVE Link Event.
      *
-     * @param linkEvent the link event to publish
+     * @param linkData the link event to publish
      */
-    private void publishRemoveLinkEvent(LinkEvent linkEvent) {
-        ConcurrentMap<ByteBuffer, LinkEvent> linkEvents =
-            publishedLinkEvents.get(linkEvent.getDst().getDpid());
-        if (linkEvents == null) {
+    private void publishRemoveLinkEvent(LinkData linkData) {
+        ConcurrentMap<ByteBuffer, LinkData> linkDataEntries =
+            publishedLinkDataEntries.get(linkData.getDst().getDpid());
+        if (linkDataEntries == null) {
             return;     // Nothing to do
         }
-        if (linkEvents.get(linkEvent.getIDasByteBuffer()) == null) {
+        if (linkDataEntries.get(linkData.getIDasByteBuffer()) == null) {
             return;     // Nothing to do
         }
 
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(linkEvent, getOnosInstanceId());
+            new TopologyEvent(linkData, getOnosInstanceId());
         tbo.appendRemoveOperation(topologyEvent);
         publishTopologyOperations(tbo);
 
-        linkEvents.remove(linkEvent.getIDasByteBuffer());
+        linkDataEntries.remove(linkData.getIDasByteBuffer());
     }
 
     /**
      * Publishes ADD Host Event.
      *
-     * @param hostEvent the host event to publish
+     * @param hostData the host event to publish
      */
-    private void publishAddHostEvent(HostEvent hostEvent) {
+    private void publishAddHostEvent(HostData hostData) {
         //
         // NOTE: The implementation below assumes that there is just one
-        // attachment point stored in hostEvent. Currently, this assumption
+        // attachment point stored in hostData. Currently, this assumption
         // is true based on the existing implementation of the caller
         // hostAdded().
         //
 
-        if (!registryService.hasControl(hostEvent.getOriginDpid().value())) {
+        if (!registryService.hasControl(hostData.getOriginDpid().value())) {
             log.debug("Not the master for attachment switch {}. Suppressed host add event {}.",
-                      hostEvent.getOriginDpid(), hostEvent);
+                      hostData.getOriginDpid(), hostData);
             return;
         }
 
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(hostEvent, getOnosInstanceId());
+            new TopologyEvent(hostData, getOnosInstanceId());
         tbo.appendAddOperation(topologyEvent);
         publishTopologyOperations(tbo);
 
         // Store the new Host Event in the local cache
-        ConcurrentMap<ByteBuffer, HostEvent> hostEvents =
-            ConcurrentUtils.putIfAbsent(publishedHostEvents,
-                hostEvent.getOriginDpid(),
-                new ConcurrentHashMap<ByteBuffer, HostEvent>());
-        hostEvents.put(hostEvent.getIDasByteBuffer(), hostEvent);
+        ConcurrentMap<ByteBuffer, HostData> hostDataEntries =
+            ConcurrentUtils.putIfAbsent(publishedHostDataEntries,
+                hostData.getOriginDpid(),
+                new ConcurrentHashMap<ByteBuffer, HostData>());
+        hostDataEntries.put(hostData.getIDasByteBuffer(), hostData);
     }
 
     /**
      * Publishes REMOVE Host Event.
      *
-     * @param hostEvent the host event to publish
+     * @param hostData the host event to publish
      */
-    private void publishRemoveHostEvent(HostEvent hostEvent) {
-        ConcurrentMap<ByteBuffer, HostEvent> hostEvents =
-            publishedHostEvents.get(hostEvent.getOriginDpid());
-        if (hostEvents == null) {
+    private void publishRemoveHostEvent(HostData hostData) {
+        ConcurrentMap<ByteBuffer, HostData> hostDataEntries =
+            publishedHostDataEntries.get(hostData.getOriginDpid());
+        if (hostDataEntries == null) {
             return;     // Nothing to do
         }
-        if (hostEvents.get(hostEvent.getIDasByteBuffer()) == null) {
+        if (hostDataEntries.get(hostData.getIDasByteBuffer()) == null) {
             return;     // Nothing to do
         }
 
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(hostEvent, getOnosInstanceId());
+            new TopologyEvent(hostData, getOnosInstanceId());
         tbo.appendRemoveOperation(topologyEvent);
         publishTopologyOperations(tbo);
 
-        hostEvents.remove(hostEvent.getIDasByteBuffer());
+        hostDataEntries.remove(hostData.getIDasByteBuffer());
     }
 
     /**

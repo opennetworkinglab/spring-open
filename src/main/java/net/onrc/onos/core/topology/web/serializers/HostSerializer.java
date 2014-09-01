@@ -36,7 +36,7 @@ public class HostSerializer extends SerializerBase<Host> {
 
         //
         // TODO: For now, the JSON format of the serialized output should
-        // be same as the JSON format of the corresponding class HostEvent.
+        // be same as the JSON format of the corresponding class HostData.
         // In the future, we will use a single serializer.
         //
 
@@ -51,7 +51,7 @@ public class HostSerializer extends SerializerBase<Host> {
         jsonGenerator.writeEndArray();
         //
         // NOTE: Class Host itself doesn't have stringAttributes.
-        // Adding empty object for now for consistency with HostEventSerializer
+        // Adding empty object for now for consistency with HostDataSerializer
         //
         jsonGenerator.writeObjectFieldStart("stringAttributes");
         /*

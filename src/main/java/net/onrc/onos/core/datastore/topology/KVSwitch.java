@@ -9,7 +9,7 @@ import net.onrc.onos.core.datastore.DataStoreClient;
 import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
 import net.onrc.onos.core.datastore.serializers.Topology.SwitchProperty;
 import net.onrc.onos.core.datastore.utils.KVObject;
-import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
@@ -64,7 +64,7 @@ public class KVSwitch extends KVObject {
      * @return SwitchID
      */
     public static byte[] getSwitchID(final Long dpid) {
-        return SwitchEvent.getSwitchID(dpid).array();
+        return SwitchData.getSwitchID(dpid).array();
     }
 
     /**

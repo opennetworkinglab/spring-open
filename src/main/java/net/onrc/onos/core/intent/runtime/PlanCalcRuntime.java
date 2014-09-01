@@ -18,7 +18,7 @@ import net.onrc.onos.core.intent.IntentOperation.Operator;
 import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,9 +117,9 @@ public class PlanCalcRuntime {
                 continue;
             }
             List<FlowEntry> entries = new ArrayList<>();
-            for (LinkEvent linkEvent : intent.getPath()) {
-                long sw = linkEvent.getSrc().getDpid().value();
-                dstPort = linkEvent.getSrc().getPortNumber().value();
+            for (LinkData linkData : intent.getPath()) {
+                long sw = linkData.getSrc().getDpid().value();
+                dstPort = linkData.getSrc().getPortNumber().value();
                 FlowEntry fe = new FlowEntry(sw, srcPort, dstPort, srcMac, dstMac,
                                              srcIP, dstIP, i.operator);
                 if (sw != firstSrcSw) {
@@ -134,7 +134,7 @@ public class PlanCalcRuntime {
                     fe.setFlowEntryId(cookieId);
                 }
                 entries.add(fe);
-                srcPort = linkEvent.getDst().getPortNumber().value();
+                srcPort = linkData.getDst().getPortNumber().value();
             }
             if (lastDstSw >= 0 && lastDstPort >= 0) {
                 long sw = lastDstSw;

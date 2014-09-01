@@ -38,78 +38,78 @@ public final class ImmutableInternalTopologyWrapper implements MutableInternalTo
     }
 
     @Override
-    public SwitchEvent getSwitchEvent(Dpid dpid) {
-        return wrapped.getSwitchEvent(dpid);
+    public SwitchData getSwitchData(Dpid dpid) {
+        return wrapped.getSwitchData(dpid);
     }
 
     @Override
-    public Collection<SwitchEvent> getAllSwitchEvents() {
-        return wrapped.getAllSwitchEvents();
+    public Collection<SwitchData> getAllSwitchDataEntries() {
+        return wrapped.getAllSwitchDataEntries();
     }
 
     @Override
-    public PortEvent getPortEvent(SwitchPort port) {
-        return wrapped.getPortEvent(port);
+    public PortData getPortData(SwitchPort port) {
+        return wrapped.getPortData(port);
     }
 
     @Override
-    public PortEvent getPortEvent(Dpid dpid, PortNumber portNumber) {
-        return wrapped.getPortEvent(dpid, portNumber);
+    public PortData getPortData(Dpid dpid, PortNumber portNumber) {
+        return wrapped.getPortData(dpid, portNumber);
     }
 
     @Override
-    public Collection<PortEvent> getPortEvents(Dpid dpid) {
-        return wrapped.getPortEvents(dpid);
+    public Collection<PortData> getPortDataEntries(Dpid dpid) {
+        return wrapped.getPortDataEntries(dpid);
     }
 
     @Override
-    public Collection<PortEvent> getAllPortEvents() {
-        return wrapped.getAllPortEvents();
+    public Collection<PortData> getAllPortDataEntries() {
+        return wrapped.getAllPortDataEntries();
     }
 
     @Override
-    public LinkEvent getLinkEvent(LinkTuple linkId) {
-        return wrapped.getLinkEvent(linkId);
+    public LinkData getLinkData(LinkTuple linkId) {
+        return wrapped.getLinkData(linkId);
     }
 
     @Override
-    public LinkEvent getLinkEvent(LinkTuple linkId, String type) {
-        return wrapped.getLinkEvent(linkId, type);
+    public LinkData getLinkData(LinkTuple linkId, String type) {
+        return wrapped.getLinkData(linkId, type);
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEvents(LinkTuple linkId) {
-        return wrapped.getLinkEvents(linkId);
+    public Collection<LinkData> getLinkDataEntries(LinkTuple linkId) {
+        return wrapped.getLinkDataEntries(linkId);
     }
 
     @Override
-    public Collection<LinkEvent> getAllLinkEvents() {
-        return wrapped.getAllLinkEvents();
+    public Collection<LinkData> getAllLinkDataEntries() {
+        return wrapped.getAllLinkDataEntries();
     }
 
     @Override
-    public HostEvent getHostEvent(MACAddress mac) {
-        return wrapped.getHostEvent(mac);
+    public HostData getHostData(MACAddress mac) {
+        return wrapped.getHostData(mac);
     }
 
     @Override
-    public Collection<HostEvent> getAllHostEvents() {
-        return wrapped.getAllHostEvents();
+    public Collection<HostData> getAllHostDataEntries() {
+        return wrapped.getAllHostDataEntries();
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEventsFrom(SwitchPort srcPort) {
-        return wrapped.getLinkEventsFrom(srcPort);
+    public Collection<LinkData> getLinkDataEntriesFrom(SwitchPort srcPort) {
+        return wrapped.getLinkDataEntriesFrom(srcPort);
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEventsTo(SwitchPort dstPort) {
-        return wrapped.getLinkEventsTo(dstPort);
+    public Collection<LinkData> getLinkDataEntriesTo(SwitchPort dstPort) {
+        return wrapped.getLinkDataEntriesTo(dstPort);
     }
 
     @Override
-    public Collection<HostEvent> getHostEvents(SwitchPort port) {
-        return wrapped.getHostEvents(port);
+    public Collection<HostData> getHostDataEntries(SwitchPort port) {
+        return wrapped.getHostDataEntries(port);
     }
 
     @Override

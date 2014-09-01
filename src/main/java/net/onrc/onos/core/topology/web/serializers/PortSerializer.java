@@ -36,7 +36,7 @@ public class PortSerializer extends SerializerBase<Port> {
 
         //
         // TODO: For now, the JSON format of the serialized output should
-        // be same as the JSON format of the corresponding class PortEvent.
+        // be same as the JSON format of the corresponding class PortData.
         // In the future, we will use a single serializer.
         //
 

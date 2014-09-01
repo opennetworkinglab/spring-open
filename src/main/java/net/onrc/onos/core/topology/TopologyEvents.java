@@ -16,12 +16,12 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
  * (a) Process "removed" events before "added" events.
  * <p/>
  * (b) The processing order of the "removed" events should be:
- * removedHostEvents, removedLinkEvents, removedPortEvents,
- * removedSwitchEvents, removedMastershipEvents
+ * removedHostDataEntries, removedLinkDataEntries, removedPortDataEntries,
+ * removedSwitchDataEntries, removedMastershipEvents
  * <p/>
  * (c) The processing order of the "added" events should be:
- * addedMastershipEvents, addedSwitchEvents, addedPortEvents, addedLinkEvents,
- * addedHostEvents
+ * addedMastershipEvents, addedSwitchDataEntries, addedPortDataEntries,
+ * addedLinkDataEntries, addedHostDataEntries
  * <p/>
  * The above ordering guarantees that removing a port for example
  * will be processed before the corresponding switch itself is
@@ -34,14 +34,14 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public final class TopologyEvents {
     private final ImmutableList<MastershipEvent> addedMastershipEvents;
     private final ImmutableList<MastershipEvent> removedMastershipEvents;
-    private final ImmutableList<SwitchEvent> addedSwitchEvents;
-    private final ImmutableList<SwitchEvent> removedSwitchEvents;
-    private final ImmutableList<PortEvent> addedPortEvents;
-    private final ImmutableList<PortEvent> removedPortEvents;
-    private final ImmutableList<LinkEvent> addedLinkEvents;
-    private final ImmutableList<LinkEvent> removedLinkEvents;
-    private final ImmutableList<HostEvent> addedHostEvents;
-    private final ImmutableList<HostEvent> removedHostEvents;
+    private final ImmutableList<SwitchData> addedSwitchDataEntries;
+    private final ImmutableList<SwitchData> removedSwitchDataEntries;
+    private final ImmutableList<PortData> addedPortDataEntries;
+    private final ImmutableList<PortData> removedPortDataEntries;
+    private final ImmutableList<LinkData> addedLinkDataEntries;
+    private final ImmutableList<LinkData> removedLinkDataEntries;
+    private final ImmutableList<HostData> addedHostDataEntries;
+    private final ImmutableList<HostData> removedHostDataEntries;
 
     /**
      * Constructor for added and removed events.
@@ -49,78 +49,83 @@ public final class TopologyEvents {
      * @param addedMastershipEvents the collection of added Mastership Events.
      * @param removedMastershipEvents the collection of removed Mastership
      *        Events.
-     * @param addedSwitchEvents the collection of added Switch Events.
-     * @param removedSwitchEvents the collection of removed Switch Events.
-     * @param addedPortEvents the collection of added Port Events.
-     * @param removedPortEvents the collection of removed Port Events.
-     * @param addedLinkEvents the collection of added Link Events.
-     * @param removedLinkEvents the collection of removed Link Events.
-     * @param addedHostEvents the collection of added Host Events.
-     * @param removedHostEvents the collection of removed Host Events.
+     * @param addedSwitchDataEntries the collection of added Switch Data
+     * Entries.
+     * @param removedSwitchDataEntries the collection of removed Switch Data
+     * Entries.
+     * @param addedPortDataEntries the collection of added Port Data Entries.
+     * @param removedPortDataEntries the collection of removed Port Data
+     * Entries.
+     * @param addedLinkDataEntries the collection of added Link Data Entries.
+     * @param removedLinkDataEntries the collection of removed Link Data
+     * Entries.
+     * @param addedHostDataEntries the collection of added Host Data Entries.
+     * @param removedHostDataEntries the collection of removed Host Data
+     * Entries.
      */
     public TopologyEvents(Collection<MastershipEvent> addedMastershipEvents,
                           Collection<MastershipEvent> removedMastershipEvents,
-                          Collection<SwitchEvent> addedSwitchEvents,
-                          Collection<SwitchEvent> removedSwitchEvents,
-                          Collection<PortEvent> addedPortEvents,
-                          Collection<PortEvent> removedPortEvents,
-                          Collection<LinkEvent> addedLinkEvents,
-                          Collection<LinkEvent> removedLinkEvents,
-                          Collection<HostEvent> addedHostEvents,
-                          Collection<HostEvent> removedHostEvents) {
+                          Collection<SwitchData> addedSwitchDataEntries,
+                          Collection<SwitchData> removedSwitchDataEntries,
+                          Collection<PortData> addedPortDataEntries,
+                          Collection<PortData> removedPortDataEntries,
+                          Collection<LinkData> addedLinkDataEntries,
+                          Collection<LinkData> removedLinkDataEntries,
+                          Collection<HostData> addedHostDataEntries,
+                          Collection<HostData> removedHostDataEntries) {
         this.addedMastershipEvents = ImmutableList.<MastershipEvent>copyOf(
                         checkNotNull(addedMastershipEvents));
         this.removedMastershipEvents = ImmutableList.<MastershipEvent>copyOf(
                         checkNotNull(removedMastershipEvents));
-        this.addedSwitchEvents = ImmutableList.<SwitchEvent>copyOf(
-                        checkNotNull(addedSwitchEvents));
-        this.removedSwitchEvents = ImmutableList.<SwitchEvent>copyOf(
-                        checkNotNull(removedSwitchEvents));
-        this.addedPortEvents = ImmutableList.<PortEvent>copyOf(
-                        checkNotNull(addedPortEvents));
-        this.removedPortEvents = ImmutableList.<PortEvent>copyOf(
-                        checkNotNull(removedPortEvents));
-        this.addedLinkEvents = ImmutableList.<LinkEvent>copyOf(
-                        checkNotNull(addedLinkEvents));
-        this.removedLinkEvents = ImmutableList.<LinkEvent>copyOf(
-                        checkNotNull(removedLinkEvents));
-        this.addedHostEvents = ImmutableList.<HostEvent>copyOf(
-                        checkNotNull(addedHostEvents));
-        this.removedHostEvents = ImmutableList.<HostEvent>copyOf(
-                        checkNotNull(removedHostEvents));
+        this.addedSwitchDataEntries = ImmutableList.<SwitchData>copyOf(
+                        checkNotNull(addedSwitchDataEntries));
+        this.removedSwitchDataEntries = ImmutableList.<SwitchData>copyOf(
+                        checkNotNull(removedSwitchDataEntries));
+        this.addedPortDataEntries = ImmutableList.<PortData>copyOf(
+                        checkNotNull(addedPortDataEntries));
+        this.removedPortDataEntries = ImmutableList.<PortData>copyOf(
+                        checkNotNull(removedPortDataEntries));
+        this.addedLinkDataEntries = ImmutableList.<LinkData>copyOf(
+                        checkNotNull(addedLinkDataEntries));
+        this.removedLinkDataEntries = ImmutableList.<LinkData>copyOf(
+                        checkNotNull(removedLinkDataEntries));
+        this.addedHostDataEntries = ImmutableList.<HostData>copyOf(
+                        checkNotNull(addedHostDataEntries));
+        this.removedHostDataEntries = ImmutableList.<HostData>copyOf(
+                        checkNotNull(removedHostDataEntries));
     }
 
     /**
      * Constructor for added events only.
      *
      * @param addedMastershipEvents the collection of added Mastership Events.
-     * @param addedSwitchEvents the collection of added Switch Events.
-     * @param addedPortEvents the collection of added Port Events.
-     * @param addedLinkEvents the collection of added Link Events.
-     * @param addedHostEvents the collection of added Host Events.
+     * @param addedSwitchDataEntries the collection of added Switch Events.
+     * @param addedPortDataEntries the collection of added Port Events.
+     * @param addedLinkDataEntries the collection of added Link Events.
+     * @param addedHostDataEntries the collection of added Host Events.
      */
     public TopologyEvents(Collection<MastershipEvent> addedMastershipEvents,
-                          Collection<SwitchEvent> addedSwitchEvents,
-                          Collection<PortEvent> addedPortEvents,
-                          Collection<LinkEvent> addedLinkEvents,
-                          Collection<HostEvent> addedHostEvents) {
+                          Collection<SwitchData> addedSwitchDataEntries,
+                          Collection<PortData> addedPortDataEntries,
+                          Collection<LinkData> addedLinkDataEntries,
+                          Collection<HostData> addedHostDataEntries) {
         this.addedMastershipEvents = ImmutableList.<MastershipEvent>copyOf(
                         checkNotNull(addedMastershipEvents));
-        this.addedSwitchEvents = ImmutableList.<SwitchEvent>copyOf(
-                        checkNotNull(addedSwitchEvents));
-        this.addedPortEvents = ImmutableList.<PortEvent>copyOf(
-                        checkNotNull(addedPortEvents));
-        this.addedLinkEvents = ImmutableList.<LinkEvent>copyOf(
-                        checkNotNull(addedLinkEvents));
-        this.addedHostEvents = ImmutableList.<HostEvent>copyOf(
-                        checkNotNull(addedHostEvents));
+        this.addedSwitchDataEntries = ImmutableList.<SwitchData>copyOf(
+                        checkNotNull(addedSwitchDataEntries));
+        this.addedPortDataEntries = ImmutableList.<PortData>copyOf(
+                        checkNotNull(addedPortDataEntries));
+        this.addedLinkDataEntries = ImmutableList.<LinkData>copyOf(
+                        checkNotNull(addedLinkDataEntries));
+        this.addedHostDataEntries = ImmutableList.<HostData>copyOf(
+                        checkNotNull(addedHostDataEntries));
 
         // Assign empty lists to the removed events
         this.removedMastershipEvents = ImmutableList.<MastershipEvent>of();
-        this.removedSwitchEvents = ImmutableList.<SwitchEvent>of();
-        this.removedPortEvents = ImmutableList.<PortEvent>of();
-        this.removedLinkEvents = ImmutableList.<LinkEvent>of();
-        this.removedHostEvents = ImmutableList.<HostEvent>of();
+        this.removedSwitchDataEntries = ImmutableList.<SwitchData>of();
+        this.removedPortDataEntries = ImmutableList.<PortData>of();
+        this.removedLinkDataEntries = ImmutableList.<LinkData>of();
+        this.removedHostDataEntries = ImmutableList.<HostData>of();
     }
 
     /**
@@ -146,8 +151,8 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of added Switch Events.
      */
-    public Collection<SwitchEvent> getAddedSwitchEvents() {
-        return addedSwitchEvents;
+    public Collection<SwitchData> getAddedSwitchDataEntries() {
+        return addedSwitchDataEntries;
     }
 
     /**
@@ -155,8 +160,8 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of removed Switch Events.
      */
-    public Collection<SwitchEvent> getRemovedSwitchEvents() {
-        return removedSwitchEvents;
+    public Collection<SwitchData> getRemovedSwitchDataEntries() {
+        return removedSwitchDataEntries;
     }
 
     /**
@@ -164,8 +169,8 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of added Port Events.
      */
-    public Collection<PortEvent> getAddedPortEvents() {
-        return addedPortEvents;
+    public Collection<PortData> getAddedPortDataEntries() {
+        return addedPortDataEntries;
     }
 
     /**
@@ -173,8 +178,8 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of removed Port Events.
      */
-    public Collection<PortEvent> getRemovedPortEvents() {
-        return removedPortEvents;
+    public Collection<PortData> getRemovedPortDataEntries() {
+        return removedPortDataEntries;
     }
 
     /**
@@ -182,8 +187,8 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of added Link Events.
      */
-    public Collection<LinkEvent> getAddedLinkEvents() {
-        return addedLinkEvents;
+    public Collection<LinkData> getAddedLinkDataEntries() {
+        return addedLinkDataEntries;
     }
 
     /**
@@ -191,8 +196,8 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of removed Link Events.
      */
-    public Collection<LinkEvent> getRemovedLinkEvents() {
-        return removedLinkEvents;
+    public Collection<LinkData> getRemovedLinkDataEntries() {
+        return removedLinkDataEntries;
     }
 
     /**
@@ -200,8 +205,8 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of added Host Events.
      */
-    public Collection<HostEvent> getAddedHostEvents() {
-        return addedHostEvents;
+    public Collection<HostData> getAddedHostDataEntries() {
+        return addedHostDataEntries;
     }
 
     /**
@@ -209,7 +214,7 @@ public final class TopologyEvents {
      *
      * @return the immutable collection of removed Host Events.
      */
-    public Collection<HostEvent> getRemovedHostEvents() {
-        return removedHostEvents;
+    public Collection<HostData> getRemovedHostDataEntries() {
+        return removedHostDataEntries;
     }
 }

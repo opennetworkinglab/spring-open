@@ -1,6 +1,6 @@
 package net.onrc.onos.core.topology;
 
-import net.onrc.onos.core.topology.web.serializers.PortEventSerializer;
+import net.onrc.onos.core.topology.web.serializers.PortDataSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
@@ -12,15 +12,11 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * Self-contained Port event Object.
- * <p/>
- * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
- * FIXME: Current implementation directly use this object as
- *        Replication message, but should be sending update operation info.
+ * Self-contained Port object.
  */
-@JsonSerialize(using = PortEventSerializer.class)
-public class PortEvent extends TopologyElement<PortEvent> {
-    public static final int PORTID_BYTES = SwitchEvent.SWITCHID_BYTES + 2 + 8;
+@JsonSerialize(using = PortDataSerializer.class)
+public class PortData extends TopologyElement<PortData> {
+    public static final int PORTID_BYTES = SwitchData.SWITCHID_BYTES + 2 + 8;
 
     private final SwitchPort id;
     // TODO Add Hardware Address
@@ -35,7 +31,7 @@ public class PortEvent extends TopologyElement<PortEvent> {
      * Default constructor for Serializer to use.
      */
     @Deprecated
-    protected PortEvent() {
+    protected PortData() {
         id = null;
     }
 
@@ -44,7 +40,7 @@ public class PortEvent extends TopologyElement<PortEvent> {
      *
      * @param switchPort the SwitchPort to identify the port
      */
-    public PortEvent(SwitchPort switchPort) {
+    public PortData(SwitchPort switchPort) {
         this.id = checkNotNull(switchPort);
     }
 
@@ -54,18 +50,18 @@ public class PortEvent extends TopologyElement<PortEvent> {
      * @param dpid the DPID of the switch the port belongs to
      * @param number the PortNumber to identify the port
      */
-    public PortEvent(Dpid dpid, PortNumber number) {
+    public PortData(Dpid dpid, PortNumber number) {
         this.id = new SwitchPort(dpid, number);
     }
 
     /**
      * Copy constructor.
      * <p>
-     * Creates an unfrozen copy of the given PortEvent object.
+     * Creates an unfrozen copy of the given PortData object.
      *
      * @param original the object to make copy of
      */
-    public PortEvent(PortEvent original) {
+    public PortData(PortData original) {
         super(original);
         this.id = original.id;
     }
@@ -127,7 +123,7 @@ public class PortEvent extends TopologyElement<PortEvent> {
         if (number == null) {
             throw new IllegalArgumentException("number cannot be null");
         }
-        return (ByteBuffer) ByteBuffer.allocate(PortEvent.PORTID_BYTES)
+        return (ByteBuffer) ByteBuffer.allocate(PortData.PORTID_BYTES)
                 .putChar('S').putLong(dpid)
                 .putChar('P').putLong(number).flip();
     }
@@ -162,12 +158,12 @@ public class PortEvent extends TopologyElement<PortEvent> {
             return false;
         }
 
-        PortEvent other = (PortEvent) o;
+        PortData other = (PortData) o;
         return Objects.equals(this.id, other.id);
     }
 
     @Override
     public String toString() {
-        return "[PortEvent " + getDpid() + "@" + getPortNumber() + "]";
+        return "[PortData " + getDpid() + "@" + getPortNumber() + "]";
     }
 }

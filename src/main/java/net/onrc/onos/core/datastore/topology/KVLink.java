@@ -9,8 +9,8 @@ import net.onrc.onos.core.datastore.DataStoreClient;
 import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
 import net.onrc.onos.core.datastore.serializers.Topology.LinkProperty;
 import net.onrc.onos.core.datastore.utils.KVObject;
-import net.onrc.onos.core.topology.LinkEvent;
-import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.topology.LinkData;
+import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 
@@ -122,7 +122,7 @@ public class KVLink extends KVObject {
      */
     public static byte[] getLinkID(final Dpid srcDpid, final PortNumber srcPortNo,
                                    final Dpid dstDpid, final PortNumber dstPortNo) {
-        return LinkEvent.getLinkID(srcDpid, srcPortNo,
+        return LinkData.getLinkID(srcDpid, srcPortNo,
                                    dstDpid, dstPortNo).array();
     }
 
@@ -137,7 +137,7 @@ public class KVLink extends KVObject {
      */
     public static byte[] getLinkID(final Long srcDpid, final Long srcPortNo,
                                    final Long dstDpid, final Long dstPortNo) {
-        return LinkEvent.getLinkID(srcDpid, srcPortNo, dstDpid,
+        return LinkData.getLinkID(srcDpid, srcPortNo, dstDpid,
                 dstPortNo).array();
     }
 
@@ -162,7 +162,7 @@ public class KVLink extends KVObject {
             throw new IllegalArgumentException("Invalid Link key");
         }
         final long[] srcPortPair = KVPort.getPortPairFromKey(keyBuf.slice());
-        keyBuf.position(2 + PortEvent.PORTID_BYTES);
+        keyBuf.position(2 + PortData.PORTID_BYTES);
         final long[] dstPortPair = KVPort.getPortPairFromKey(keyBuf.slice());
 
         long[] tuple = new long[4];

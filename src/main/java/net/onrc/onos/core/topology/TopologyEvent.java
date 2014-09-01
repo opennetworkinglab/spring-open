@@ -72,48 +72,48 @@ public final class TopologyEvent implements TopologyBatchTarget {
     /**
      * Constructor for given Switch event.
      *
-     * @param switchEvent the Switch event to use.
+     * @param switchData the Switch event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(SwitchEvent switchEvent, OnosInstanceId onosInstanceId) {
+    TopologyEvent(SwitchData switchData, OnosInstanceId onosInstanceId) {
         this.eventType = Type.SWITCH;
-        this.event = checkNotNull(switchEvent);
+        this.event = checkNotNull(switchData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
     /**
      * Constructor for given Port event.
      *
-     * @param portEvent the Port event to use.
+     * @param portData the Port event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(PortEvent portEvent, OnosInstanceId onosInstanceId) {
+    TopologyEvent(PortData portData, OnosInstanceId onosInstanceId) {
         this.eventType = Type.PORT;
-        this.event = checkNotNull(portEvent);
+        this.event = checkNotNull(portData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
     /**
      * Constructor for given Link event.
      *
-     * @param linkEvent the Link event to use.
+     * @param linkData the Link event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(LinkEvent linkEvent, OnosInstanceId onosInstanceId) {
+    TopologyEvent(LinkData linkData, OnosInstanceId onosInstanceId) {
         this.eventType = Type.LINK;
-        this.event = checkNotNull(linkEvent);
+        this.event = checkNotNull(linkData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
     /**
      * Constructor for given Host event.
      *
-     * @param hostEvent the Host event to use.
+     * @param hostData the Host event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(HostEvent hostEvent, OnosInstanceId onosInstanceId) {
+    TopologyEvent(HostData hostData, OnosInstanceId onosInstanceId) {
         this.eventType = Type.HOST;
-        this.event = checkNotNull(hostEvent);
+        this.event = checkNotNull(hostData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
@@ -144,12 +144,12 @@ public final class TopologyEvent implements TopologyBatchTarget {
      *
      * @return the Switch event.
      */
-    public SwitchEvent getSwitchEvent() {
+    public SwitchData getSwitchData() {
         if (eventType != Type.SWITCH) {
             return null;
         }
-        SwitchEvent switchEvent = (SwitchEvent) event;
-        return switchEvent;
+        SwitchData switchData = (SwitchData) event;
+        return switchData;
     }
 
     /**
@@ -157,12 +157,12 @@ public final class TopologyEvent implements TopologyBatchTarget {
      *
      * @return the Port event.
      */
-    public PortEvent getPortEvent() {
+    public PortData getPortData() {
         if (eventType != Type.PORT) {
             return null;
         }
-        PortEvent portEvent = (PortEvent) event;
-        return portEvent;
+        PortData portData = (PortData) event;
+        return portData;
     }
 
     /**
@@ -170,12 +170,12 @@ public final class TopologyEvent implements TopologyBatchTarget {
      *
      * @return the Link event.
      */
-    public LinkEvent getLinkEvent() {
+    public LinkData getLinkData() {
         if (eventType != Type.LINK) {
             return null;
         }
-        LinkEvent linkEvent = (LinkEvent) event;
-        return linkEvent;
+        LinkData linkData = (LinkData) event;
+        return linkData;
     }
 
     /**
@@ -183,12 +183,12 @@ public final class TopologyEvent implements TopologyBatchTarget {
      *
      * @return the Host event.
      */
-    public HostEvent getHostEvent() {
+    public HostData getHostData() {
         if (eventType != Type.HOST) {
             return null;
         }
-        HostEvent hostEvent = (HostEvent) event;
-        return hostEvent;
+        HostData hostData = (HostData) event;
+        return hostData;
     }
 
     /**

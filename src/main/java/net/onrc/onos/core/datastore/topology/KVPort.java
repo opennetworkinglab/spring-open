@@ -10,7 +10,7 @@ import net.onrc.onos.core.datastore.IKVTable.IKVEntry;
 import net.onrc.onos.core.datastore.serializers.Topology.PortProperty;
 import net.onrc.onos.core.datastore.utils.ByteArrayUtil;
 import net.onrc.onos.core.datastore.utils.KVObject;
-import net.onrc.onos.core.topology.PortEvent;
+import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 
@@ -69,7 +69,7 @@ public class KVPort extends KVObject {
      * @return PortID
      */
     public static byte[] getPortID(final Dpid dpid, final PortNumber number) {
-        return PortEvent.getPortID(dpid, number).array();
+        return PortData.getPortID(dpid, number).array();
     }
 
     /**
@@ -80,7 +80,7 @@ public class KVPort extends KVObject {
      * @return PortID
      */
     public static byte[] getPortID(final Long dpid, final Long number) {
-        return PortEvent.getPortID(dpid, number).array();
+        return PortData.getPortID(dpid, number).array();
     }
 
     /**

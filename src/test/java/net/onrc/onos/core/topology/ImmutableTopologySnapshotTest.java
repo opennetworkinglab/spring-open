@@ -60,9 +60,9 @@ public class ImmutableTopologySnapshotTest {
     public void testInitialBuilder() {
         final Builder builder = ImmutableTopologySnapshot.initialBuilder();
         assertTrue("Topology should be empty",
-                builder.getCurrentInternal().getAllSwitchEvents().isEmpty());
+                builder.getCurrentInternal().getAllSwitchDataEntries().isEmpty());
         assertTrue("Topology should be empty",
-                builder.build().getAllSwitchEvents().isEmpty());
+                builder.build().getAllSwitchDataEntries().isEmpty());
     }
 
     /**
@@ -72,120 +72,120 @@ public class ImmutableTopologySnapshotTest {
     public void testBuilder() {
         final Builder builder = ss.builder();
         assertEquals("Number of switch", NUM_SWITCH,
-                builder.getCurrentInternal().getAllSwitchEvents().size());
+                builder.getCurrentInternal().getAllSwitchDataEntries().size());
         assertEquals("Number of ports", NUM_PORTS * NUM_SWITCH,
-                builder.getCurrentInternal().getAllPortEvents().size());
+                builder.getCurrentInternal().getAllPortDataEntries().size());
         assertEquals("Number of links", NUM_LINKS,
-                builder.getCurrentInternal().getAllLinkEvents().size());
+                builder.getCurrentInternal().getAllLinkDataEntries().size());
         assertEquals("Number of hosts", NUM_HOSTS,
-                builder.getCurrentInternal().getAllHostEvents().size());
+                builder.getCurrentInternal().getAllHostDataEntries().size());
 
         final ImmutableTopologySnapshot clone = builder.build();
         assertEquals("Number of switch", NUM_SWITCH,
-                clone.getAllSwitchEvents().size());
+                clone.getAllSwitchDataEntries().size());
         assertEquals("Number of ports", NUM_PORTS * NUM_SWITCH,
-                clone.getAllPortEvents().size());
+                clone.getAllPortDataEntries().size());
         assertEquals("Number of links", NUM_LINKS,
-                clone.getAllLinkEvents().size());
+                clone.getAllLinkDataEntries().size());
         assertEquals("Number of hosts", NUM_HOSTS,
-                clone.getAllHostEvents().size());
+                clone.getAllHostDataEntries().size());
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getSwitchEvent(Dpid)}.
+     * Test for {@link ImmutableTopologySnapshot#getSwitchData(Dpid)}.
      */
     @Test
-    public void testGetSwitchEvent() {
+    public void testGetSwitchData() {
         final Dpid dpid1 = new Dpid(1);
         assertNotNull("Switch 1 should exist",
-                ss.getSwitchEvent(dpid1));
+                ss.getSwitchData(dpid1));
 
         final Dpid dpidNa = new Dpid(NUM_SWITCH + 1);
         assertNull("Switch NUM_SWITCH + 1 should not exist",
-                ss.getSwitchEvent(dpidNa));
+                ss.getSwitchData(dpidNa));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getAllSwitchEvents()}.
+     * Test for {@link ImmutableTopologySnapshot#getAllSwitchDataEntries()}.
      */
     @Test
-    public void testGetAllSwitchEvents() {
+    public void testGetAllSwitchDataEntries() {
         assertEquals("Number of switch", NUM_SWITCH,
-                ss.getAllSwitchEvents().size());
+                ss.getAllSwitchDataEntries().size());
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getPortEvent(SwitchPort)}.
+     * Test for {@link ImmutableTopologySnapshot#getPortData(SwitchPort)}.
      */
     @Test
-    public void testGetPortEventSwitchPort() {
+    public void testGetPortDataSwitchPort() {
         final Dpid dpid1 = new Dpid(1);
         final PortNumber port1 = PortNumber.uint32(1);
         assertNotNull("Switch 1 Port 1 should exist",
-                ss.getPortEvent(new SwitchPort(dpid1, port1)));
+                ss.getPortData(new SwitchPort(dpid1, port1)));
 
         final PortNumber portNa = PortNumber.uint32(PORT_NUM_NA);
         assertNull("Switch 1 Port PORT_NUM_NA should not exist",
-                ss.getPortEvent(new SwitchPort(dpid1, portNa)));
+                ss.getPortData(new SwitchPort(dpid1, portNa)));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getPortEvent(Dpid, PortNumber)}.
+     * Test for {@link ImmutableTopologySnapshot#getPortData(Dpid, PortNumber)}.
      */
     @Test
-    public void testGetPortEventDpidPortNumber() {
+    public void testGetPortDataDpidPortNumber() {
         final Dpid dpid1 = new Dpid(1);
         final PortNumber port1 = PortNumber.uint32(1);
         assertNotNull("Switch 1 Port 1 should exist",
-                ss.getPortEvent(dpid1, port1));
+                ss.getPortData(dpid1, port1));
 
         final PortNumber portNa = PortNumber.uint32(PORT_NUM_NA);
         assertNull("Switch 1 Port PORT_NUM_NA should not exist",
-                ss.getPortEvent(dpid1, portNa));
+                ss.getPortData(dpid1, portNa));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getPortEvents(Dpid)}.
+     * Test for {@link ImmutableTopologySnapshot#getPortDataEntries(Dpid)}.
      */
     @Test
-    public void testGetPortEvents() {
+    public void testGetPortDataEntries() {
         final Dpid dpid1 = new Dpid(1);
         assertEquals("Number of ports", NUM_PORTS,
-                ss.getPortEvents(dpid1).size());
+                ss.getPortDataEntries(dpid1).size());
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getAllPortEvents()}.
+     * Test for {@link ImmutableTopologySnapshot#getAllPortDataEntries()}.
      */
     @Test
-    public void testGetAllPortEvents() {
+    public void testGetAllPortDataEntries() {
         assertEquals("Number of ports", NUM_PORTS * NUM_SWITCH,
-                ss.getAllPortEvents().size());
+                ss.getAllPortDataEntries().size());
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getLinkEvent(LinkTuple)}.
+     * Test for {@link ImmutableTopologySnapshot#getLinkData(LinkTuple)}.
      */
     @Test
-    public void testGetLinkEventLinkTuple() {
+    public void testGetLinkDataLinkTuple() {
         assertNotNull("Link (1:1 -> 2:1) should exist",
-                ss.getLinkEvent(LINK_IN_TOPOLOGY));
+                ss.getLinkData(LINK_IN_TOPOLOGY));
 
         final Dpid dpid1 = new Dpid(1);
         final Dpid dpid2 = new Dpid(2);
         final PortNumber port1 = PortNumber.uint32(1);
         final PortNumber portNa = PortNumber.uint32(PORT_NUM_NA);
         assertNull("Link (1:1 -> 2:PORT_NUM_NA) should not exist",
-                ss.getLinkEvent(new LinkTuple(dpid1, port1, dpid2, portNa)));
+                ss.getLinkData(new LinkTuple(dpid1, port1, dpid2, portNa)));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getLinkEvent(LinkTuple, String)}.
+     * Test for {@link ImmutableTopologySnapshot#getLinkData(LinkTuple, String)}.
      */
     @Test
-    public void testGetLinkEventLinkTupleString() {
+    public void testGetLinkDataLinkTupleString() {
         assertNotNull("Link (1:1 -> 2:1) should exist",
-                ss.getLinkEvent(LINK_IN_TOPOLOGY,
+                ss.getLinkData(LINK_IN_TOPOLOGY,
                         TopologyElement.TYPE_PACKET_LAYER));
 
         final Dpid dpid1 = new Dpid(1);
@@ -193,87 +193,87 @@ public class ImmutableTopologySnapshotTest {
         final PortNumber port1 = PortNumber.uint32(1);
         final PortNumber portNa = PortNumber.uint32(PORT_NUM_NA);
         assertNull("Link (1:1 -> 2:PORT_NUM_NA) should not exist",
-                ss.getLinkEvent(new LinkTuple(dpid1, port1, dpid2, portNa),
+                ss.getLinkData(new LinkTuple(dpid1, port1, dpid2, portNa),
                         TopologyElement.TYPE_PACKET_LAYER));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getLinkEventsFrom(SwitchPort)}.
+     * Test for {@link ImmutableTopologySnapshot#getLinkDataEntriesFrom(SwitchPort)}.
      */
     @Test
-    public void testGetLinkEventsFrom() {
+    public void testGetLinkDataEntriesFrom() {
         assertThat("Port 1:1 should at least have 1 outgoing link",
-                ss.getLinkEventsFrom(LINK_IN_TOPOLOGY.getSrc()).size(),
+                ss.getLinkDataEntriesFrom(LINK_IN_TOPOLOGY.getSrc()).size(),
                 is(greaterThanOrEqualTo(1)));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getLinkEventsTo(SwitchPort)}.
+     * Test for {@link ImmutableTopologySnapshot#getLinkDataEntriesTo(SwitchPort)}.
      */
     @Test
-    public void testGetLinkEventsTo() {
+    public void testGetLinkDataEntriesTo() {
         assertThat("Port 2:1 should at least have 1 incoming link",
-                ss.getLinkEventsTo(LINK_IN_TOPOLOGY.getDst()).size(),
+                ss.getLinkDataEntriesTo(LINK_IN_TOPOLOGY.getDst()).size(),
                 is(greaterThanOrEqualTo(1)));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getLinkEvents(LinkTuple)}.
+     * Test for {@link ImmutableTopologySnapshot#getLinkDataEntries(LinkTuple)}.
      */
     @Test
-    public void testGetLinkEvents() {
+    public void testGetLinkDataEntries() {
         assertFalse("Link (1:1 -> 2:1) should exist",
-                ss.getLinkEvents(LINK_IN_TOPOLOGY).isEmpty());
+                ss.getLinkDataEntries(LINK_IN_TOPOLOGY).isEmpty());
 
         final Dpid dpid1 = new Dpid(1);
         final Dpid dpid2 = new Dpid(2);
         final PortNumber port1 = PortNumber.uint32(1);
         final PortNumber portNa = PortNumber.uint32(PORT_NUM_NA);
         assertTrue("Link (1:1 -> 2:PORT_NUM_NA) should not exist",
-                ss.getLinkEvents(new LinkTuple(dpid1, port1, dpid2, portNa)).isEmpty());
+                ss.getLinkDataEntries(new LinkTuple(dpid1, port1, dpid2, portNa)).isEmpty());
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getAllLinkEvents()}.
+     * Test for {@link ImmutableTopologySnapshot#getAllLinkDataEntries()}.
      */
     @Test
-    public void testGetAllLinkEvents() {
+    public void testGetAllLinkDataEntries() {
         assertEquals("Number of links", NUM_LINKS,
-                ss.getAllLinkEvents().size());
+                ss.getAllLinkDataEntries().size());
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getHostEvent(MACAddress)}.
+     * Test for {@link ImmutableTopologySnapshot#getHostData(MACAddress)}.
      */
     @Test
-    public void testGetHostEvent() {
+    public void testGetHostData() {
         assertNotNull("Host 0:..:0 should exist",
-                ss.getHostEvent(MACAddress.valueOf(0L)));
+                ss.getHostData(MACAddress.valueOf(0L)));
 
         assertNull("Host MAC_NA should exist",
-                ss.getHostEvent(MACAddress.valueOf(MAC_NA)));
+                ss.getHostData(MACAddress.valueOf(MAC_NA)));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getHostEvents(SwitchPort)}.
+     * Test for {@link ImmutableTopologySnapshot#getHostDataEntries(SwitchPort)}.
      */
     @Test
-    public void testGetHostEvents() {
-        final HostEvent host = ss.getHostEvent(MACAddress.valueOf(0L));
+    public void testGetHostDataEntries() {
+        final HostData host = ss.getHostData(MACAddress.valueOf(0L));
         final SwitchPort attachment = host.getAttachmentPoints().get(0);
 
         assertThat("should at least have 1 host attached",
-                ss.getHostEvents(attachment).size(),
+                ss.getHostDataEntries(attachment).size(),
                 is(greaterThanOrEqualTo(1)));
     }
 
     /**
-     * Test for {@link ImmutableTopologySnapshot#getAllHostEvents()}.
+     * Test for {@link ImmutableTopologySnapshot#getAllHostDataEntries()}.
      */
     @Test
-    public void testGetAllHostEvents() {
+    public void testGetAllHostDataEntries() {
         assertEquals("Number of hosts", NUM_HOSTS,
-                ss.getAllHostEvents().size());
+                ss.getAllHostDataEntries().size());
     }
 
     /**
@@ -542,7 +542,7 @@ public class ImmutableTopologySnapshotTest {
      */
     @Test
     public void testGetHostsSwitchPort() {
-        final HostEvent host = ss.getHostEvent(MACAddress.valueOf(0L));
+        final HostData host = ss.getHostData(MACAddress.valueOf(0L));
         final SwitchPort attachment = host.getAttachmentPoints().get(0);
 
         assertThat("should at least have 1 host attached",
@@ -571,9 +571,9 @@ public class ImmutableTopologySnapshotTest {
             builder.putSwitchMastershipEvent(new MastershipEvent(dpid,
                                 INSTANCE_ID,
                                 Role.MASTER));
-            builder.putSwitch(new SwitchEvent(dpid));
+            builder.putSwitch(new SwitchData(dpid));
             for (int j = 0; j < ports; ++j) {
-                builder.putPort(new PortEvent(dpid, PortNumber.uint32(j + 1)));
+                builder.putPort(new PortData(dpid, PortNumber.uint32(j + 1)));
             }
         }
 
@@ -581,7 +581,7 @@ public class ImmutableTopologySnapshotTest {
         final RandomDataGenerator rand = new RandomDataGenerator();
         int l = 0;
         // Always add Link (1:1 -> 2:1)
-        builder.putLink(new LinkEvent(LINK_IN_TOPOLOGY));
+        builder.putLink(new LinkData(LINK_IN_TOPOLOGY));
         ++l;
 
         while (l < links) {
@@ -597,26 +597,26 @@ public class ImmutableTopologySnapshotTest {
                     new Dpid(sw2), PortNumber.uint32(port2));
 
             final BaseInternalTopology current = builder.getCurrentInternal();
-            if (!current.getLinkEventsFrom(linkId.getSrc()).isEmpty() ||
-                !current.getLinkEventsTo(linkId.getSrc()).isEmpty()) {
+            if (!current.getLinkDataEntriesFrom(linkId.getSrc()).isEmpty() ||
+                !current.getLinkDataEntriesTo(linkId.getSrc()).isEmpty()) {
                 // src port already has a link
                 continue;
             }
-            if (!current.getLinkEventsFrom(linkId.getDst()).isEmpty() ||
-                !current.getLinkEventsTo(linkId.getDst()).isEmpty()) {
+            if (!current.getLinkDataEntriesFrom(linkId.getDst()).isEmpty() ||
+                !current.getLinkDataEntriesTo(linkId.getDst()).isEmpty()) {
                 // dst port already has a link
                 continue;
             }
 
             // add only if both port doesn't have any link
-            builder.putLink(new LinkEvent(linkId));
+            builder.putLink(new LinkData(linkId));
             ++l;
         }
 
         // Add host with mac 0 -> hosts
         int h = 0;
         while (h < hosts) {
-            HostEvent host = new HostEvent(MACAddress.valueOf(h));
+            HostData host = new HostData(MACAddress.valueOf(h));
             SwitchPort swp = new SwitchPort(
                                 new Dpid(rand.nextInt(1, switches)),
                                 PortNumber.uint32(rand.nextInt(1, ports)));

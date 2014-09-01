@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import net.onrc.onos.core.intent.IntentOperation.Operator;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
@@ -72,21 +72,21 @@ public class ConstrainedBFSTreeTest {
 
         assertNotNull(path12);
         assertEquals(1, path12.size());
-        assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_1, PORT_NUMBER_12)), path12.get(0));
+        assertEquals(new LinkData(topology.getOutgoingLink(DPID_1, PORT_NUMBER_12)), path12.get(0));
 
         assertNotNull(path13);
         assertEquals(2, path13.size());
         if (path13.get(0).getDst().getDpid().value() == 2L) {
-            assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_1, PORT_NUMBER_12)), path13.get(0));
-            assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_2, PORT_NUMBER_23)), path13.get(1));
+            assertEquals(new LinkData(topology.getOutgoingLink(DPID_1, PORT_NUMBER_12)), path13.get(0));
+            assertEquals(new LinkData(topology.getOutgoingLink(DPID_2, PORT_NUMBER_23)), path13.get(1));
         } else {
-            assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_1, PORT_NUMBER_14)), path13.get(0));
-            assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_4, PORT_NUMBER_43)), path13.get(1));
+            assertEquals(new LinkData(topology.getOutgoingLink(DPID_1, PORT_NUMBER_14)), path13.get(0));
+            assertEquals(new LinkData(topology.getOutgoingLink(DPID_4, PORT_NUMBER_43)), path13.get(1));
         }
 
         assertNotNull(path14);
         assertEquals(1, path14.size());
-        assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_1, PORT_NUMBER_14)), path14.get(0));
+        assertEquals(new LinkData(topology.getOutgoingLink(DPID_1, PORT_NUMBER_14)), path14.get(0));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class ConstrainedBFSTreeTest {
         assertNull(path14);
         assertNotNull(path21);
         assertEquals(1, path21.size());
-        assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_2, PORT_NUMBER_21)), path21.get(0));
+        assertEquals(new LinkData(topology.getOutgoingLink(DPID_2, PORT_NUMBER_21)), path21.get(0));
     }
 
     @Test
@@ -132,7 +132,7 @@ public class ConstrainedBFSTreeTest {
 
         assertNotNull(path1);
         assertEquals(1, path1.size());
-        assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_1, PORT_NUMBER_12)), path1.get(0));
+        assertEquals(new LinkData(topology.getOutgoingLink(DPID_1, PORT_NUMBER_12)), path1.get(0));
 
         PathIntent pathIntent1 = new PathIntent("pi1", path1, 600.0, intent1);
         intentOps.add(Operator.ADD, pathIntent1);
@@ -144,8 +144,8 @@ public class ConstrainedBFSTreeTest {
 
         assertNotNull(path2);
         assertEquals(2, path2.size());
-        assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_1, PORT_NUMBER_14)), path2.get(0));
-        assertEquals(new LinkEvent(topology.getOutgoingLink(DPID_4, PORT_NUMBER_42)), path2.get(1));
+        assertEquals(new LinkData(topology.getOutgoingLink(DPID_1, PORT_NUMBER_14)), path2.get(0));
+        assertEquals(new LinkData(topology.getOutgoingLink(DPID_4, PORT_NUMBER_42)), path2.get(1));
 
         PathIntent pathIntent2 = new PathIntent("pi2", path2, 600.0, intent2);
         intentOps.add(Operator.ADD, pathIntent2);

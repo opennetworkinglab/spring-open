@@ -16,7 +16,7 @@ import net.onrc.onos.core.util.OnosInstanceId;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
- * Self-contained Switch Mastership event Object.
+ * Self-contained Switch Mastership event object.
  * <p/>
  * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
  * FIXME: Current implementation directly use this object as

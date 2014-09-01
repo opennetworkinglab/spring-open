@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import net.onrc.onos.core.topology.Link;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.PortNumber;
@@ -74,9 +74,9 @@ public class PathIntentMap extends IntentMap {
         super.putIntent(intent);
 
         PathIntent pathIntent = (PathIntent) intent;
-        for (LinkEvent linkEvent : pathIntent.getPath()) {
-            put(linkEvent.getSrc(), (PathIntent) intent);
-            put(linkEvent.getDst(), (PathIntent) intent);
+        for (LinkData linkData : pathIntent.getPath()) {
+            put(linkData.getSrc(), (PathIntent) intent);
+            put(linkData.getDst(), (PathIntent) intent);
         }
     }
 
@@ -88,9 +88,9 @@ public class PathIntentMap extends IntentMap {
     @Override
     protected void removeIntent(String intentId) {
         PathIntent intent = (PathIntent) getIntent(intentId);
-        for (LinkEvent linkEvent : intent.getPath()) {
-            get(linkEvent.getSrc()).remove(intent);
-            get(linkEvent.getDst()).remove(intent);
+        for (LinkData linkData : intent.getPath()) {
+            get(linkData.getSrc()).remove(intent);
+            get(linkData.getDst()).remove(intent);
         }
         super.removeIntent(intentId);
     }

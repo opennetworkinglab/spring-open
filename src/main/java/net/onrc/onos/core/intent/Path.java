@@ -6,31 +6,31 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 
 /**
  * Base class for Path representation, which implements the List interface.
  */
-public class Path implements List<LinkEvent> {
+public class Path implements List<LinkData> {
 
-    private final List<LinkEvent> links;
+    private final List<LinkData> links;
 
     /**
      * Default constructor to create an empty path.
      */
     public Path() {
-        links = new LinkedList<LinkEvent>();
+        links = new LinkedList<LinkData>();
     }
 
     /**
      * Returns a string representation of the path.
      *
-     * @return "[LinkEvent src->dst],..."
+     * @return "[LinkData src->dst],..."
      */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        Iterator<LinkEvent> i = this.iterator();
+        Iterator<LinkData> i = this.iterator();
         while (i.hasNext()) {
             builder.append(i.next().toString());
             if (i.hasNext()) {
@@ -56,7 +56,7 @@ public class Path implements List<LinkEvent> {
     }
 
     @Override
-    public Iterator<LinkEvent> iterator() {
+    public Iterator<LinkData> iterator() {
         return links.iterator();
     }
 
@@ -71,8 +71,8 @@ public class Path implements List<LinkEvent> {
     }
 
     @Override
-    public boolean add(LinkEvent e) {
-        return links.add(e);
+    public boolean add(LinkData d) {
+        return links.add(d);
     }
 
     @Override
@@ -86,12 +86,12 @@ public class Path implements List<LinkEvent> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends LinkEvent> c) {
+    public boolean addAll(Collection<? extends LinkData> c) {
         return links.addAll(c);
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends LinkEvent> c) {
+    public boolean addAll(int index, Collection<? extends LinkData> c) {
         return links.addAll(index, c);
     }
 
@@ -121,22 +121,22 @@ public class Path implements List<LinkEvent> {
     }
 
     @Override
-    public LinkEvent get(int index) {
+    public LinkData get(int index) {
         return links.get(index);
     }
 
     @Override
-    public LinkEvent set(int index, LinkEvent element) {
+    public LinkData set(int index, LinkData element) {
         return links.set(index, element);
     }
 
     @Override
-    public void add(int index, LinkEvent element) {
+    public void add(int index, LinkData element) {
         links.add(index, element);
     }
 
     @Override
-    public LinkEvent remove(int index) {
+    public LinkData remove(int index) {
         return links.remove(index);
     }
 
@@ -151,17 +151,17 @@ public class Path implements List<LinkEvent> {
     }
 
     @Override
-    public ListIterator<LinkEvent> listIterator() {
+    public ListIterator<LinkData> listIterator() {
         return links.listIterator();
     }
 
     @Override
-    public ListIterator<LinkEvent> listIterator(int index) {
+    public ListIterator<LinkData> listIterator(int index) {
         return links.listIterator(index);
     }
 
     @Override
-    public List<LinkEvent> subList(int fromIndex, int toIndex) {
+    public List<LinkData> subList(int fromIndex, int toIndex) {
         return links.subList(fromIndex, toIndex);
     }
 }

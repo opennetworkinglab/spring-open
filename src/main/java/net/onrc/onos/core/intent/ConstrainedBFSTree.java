@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 
 import net.onrc.onos.core.topology.Link;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.Dpid;
 
@@ -19,7 +19,7 @@ import net.onrc.onos.core.util.Dpid;
 public class ConstrainedBFSTree {
     LinkedList<Switch> switchQueue = new LinkedList<>();
     HashSet<Dpid> switchSearched = new HashSet<>();
-    HashMap<Dpid, LinkEvent> upstreamLinks = new HashMap<>();
+    HashMap<Dpid, LinkData> upstreamLinks = new HashMap<>();
     HashMap<Dpid, Path> paths = new HashMap<>();
     Switch rootSwitch;
     PathIntentMap intents = null;
@@ -68,7 +68,7 @@ public class ConstrainedBFSTree {
                 }
                 switchQueue.add(reachedSwitch);
                 switchSearched.add(reachedSwitch.getDpid());
-                upstreamLinks.put(reachedSwitch.getDpid(), new LinkEvent(link));
+                upstreamLinks.put(reachedSwitch.getDpid(), new LinkData(link));
             }
         }
     }
@@ -86,7 +86,7 @@ public class ConstrainedBFSTree {
             path = new Path();
             Dpid sw = leafSwitch.getDpid();
             while (!sw.equals(rootSwitchDpid)) {
-                LinkEvent upstreamLink = upstreamLinks.get(sw);
+                LinkData upstreamLink = upstreamLinks.get(sw);
                 path.add(0, upstreamLink);
                 sw = upstreamLink.getSrc().getDpid();
             }

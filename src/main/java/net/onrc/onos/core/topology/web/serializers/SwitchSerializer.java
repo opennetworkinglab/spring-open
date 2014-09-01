@@ -37,7 +37,7 @@ public class SwitchSerializer extends SerializerBase<Switch> {
 
         //
         // TODO: For now, the JSON format of the serialized output should
-        // be same as the JSON format of the corresponding class SwitchEvent.
+        // be same as the JSON format of the corresponding class SwitchData.
         // In the future, we will use a single serializer.
         //
 

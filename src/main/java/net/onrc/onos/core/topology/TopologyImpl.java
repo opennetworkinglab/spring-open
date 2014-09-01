@@ -52,16 +52,16 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     private final Map<Dpid, SortedSet<MastershipEvent>> mastership;
 
     // DPID -> Switch
-    private final ConcurrentMap<Dpid, SwitchEvent> switches;
-    private final ConcurrentMap<Dpid, ConcurrentMap<PortNumber, PortEvent>> ports;
+    private final ConcurrentMap<Dpid, SwitchData> switches;
+    private final ConcurrentMap<Dpid, ConcurrentMap<PortNumber, PortData>> ports;
 
     // Index from Port to Host
-    private final Multimap<SwitchPort, HostEvent> hosts;
-    private final ConcurrentMap<MACAddress, HostEvent> mac2Host;
+    private final Multimap<SwitchPort, HostData> hosts;
+    private final ConcurrentMap<MACAddress, HostData> mac2Host;
 
     // SwitchPort -> (type -> Link)
-    private final ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkEvent>> outgoingLinks;
-    private final ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkEvent>> incomingLinks;
+    private final ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkData>> outgoingLinks;
+    private final ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkData>> incomingLinks;
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock readLock = readWriteLock.readLock();
@@ -77,7 +77,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
         switches = new ConcurrentHashMap<>();
         ports = new ConcurrentHashMap<>();
         hosts = Multimaps.synchronizedMultimap(
-                HashMultimap.<SwitchPort, HostEvent>create());
+                HashMultimap.<SwitchPort, HostData>create());
         mac2Host = new ConcurrentHashMap<>();
         outgoingLinks = new ConcurrentHashMap<>();
         incomingLinks = new ConcurrentHashMap<>();
@@ -102,25 +102,25 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
             // shallow copy Map in Map
             this.ports = new ConcurrentHashMap<>(original.ports.size());
-            for (Entry<Dpid, ConcurrentMap<PortNumber, PortEvent>> entry
+            for (Entry<Dpid, ConcurrentMap<PortNumber, PortData>> entry
                     : original.ports.entrySet()) {
                 this.ports.put(entry.getKey(), new ConcurrentHashMap<>(entry.getValue()));
             }
 
             this.hosts = Multimaps.synchronizedMultimap(
-                    HashMultimap.<SwitchPort, HostEvent>create(original.hosts));
+                    HashMultimap.<SwitchPort, HostData>create(original.hosts));
             this.mac2Host = new ConcurrentHashMap<>(original.mac2Host);
 
             // shallow copy Map in Map
             this.outgoingLinks = new ConcurrentHashMap<>(original.outgoingLinks.size());
-            for (Entry<SwitchPort, ConcurrentMap<String, LinkEvent>> entry
+            for (Entry<SwitchPort, ConcurrentMap<String, LinkData>> entry
                     : original.outgoingLinks.entrySet()) {
                 this.outgoingLinks.put(entry.getKey(), new ConcurrentHashMap<>(entry.getValue()));
             }
 
             // shallow copy Map in Map
             this.incomingLinks = new ConcurrentHashMap<>(original.incomingLinks.size());
-            for (Entry<SwitchPort, ConcurrentMap<String, LinkEvent>> entry
+            for (Entry<SwitchPort, ConcurrentMap<String, LinkData>> entry
                     : original.incomingLinks.entrySet()) {
                 this.incomingLinks.put(entry.getKey(), new ConcurrentHashMap<>(entry.getValue()));
             }
@@ -131,7 +131,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Switch getSwitch(Dpid dpid) {
-        final SwitchEvent sw = switches.get(dpid);
+        final SwitchData sw = switches.get(dpid);
         if (sw != null) {
             return new SwitchImpl(this, dpid);
         } else {
@@ -142,7 +142,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     @Override
     public Iterable<Switch> getSwitches() {
         List<Switch> list = new ArrayList<>(switches.size());
-        for (SwitchEvent elm : switches.values()) {
+        for (SwitchData elm : switches.values()) {
             list.add(new SwitchImpl(this, elm.getDpid()));
         }
         return list;
@@ -150,9 +150,9 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Port getPort(Dpid dpid, PortNumber number) {
-        ConcurrentMap<PortNumber, PortEvent> portMap = ports.get(dpid);
+        ConcurrentMap<PortNumber, PortData> portMap = ports.get(dpid);
         if (portMap != null) {
-            final PortEvent port = portMap.get(number);
+            final PortData port = portMap.get(number);
             if (port != null) {
                 return new PortImpl(this, port.getSwitchPort());
             }
@@ -167,12 +167,12 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Collection<Port> getPorts(Dpid dpid) {
-        ConcurrentMap<PortNumber, PortEvent> portMap = ports.get(dpid);
+        ConcurrentMap<PortNumber, PortData> portMap = ports.get(dpid);
         if (portMap == null) {
             return Collections.emptyList();
         }
         List<Port> list = new ArrayList<>(portMap.size());
-        for (PortEvent elm : portMap.values()) {
+        for (PortData elm : portMap.values()) {
             list.add(new PortImpl(this, elm.getSwitchPort()));
         }
         return list;
@@ -185,7 +185,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Link getOutgoingLink(SwitchPort port) {
-        Map<String, LinkEvent> links = outgoingLinks.get(port);
+        Map<String, LinkData> links = outgoingLinks.get(port);
         return getPacketLinkIfExists(links);
     }
 
@@ -197,19 +197,19 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
      * @param links Collection of links to search from
      * @return Link instance found or null if no link exists
      */
-    private Link getPacketLinkIfExists(Map<String, LinkEvent> links) {
+    private Link getPacketLinkIfExists(Map<String, LinkData> links) {
 
         if (links == null) {
             return null;
         }
 
-        LinkEvent link = links.get(TopologyElement.TYPE_PACKET_LAYER);
+        LinkData link = links.get(TopologyElement.TYPE_PACKET_LAYER);
         if (link != null) {
             // return packet link
             return new LinkImpl(this, link.getLinkTuple());
         } else {
             // return whatever found
-            Iterator<LinkEvent> it = links.values().iterator();
+            Iterator<LinkData> it = links.values().iterator();
             if (it.hasNext()) {
                 return new LinkImpl(this, it.next().getLinkTuple());
             }
@@ -224,8 +224,8 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Link getOutgoingLink(SwitchPort port, String type) {
-        Map<String, LinkEvent> links = outgoingLinks.get(port);
-        final LinkEvent link = links.get(type);
+        Map<String, LinkData> links = outgoingLinks.get(port);
+        final LinkData link = links.get(type);
         if (link != null) {
             return new LinkImpl(this, link.getLinkTuple());
         }
@@ -234,7 +234,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Collection<Link> getOutgoingLinks(SwitchPort port) {
-        ConcurrentMap<String, LinkEvent> typeMap = outgoingLinks.get(port);
+        ConcurrentMap<String, LinkData> typeMap = outgoingLinks.get(port);
         if (typeMap == null) {
             return Collections.emptyList();
         }
@@ -242,17 +242,17 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Converts collection of LinkEvent to collection of LinkImpls.
+     * Converts collection of LinkData to collection of LinkImpls.
      *
-     * @param links collection of LinkEvent
+     * @param links collection of LinkData
      * @return collection of LinkImpls
      */
-    private Collection<Link> toLinkImpls(final Collection<LinkEvent> links) {
+    private Collection<Link> toLinkImpls(final Collection<LinkData> links) {
         if (links == null) {
             return Collections.emptyList();
         }
         List<Link> list = new ArrayList<>(links.size());
-        for (LinkEvent elm : links) {
+        for (LinkData elm : links) {
             list.add(new LinkImpl(this, elm.getLinkTuple()));
         }
         return list;
@@ -265,7 +265,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Link getIncomingLink(SwitchPort port) {
-        Map<String, LinkEvent> links = incomingLinks.get(port);
+        Map<String, LinkData> links = incomingLinks.get(port);
         return getPacketLinkIfExists(links);
     }
 
@@ -276,8 +276,8 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Link getIncomingLink(SwitchPort port, String type) {
-        Map<String, LinkEvent> links = incomingLinks.get(port);
-        final LinkEvent link = links.get(type);
+        Map<String, LinkData> links = incomingLinks.get(port);
+        final LinkData link = links.get(type);
         if (link != null) {
             return new LinkImpl(this, link.getLinkTuple());
         }
@@ -286,7 +286,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Collection<Link> getIncomingLinks(SwitchPort port) {
-        ConcurrentMap<String, LinkEvent> typeMap = incomingLinks.get(port);
+        ConcurrentMap<String, LinkData> typeMap = incomingLinks.get(port);
         if (typeMap == null) {
             return Collections.emptyList();
         }
@@ -332,11 +332,11 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     public Iterable<Link> getLinks() {
         List<Link> links = new ArrayList<>();
 
-        for (Map<String, LinkEvent> portLinks : outgoingLinks.values()) {
+        for (Map<String, LinkData> portLinks : outgoingLinks.values()) {
             if (portLinks == null) {
                 continue;
             }
-            for (LinkEvent elm : portLinks.values()) {
+            for (LinkData elm : portLinks.values()) {
                 links.add(new LinkImpl(this, elm.getLinkTuple()));
             }
         }
@@ -345,7 +345,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
 
     @Override
     public Host getHostByMac(MACAddress address) {
-        HostEvent host = mac2Host.get(address);
+        HostData host = mac2Host.get(address);
         if (host != null) {
             return new HostImpl(this, address);
         }
@@ -358,17 +358,17 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Converts collection of HostEvent to collection of HostImpl.
+     * Converts collection of HostData to collection of HostImpl.
      *
-     * @param events collection of HostEvent
+     * @param events collection of HostData
      * @return collection of HostImpl
      */
-    private List<Host> toHostImpls(Collection<HostEvent> events) {
+    private List<Host> toHostImpls(Collection<HostData> events) {
         if (events == null) {
             return Collections.emptyList();
         }
         List<Host> list = new ArrayList<>(events.size());
-        for (HostEvent elm : events) {
+        for (HostData elm : events) {
             list.add(new HostImpl(this, elm.getMac()));
         }
         return list;
@@ -380,23 +380,23 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     @Override
-    public SwitchEvent getSwitchEvent(final Dpid dpid) {
+    public SwitchData getSwitchData(final Dpid dpid) {
         return this.switches.get(dpid);
     }
 
     @Override
-    public Collection<SwitchEvent> getAllSwitchEvents() {
+    public Collection<SwitchData> getAllSwitchDataEntries() {
         return Collections.unmodifiableCollection(switches.values());
     }
 
     @Override
-    public PortEvent getPortEvent(final SwitchPort port) {
-        return getPortEvent(port.getDpid(), port.getPortNumber());
+    public PortData getPortData(final SwitchPort port) {
+        return getPortData(port.getDpid(), port.getPortNumber());
     }
 
     @Override
-    public PortEvent getPortEvent(final Dpid dpid, PortNumber portNumber) {
-        ConcurrentMap<PortNumber, PortEvent> portMap = this.ports.get(dpid);
+    public PortData getPortData(final Dpid dpid, PortNumber portNumber) {
+        ConcurrentMap<PortNumber, PortData> portMap = this.ports.get(dpid);
         if (portMap != null) {
             return portMap.get(portNumber);
         }
@@ -404,8 +404,8 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     @Override
-    public Collection<PortEvent> getPortEvents(final Dpid dpid) {
-        ConcurrentMap<PortNumber, PortEvent> portList = ports.get(dpid);
+    public Collection<PortData> getPortDataEntries(final Dpid dpid) {
+        ConcurrentMap<PortNumber, PortData> portList = ports.get(dpid);
         if (portList == null) {
             return Collections.emptyList();
         }
@@ -413,17 +413,17 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     @Override
-    public Collection<PortEvent> getAllPortEvents() {
-        List<PortEvent> events = new LinkedList<>();
-        for (ConcurrentMap<PortNumber, PortEvent> cm : ports.values()) {
+    public Collection<PortData> getAllPortDataEntries() {
+        List<PortData> events = new LinkedList<>();
+        for (ConcurrentMap<PortNumber, PortData> cm : ports.values()) {
             events.addAll(cm.values());
         }
         return Collections.unmodifiableCollection(events);
     }
 
     @Override
-    public LinkEvent getLinkEvent(final LinkTuple linkId) {
-        ConcurrentMap<String, LinkEvent> links = this.outgoingLinks.get(linkId.getSrc());
+    public LinkData getLinkData(final LinkTuple linkId) {
+        ConcurrentMap<String, LinkData> links = this.outgoingLinks.get(linkId.getSrc());
         if (links == null) {
             return null;
         }
@@ -431,7 +431,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
         // TODO Should we look for Packet link first?
         //  Not unless invariant is broken.
 
-        for (LinkEvent link : links.values()) {
+        for (LinkData link : links.values()) {
             if (link.getDst().equals(linkId.getDst())) {
                 return link;
             }
@@ -440,12 +440,12 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     @Override
-    public LinkEvent getLinkEvent(final LinkTuple linkId, final String type) {
-        ConcurrentMap<String, LinkEvent> links = this.outgoingLinks.get(linkId.getSrc());
+    public LinkData getLinkData(final LinkTuple linkId, final String type) {
+        ConcurrentMap<String, LinkData> links = this.outgoingLinks.get(linkId.getSrc());
         if (links == null) {
             return null;
         }
-        LinkEvent link = links.get(type);
+        LinkData link = links.get(type);
         if (link.getDst().equals(linkId.getDst())) {
             return link;
         }
@@ -453,8 +453,8 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEventsFrom(SwitchPort srcPort) {
-        ConcurrentMap<String, LinkEvent> links = this.outgoingLinks.get(srcPort);
+    public Collection<LinkData> getLinkDataEntriesFrom(SwitchPort srcPort) {
+        ConcurrentMap<String, LinkData> links = this.outgoingLinks.get(srcPort);
         if (links == null) {
             return Collections.emptyList();
         }
@@ -462,8 +462,8 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEventsTo(SwitchPort dstPort) {
-        ConcurrentMap<String, LinkEvent> links = this.incomingLinks.get(dstPort);
+    public Collection<LinkData> getLinkDataEntriesTo(SwitchPort dstPort) {
+        ConcurrentMap<String, LinkData> links = this.incomingLinks.get(dstPort);
         if (links == null) {
             return Collections.emptyList();
         }
@@ -471,44 +471,44 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     @Override
-    public Collection<LinkEvent> getLinkEvents(final LinkTuple linkId) {
-        ConcurrentMap<String, LinkEvent> links = this.outgoingLinks.get(linkId.getSrc());
+    public Collection<LinkData> getLinkDataEntries(final LinkTuple linkId) {
+        ConcurrentMap<String, LinkData> links = this.outgoingLinks.get(linkId.getSrc());
         if (links == null) {
             return Collections.emptyList();
         }
 
-        List<LinkEvent> linkEvents = new ArrayList<>();
-        for (LinkEvent e : links.values()) {
+        List<LinkData> linkDataEntries = new ArrayList<>();
+        for (LinkData e : links.values()) {
             if (e.getDst().equals(linkId.getDst())) {
-                linkEvents.add(e);
+                linkDataEntries.add(e);
             }
         }
 
         // unless invariant is broken, this should contain at most 1 element.
-        return linkEvents;
+        return linkDataEntries;
     }
 
     @Override
-    public Collection<LinkEvent> getAllLinkEvents() {
-        List<LinkEvent> events = new LinkedList<>();
-        for (ConcurrentMap<String, LinkEvent> cm : outgoingLinks.values()) {
+    public Collection<LinkData> getAllLinkDataEntries() {
+        List<LinkData> events = new LinkedList<>();
+        for (ConcurrentMap<String, LinkData> cm : outgoingLinks.values()) {
             events.addAll(cm.values());
         }
         return Collections.unmodifiableCollection(events);
     }
 
     @Override
-    public HostEvent getHostEvent(final MACAddress mac) {
+    public HostData getHostData(final MACAddress mac) {
         return this.mac2Host.get(mac);
     }
 
     @Override
-    public Collection<HostEvent> getHostEvents(SwitchPort port) {
+    public Collection<HostData> getHostDataEntries(SwitchPort port) {
         return Collections.unmodifiableCollection(hosts.get(port));
     }
 
     @Override
-    public Collection<HostEvent> getAllHostEvents() {
+    public Collection<HostData> getAllHostDataEntries() {
         return Collections.unmodifiableCollection(mac2Host.values());
     }
 
@@ -527,19 +527,19 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Puts a SwitchEvent.
+     * Puts a SwitchData.
      *
      * @param sw Switch to add. (Will be frozen if not already)
      */
     @GuardedBy("writeLock")
-    protected void putSwitch(SwitchEvent sw) {
+    protected void putSwitch(SwitchData sw) {
         // TODO isFrozen check once we implement CoW/lock-free
         switches.put(sw.getDpid(), sw.freeze());
-        ports.putIfAbsent(sw.getDpid(), new ConcurrentHashMap<PortNumber, PortEvent>());
+        ports.putIfAbsent(sw.getDpid(), new ConcurrentHashMap<PortNumber, PortData>());
     }
 
     /**
-     * Removes a SwitchEvent from this snapshot.
+     * Removes a SwitchData from this snapshot.
      * <p/>
      * Will also remove ports, if it has not been removed already.
      *
@@ -549,24 +549,24 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     protected void removeSwitch(Dpid dpid) {
         // TODO isFrozen check once we implement CoW/lock-free
         switches.remove(dpid);
-        ConcurrentMap<PortNumber, PortEvent> removedPorts = ports.remove(dpid);
+        ConcurrentMap<PortNumber, PortData> removedPorts = ports.remove(dpid);
         if (removedPorts != null && !removedPorts.isEmpty()) {
             log.warn("Some ports were removed as side-effect of #removeSwitch({})", dpid);
         }
     }
 
     /**
-     * Puts a PortEvent.
+     * Puts a PortData.
      *
      * @param port Port to add. (Will be frozen if not already)
      */
     @GuardedBy("writeLock")
-    protected void putPort(PortEvent port) {
+    protected void putPort(PortData port) {
 
-        ConcurrentMap<PortNumber, PortEvent> portMap = ports.get(port.getDpid());
+        ConcurrentMap<PortNumber, PortData> portMap = ports.get(port.getDpid());
         if (portMap == null) {
             portMap = new ConcurrentHashMap<>();
-            ConcurrentMap<PortNumber, PortEvent> existing
+            ConcurrentMap<PortNumber, PortData> existing
                 = ports.putIfAbsent(port.getDpid(), portMap);
             if (existing != null) {
                 // port map was added concurrently, using theirs
@@ -577,7 +577,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Removes a PortEvent from this snapshot.
+     * Removes a PortData from this snapshot.
      *
      * @param port SwitchPort to remove
      */
@@ -587,7 +587,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Removes a PortEvent from this snapshot.
+     * Removes a PortData from this snapshot.
      * <p/>
      * Will also remove ports, if it has not been removed already.
      *
@@ -597,19 +597,19 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     @GuardedBy("writeLock")
     protected void removePort(Dpid dpid, PortNumber number) {
         // TODO sanity check Host attachment point.
-        ConcurrentMap<PortNumber, PortEvent> portMap = ports.get(dpid);
+        ConcurrentMap<PortNumber, PortData> portMap = ports.get(dpid);
         if (portMap != null) {
             portMap.remove(number);
         }
     }
 
     /**
-     * Puts a LinkEvent.
+     * Puts a LinkData.
      *
-     * @param link LinkEvent
+     * @param link LinkData
      */
     @GuardedBy("writeLock")
-    protected void putLink(LinkEvent link) {
+    protected void putLink(LinkData link) {
         // TODO Do sanity check?
         //   - There cannot be 2 links in same direction between a port pair.
         putLinkMap(outgoingLinks, link.getSrc(), link);
@@ -624,13 +624,13 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
      * @param link Link to add
      */
     @GuardedBy("writeLock")
-    private void putLinkMap(ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkEvent>> linkMap,
-                            SwitchPort port, LinkEvent link) {
+    private void putLinkMap(ConcurrentMap<SwitchPort, ConcurrentMap<String, LinkData>> linkMap,
+                            SwitchPort port, LinkData link) {
 
-        ConcurrentMap<String, LinkEvent> linksOnPort = linkMap.get(port);
+        ConcurrentMap<String, LinkData> linksOnPort = linkMap.get(port);
         if (linksOnPort == null) {
             linksOnPort = new ConcurrentHashMap<>(4);
-            ConcurrentMap<String, LinkEvent> existing
+            ConcurrentMap<String, LinkData> existing
                 = linkMap.putIfAbsent(
                     port,
                     linksOnPort);
@@ -643,14 +643,14 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Removes a LinkEvent from this snapshot.
+     * Removes a LinkData from this snapshot.
      *
      * @param link Link to remove
      * @param type type of link to remove
      */
     @GuardedBy("writeLock")
     protected void removeLink(LinkTuple link, String type) {
-        ConcurrentMap<String, LinkEvent> portLinks
+        ConcurrentMap<String, LinkData> portLinks
             = outgoingLinks.get(link.getSrc());
         if (portLinks != null) {
             // no conditional update here
@@ -665,28 +665,28 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Removes a LinkEvent from this snapshot.
+     * Removes a LinkData from this snapshot.
      *
      * @param link Link to remove
      */
     @GuardedBy("writeLock")
     protected void removeLink(LinkTuple link) {
-        Collection<LinkEvent> links = getLinkEvents(link);
-        for (LinkEvent l : links) {
+        Collection<LinkData> links = getLinkDataEntries(link);
+        for (LinkData l : links) {
             removeLink(link, l.getType());
         }
     }
 
     /**
-     * Puts a HostEvent.
+     * Puts a HostData.
      * <p/>
-     * Removes attachment points for previous HostEvent and update
-     * them with new HostEvent
+     * Removes attachment points for previous HostData and update
+     * them with new HostData
      *
-     * @param host HostEvent
+     * @param host HostData
      */
     @GuardedBy("writeLock")
-    protected void putHost(HostEvent host) {
+    protected void putHost(HostData host) {
         // Host cannot be simply put() to replace instance since it has mobility.
         // Simply remove -> put for now.
 
@@ -701,13 +701,13 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
     }
 
     /**
-     * Removes a HostEvent from this snapshot.
+     * Removes a HostData from this snapshot.
      *
      * @param mac MACAddress of the Host to remove
      */
     @GuardedBy("writeLock")
     protected void removeHost(MACAddress mac) {
-        HostEvent host = mac2Host.remove(mac);
+        HostData host = mac2Host.remove(mac);
         if (host != null) {
             for (SwitchPort port : host.getAttachmentPoints()) {
                 hosts.remove(port, host);

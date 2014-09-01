@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology.web.serializers;
 import java.io.IOException;
 import java.util.Map.Entry;
 
-import net.onrc.onos.core.topology.SwitchEvent;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyElement;
 
 import org.codehaus.jackson.JsonGenerator;
@@ -11,26 +11,26 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * JSON serializer for SwitchEvent objects.
+ * JSON serializer for SwitchData objects.
  */
-public class SwitchEventSerializer extends SerializerBase<SwitchEvent> {
+public class SwitchDataSerializer extends SerializerBase<SwitchData> {
     /**
      * Default constructor.
      */
-    public SwitchEventSerializer() {
-        super(SwitchEvent.class);
+    public SwitchDataSerializer() {
+        super(SwitchData.class);
     }
 
     /**
-     * Serializes a SwitchEvent object in JSON.
+     * Serializes a SwitchData object in JSON.
      *
-     * @param switchEvent the SwitchEvent that is being converted to JSON
+     * @param switchData the SwitchData that is being converted to JSON
      * @param jsonGenerator generator to place the serialized JSON into
      * @param serializerProvider unused but required for method override
      * @throws IOException if the JSON serialization process fails
      */
     @Override
-    public void serialize(SwitchEvent switchEvent, JsonGenerator jsonGenerator,
+    public void serialize(SwitchData switchData, JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider)
         throws IOException {
 
@@ -41,9 +41,9 @@ public class SwitchEventSerializer extends SerializerBase<SwitchEvent> {
         //
 
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField(TopologyElement.TYPE, switchEvent.getType());
+        jsonGenerator.writeStringField(TopologyElement.TYPE, switchData.getType());
         jsonGenerator.writeStringField("dpid",
-                                       switchEvent.getDpid().toString());
+                                       switchData.getDpid().toString());
         jsonGenerator.writeStringField("state", "ACTIVE");
         //
         // TODO: For now, we write empty "ports" array for consistency
@@ -57,7 +57,7 @@ public class SwitchEventSerializer extends SerializerBase<SwitchEvent> {
         */
         jsonGenerator.writeEndArray();
         jsonGenerator.writeObjectFieldStart("stringAttributes");
-        for (Entry<String, String> entry : switchEvent.getAllStringAttributes().entrySet()) {
+        for (Entry<String, String> entry : switchData.getAllStringAttributes().entrySet()) {
             jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
         }
         jsonGenerator.writeEndObject();         // stringAttributes

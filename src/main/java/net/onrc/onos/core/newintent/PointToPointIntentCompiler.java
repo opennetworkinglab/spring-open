@@ -16,7 +16,7 @@ import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.topology.BaseTopology;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.LinkEvent;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.SwitchPort;
@@ -104,13 +104,13 @@ public class PointToPointIntentCompiler
         // transform is avoided.
         // Ref: https://code.google.com/p/guava-libraries/issues/detail?id=1812
         // TODO: replace with transform when the above issue is resolved
-        ImmutableList<LinkEvent> events = FluentIterable.from(path)
+        ImmutableList<LinkData> dataEntries = FluentIterable.from(path)
                 .filter(Predicates.notNull())
                 .toList();
 
         Path converted = new Path();
-        for (LinkEvent event: events) {
-            converted.add(new FlowLink(event.getSrc(), event.getDst()));
+        for (LinkData data: dataEntries) {
+            converted.add(new FlowLink(data.getSrc(), data.getDst()));
         }
         return converted;
     }

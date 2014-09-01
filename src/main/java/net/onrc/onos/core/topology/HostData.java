@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.core.topology.web.serializers.HostEventSerializer;
+import net.onrc.onos.core.topology.web.serializers.HostDataSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -16,21 +16,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
- * Self-contained Host event(s) Object
- * <p/>
- * Host event differ from other events.
- * Host Event represent add/remove of attachmentPoint.
- * Not add/remove of the Host Object itself.
- * <p/>
- * Multiple attachmentPoints can be specified to batch events into 1 object.
- * Each should be treated as independent events.
- * <p/>
- * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
- * FIXME: Current implementation directly use this object as
- *        Replication message, but should be sending update operation info.
+ * Self-contained Host object.
  */
-@JsonSerialize(using = HostEventSerializer.class)
-public class HostEvent extends TopologyElement<HostEvent> {
+@JsonSerialize(using = HostDataSerializer.class)
+public class HostData extends TopologyElement<HostData> {
 
     private final MACAddress mac;
     private List<SwitchPort> attachmentPoints;
@@ -40,7 +29,7 @@ public class HostEvent extends TopologyElement<HostEvent> {
      * Default constructor for Serializer to use.
      */
     @Deprecated
-    protected HostEvent() {
+    protected HostData() {
         mac = null;
     }
 
@@ -49,7 +38,7 @@ public class HostEvent extends TopologyElement<HostEvent> {
      *
      * @param mac the MAC address to identify the host
      */
-    public HostEvent(MACAddress mac) {
+    public HostData(MACAddress mac) {
         this.mac = checkNotNull(mac);
         this.attachmentPoints = new LinkedList<>();
     }
@@ -57,11 +46,11 @@ public class HostEvent extends TopologyElement<HostEvent> {
     /**
      * Copy constructor.
      * <p>
-     * Creates an unfrozen copy of the given HostEvent object.
+     * Creates an unfrozen copy of the given HostData object.
      *
      * @param original the object to make copy of
      */
-    public HostEvent(HostEvent original) {
+    public HostData(HostData original) {
         super(original);
         this.mac = original.mac;
         this.attachmentPoints = new ArrayList<>(original.attachmentPoints);
@@ -193,7 +182,7 @@ public class HostEvent extends TopologyElement<HostEvent> {
             return false;
         }
 
-        HostEvent other = (HostEvent) o;
+        HostData other = (HostData) o;
         // XXX lastSeenTime excluded from Equality condition, is it OK?
         return Objects.equals(mac, other.mac) &&
                 Objects.equals(this.attachmentPoints, other.attachmentPoints);
@@ -201,6 +190,6 @@ public class HostEvent extends TopologyElement<HostEvent> {
 
     @Override
     public String toString() {
-        return "[HostEvent " + mac + " attachmentPoints:" + attachmentPoints + "]";
+        return "[HostData " + mac + " attachmentPoints:" + attachmentPoints + "]";
     }
 }
