@@ -7,7 +7,7 @@ public class SwitchResult {
     private Status status;
     private MatchActionOperationsId matchSetId;
 
-    protected enum Status {
+    public enum Status {
         SUCCESS,
         FAILURE,
         UNKNOWN
@@ -17,6 +17,13 @@ public class SwitchResult {
         this.sw = sw;
         this.status = Status.UNKNOWN;
         this.matchSetId = match;
+    }
+
+    /**
+     * no-arg constructor for Kryo.
+     */
+    protected SwitchResult() {
+
     }
 
     protected void setStatus(Status newStatus) {

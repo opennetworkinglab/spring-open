@@ -20,6 +20,13 @@ public final class MatchActionId implements BatchOperationTarget {
     }
 
     /**
+     * no-arg constructor for Kryo.
+     */
+    protected MatchActionId() {
+        value = -1;
+    }
+
+    /**
      * Returns the MatchActionId as a long.
      *
      * @return MatchAction ID

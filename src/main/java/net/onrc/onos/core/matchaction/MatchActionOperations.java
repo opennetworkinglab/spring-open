@@ -1,11 +1,11 @@
 package net.onrc.onos.core.matchaction;
 
-import net.onrc.onos.api.batchoperation.BatchOperation;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import net.onrc.onos.api.batchoperation.BatchOperation;
 
 /**
  * The MatchActionOperations class holds a list of MatchActionOperationEntry
@@ -36,6 +36,14 @@ public class MatchActionOperations
         id = checkNotNull(newId);
         state = MatchActionOperationsState.INIT;
         dependencies = new HashSet<>();
+    }
+
+    /**
+     * no-arg constructor for Kryo.
+     */
+    protected MatchActionOperations() {
+        id = null;
+        dependencies = null;
     }
 
     /**

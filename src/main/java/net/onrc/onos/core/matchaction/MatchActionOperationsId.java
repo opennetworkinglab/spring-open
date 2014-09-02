@@ -19,6 +19,13 @@ public final class MatchActionOperationsId {
     }
 
     /**
+     * no-arg instructor for Kryo.
+     */
+    protected MatchActionOperationsId() {
+        id = -1;
+    }
+
+    /**
      * Gets the identifier for the Operations object.
      *
      * @return Operations object identifier as a string

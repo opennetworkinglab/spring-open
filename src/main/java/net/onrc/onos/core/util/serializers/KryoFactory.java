@@ -47,6 +47,14 @@ import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.intent.PathIntent;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IntentStateList;
+import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionId;
+import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
+import net.onrc.onos.core.matchaction.MatchActionOperationsState;
+import net.onrc.onos.core.matchaction.SwitchResult;
+import net.onrc.onos.core.matchaction.SwitchResultList;
 import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
 import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
@@ -267,10 +275,20 @@ public class KryoFactory {
         kryo.register(SingleDstTreeFlow.class);
 
         // New match action related classes
+        kryo.register(MatchAction.class);
+        kryo.register(MatchActionId.class);
         kryo.register(PacketMatch.class);
         kryo.register(OutputAction.class);
         kryo.register(ModifyDstMacAction.class);
         kryo.register(ModifySrcMacAction.class);
+        kryo.register(MatchActionOperations.class);
+        kryo.register(MatchActionOperations.Operator.class);
+        kryo.register(MatchActionOperationsId.class);
+        kryo.register(MatchActionOperationsState.class);
+        kryo.register(MatchActionOperationEntry.class);
+        kryo.register(SwitchResultList.class);
+        kryo.register(SwitchResult.class);
+        kryo.register(SwitchResult.Status.class);
 
         // Host-related classes
         kryo.register(HashSet.class);

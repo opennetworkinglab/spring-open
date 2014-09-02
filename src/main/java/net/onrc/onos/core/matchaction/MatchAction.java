@@ -32,6 +32,16 @@ public final class MatchAction implements BatchOperationTarget {
     }
 
     /**
+     * no-arg constructor for Kryo.
+     */
+    protected MatchAction() {
+        id = null;
+        port = null;
+        match = null;
+        actions = null;
+    }
+
+    /**
      * Constructor. TEMPORARY
      *
      * @param id ID for this MatchAction object
