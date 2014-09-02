@@ -215,18 +215,18 @@ public class TopologyEventPreprocessor {
      * @return a list of postponed events if the processed event is a
      * Mastership Event for a new Master, otherwise an empty list.
      */
-    private List<EventEntry<TopologyEvent>> processMastershipEvent(
+    private List<EventEntry<TopologyEvent>> processMastershipData(
                         OnosInstanceLastAddEvents instance,
                         EventEntry<TopologyEvent> event) {
         TopologyEvent topologyEvent = event.eventData();
-        MastershipEvent mastershipEvent = topologyEvent.getMastershipEvent();
+        MastershipData mastershipData = topologyEvent.getMastershipData();
 
-        if (mastershipEvent == null) {
+        if (mastershipData == null) {
             return Collections.emptyList();  // Not a Mastership Event
         }
 
         OnosInstanceId onosInstanceId = topologyEvent.getOnosInstanceId();
-        Dpid dpid = mastershipEvent.getDpid();
+        Dpid dpid = mastershipData.getDpid();
         boolean newMaster = false;
 
         //
@@ -239,7 +239,7 @@ public class TopologyEventPreprocessor {
         //    the current MASTER.
         //
         if ((event.eventType() == EventEntry.Type.ENTRY_ADD) &&
-            (mastershipEvent.getRole() == Role.MASTER)) {
+            (mastershipData.getRole() == Role.MASTER)) {
 
             //
             // Accept if explicitly configured, otherwise check
@@ -313,7 +313,7 @@ public class TopologyEventPreprocessor {
                 instanceState.put(onosInstanceId, instance);
             }
 
-            postponedEvents = processMastershipEvent(instance, event);
+            postponedEvents = processMastershipData(instance, event);
 
             //
             // Process the event and eventually store it in the
@@ -339,7 +339,7 @@ public class TopologyEventPreprocessor {
      * <p/>
      * The result events can be applied to the Topology in the following
      * order: REMOVE events followed by ADD events. The ADD events are in the
-     * natural order to build a Topology: MastershipEvent, SwitchData,
+     * natural order to build a Topology: MastershipData, SwitchData,
      * PortData, LinkData, HostData. The REMOVE events are in the reverse
      * order.
      *
@@ -349,9 +349,9 @@ public class TopologyEventPreprocessor {
     private List<EventEntry<TopologyEvent>> reorderEventsForTopology(
                 List<EventEntry<TopologyEvent>> events) {
         // Local state for computing the final set of events
-        Map<ByteBuffer, EventEntry<TopologyEvent>> addedMastershipEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> addedMastershipDataEntries =
             new HashMap<>();
-        Map<ByteBuffer, EventEntry<TopologyEvent>> removedMastershipEvents =
+        Map<ByteBuffer, EventEntry<TopologyEvent>> removedMastershipDataEntries =
             new HashMap<>();
         Map<ByteBuffer, EventEntry<TopologyEvent>> addedSwitchDataEntries =
             new HashMap<>();
@@ -381,8 +381,8 @@ public class TopologyEventPreprocessor {
             TopologyEvent topologyEvent = event.eventData();
 
             // Get the event itself
-            MastershipEvent mastershipEvent =
-                topologyEvent.getMastershipEvent();
+            MastershipData mastershipData =
+                topologyEvent.getMastershipData();
             SwitchData switchData = topologyEvent.getSwitchData();
             PortData portData = topologyEvent.getPortData();
             LinkData linkData = topologyEvent.getLinkData();
@@ -393,10 +393,10 @@ public class TopologyEventPreprocessor {
             //
             switch (event.eventType()) {
             case ENTRY_ADD:
-                if (mastershipEvent != null) {
-                    ByteBuffer id = mastershipEvent.getIDasByteBuffer();
-                    addedMastershipEvents.put(id, event);
-                    removedMastershipEvents.remove(id);
+                if (mastershipData != null) {
+                    ByteBuffer id = mastershipData.getIDasByteBuffer();
+                    addedMastershipDataEntries.put(id, event);
+                    removedMastershipDataEntries.remove(id);
                 }
                 if (switchData != null) {
                     ByteBuffer id = switchData.getIDasByteBuffer();
@@ -420,10 +420,10 @@ public class TopologyEventPreprocessor {
                 }
                 break;
             case ENTRY_REMOVE:
-                if (mastershipEvent != null) {
-                    ByteBuffer id = mastershipEvent.getIDasByteBuffer();
-                    addedMastershipEvents.remove(id);
-                    removedMastershipEvents.put(id, event);
+                if (mastershipData != null) {
+                    ByteBuffer id = mastershipData.getIDasByteBuffer();
+                    addedMastershipDataEntries.remove(id);
+                    removedMastershipDataEntries.put(id, event);
                 }
                 if (switchData != null) {
                     ByteBuffer id = switchData.getIDasByteBuffer();
@@ -463,9 +463,9 @@ public class TopologyEventPreprocessor {
         result.addAll(removedLinkDataEntries.values());
         result.addAll(removedPortDataEntries.values());
         result.addAll(removedSwitchDataEntries.values());
-        result.addAll(removedMastershipEvents.values());
+        result.addAll(removedMastershipDataEntries.values());
         //
-        result.addAll(addedMastershipEvents.values());
+        result.addAll(addedMastershipDataEntries.values());
         result.addAll(addedSwitchDataEntries.values());
         result.addAll(addedPortDataEntries.values());
         result.addAll(addedLinkDataEntries.values());

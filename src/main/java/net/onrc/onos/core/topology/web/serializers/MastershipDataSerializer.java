@@ -3,7 +3,7 @@ package net.onrc.onos.core.topology.web.serializers;
 import java.io.IOException;
 import java.util.Map.Entry;
 
-import net.onrc.onos.core.topology.MastershipEvent;
+import net.onrc.onos.core.topology.MastershipData;
 import net.onrc.onos.core.topology.TopologyElement;
 
 import org.codehaus.jackson.JsonGenerator;
@@ -11,27 +11,27 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 /**
- * JSON serializer for MastershipEvent objects.
+ * JSON serializer for MastershipData objects.
  */
-public class MastershipEventSerializer extends SerializerBase<MastershipEvent> {
+public class MastershipDataSerializer extends SerializerBase<MastershipData> {
     /**
      * Default constructor.
      */
-    public MastershipEventSerializer() {
-        super(MastershipEvent.class);
+    public MastershipDataSerializer() {
+        super(MastershipData.class);
     }
 
     /**
-     * Serializes a MastershipEvent object in JSON.
+     * Serializes a MastershipData object in JSON.
      *
-     * @param mastershipEvent the MastershipEvent that is being converted to
+     * @param mastershipData the MastershipData that is being converted to
      * JSON
      * @param jsonGenerator generator to place the serialized JSON into
      * @param serializerProvider unused but required for method override
      * @throws IOException if the JSON serialization process fails
      */
     @Override
-    public void serialize(final MastershipEvent mastershipEvent,
+    public void serialize(final MastershipData mastershipData,
                           final JsonGenerator jsonGenerator,
                           final SerializerProvider serializerProvider)
         throws IOException {
@@ -44,15 +44,15 @@ public class MastershipEventSerializer extends SerializerBase<MastershipEvent> {
         //
 
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField(TopologyElement.TYPE, mastershipEvent.getType());
+        jsonGenerator.writeStringField(TopologyElement.TYPE, mastershipData.getType());
         jsonGenerator.writeStringField("dpid",
-                                       mastershipEvent.getDpid().toString());
+                                       mastershipData.getDpid().toString());
         jsonGenerator.writeStringField("onosInstanceId",
-                                       mastershipEvent.getOnosInstanceId().toString());
+                                       mastershipData.getOnosInstanceId().toString());
         jsonGenerator.writeStringField("role",
-                                       mastershipEvent.getRole().name());
+                                       mastershipData.getRole().name());
         jsonGenerator.writeObjectFieldStart("stringAttributes");
-        for (Entry<String, String> entry : mastershipEvent.getAllStringAttributes().entrySet()) {
+        for (Entry<String, String> entry : mastershipData.getAllStringAttributes().entrySet()) {
             jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
         }
         jsonGenerator.writeEndObject();         // stringAttributes

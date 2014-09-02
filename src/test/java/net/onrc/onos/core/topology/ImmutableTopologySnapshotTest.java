@@ -568,7 +568,7 @@ public class ImmutableTopologySnapshotTest {
         Builder builder = ImmutableTopologySnapshot.initialBuilder();
         for (int i = 0; i < switches; ++i) {
             final Dpid dpid = new Dpid(i + 1);
-            builder.putSwitchMastershipEvent(new MastershipEvent(dpid,
+            builder.putSwitchMastershipData(new MastershipData(dpid,
                                 INSTANCE_ID,
                                 Role.MASTER));
             builder.putSwitch(new SwitchData(dpid));

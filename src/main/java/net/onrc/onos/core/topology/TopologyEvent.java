@@ -59,13 +59,13 @@ public final class TopologyEvent implements TopologyBatchTarget {
     /**
      * Constructor for given Switch Mastership event.
      *
-     * @param mastershipEvent the Switch Mastership event to use.
+     * @param mastershipData the Switch Mastership event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(MastershipEvent mastershipEvent,
+    TopologyEvent(MastershipData mastershipData,
                   OnosInstanceId onosInstanceId) {
         this.eventType = Type.MASTERSHIP;
-        this.event = checkNotNull(mastershipEvent);
+        this.event = checkNotNull(mastershipData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
     }
 
@@ -131,12 +131,12 @@ public final class TopologyEvent implements TopologyBatchTarget {
      *
      * @return the Mastership event.
      */
-    public MastershipEvent getMastershipEvent() {
+    public MastershipData getMastershipData() {
         if (eventType != Type.MASTERSHIP) {
             return null;
         }
-        MastershipEvent mastershipEvent = (MastershipEvent) event;
-        return mastershipEvent;
+        MastershipData mastershipData = (MastershipData) event;
+        return mastershipData;
     }
 
     /**

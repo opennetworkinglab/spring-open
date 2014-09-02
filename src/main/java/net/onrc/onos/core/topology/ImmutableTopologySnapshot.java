@@ -52,7 +52,7 @@ public final class ImmutableTopologySnapshot
 
     // Mastership info
     // Dpid -> [ (InstanceID, Role) ]
-    private final Map<Dpid, SortedSet<MastershipEvent>> mastership;
+    private final Map<Dpid, SortedSet<MastershipData>> mastership;
 
     // DPID -> Switch
     private final Map<Dpid, SwitchData> switches;
@@ -354,18 +354,18 @@ public final class ImmutableTopologySnapshot
         /**
          * Puts a mastership change event.
          *
-         * @param master MastershipEvent
+         * @param master MastershipData
          * @return Builder
          */
-        public Builder putSwitchMastershipEvent(MastershipEvent master) {
+        public Builder putSwitchMastershipData(MastershipData master) {
             checkNotNull(master);
 
-            SortedSet<MastershipEvent> candidates
+            SortedSet<MastershipData> candidates
                 = current.mastership.get(master.getDpid());
             if (candidates == null) {
-                // SortedSet, customized so that MASTER MastershipEvent appear
+                // SortedSet, customized so that MASTER MastershipData appear
                 // earlier during iteration.
-                candidates = new TreeSet<>(new MastershipEvent.MasterFirstComparator());
+                candidates = new TreeSet<>(new MastershipData.MasterFirstComparator());
                 current.mastership.put(master.getDpid(), candidates);
             }
 
@@ -379,15 +379,15 @@ public final class ImmutableTopologySnapshot
          * Removes a mastership change event.
          * <p>
          * Note: Only Dpid and OnosInstanceId will be used to identify the
-         * {@link MastershipEvent} to remove.
+         * {@link MastershipData} to remove.
          *
-         * @param master {@link MastershipEvent} to remove. (Role is ignored)
+         * @param master {@link MastershipData} to remove. (Role is ignored)
          * @return Builder
          */
-        public Builder removeSwitchMastershipEvent(MastershipEvent master) {
+        public Builder removeSwitchMastershipData(MastershipData master) {
             checkNotNull(master);
 
-            SortedSet<MastershipEvent> candidates
+            SortedSet<MastershipData> candidates
                 = current.mastership.get(master.getDpid());
             if (candidates == null) {
                 // nothing to do
@@ -429,7 +429,7 @@ public final class ImmutableTopologySnapshot
 
         // shallow copy Set in Map
         this.mastership = new HashMap<>(builder.current.mastership.size());
-        for (Entry<Dpid, SortedSet<MastershipEvent>> e
+        for (Entry<Dpid, SortedSet<MastershipData>> e
                     : builder.current.mastership.entrySet()) {
             this.mastership.put(e.getKey(), new TreeSet<>(e.getValue()));
         }
@@ -475,7 +475,7 @@ public final class ImmutableTopologySnapshot
 
         // shallow copy Set in Map
         this.mastership = new HashMap<>(original.mastership.size());
-        for (Entry<Dpid, SortedSet<MastershipEvent>> e
+        for (Entry<Dpid, SortedSet<MastershipData>> e
                         : original.mastership.entrySet()) {
             this.mastership.put(e.getKey(), new TreeSet<>(e.getValue()));
         }
@@ -672,11 +672,11 @@ public final class ImmutableTopologySnapshot
      */
     @Override
     public OnosInstanceId getSwitchMaster(Dpid dpid) {
-        final SortedSet<MastershipEvent> candidates = mastership.get(dpid);
+        final SortedSet<MastershipData> candidates = mastership.get(dpid);
         if (candidates == null) {
             return null;
         }
-        for (MastershipEvent candidate : candidates) {
+        for (MastershipData candidate : candidates) {
             if (candidate.getRole() == Role.MASTER) {
                 return candidate.getOnosInstanceId();
             }

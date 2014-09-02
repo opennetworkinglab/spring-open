@@ -218,13 +218,13 @@ public class TopologyManagerTest extends UnitTest {
 
         // Generate the Switch Mastership event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
 
         // Call the TopologyPublisher function for adding the event
         TestUtils.callMethod(theTopologyPublisher,
                              "publishAddSwitchMastershipEvent",
-                             MastershipEvent.class, mastershipEvent);
+                             MastershipData.class, mastershipData);
 
         // Verify the function calls
         verify(eventChannel);
@@ -244,18 +244,18 @@ public class TopologyManagerTest extends UnitTest {
 
         // Generate the Switch Mastership Event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
 
         // Call the TopologyPublisher function for adding the event
         TestUtils.callMethod(theTopologyPublisher,
                              "publishAddSwitchMastershipEvent",
-                             MastershipEvent.class, mastershipEvent);
+                             MastershipData.class, mastershipData);
 
         // Call the TopologyPublisher function for removing the event
         TestUtils.callMethod(theTopologyPublisher,
                              "publishRemoveSwitchMastershipEvent",
-                             MastershipEvent.class, mastershipEvent);
+                             MastershipData.class, mastershipData);
 
         // Verify the function calls
         verify(eventChannel);
@@ -549,16 +549,16 @@ public class TopologyManagerTest extends UnitTest {
      * transformation.
      */
     @Test
-    public void testAddMastershipEvent() {
+    public void testAddMastershipData() {
         setupTopologyManager();
 
         // Prepare the event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
         // Add the event
-        TestUtils.callMethod(theTopologyManager, "addMastershipEvent",
-                             MastershipEvent.class, mastershipEvent);
+        TestUtils.callMethod(theTopologyManager, "addMastershipData",
+                             MastershipData.class, mastershipData);
 
         //
         // NOTE: The topology itself doesn't contain the Mastership Events,
@@ -566,10 +566,10 @@ public class TopologyManagerTest extends UnitTest {
         //
 
         // Check the events to be fired
-        List<MastershipEvent> apiAddedMastershipEvents
+        List<MastershipData> apiAddedMastershipDataEntries
             = TestUtils.getField(theTopologyManager,
-                                 "apiAddedMastershipEvents");
-        assertThat(apiAddedMastershipEvents, hasItem(mastershipEvent));
+                                 "apiAddedMastershipDataEntries");
+        assertThat(apiAddedMastershipDataEntries, hasItem(mastershipData));
     }
 
     /**
@@ -577,33 +577,33 @@ public class TopologyManagerTest extends UnitTest {
      * transformation.
      */
     @Test
-    public void testRemoveMastershipEvent() {
+    public void testRemoveMastershipData() {
         setupTopologyManager();
 
         // Prepare the event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
         // Add the event
-        TestUtils.callMethod(theTopologyManager, "addMastershipEvent",
-                             MastershipEvent.class, mastershipEvent);
+        TestUtils.callMethod(theTopologyManager, "addMastershipData",
+                             MastershipData.class, mastershipData);
 
         // Check the events to be fired
-        List<MastershipEvent> apiAddedMastershipEvents
+        List<MastershipData> apiAddedMastershipDataEntries
             = TestUtils.getField(theTopologyManager,
-                                 "apiAddedMastershipEvents");
-        assertThat(apiAddedMastershipEvents, hasItem(mastershipEvent));
+                                 "apiAddedMastershipDataEntries");
+        assertThat(apiAddedMastershipDataEntries, hasItem(mastershipData));
 
         // Remove the event
-        TestUtils.callMethod(theTopologyManager, "removeMastershipEvent",
-                             MastershipEvent.class,
-                             new MastershipEvent(mastershipEvent));
+        TestUtils.callMethod(theTopologyManager, "removeMastershipData",
+                             MastershipData.class,
+                             new MastershipData(mastershipData));
 
         // Check the events to be fired
-        List<MastershipEvent> apiRemovedMastershipEvents
+        List<MastershipData> apiRemovedMastershipDataEntries
             = TestUtils.getField(theTopologyManager,
-                                 "apiRemovedMastershipEvents");
-        assertThat(apiRemovedMastershipEvents, hasItem(mastershipEvent));
+                                 "apiRemovedMastershipDataEntries");
+        assertThat(apiRemovedMastershipDataEntries, hasItem(mastershipData));
     }
 
     /**
@@ -1292,7 +1292,7 @@ public class TopologyManagerTest extends UnitTest {
      * topology events.
      */
     @Test
-    public void testProcessMastershipEvent() {
+    public void testProcessMastershipData() {
         List<EventEntry<TopologyEvent>> events = new LinkedList<>();
         EventEntry<TopologyEvent> eventEntry;
         TopologyEvent topologyEvent;
@@ -1301,9 +1301,9 @@ public class TopologyManagerTest extends UnitTest {
 
         // Prepare the Mastership Event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
-        topologyEvent = new TopologyEvent(mastershipEvent, ONOS_INSTANCE_ID_1);
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
+        topologyEvent = new TopologyEvent(mastershipData, ONOS_INSTANCE_ID_1);
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
@@ -1317,8 +1317,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events
         TopologyEvents topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         theTopologyListener.clear();
     }
 
@@ -1335,16 +1335,16 @@ public class TopologyManagerTest extends UnitTest {
         TopologyEvents topologyEvents;
         List<EventEntry<TopologyEvent>> events = new LinkedList<>();
         EventEntry<TopologyEvent> eventEntry;
-        TopologyEvent topologyMastershipEvent;
+        TopologyEvent topologyMastershipData;
         TopologyEvent topologySwitchData;
 
         setupTopologyManagerWithEventHandler();
 
         // Prepare the Mastership Event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
-        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
+        topologyMastershipData = new TopologyEvent(mastershipData,
                                                     ONOS_INSTANCE_ID_1);
 
         // Prepare the Switch Event
@@ -1354,7 +1354,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                                   topologyMastershipEvent);
+                                                   topologyMastershipData);
         events.add(eventEntry);
 
         // Add the Switch Event
@@ -1369,8 +1369,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events
         topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         assertThat(topologyEvents.getAddedSwitchDataEntries(),
                    hasItem(switchData));
         theTopologyListener.clear();
@@ -1390,16 +1390,16 @@ public class TopologyManagerTest extends UnitTest {
         TopologyEvents topologyEvents;
         List<EventEntry<TopologyEvent>> events = new LinkedList<>();
         EventEntry<TopologyEvent> eventEntry;
-        TopologyEvent topologyMastershipEvent;
+        TopologyEvent topologyMastershipData;
         TopologyEvent topologySwitchData;
 
         setupTopologyManagerWithEventHandler();
 
         // Prepare the Mastership Event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
-        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
+        topologyMastershipData = new TopologyEvent(mastershipData,
                                                     ONOS_INSTANCE_ID_1);
 
         // Prepare the Switch Event
@@ -1424,7 +1424,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                                   topologyMastershipEvent);
+                                                   topologyMastershipData);
         events.add(eventEntry);
 
         // Process the events
@@ -1434,8 +1434,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events: both events should be fired
         topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         assertThat(topologyEvents.getAddedSwitchDataEntries(),
                    hasItem(switchData));
         theTopologyListener.clear();
@@ -1455,16 +1455,16 @@ public class TopologyManagerTest extends UnitTest {
         TopologyEvents topologyEvents;
         List<EventEntry<TopologyEvent>> events = new LinkedList<>();
         EventEntry<TopologyEvent> eventEntry;
-        TopologyEvent topologyMastershipEvent;
+        TopologyEvent topologyMastershipData;
         TopologyEvent topologySwitchData;
 
         setupTopologyManagerWithEventHandler();
 
         // Prepare the Mastership Event
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_2, ONOS_INSTANCE_ID_2, role);
-        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+        MastershipData mastershipData =
+            new MastershipData(DPID_2, ONOS_INSTANCE_ID_2, role);
+        topologyMastershipData = new TopologyEvent(mastershipData,
                                                     ONOS_INSTANCE_ID_2);
 
         // Prepare the Switch Event
@@ -1490,7 +1490,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                                   topologyMastershipEvent);
+                                                   topologyMastershipData);
         events.add(eventEntry);
 
         // Process the events
@@ -1500,8 +1500,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events: only the Mastership event should be fired
         topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         assertThat(topologyEvents.getAddedSwitchDataEntries(), is(empty()));
         theTopologyListener.clear();
     }
@@ -1526,16 +1526,16 @@ public class TopologyManagerTest extends UnitTest {
         TopologyEvents topologyEvents;
         List<EventEntry<TopologyEvent>> events = new LinkedList<>();
         EventEntry<TopologyEvent> eventEntry;
-        TopologyEvent topologyMastershipEvent;
+        TopologyEvent topologyMastershipData;
         TopologyEvent topologySwitchData;
 
         setupTopologyManagerWithEventHandler();
 
         // Prepare the Mastership Event from the first ONOS instance
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
-        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
+        topologyMastershipData = new TopologyEvent(mastershipData,
                                                     ONOS_INSTANCE_ID_1);
 
         // Prepare the Switch Event from the first ONOS instance
@@ -1545,7 +1545,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                                   topologyMastershipEvent);
+                                                   topologyMastershipData);
         events.add(eventEntry);
 
         // Add the Switch Event
@@ -1560,8 +1560,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events: both events should be fired
         topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         assertThat(topologyEvents.getAddedSwitchDataEntries(),
                    hasItem(switchData));
         theTopologyListener.clear();
@@ -1578,9 +1578,9 @@ public class TopologyManagerTest extends UnitTest {
 
         // Prepare the Mastership Event from the second ONOS instance
         role = Role.MASTER;
-        mastershipEvent = new MastershipEvent(DPID_1,
+        mastershipData = new MastershipData(DPID_1,
                                               ONOS_INSTANCE_ID_2, role);
-        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+        topologyMastershipData = new TopologyEvent(mastershipData,
                                                     ONOS_INSTANCE_ID_2);
 
         // Prepare the Switch Event from second ONOS instance
@@ -1590,7 +1590,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                                   topologyMastershipEvent);
+                                                   topologyMastershipData);
         events.add(eventEntry);
 
         // Add the Switch Event
@@ -1605,8 +1605,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events: both events should be fired
         topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         assertThat(topologyEvents.getAddedSwitchDataEntries(),
                    hasItem(switchData));
         theTopologyListener.clear();
@@ -1651,7 +1651,7 @@ public class TopologyManagerTest extends UnitTest {
         TopologyEvents topologyEvents;
         List<EventEntry<TopologyEvent>> events = new LinkedList<>();
         EventEntry<TopologyEvent> eventEntry;
-        TopologyEvent topologyMastershipEvent;
+        TopologyEvent topologyMastershipData;
         TopologyEvent topologySwitchData;
 
         setupTopologyManagerWithEventHandler();
@@ -1661,12 +1661,12 @@ public class TopologyManagerTest extends UnitTest {
 
         // Prepare the Mastership Event from the first ONOS instance
         Role role = Role.MASTER;
-        MastershipEvent mastershipEvent =
-            new MastershipEvent(DPID_1, ONOS_INSTANCE_ID_1, role);
-        mastershipEvent.createStringAttribute(
+        MastershipData mastershipData =
+            new MastershipData(DPID_1, ONOS_INSTANCE_ID_1, role);
+        mastershipData.createStringAttribute(
                 TopologyElement.ELEMENT_CONFIG_STATE,
                 ConfigState.CONFIGURED.toString());
-        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+        topologyMastershipData = new TopologyEvent(mastershipData,
                                                     ONOS_INSTANCE_ID_1);
 
         // Prepare the Switch Event from the first ONOS instance
@@ -1679,7 +1679,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                                   topologyMastershipEvent);
+                                                   topologyMastershipData);
         events.add(eventEntry);
 
         // Add the Switch Event
@@ -1694,8 +1694,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events: both events should be fired
         topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         assertThat(topologyEvents.getAddedSwitchDataEntries(),
                    hasItem(switchData));
         theTopologyListener.clear();
@@ -1703,12 +1703,12 @@ public class TopologyManagerTest extends UnitTest {
 
         // Prepare the Mastership Event from the second ONOS instance
         role = Role.MASTER;
-        mastershipEvent = new MastershipEvent(DPID_1,
+        mastershipData = new MastershipData(DPID_1,
                                               ONOS_INSTANCE_ID_2, role);
-        mastershipEvent.createStringAttribute(
+        mastershipData.createStringAttribute(
                 TopologyElement.ELEMENT_CONFIG_STATE,
                 ConfigState.CONFIGURED.toString());
-        topologyMastershipEvent = new TopologyEvent(mastershipEvent,
+        topologyMastershipData = new TopologyEvent(mastershipData,
                                                     ONOS_INSTANCE_ID_2);
 
         // Prepare the Switch Event from second ONOS instance
@@ -1721,7 +1721,7 @@ public class TopologyManagerTest extends UnitTest {
 
         // Add the Mastership Event
         eventEntry = new EventEntry<TopologyEvent>(EventEntry.Type.ENTRY_ADD,
-                                                   topologyMastershipEvent);
+                                                   topologyMastershipData);
         events.add(eventEntry);
 
         // Add the Switch Event
@@ -1736,8 +1736,8 @@ public class TopologyManagerTest extends UnitTest {
         // Check the fired events: both events should be fired
         topologyEvents = theTopologyListener.topologyEvents;
         assertNotNull(topologyEvents);
-        assertThat(topologyEvents.getAddedMastershipEvents(),
-                   hasItem(mastershipEvent));
+        assertThat(topologyEvents.getAddedMastershipDataEntries(),
+                   hasItem(mastershipData));
         assertThat(topologyEvents.getAddedSwitchDataEntries(),
                    hasItem(switchData));
         theTopologyListener.clear();

@@ -33,7 +33,7 @@ import net.onrc.onos.core.topology.HostData;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkData;
-import net.onrc.onos.core.topology.MastershipEvent;
+import net.onrc.onos.core.topology.MastershipData;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.topology.SwitchData;
@@ -232,8 +232,8 @@ public class UseCaseTest extends UnitTest {
 
     @Test
     public void rerouteShortestPaths() throws FloodlightModuleException {
-        List<MastershipEvent> addedMastershipEvents = new LinkedList<>();
-        List<MastershipEvent> removedMastershipEvents = new LinkedList<>();
+        List<MastershipData> addedMastershipDataEntries = new LinkedList<>();
+        List<MastershipData> removedMastershipDataEntries = new LinkedList<>();
         List<SwitchData> addedSwitchDataEntries = new LinkedList<>();
         List<SwitchData> removedSwitchDataEntries = new LinkedList<>();
         List<PortData> addedPortDataEntries = new LinkedList<>();
@@ -285,8 +285,8 @@ public class UseCaseTest extends UnitTest {
         removedLinkDataEntries.add(linkData1);
         removedLinkDataEntries.add(linkData2);
 
-        topologyEvents = new TopologyEvents(addedMastershipEvents,
-                                            removedMastershipEvents,
+        topologyEvents = new TopologyEvents(addedMastershipDataEntries,
+                                            removedMastershipDataEntries,
                                             addedSwitchDataEntries,
                                             removedSwitchDataEntries,
                                             addedPortDataEntries,
@@ -320,8 +320,8 @@ public class UseCaseTest extends UnitTest {
         addedLinkDataEntries.add(linkData1);
         addedLinkDataEntries.add(linkData2);
 
-        topologyEvents = new TopologyEvents(addedMastershipEvents,
-                                            removedMastershipEvents,
+        topologyEvents = new TopologyEvents(addedMastershipDataEntries,
+                                            removedMastershipDataEntries,
                                             addedSwitchDataEntries,
                                             removedSwitchDataEntries,
                                             addedPortDataEntries,

@@ -9,21 +9,17 @@ import java.util.Comparator;
 import java.util.Objects;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
-import net.onrc.onos.core.topology.web.serializers.MastershipEventSerializer;
+import net.onrc.onos.core.topology.web.serializers.MastershipDataSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
- * Self-contained Switch Mastership event object.
- * <p/>
- * TODO: Rename to match what it is. (Switch/Port/Link/Host)Snapshot?
- * FIXME: Current implementation directly use this object as
- *        Replication message, but should be sending update operation info.
+ * Self-contained Switch Mastership object.
  */
-@JsonSerialize(using = MastershipEventSerializer.class)
-public class MastershipEvent extends TopologyElement<MastershipEvent> {
+@JsonSerialize(using = MastershipDataSerializer.class)
+public class MastershipData extends TopologyElement<MastershipData> {
     private final Dpid dpid;
     private final OnosInstanceId onosInstanceId;
     private final Role role;
@@ -32,7 +28,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      * Default constructor for Serializer to use.
      */
     @Deprecated
-    protected MastershipEvent() {
+    protected MastershipData() {
         dpid = null;
         onosInstanceId = null;
         role = Role.SLAVE;              // Default role is SLAVE
@@ -46,7 +42,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
      * @param onosInstanceId the ONOS Instance ID
      * @param role the ONOS instance role for the switch
      */
-    public MastershipEvent(Dpid dpid, OnosInstanceId onosInstanceId,
+    public MastershipData(Dpid dpid, OnosInstanceId onosInstanceId,
                            Role role) {
         this.dpid = checkNotNull(dpid);
         this.onosInstanceId = checkNotNull(onosInstanceId);
@@ -56,11 +52,11 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
     /**
      * Copy constructor.
      * <p>
-     * Creates an unfrozen copy of the given Switch MastershipEvent object.
+     * Creates an unfrozen copy of the given Switch MastershipData object.
      *
      * @param original the object to make copy of
      */
-    public MastershipEvent(MastershipEvent original) {
+    public MastershipData(MastershipData original) {
         super(original);
         this.dpid = original.dpid;
         this.onosInstanceId = original.onosInstanceId;
@@ -113,8 +109,8 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
     }
 
     /**
-     * Compares two MastershipEvent objects.
-     * MastershipEvent objects are equal if they have same DPID and same
+     * Compares two MastershipData objects.
+     * MastershipData objects are equal if they have same DPID and same
      * ONOS Instance ID.
      *
      * @param o another object to compare to this
@@ -135,24 +131,24 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
             return false;
         }
 
-        MastershipEvent other = (MastershipEvent) o;
+        MastershipData other = (MastershipData) o;
         return Objects.equals(dpid, other.dpid) &&
             Objects.equals(onosInstanceId, other.onosInstanceId);
     }
 
     /**
-     * Comparator to bring {@link MastershipEvent} with MASTER role up front.
+     * Comparator to bring {@link MastershipData} with MASTER role up front.
      * <p>
-     * Note: expected to be used against Collection of MastershipEvents
+     * Note: expected to be used against Collection of MastershipData
      * about same Dpid.
      */
     public static final class MasterFirstComparator
-                implements Comparator<MastershipEvent>, Serializable {
+                implements Comparator<MastershipData>, Serializable {
         @Override
-        public int compare(MastershipEvent o1, MastershipEvent o2) {
-            // MastershipEvent for same ONOS Instance
+        public int compare(MastershipData o1, MastershipData o2) {
+            // MastershipData for same ONOS Instance
             //  => treat as equal regardless of Role
-            // Note: MastershipEvent#equals() does not use Role
+            // Note: MastershipData#equals() does not use Role
             if (o1.equals(o2)) {
                 return 0;
             }
@@ -173,7 +169,7 @@ public class MastershipEvent extends TopologyElement<MastershipEvent> {
 
     @Override
     public String toString() {
-        return "[MastershipEvent " + getDpid() + "@" + getOnosInstanceId() +
+        return "[MastershipData " + getDpid() + "@" + getOnosInstanceId() +
             "->" + getRole() + "]";
     }
 }

@@ -64,7 +64,7 @@ import net.onrc.onos.core.topology.AdminStatus;
 import net.onrc.onos.core.topology.ConfigState;
 import net.onrc.onos.core.topology.HostData;
 import net.onrc.onos.core.topology.LinkData;
-import net.onrc.onos.core.topology.MastershipEvent;
+import net.onrc.onos.core.topology.MastershipData;
 import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyBatchOperation;
@@ -203,7 +203,7 @@ public class KryoFactory {
         kryo.register(HostData.class);
         kryo.register(LinkedList.class);
         kryo.register(LinkData.class);
-        kryo.register(MastershipEvent.class);
+        kryo.register(MastershipData.class);
         kryo.register(OnosInstanceId.class);
         kryo.register(PortData.class);
         kryo.register(Role.class);

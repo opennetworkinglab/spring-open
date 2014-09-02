@@ -20,7 +20,7 @@ import net.onrc.onos.core.intent.IntentOperationList;
 import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.topology.HostData;
 import net.onrc.onos.core.topology.LinkData;
-import net.onrc.onos.core.topology.MastershipEvent;
+import net.onrc.onos.core.topology.MastershipData;
 import net.onrc.onos.core.topology.MockTopology;
 import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.topology.SwitchData;
@@ -456,7 +456,8 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
                 hasIntentWithIdAndState("3___0", IntentState.INST_ACK));
 
         //  Remove one of the links and check results
-        final List<MastershipEvent> emptyMastershipEvents = new LinkedList<>();
+        final List<MastershipData> emptyMastershipDataEntries =
+            new LinkedList<>();
         final List<SwitchData> emptySwitchDataEntries = new LinkedList<>();
         final List<PortData> emptyPortDataEntries = new LinkedList<>();
         final List<HostData> emptyHostDataEntries = new LinkedList<>();
@@ -474,8 +475,8 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
         removedLinkDataEntries.add(linkData1);
         removedLinkDataEntries.add(linkData2);
 
-        topologyEvents = new TopologyEvents(emptyMastershipEvents,
-                                            emptyMastershipEvents,
+        topologyEvents = new TopologyEvents(emptyMastershipDataEntries,
+                                            emptyMastershipDataEntries,
                                             emptySwitchDataEntries,
                                             emptySwitchDataEntries,
                                             emptyPortDataEntries,
@@ -694,7 +695,8 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
 
 
         //  Remove one of the links and check results
-        final List<MastershipEvent> emptyMastershipEvents = new LinkedList<>();
+        final List<MastershipData> emptyMastershipDataEntries =
+            new LinkedList<>();
         final List<SwitchData> emptySwitchDataEntries = new LinkedList<>();
         final List<PortData> emptyPortDataEntries = new LinkedList<>();
         final List<HostData> emptyHostDataEntries = new LinkedList<>();
@@ -712,8 +714,8 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
         removedLinkDataEntries.add(linkData1);
         removedLinkDataEntries.add(linkData2);
 
-        topologyEvents = new TopologyEvents(emptyMastershipEvents,
-                                            emptyMastershipEvents,
+        topologyEvents = new TopologyEvents(emptyMastershipDataEntries,
+                                            emptyMastershipDataEntries,
                                             emptySwitchDataEntries,
                                             emptySwitchDataEntries,
                                             emptyPortDataEntries,
@@ -766,8 +768,8 @@ public class PathCalcRuntimeModuleTest extends UnitTest {
         addedLinkDataEntries.add(linkData1);
         addedLinkDataEntries.add(linkData2);
 
-        topologyEvents = new TopologyEvents(emptyMastershipEvents,
-                                            emptyMastershipEvents,
+        topologyEvents = new TopologyEvents(emptyMastershipDataEntries,
+                                            emptyMastershipDataEntries,
                                             emptySwitchDataEntries,
                                             emptySwitchDataEntries,
                                             emptyPortDataEntries,

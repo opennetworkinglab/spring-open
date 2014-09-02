@@ -97,7 +97,7 @@ public class TopologyManager {
     // Local state for keeping the last ADD Mastership Event entries.
     // TODO: In the future, we might have to keep this state somewhere else.
     //
-    private Map<ByteBuffer, MastershipEvent> lastAddMastershipEvents =
+    private Map<ByteBuffer, MastershipData> lastAddMastershipDataEntries =
         new HashMap<>();
 
     //
@@ -106,9 +106,9 @@ public class TopologyManager {
     //  - Queue of events, which will be dispatched to local listeners
     //    on next notification.
 
-    private List<MastershipEvent> apiAddedMastershipEvents =
+    private List<MastershipData> apiAddedMastershipDataEntries =
         new LinkedList<>();
-    private List<MastershipEvent> apiRemovedMastershipEvents =
+    private List<MastershipData> apiRemovedMastershipDataEntries =
         new LinkedList<>();
     private List<SwitchData> apiAddedSwitchDataEntries = new LinkedList<>();
     private List<SwitchData> apiRemovedSwitchDataEntries = new LinkedList<>();
@@ -233,8 +233,8 @@ public class TopologyManager {
                     TopologyEvent topologyEvent = event.eventData();
 
                     // Get the event itself
-                    MastershipEvent mastershipEvent =
-                        topologyEvent.getMastershipEvent();
+                    MastershipData mastershipData =
+                        topologyEvent.getMastershipData();
                     SwitchData switchData = topologyEvent.getSwitchData();
                     PortData portData = topologyEvent.getPortData();
                     LinkData linkData = topologyEvent.getLinkData();
@@ -246,8 +246,8 @@ public class TopologyManager {
                     //
                     switch (event.eventType()) {
                     case ENTRY_ADD:
-                        if (mastershipEvent != null) {
-                            wasAdded = addMastershipEvent(mastershipEvent);
+                        if (mastershipData != null) {
+                            wasAdded = addMastershipData(mastershipData);
                         }
                         if (switchData != null) {
                             wasAdded = addSwitch(switchData);
@@ -268,8 +268,8 @@ public class TopologyManager {
                         }
                         break;
                     case ENTRY_REMOVE:
-                        if (mastershipEvent != null) {
-                            removeMastershipEvent(mastershipEvent);
+                        if (mastershipData != null) {
+                            removeMastershipData(mastershipData);
                         }
                         if (switchData != null) {
                             removeSwitch(switchData);
@@ -411,18 +411,18 @@ public class TopologyManager {
         // Create the Topology Snapshot Event
         //
         TopologyEvents events = null;
-        Collection<MastershipEvent> mastershipEvents =
-            lastAddMastershipEvents.values();
+        Collection<MastershipData> mastershipDataEntries =
+            lastAddMastershipDataEntries.values();
         Collection<SwitchData> switchDataEntries = topology.getAllSwitchDataEntries();
         Collection<PortData> portDataEntries = topology.getAllPortDataEntries();
         Collection<LinkData> linkDataEntries = topology.getAllLinkDataEntries();
         Collection<HostData> hostDataEntries = topology.getAllHostDataEntries();
-        if (!(mastershipEvents.isEmpty() &&
+        if (!(mastershipDataEntries.isEmpty() &&
               switchDataEntries.isEmpty() &&
               portDataEntries.isEmpty() &&
               linkDataEntries.isEmpty() &&
               hostDataEntries.isEmpty())) {
-            events = new TopologyEvents(mastershipEvents,
+            events = new TopologyEvents(mastershipDataEntries,
                                         switchDataEntries,
                                         portDataEntries,
                                         linkDataEntries,
@@ -455,8 +455,8 @@ public class TopologyManager {
      * Dispatch Topology Events to the listeners.
      */
     private void dispatchTopologyEvents() {
-        if (apiAddedMastershipEvents.isEmpty() &&
-                apiRemovedMastershipEvents.isEmpty() &&
+        if (apiAddedMastershipDataEntries.isEmpty() &&
+                apiRemovedMastershipDataEntries.isEmpty() &&
                 apiAddedSwitchDataEntries.isEmpty() &&
                 apiRemovedSwitchDataEntries.isEmpty() &&
                 apiAddedPortDataEntries.isEmpty() &&
@@ -473,13 +473,13 @@ public class TopologyManager {
             // Debug statements
             // TODO: Those statements should be removed in the future
             //
-            for (MastershipEvent mastershipEvent : apiAddedMastershipEvents) {
+            for (MastershipData mastershipData : apiAddedMastershipDataEntries) {
                 log.debug("Dispatch Topology Event: ADDED {}",
-                          mastershipEvent);
+                          mastershipData);
             }
-            for (MastershipEvent mastershipEvent : apiRemovedMastershipEvents) {
+            for (MastershipData mastershipData : apiRemovedMastershipDataEntries) {
                 log.debug("Dispatch Topology Event: REMOVED {}",
-                          mastershipEvent);
+                          mastershipData);
             }
             for (SwitchData switchData : apiAddedSwitchDataEntries) {
                 log.debug("Dispatch Topology Event: ADDED {}", switchData);
@@ -511,7 +511,7 @@ public class TopologyManager {
         // Update the metrics
         //
         long totalEvents =
-            apiAddedMastershipEvents.size() + apiRemovedMastershipEvents.size() +
+            apiAddedMastershipDataEntries.size() + apiRemovedMastershipDataEntries.size() +
             apiAddedSwitchDataEntries.size() + apiRemovedSwitchDataEntries.size() +
             apiAddedPortDataEntries.size() + apiRemovedPortDataEntries.size() +
             apiAddedLinkDataEntries.size() + apiRemovedLinkDataEntries.size() +
@@ -523,8 +523,8 @@ public class TopologyManager {
         // Allocate the events to deliver.
         //
         TopologyEvents events = new TopologyEvents(
-                apiAddedMastershipEvents,
-                apiRemovedMastershipEvents,
+                apiAddedMastershipDataEntries,
+                apiRemovedMastershipDataEntries,
                 apiAddedSwitchDataEntries,
                 apiRemovedSwitchDataEntries,
                 apiAddedPortDataEntries,
@@ -544,8 +544,8 @@ public class TopologyManager {
         //
         // Cleanup
         //
-        apiAddedMastershipEvents.clear();
-        apiRemovedMastershipEvents.clear();
+        apiAddedMastershipDataEntries.clear();
+        apiRemovedMastershipDataEntries.clear();
         apiAddedSwitchDataEntries.clear();
         apiRemovedSwitchDataEntries.clear();
         apiAddedPortDataEntries.clear();
@@ -563,28 +563,28 @@ public class TopologyManager {
     /**
      * Adds Switch Mastership event.
      *
-     * @param mastershipEvent the MastershipEvent to process.
+     * @param mastershipData the MastershipData to process.
      * @return true if the item was successfully added, otherwise false.
      */
     @GuardedBy("topology.writeLock")
-    private boolean addMastershipEvent(MastershipEvent mastershipEvent) {
-        log.debug("Added Mastership event {}", mastershipEvent);
-        lastAddMastershipEvents.put(mastershipEvent.getIDasByteBuffer(),
-                                    mastershipEvent);
-        apiAddedMastershipEvents.add(mastershipEvent);
+    private boolean addMastershipData(MastershipData mastershipData) {
+        log.debug("Added Mastership event {}", mastershipData);
+        lastAddMastershipDataEntries.put(mastershipData.getIDasByteBuffer(),
+                                         mastershipData);
+        apiAddedMastershipDataEntries.add(mastershipData);
         return true;
     }
 
     /**
      * Removes Switch Mastership event.
      *
-     * @param mastershipEvent the MastershipEvent to process.
+     * @param mastershipData the MastershipData to process.
      */
     @GuardedBy("topology.writeLock")
-    private void removeMastershipEvent(MastershipEvent mastershipEvent) {
-        log.debug("Removed Mastership event {}", mastershipEvent);
-        lastAddMastershipEvents.remove(mastershipEvent.getIDasByteBuffer());
-        apiRemovedMastershipEvents.add(mastershipEvent);
+    private void removeMastershipData(MastershipData mastershipData) {
+        log.debug("Removed Mastership event {}", mastershipData);
+        lastAddMastershipDataEntries.remove(mastershipData.getIDasByteBuffer());
+        apiRemovedMastershipDataEntries.add(mastershipData);
     }
 
     /**

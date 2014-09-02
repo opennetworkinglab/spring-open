@@ -99,7 +99,7 @@ public class TopologyPublisher implements IOFSwitchListener,
     // TODO: What to do if the Mastership changes?
     //  - Cleanup state from publishedFoo maps, but do not send REMOVE events?
     //
-    private ConcurrentMap<Dpid, MastershipEvent> publishedMastershipEvents =
+    private ConcurrentMap<Dpid, MastershipData> publishedMastershipDataEntries =
         new ConcurrentHashMap<>();
     private ConcurrentMap<Dpid, SwitchData> publishedSwitchDataEntries =
         new ConcurrentHashMap<>();
@@ -398,15 +398,15 @@ public class TopologyPublisher implements IOFSwitchListener,
 
         Role role = Role.SLAVE; // TODO: Should be Role.UNKNOWN
 
-        MastershipEvent mastershipEvent =
-                new MastershipEvent(dpid, getOnosInstanceId(), role);
+        MastershipData mastershipData =
+                new MastershipData(dpid, getOnosInstanceId(), role);
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
-        mastershipEvent.createStringAttribute(TopologyElement.TYPE,
+        mastershipData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_ALL_LAYERS);
-        mastershipEvent.freeze();
-        publishRemoveSwitchMastershipEvent(mastershipEvent);
+        mastershipData.freeze();
+        publishRemoveSwitchMastershipEvent(mastershipData);
     }
 
     @Override
@@ -625,52 +625,52 @@ public class TopologyPublisher implements IOFSwitchListener,
     private void controllerRoleChanged(Dpid dpid, Role role) {
         log.debug("Local switch controller mastership role changed: dpid = {} role = {}",
                 dpid, role);
-        MastershipEvent mastershipEvent =
-                new MastershipEvent(dpid, getOnosInstanceId(), role);
+        MastershipData mastershipData =
+                new MastershipData(dpid, getOnosInstanceId(), role);
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
         // TODO populate appropriate attributes.
-        mastershipEvent.createStringAttribute(TopologyElement.TYPE,
+        mastershipData.createStringAttribute(TopologyElement.TYPE,
                 TopologyElement.TYPE_ALL_LAYERS);
-        mastershipEvent.freeze();
-        publishAddSwitchMastershipEvent(mastershipEvent);
+        mastershipData.freeze();
+        publishAddSwitchMastershipEvent(mastershipData);
     }
 
     /**
      * Publishes ADD Mastership Event.
      *
-     * @param mastershipEvent the mastership event to publish
+     * @param mastershipData the mastership event to publish
      */
     private void publishAddSwitchMastershipEvent(
-                        MastershipEvent mastershipEvent) {
+                        MastershipData mastershipData) {
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(mastershipEvent, getOnosInstanceId());
+            new TopologyEvent(mastershipData, getOnosInstanceId());
         tbo.appendAddOperation(topologyEvent);
         publishTopologyOperations(tbo);
-        publishedMastershipEvents.put(mastershipEvent.getDpid(),
-                                      mastershipEvent);
+        publishedMastershipDataEntries.put(mastershipData.getDpid(),
+                                           mastershipData);
     }
 
     /**
      * Publishes REMOVE Mastership Event.
      *
-     * @param mastershipEvent the mastership event to publish
+     * @param mastershipData the mastership event to publish
      */
     private void publishRemoveSwitchMastershipEvent(
-                        MastershipEvent mastershipEvent) {
-        if (publishedMastershipEvents.get(mastershipEvent.getDpid()) == null) {
+                        MastershipData mastershipData) {
+        if (publishedMastershipDataEntries.get(mastershipData.getDpid()) == null) {
             return;     // Nothing to do
         }
 
         // Publish the information
         TopologyBatchOperation tbo = new TopologyBatchOperation();
         TopologyEvent topologyEvent =
-            new TopologyEvent(mastershipEvent, getOnosInstanceId());
+            new TopologyEvent(mastershipData, getOnosInstanceId());
         tbo.appendRemoveOperation(topologyEvent);
         publishTopologyOperations(tbo);
-        publishedMastershipEvents.remove(mastershipEvent.getDpid());
+        publishedMastershipDataEntries.remove(mastershipData.getDpid());
     }
 
     /**
