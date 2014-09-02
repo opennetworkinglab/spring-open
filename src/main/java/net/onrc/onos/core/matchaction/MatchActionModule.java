@@ -1,17 +1,5 @@
 package net.onrc.onos.core.matchaction;
 
-import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.floodlightcontroller.core.module.FloodlightModuleException;
-import net.floodlightcontroller.core.module.IFloodlightModule;
-import net.floodlightcontroller.core.module.IFloodlightService;
-import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
-import net.onrc.onos.core.datagrid.IDatagridService;
-import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
-import net.onrc.onos.core.util.IdGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EventListener;
@@ -20,6 +8,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.module.FloodlightModuleContext;
+import net.floodlightcontroller.core.module.FloodlightModuleException;
+import net.floodlightcontroller.core.module.IFloodlightModule;
+import net.floodlightcontroller.core.module.IFloodlightService;
+import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
+import net.onrc.onos.core.datagrid.IDatagridService;
+import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
+import net.onrc.onos.core.registry.IControllerRegistryService;
+import net.onrc.onos.core.util.IdGenerator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Floodlight module for Match Action service.
@@ -31,10 +33,6 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
     private static final Logger log = LoggerFactory
             .getLogger(MatchActionModule.class);
     private MatchActionComponent matchActionComponent;
-
-
-
-
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -58,6 +56,7 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
         dependencies.add(IDatagridService.class);
         dependencies.add(IFlowPusherService.class);
         dependencies.add(IFloodlightProviderService.class);
+        dependencies.add(IControllerRegistryService.class);
         return dependencies;
     }
 
@@ -71,8 +70,9 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
         final IDatagridService datagrid = context.getServiceImpl(IDatagridService.class);
         final IFlowPusherService pusher = context.getServiceImpl(IFlowPusherService.class);
         final IFloodlightProviderService provider = context.getServiceImpl(IFloodlightProviderService.class);
+        final IControllerRegistryService registry = context.getServiceImpl(IControllerRegistryService.class);
 
-        matchActionComponent = new MatchActionComponent(datagrid, pusher, provider);
+        matchActionComponent = new MatchActionComponent(datagrid, pusher, provider, registry);
         log.info("match action component created");
         matchActionComponent.start();
     }
@@ -104,16 +104,12 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
 
     @Override
     public IdGenerator<MatchActionId> getMatchActionIdGenerator() {
-        // TODO Auto-generated method stub
-        // use MatchActionIdGeneratorWithIdBlockAllocator.
-        return null;
+        return matchActionComponent.getMatchActionIdGenerator();
     }
 
     @Override
     public IdGenerator<MatchActionOperationsId> getMatchActionOperationsIdGenerator() {
-        // TODO Auto-generated method stub
-        // use MatchActionOperationsIdGeneratorWithIdBlockAllocator.
-        return null;
+        return matchActionComponent.getMatchActionOperationsIdGenerator();
     }
 
     @Override

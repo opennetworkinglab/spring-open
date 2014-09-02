@@ -22,7 +22,9 @@ import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
+import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.IdBlockAllocator;
 import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -30,7 +32,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * Manages Match-Action entries.
@@ -57,16 +58,28 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
     private Thread coordinator;
     private Thread installer;
     private final IDatagridService datagrid;
+    private IControllerRegistryService registryService;
+
+    private MatchActionIdGeneratorWithIdBlockAllocator matchActionIdGenerator;
+    private MatchActionOperationsIdGeneratorWithIdBlockAllocator matchActionOperationsIdGenerator;
 
     public MatchActionComponent(final IDatagridService newDatagrid,
                                 final IFlowPusherService newPusher,
-                                final IFloodlightProviderService newProvider) {
+                                final IFloodlightProviderService newProvider,
+                                final IControllerRegistryService newRegistryService) {
         datagrid = newDatagrid;
         pusher = newPusher;
         provider = newProvider;
+        registryService = newRegistryService;
     }
 
     public void start() {
+        IdBlockAllocator idBlockAllocator = registryService;
+        matchActionIdGenerator =
+                new MatchActionIdGeneratorWithIdBlockAllocator(idBlockAllocator);
+        matchActionOperationsIdGenerator =
+                new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
+
         installSetChannel = datagrid.createChannel("onos.matchaction.installSetChannel",
                 String.class,
                 MatchActionOperations.class);
@@ -387,12 +400,12 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
 
     @Override
     public IdGenerator<MatchActionId> getMatchActionIdGenerator() {
-        return null;
+        return matchActionIdGenerator;
     }
 
     @Override
     public IdGenerator<MatchActionOperationsId> getMatchActionOperationsIdGenerator() {
-        return null;
+        return matchActionOperationsIdGenerator;
     }
 
 }

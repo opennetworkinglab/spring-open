@@ -74,7 +74,7 @@ public class FlowEntryGenerationTest {
         final MatchActionOperationsId operationsId = new MatchActionOperationsId(1L);
         final MatchActionId matchActionId = new MatchActionId(1L);
 
-        final MatchActionComponent component = new MatchActionComponent(datagridService, null, null);
+        final MatchActionComponent component = new MatchActionComponent(datagridService, null, null, null);
 
         MACAddress srcMac = new MACAddress(new byte[]{0, 0, 0, 0, 0, 0});
         MACAddress dstMac = new MACAddress(new byte[]{0, 0, 0, 0, 0, 1});

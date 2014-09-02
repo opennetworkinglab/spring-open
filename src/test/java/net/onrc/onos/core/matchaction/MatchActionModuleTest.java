@@ -79,7 +79,7 @@ public class MatchActionModuleTest {
 
         final int iterations = 5;
         final MatchActionComponent matchActionComponent =
-            new MatchActionComponent(datagridService, null, null);
+            new MatchActionComponent(datagridService, null, null, null);
         final ArrayList<MatchAction> generatedMatchActions = new ArrayList<>();
 
         // Add some test MatchAction objects. 25 will be added, in 5 blocks
@@ -167,7 +167,7 @@ public class MatchActionModuleTest {
         operations.addOperation(entry);
 
         // Create a module to use to execute the Operations.
-        final MatchActionComponent matchActionComponent = new MatchActionComponent(null, null, null);
+        final MatchActionComponent matchActionComponent = new MatchActionComponent(null, null, null, null);
 
         // Execute the first set of Operations.  This
         // should succeed.
