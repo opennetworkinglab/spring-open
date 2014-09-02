@@ -5,8 +5,8 @@ import java.util.Set;
 
 import net.floodlightcontroller.restserver.CustomSerializerHelper;
 import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionFloodlightService;
 import net.onrc.onos.core.matchaction.MatchActionId;
-import net.onrc.onos.core.matchaction.MatchActionService;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonProcessingException;
@@ -49,9 +49,9 @@ public class MatchActionResource extends ServerResource {
      */
     @Get("json")
     public Representation retrieve() {
-        MatchActionService matchActionService =
-                (MatchActionService) getContext().getAttributes()
-                    .get(MatchActionService.class.getCanonicalName());
+        MatchActionFloodlightService matchActionService =
+                (MatchActionFloodlightService) getContext().getAttributes()
+                    .get(MatchActionFloodlightService.class.getCanonicalName());
 
         Set<MatchAction> matchActions = matchActionService.getMatchActions();
 

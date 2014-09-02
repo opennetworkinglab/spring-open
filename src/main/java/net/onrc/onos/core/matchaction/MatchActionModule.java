@@ -14,9 +14,11 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.restserver.IRestApiService;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
+import net.onrc.onos.core.matchaction.web.MatchActionWebRoutable;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.IdGenerator;
 
@@ -57,6 +59,7 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
         dependencies.add(IFlowPusherService.class);
         dependencies.add(IFloodlightProviderService.class);
         dependencies.add(IControllerRegistryService.class);
+        dependencies.add(IRestApiService.class);
         return dependencies;
     }
 
@@ -71,6 +74,9 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
         final IFlowPusherService pusher = context.getServiceImpl(IFlowPusherService.class);
         final IFloodlightProviderService provider = context.getServiceImpl(IFloodlightProviderService.class);
         final IControllerRegistryService registry = context.getServiceImpl(IControllerRegistryService.class);
+        final IRestApiService restApi = context.getServiceImpl(IRestApiService.class);
+
+        restApi.addRestletRoutable(new MatchActionWebRoutable());
 
         matchActionComponent = new MatchActionComponent(datagrid, pusher, provider, registry);
         log.info("match action component created");

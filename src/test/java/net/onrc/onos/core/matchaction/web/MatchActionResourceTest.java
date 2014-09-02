@@ -17,8 +17,8 @@ import java.util.Set;
 
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionFloodlightService;
 import net.onrc.onos.core.matchaction.MatchActionId;
-import net.onrc.onos.core.matchaction.MatchActionService;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
@@ -50,13 +50,16 @@ public class MatchActionResourceTest {
         Set<MatchAction> matchActionSet = createMatchActions();
 
         // Create a mock match-action service that will return the match-actions
-        MatchActionService matchActionService = createMock(MatchActionService.class);
-        expect(matchActionService.getMatchActions()).andReturn(matchActionSet).anyTimes();
+        MatchActionFloodlightService matchActionService =
+                createMock(MatchActionFloodlightService.class);
+        expect(matchActionService.getMatchActions()).andReturn(matchActionSet)
+                .anyTimes();
         replay(matchActionService);
 
         // Inject the match-action service into a Restlet context
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(MatchActionService.class.getCanonicalName(), matchActionService);
+        attributes.put(MatchActionFloodlightService.class.getCanonicalName(),
+                matchActionService);
         Context context = new Context();
         context.setAttributes(attributes);
 
@@ -81,8 +84,8 @@ public class MatchActionResourceTest {
         actions.add(new ModifyDstMacAction(MACAddress.valueOf(10L)));
         actions.add(new OutputAction(PortNumber.uint32(4)));
 
-        MatchAction ma = new MatchAction(new MatchActionId(1L), new SwitchPort(1L, 1L), match,
-                actions);
+        MatchAction ma = new MatchAction(new MatchActionId(1L),
+                new SwitchPort(1L, 1L), match, actions);
 
         matchActionSet.add(ma);
 
