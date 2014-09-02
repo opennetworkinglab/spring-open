@@ -36,6 +36,7 @@ import org.jboss.netty.util.Timer;
 public class OpenflowPipelineFactory
     implements ChannelPipelineFactory, ExternalResourceReleasable {
 
+    private static final long HANDSHAKE_TIMEOUT_SECS = 10;
     protected Controller controller;
     protected ThreadPoolExecutor pipelineExecutor;
     protected Timer timer;
@@ -61,9 +62,8 @@ public class OpenflowPipelineFactory
         pipeline.addLast("ofmessageencoder", new OFMessageEncoder());
         pipeline.addLast("idle", idleHandler);
         pipeline.addLast("timeout", readTimeoutHandler);
-        // XXX S ONOS: was 15 increased it to fix Issue #296
         pipeline.addLast("handshaketimeout",
-                         new HandshakeTimeoutHandler(handler, timer, 60));
+                new HandshakeTimeoutHandler(handler, timer, HANDSHAKE_TIMEOUT_SECS));
         if (pipelineExecutor != null)
             pipeline.addLast("pipelineExecutor",
                              new ExecutionHandler(pipelineExecutor));

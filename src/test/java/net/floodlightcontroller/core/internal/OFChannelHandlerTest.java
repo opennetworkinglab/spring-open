@@ -519,8 +519,6 @@ public class OFChannelHandlerTest {
         assertEquals(OFChannelHandler.ChannelState.WAIT_INITIAL_ROLE,
                 handler.getStateForTesting());
 
-        // build the stats reply
-        OFStatsReply sr = createDescriptionStatsReply();
         OFMessage rr = getRoleReply(xid, Role.SLAVE);
         setupMessageEvent(Collections.<OFMessage>singletonList(rr));
 
@@ -528,8 +526,6 @@ public class OFChannelHandlerTest {
         reset(controller);
         reset(swImplBase);
 
-        expect(controller.getOFSwitchInstance((OFDescStatsReply)sr, ofVersion))
-        .andReturn(swImplBase).anyTimes();
         expect(controller.getThreadPoolService())
         .andReturn(threadPool).anyTimes();
         expect(controller.getDebugCounter())
@@ -562,6 +558,55 @@ public class OFChannelHandlerTest {
         assertEquals(OFChannelHandler.ChannelState.WAIT_SWITCH_DRIVER_SUB_HANDSHAKE,
                 handler.getStateForTesting());
     }
+
+    /**
+     * In WAIT_INITIAL_ROLE state the controller is waiting to hear back from
+     * the registry service. If it gets mastership it sends a role-request to
+     * the switch and if it gets the reply it moves to state MASTER.
+     * <p>
+     * However if it does not hear from the registry service, the handshake
+     * process should timeout, and the controller should move to state EQUAL.
+     * This test checks this behavior.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void moveToRoleEqualFromHandshakeTimeout() throws Exception {
+        moveToWaitInitialRole();
+        int xid = 2000;
+        resetChannel();
+        reset(controller);
+        reset(swImplBase);
+        // simulate that we never heard from registry service and so the
+        // handshake times out -- this results in a HandshakeTimeoutException
+        // called on the channel.
+        ExceptionEvent eeMock = createMock(ExceptionEvent.class);
+        expect(eeMock.getCause()).andReturn(new HandshakeTimeoutException())
+                .atLeastOnce();
+        // controller should move to role EQUAL via the driver handshake
+        swImplBase.setRole(Role.EQUAL);
+        expectLastCall().once();
+        swImplBase.startDriverHandshake();
+        expectLastCall().once();
+        // assume nothing-to-do in driver handshake by returning true
+        // immediately
+        expect(swImplBase.isDriverHandshakeComplete())
+                .andReturn(true).once();
+        expect(swImplBase.getRole()).andReturn(Role.EQUAL).once();
+        expect(swImplBase.getId())
+                .andReturn(1L).anyTimes();
+        expect(controller.addActivatedEqualSwitch(1L, swImplBase))
+                .andReturn(true).once();
+
+        replay(channel);
+        replay(controller);
+        replay(swImplBase);
+        replay(eeMock);
+        handler.exceptionCaught(ctx, eeMock);
+        assertEquals(OFChannelHandler.ChannelState.EQUAL,
+                handler.getStateForTesting());
+    }
+
 
     /**
      * Move the channel from scratch to WAIT_INITIAL_ROLE state,

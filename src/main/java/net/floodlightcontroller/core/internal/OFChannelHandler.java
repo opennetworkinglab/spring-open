@@ -84,7 +84,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     private static final Logger log = LoggerFactory.getLogger(OFChannelHandler.class);
 
-    private static final long DEFAULT_ROLE_TIMEOUT_MS = 10 * 1000; // 10 sec
+    private static final long DEFAULT_ROLE_TIMEOUT_MS = 3 * 1000; // 3 sec
     private final Controller controller;
     private final Counters counters;
     private IOFSwitch sw;
@@ -1033,6 +1033,15 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             }
 
             @Override
+            public void handleTimedOutHandshake(OFChannelHandler h,
+                    ChannelHandlerContext ctx) throws IOException {
+                log.info("Handshake timed out waiting to hear back from registry "
+                        + "service. Moving to Role EQUAL for switch {}",
+                        h.getSwitchInfoString());
+                setRoleAndStartDriverHandshake(h, Role.EQUAL);
+            }
+
+            @Override
             void processOFFeaturesReply(OFChannelHandler h, OFFeaturesReply m)
                     throws IOException, SwitchStateException {
                 illegalMessageReceived(h, m);
@@ -1893,6 +1902,41 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                     h.getSwitchInfoString(), this.toString(), pendingRole);
             throw new SwitchStateException(msg);
         }
+
+        /**
+         * Handles switch handshake timeout.
+         * <p>
+         * If the handshake times-out while the switch is in any state other
+         * than WAIT_INITIAL_ROLE, then the switch is disconnected.
+         * <p>
+         * If the switch is in WAIT_INITIAL_ROLE state, and a pending role reply
+         * is not received, it would trigger the role reply timeout, which would
+         * be handled by handleTimedOutRoleReply (which would disconnect the
+         * switch).
+         * <p>
+         * If the switch is in WAIT_INITIAL_ROLE state, when the handshake
+         * timeout is triggered, then it's because we have not heard back from
+         * the registry service regarding switch mastership. In this case, we
+         * move to EQUAL (or SLAVE) state. See override for this method in
+         * WAIT_INITIAL_ROLE state.
+         * <p>
+         * XXX: This is required today as the registry service does not reply
+         * with role.slave to a mastership request, i.e it only replies to the
+         * controller that wins mastership. Once the registry API changes to
+         * reply to every request, we would not need to wait for a timeout to
+         * move to Role.EQUAL (or SLAVE).
+         * 
+         * @param h the channel handler for this switch
+         * @param ctx the netty channel handler context for the channel 'h'
+         * @throws IOException
+         */
+        public void handleTimedOutHandshake(OFChannelHandler h,
+                ChannelHandlerContext ctx) throws IOException {
+            log.error("Disconnecting switch {}: failed to complete handshake",
+                    h.getSwitchInfoString());
+            h.counters.switchDisconnectHandshakeTimeout.updateCounterWithFlush();
+            ctx.getChannel().close();
+        }
     }
 
     // *************************
@@ -1996,10 +2040,9 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             counters.switchDisconnectReadTimeout.updateCounterWithFlush();
             ctx.getChannel().close();
         } else if (e.getCause() instanceof HandshakeTimeoutException) {
-            log.error("Disconnecting switch {}: failed to complete handshake",
-                    getSwitchInfoString());
-            counters.switchDisconnectHandshakeTimeout.updateCounterWithFlush();
-            ctx.getChannel().close();
+            // handle timeout within state-machine - different actions taken
+            // depending on current state
+            state.handleTimedOutHandshake(this, ctx);
         } else if (e.getCause() instanceof ClosedChannelException) {
             log.debug("Channel for sw {} already closed", getSwitchInfoString());
         } else if (e.getCause() instanceof IOException) {
