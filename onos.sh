@@ -2,23 +2,23 @@
 
 ### Env vars used by this script. (default value) ###
 # $ONOS_HOME       : path of root directory of ONOS repository (this script's dir)
-# $ONOS_CONF_DIR   : path of ONOS config directory (~/ONOS/conf)
-# $ONOS_CONF       : path of ONOS node config file (~/ONOS/conf/onos_node.`hostname`.conf or onos_node.conf)
-# $ONOS_PROPS      : path of ONOS properties file (~/ONOS/conf/onos.properties)
-# $ONOS_LOGBACK    : path of logback config file (~/ONOS/conf/logback.`hostname`.xml)
-# $ONOS_LOGDIR     : path of log output directory (~/ONOS/onos-logs)
+# $ONOS_CONF_DIR   : path of ONOS config directory (${ONOS_HOME}/conf)
+# $ONOS_CONF       : path of ONOS node config file (${ONOS_CONF_DIR}/onos_node.`hostname`.conf or onos_node.conf)
+# $ONOS_PROPS      : path of ONOS properties file (${ONOS_CONF_DIR}/onos.properties)
+# $ONOS_LOGBACK    : path of logback config file (${ONOS_CONF_DIR}/logback.`hostname`.xml)
+# $ONOS_LOGDIR     : path of log output directory (${ONOS_HOME}/onos-logs)
 # $ONOS_LOGBASE    : base name of log output file (onos.`hostname`)
 # $ONOS_DEBUG      : option to enable debugger for ONOS (false)
 # $RAMCLOUD_HOME   : path of root directory of RAMCloud repository (~/ramcloud)
 # $RAMCLOUD_BRANCH : branch name of RAMCloud to use (master)
 # $ZK_HOME         : path of root directory of ZooKeeper (~/zookeeper-3.4.6)
 # $ZK_LIB_DIR      : path of ZooKeeper library (/var/lib/zookeeper)
-# $ZK_LOG_DIR      : path of ZooKeeper log output directory (~/ONOS/onos-logs/zk-`hostname`)
+# $ZK_LOG_DIR      : path of ZooKeeper console log output directory (${ONOS_LOGDIR}/zk-`hostname`)
 # $JVM_OPTS        : JVM options to add when starting ONOS
 # $JVM_DEBUG_PORT  : port to use for remote debugging ONOS process, when $ONOS_DEBUG is enabled (22007)
-# $ZK_CONF         : path of ZooKeeper config file (~/ONOS/conf/zoo.cfg)
-# $HC_CONF         : path of Hazelcast config file (~/ONOS/conf/hazelcast.xml)
-# $RAMCLOUD_CONF   : path of RAMCloud config file (~/ONOS/conf/ramcloud.conf)
+# $ZK_CONF         : path of ZooKeeper config file (${ONOS_CONF_DIR}/zoo.cfg)
+# $HC_CONF         : path of Hazelcast config file (${ONOS_CONF_DIR}/hazelcast.xml)
+# $RAMCLOUD_CONF   : path of RAMCloud config file (${ONOS_CONF_DIR}/ramcloud.conf)
 #####################################################
 
 ONOS_HOME=${ONOS_HOME:-$(cd `dirname $0`; pwd)}
