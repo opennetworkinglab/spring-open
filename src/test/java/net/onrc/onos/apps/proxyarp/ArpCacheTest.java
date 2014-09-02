@@ -71,7 +71,7 @@ public class ArpCacheTest {
     @Test
     public void testGetMappings() {
         testUpdate();
-        for (String macStr :arpCache.getMappings()) {
+        for (String macStr : arpCache.getMappings()) {
             assertNotNull(macStr);
         }
     }

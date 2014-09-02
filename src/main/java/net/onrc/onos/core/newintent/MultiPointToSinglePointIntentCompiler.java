@@ -87,7 +87,7 @@ public class MultiPointToSinglePointIntentCompiler
         ConstrainedBFSTree bfs = new ConstrainedBFSTree(egressSwitch);
         Tree tree = new Tree();
 
-        for (SwitchPort ingressPort: ingressPorts) {
+        for (SwitchPort ingressPort : ingressPorts) {
             Switch ingressSwitch = topology.getSwitch(ingressPort.getDpid());
             if (ingressSwitch == null) {
                 continue;

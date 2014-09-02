@@ -94,7 +94,7 @@ class IntentMap<V> {
      */
     public Collection<V> values() {
         Collection<V> values = new ArrayList<>();
-        for (byte[] bytes: map.values()) {
+        for (byte[] bytes : map.values()) {
             V value = KryoFactory.deserialize(bytes);
             if (value == null) {
                 continue;

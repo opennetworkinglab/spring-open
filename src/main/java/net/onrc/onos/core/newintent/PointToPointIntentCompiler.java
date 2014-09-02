@@ -109,7 +109,7 @@ public class PointToPointIntentCompiler
                 .toList();
 
         Path converted = new Path();
-        for (LinkData data: dataEntries) {
+        for (LinkData data : dataEntries) {
             converted.add(new FlowLink(data.getSrc(), data.getDst()));
         }
         return converted;

@@ -29,6 +29,7 @@ public class FakeFlowManagerService implements FlowManagerService {
         this.returnNull = returnNull;
     }
 
+    @Override
     public FlowBatchHandle addFlow(Flow flow) {
         return processFlow();
     }
@@ -113,7 +114,7 @@ public class FakeFlowManagerService implements FlowManagerService {
     }
 
     private void invokeListeners(FlowStatesChangedEvent event) {
-        for (FlowManagerListener listener: listeners) {
+        for (FlowManagerListener listener : listeners) {
             listener.flowStatesChanged(event);
         }
     }

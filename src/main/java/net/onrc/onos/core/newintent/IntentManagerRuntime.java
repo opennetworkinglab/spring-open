@@ -85,7 +85,7 @@ public class IntentManagerRuntime implements IntentManager {
     public Set<Intent> getIntents() {
         Collection<IntentEvent> events = intentEvents.values();
         Set<Intent> intents = new HashSet<>(events.size());
-        for (IntentEvent event: events) {
+        for (IntentEvent event : events) {
             intents.add(event.getIntent());
         }
         return intents;
@@ -167,7 +167,7 @@ public class IntentManagerRuntime implements IntentManager {
      * @param event event supplied to a listener as an argument
      */
     private void invokeListeners(IntentEvent event) {
-        for (IntentEventListener listener: listeners) {
+        for (IntentEventListener listener : listeners) {
             listener.event(event);
         }
     }
@@ -226,7 +226,7 @@ public class IntentManagerRuntime implements IntentManager {
      */
     private void installIntent(Intent intent) {
         IntentCompilationResult compiled = installableIntents.get(intent.getId());
-        for (InstallableIntent installable: compiled.getResult()) {
+        for (InstallableIntent installable : compiled.getResult()) {
             registerSubclassInstallerIfNeeded(installable);
             getInstaller(installable).install(installable);
         }
@@ -241,7 +241,7 @@ public class IntentManagerRuntime implements IntentManager {
      */
     private void uninstallIntent(Intent intent) {
         IntentCompilationResult compiled = installableIntents.get(intent.getId());
-        for (InstallableIntent installable: compiled.getResult()) {
+        for (InstallableIntent installable : compiled.getResult()) {
             getInstaller(installable).remove(installable);
         }
 

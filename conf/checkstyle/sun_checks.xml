@@ -202,6 +202,7 @@
         <module name="WhitespaceAround">
             <property name="allowEmptyConstructors" value="true"/>
             <property name="allowEmptyMethods" value="true"/>
+            <property name="ignoreEnhancedForColon" value="false"/>
         </module>
 
 

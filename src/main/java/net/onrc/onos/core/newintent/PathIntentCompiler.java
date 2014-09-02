@@ -75,7 +75,7 @@ public class PathIntentCompiler
                 .toList();
 
         Path path = new Path();
-        for (LinkTuple link: links) {
+        for (LinkTuple link : links) {
             path.add(new FlowLink(link.getSrc(), link.getDst()));
         }
         return path;
