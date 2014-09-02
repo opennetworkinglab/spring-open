@@ -59,7 +59,7 @@ public class SharedFlowBatchMapEventDispatcher implements EntryListener<String, 
         if (value instanceof FlowBatchOperation) {
             // Handles events from flowBatchMap.
             final FlowBatchOperation flowOp = (FlowBatchOperation) value;
-            final FlowBatchId id = new FlowBatchId(Long.parseLong(event.getKey()));
+            final FlowBatchId id = FlowBatchId.valueOf(event.getKey());
             log.trace("Flow batch operation ID:{}, {} was added", id, flowOp);
             for (FlowBatchMapEventListener e : listeners) {
                 FlowBatchOperation copiedFlowOp =
@@ -70,7 +70,7 @@ public class SharedFlowBatchMapEventDispatcher implements EntryListener<String, 
         } else if (value instanceof FlowBatchState) {
             // Handles events from flowBatchStateMap.
             final FlowBatchState state = (FlowBatchState) value;
-            final FlowBatchId id = new FlowBatchId(Long.parseLong(event.getKey()));
+            final FlowBatchId id = FlowBatchId.valueOf(event.getKey());
             log.trace("FlowState of FlowId {} was set to {}", id, state);
             for (FlowBatchMapEventListener e : listeners) {
                 e.flowBatchOperationStateChanged(id, FlowBatchState.SUBMITTED, state);
@@ -86,7 +86,7 @@ public class SharedFlowBatchMapEventDispatcher implements EntryListener<String, 
         if (value instanceof FlowBatchOperation) {
             // Handles events from flowBatchMap.
             final FlowBatchOperation flowOp = (FlowBatchOperation) value;
-            final FlowBatchId id = new FlowBatchId(Long.parseLong(event.getKey()));
+            final FlowBatchId id = FlowBatchId.valueOf(event.getKey());
             log.trace("Flow batch operation ID:{}, {} was removed", id, flowOp);
             for (FlowBatchMapEventListener e : listeners) {
                 e.flowBatchOperationRemoved(id);
@@ -110,7 +110,7 @@ public class SharedFlowBatchMapEventDispatcher implements EntryListener<String, 
             Object oldValue = KryoFactory.deserialize(event.getOldValue());
             final FlowBatchState currentState = (FlowBatchState) value;
             final FlowBatchState oldState = (FlowBatchState) oldValue;
-            final FlowBatchId id = new FlowBatchId(Long.parseLong(event.getKey()));
+            final FlowBatchId id = FlowBatchId.valueOf(event.getKey());
             log.trace("Flow batch state of ID:{} was updated from {} to {}",
                     id, oldState, currentState);
             for (FlowBatchMapEventListener e : listeners) {

@@ -67,7 +67,7 @@ class SharedFlowMapEventDispatcher implements EntryListener<String, byte[]> {
         } else if (value instanceof FlowState) {
             // Handles events from flowStateMap.
             final FlowState state = (FlowState) value;
-            final FlowId id = new FlowId(Long.parseLong(event.getKey()));
+            final FlowId id = FlowId.valueOf(event.getKey());
             log.trace("FlowState of FlowId {} was set to {}", id, state);
             for (FlowMapEventListener e : listeners) {
                 e.flowStateChanged(id, FlowState.SUBMITTED, state);
@@ -106,7 +106,7 @@ class SharedFlowMapEventDispatcher implements EntryListener<String, byte[]> {
             Object oldValue = KryoFactory.deserialize(event.getOldValue());
             final FlowState state = (FlowState) value;
             final FlowState oldState = (FlowState) oldValue;
-            final FlowId id = new FlowId(Long.parseLong(event.getKey()));
+            final FlowId id = FlowId.valueOf(event.getKey());
             log.trace("FlowState of FlowId {} was updated from {} to {}",
                     id, oldState, state);
             for (FlowMapEventListener e : listeners) {

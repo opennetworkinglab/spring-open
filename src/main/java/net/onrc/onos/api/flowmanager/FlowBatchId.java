@@ -11,7 +11,24 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class FlowBatchId {
+    private static final int DEC = 10;
+    private static final int HEX = 16;
+
     private final long id;
+
+    /**
+     * Creates a flow batch identifier from the specified string
+     * representation.
+     *
+     * @param value long value
+     * @return flow batch identifier
+     */
+    public static FlowBatchId valueOf(String value) {
+        long id = value.toLowerCase().startsWith("0x")
+                ? Long.parseLong(value.substring(2), HEX)
+                : Long.parseLong(value, DEC);
+        return new FlowBatchId(id);
+    }
 
     /**
      * Creates a new FlowBatchId object using long value.

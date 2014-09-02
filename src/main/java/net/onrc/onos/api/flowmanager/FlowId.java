@@ -13,7 +13,23 @@ import net.onrc.onos.api.batchoperation.BatchOperationTarget;
  */
 @Immutable
 public final class FlowId implements BatchOperationTarget {
+    private static final int DEC = 10;
+    private static final int HEX = 16;
+
     private final long id;
+
+    /**
+     * Creates a flow identifier from the specified string representation.
+     *
+     * @param value long value
+     * @return flow identifier
+     */
+    public static FlowId valueOf(String value) {
+        long id = value.toLowerCase().startsWith("0x")
+                ? Long.parseLong(value.substring(2), HEX)
+                : Long.parseLong(value, DEC);
+        return new FlowId(id);
+    }
 
     /**
      * Default constructor for Kryo deserialization.
