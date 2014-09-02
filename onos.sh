@@ -416,8 +416,7 @@ function create-zk-conf {
     else
       echo $line
     fi
-  done < ${ZK_CONF_TEMPLATE} > ${temp_zk}
-  sed -e "s|__CLIENTPORT__|${ZK_CLIENTPORT}|" -i "" ${temp_zk}
+  done < ${ZK_CONF_TEMPLATE} | sed -e "s|__CLIENTPORT__|${ZK_CLIENTPORT}|" > ${temp_zk}
   
   end-conf-creation ${ZK_CONF}
   
