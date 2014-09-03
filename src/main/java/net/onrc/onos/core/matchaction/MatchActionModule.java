@@ -65,11 +65,6 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
 
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
-
-    }
-
-    @Override
-    public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         final IDatagridService datagrid = context.getServiceImpl(IDatagridService.class);
         final IFlowPusherService pusher = context.getServiceImpl(IFlowPusherService.class);
         final IFloodlightProviderService provider = context.getServiceImpl(IFloodlightProviderService.class);
@@ -79,7 +74,10 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
         restApi.addRestletRoutable(new MatchActionWebRoutable());
 
         matchActionComponent = new MatchActionComponent(datagrid, pusher, provider, registry);
-        log.info("match action component created");
+    }
+
+    @Override
+    public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         matchActionComponent.start();
     }
 
@@ -90,12 +88,13 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
 
     @Override
     public Set<MatchAction> getMatchActions() {
-        return null;
+        return matchActionComponent.getMatchActions();
     }
 
     @Override
     public boolean executeOperations(MatchActionOperations operations) {
-        return false;
+        matchActionComponent.installMatchActionOperations(operations);
+        return false; // TODO define return value semantics
     }
 
     @Override

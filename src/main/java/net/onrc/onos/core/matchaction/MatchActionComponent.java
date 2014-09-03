@@ -1,7 +1,6 @@
 package net.onrc.onos.core.matchaction;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +56,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
     // TODO Single instance for now, should be a work queue of some sort eventually
     private Thread coordinator;
     private Thread installer;
+    private Installer installerListener;
     private final IDatagridService datagrid;
     private IControllerRegistryService registryService;
 
@@ -93,6 +93,9 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
 
         installer = new InstallerWorker();
         installer.start();
+
+        installerListener = new Installer();
+        installerListener.start();
     }
 
     public MatchActionOperationsId installMatchActionOperations(MatchActionOperations matchSet) {
@@ -101,6 +104,10 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         } else {
             matchSet.setState(MatchActionOperationsState.INIT);
         }
+        log.trace("MatchActionsOperations set added: {} {} {}",
+                matchSet.getOperationsId(),
+                matchSet.getState(),
+                matchSet.toString());
         matchSetMap.put(matchSet.getOperationsId(), matchSet);
         if (matchSet.getState() == MatchActionOperationsState.RESOLVED) {
             resolvedQueue.add(matchSet.getOperationsId());
@@ -128,7 +135,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
     class Coordinator extends Thread
             implements IEventChannelListener<String, SwitchResultList> {
 
-        private Map<MatchActionOperationsId, Map<Dpid, SwitchResult>> pendingMatchActionOperationss = new HashMap<>();
+        private Map<MatchActionOperationsId, Map<Dpid, SwitchResult>> pendingMatchActionOperations = new HashMap<>();
 
         protected Coordinator() {
             installSetReplyChannel.addListener(this);
@@ -166,17 +173,19 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
                     matchActionMap.put(matchAction.getId(), matchAction);
                     break;
                 case REMOVE:
-                    //TODO
+                    // TODO we may want to be more careful when removing MatchActions
+                    matchActionMap.remove(matchAction.getId());
+                    break;
                 default:
                     throw new UnsupportedOperationException(
                             "Unsupported MatchAction operation" +
                                     matchActionOp.getOperator().toString());
                 }
             }
-            pendingMatchActionOperationss.put(setId, switches);
+            pendingMatchActionOperations.put(setId, switches);
 
             // distribute apply/undo sets to cluster
-            //installSetChannel.addTransientEntry(setId.toString(), matchSet);
+            installSetChannel.addTransientEntry(setId.toString(), matchSet);
         }
 
         @Override
@@ -201,7 +210,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
             MatchActionOperationsId matchSetId = results.get(0).getMatchActionOperationsId();
 
             // apply updates from results list
-            Map<Dpid, SwitchResult> resultMap = pendingMatchActionOperationss.get(matchSetId);
+            Map<Dpid, SwitchResult> resultMap = pendingMatchActionOperations.get(matchSetId);
             for (SwitchResult result : results) {
                 SwitchResult resultToUpdate = resultMap.get(result.getSwitch());
                 if (resultToUpdate != null) {
@@ -230,7 +239,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
                     MatchActionOperations matchSet = matchSetMap.get(matchSetId);
                     matchSet.setState(MatchActionOperationsState.INSTALLED);
                     matchSetMap.replace(matchSetId, matchSet);
-                    pendingMatchActionOperationss.remove(matchSetId);
+                    pendingMatchActionOperations.remove(matchSetId);
 
                     // TODO update dependent sets as needed
                     break;
@@ -241,15 +250,17 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
                     matchSetMap.replace(matchSetId, matchSet);
 
                     // TODO instruct installers to install Undo set
+                    // TODO the pendingMatchActionOperations state needs to be cleaned-up
                     break;
                 case UNKNOWN:
+                    // FALLTHROUGH
                 default:
                     // noop, still waiting for results
                     // TODO: check to see if installers are dead after timeout
+                    break;
             }
         }
     }
-
 
     class InstallerWorker extends Thread {
 
@@ -324,14 +335,19 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
     class Installer
             implements IEventChannelListener<String, MatchActionOperations> {
 
-        protected Installer() {
+        protected void start() {
             installSetChannel.addListener(this);
         }
 
 
         @Override
         public void entryAdded(MatchActionOperations value) {
-            installationWorkQueue.add(value);
+            try {
+                installationWorkQueue.put(value);
+            } catch (InterruptedException e) {
+                log.warn("Error adding to installer work queue: {}",
+                        e.getMessage());
+            }
         }
 
         @Override
@@ -341,7 +357,12 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
 
         @Override
         public void entryUpdated(MatchActionOperations value) {
-            installationWorkQueue.add(value);
+            try {
+                installationWorkQueue.put(value);
+            } catch (InterruptedException e) {
+                log.warn("Error adding to installer work queue: {}",
+                        e.getMessage());
+            }
         }
     }
 
@@ -365,7 +386,8 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
 
     @Override
     public Set<MatchAction> getMatchActions() {
-        return Collections.unmodifiableSet(currentOperations);
+        // return Collections.unmodifiableSet(currentOperations);
+        return new HashSet<MatchAction>(matchActionMap.values());
     }
 
     @Override
