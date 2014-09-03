@@ -6,7 +6,7 @@
   </prerequisites>
   <groupId>net.onrc.onos</groupId>
   <artifactId>onos</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.3.0</version>
   <packaging>jar</packaging>
   <name>ONOS</name>
   <url>http://onlab.us/</url>
