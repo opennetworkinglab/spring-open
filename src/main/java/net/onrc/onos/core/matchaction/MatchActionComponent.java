@@ -366,19 +366,6 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         }
     }
 
-    private final HashSet<MatchAction> currentOperations = new HashSet<>();
-
-    private boolean processMatchActionEntries(
-            final List<MatchActionOperationEntry> entries) {
-        int successfulOperations = 0;
-        for (final MatchActionOperationEntry entry : entries) {
-            if (currentOperations.add(entry.getTarget())) {
-                successfulOperations++;
-            }
-        }
-        return entries.size() == successfulOperations;
-    }
-
     @Override
     public boolean addMatchAction(MatchAction matchAction) {
         return false;
@@ -386,14 +373,14 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
 
     @Override
     public Set<MatchAction> getMatchActions() {
-        // return Collections.unmodifiableSet(currentOperations);
-        return new HashSet<MatchAction>(matchActionMap.values());
+        return new HashSet<>(matchActionMap.values());
     }
 
     @Override
     public boolean executeOperations(final MatchActionOperations operations) {
         installMatchActionOperations(operations);
-        return processMatchActionEntries(operations.getOperations());
+        // TODO how to generate an actual error response here
+        return true;
     }
 
     @Override
