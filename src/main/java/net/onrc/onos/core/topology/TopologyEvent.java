@@ -50,7 +50,7 @@ public final class TopologyEvent implements TopologyBatchTarget {
      *
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    protected TopologyEvent(OnosInstanceId onosInstanceId) {
+    public TopologyEvent(OnosInstanceId onosInstanceId) {
         this.eventType = Type.NOOP;
         this.event = null;
         this.onosInstanceId = checkNotNull(onosInstanceId);
@@ -62,8 +62,8 @@ public final class TopologyEvent implements TopologyBatchTarget {
      * @param mastershipData the Switch Mastership event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(MastershipData mastershipData,
-                  OnosInstanceId onosInstanceId) {
+    public TopologyEvent(MastershipData mastershipData,
+                         OnosInstanceId onosInstanceId) {
         this.eventType = Type.MASTERSHIP;
         this.event = checkNotNull(mastershipData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
@@ -75,7 +75,8 @@ public final class TopologyEvent implements TopologyBatchTarget {
      * @param switchData the Switch event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(SwitchData switchData, OnosInstanceId onosInstanceId) {
+    public TopologyEvent(SwitchData switchData,
+                         OnosInstanceId onosInstanceId) {
         this.eventType = Type.SWITCH;
         this.event = checkNotNull(switchData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
@@ -87,7 +88,7 @@ public final class TopologyEvent implements TopologyBatchTarget {
      * @param portData the Port event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(PortData portData, OnosInstanceId onosInstanceId) {
+    public TopologyEvent(PortData portData, OnosInstanceId onosInstanceId) {
         this.eventType = Type.PORT;
         this.event = checkNotNull(portData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
@@ -99,7 +100,7 @@ public final class TopologyEvent implements TopologyBatchTarget {
      * @param linkData the Link event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(LinkData linkData, OnosInstanceId onosInstanceId) {
+    public TopologyEvent(LinkData linkData, OnosInstanceId onosInstanceId) {
         this.eventType = Type.LINK;
         this.event = checkNotNull(linkData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
@@ -111,7 +112,7 @@ public final class TopologyEvent implements TopologyBatchTarget {
      * @param hostData the Host event to use.
      * @param onosInstanceId the ONOS Instance ID that originates the event.
      */
-    TopologyEvent(HostData hostData, OnosInstanceId onosInstanceId) {
+    public TopologyEvent(HostData hostData, OnosInstanceId onosInstanceId) {
         this.eventType = Type.HOST;
         this.event = checkNotNull(hostData);
         this.onosInstanceId = checkNotNull(onosInstanceId);
@@ -122,7 +123,7 @@ public final class TopologyEvent implements TopologyBatchTarget {
      *
      * @return the Topology Event type.
      */
-    TopologyEvent.Type getEventType() {
+    public TopologyEvent.Type getEventType() {
         return this.eventType;
     }
 
