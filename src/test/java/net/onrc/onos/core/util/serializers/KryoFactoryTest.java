@@ -323,10 +323,10 @@ public class KryoFactoryTest {
         }
 
         { // CHECKSTYLE IGNORE THIS LINE
-            SwitchData evt = new SwitchData(DPID_A);
-            evt.createStringAttribute(TopologyElement.TYPE,
+            SwitchData sw = new SwitchData(DPID_A);
+            sw.createStringAttribute(TopologyElement.TYPE,
                                       TopologyElement.TYPE_PACKET_LAYER);
-            evt.freeze();
+            sw.freeze();
             OnosInstanceId onosInstanceId =
                 new OnosInstanceId(ONOS_INSTANCE_NAME);
 
@@ -335,7 +335,7 @@ public class KryoFactoryTest {
                 = TopologyEvent.class.getDeclaredConstructor(SwitchData.class,
                         OnosInstanceId.class);
             swConst.setAccessible(true);
-            TopologyEvent obj = swConst.newInstance(evt, onosInstanceId);
+            TopologyEvent obj = swConst.newInstance(sw, onosInstanceId);
 
             Result result = benchType(obj, EqualityCheck.TO_STRING);
             results.add(result);
