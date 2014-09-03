@@ -50,7 +50,7 @@
     <findbugs-plugin.version>3.0.0</findbugs-plugin.version>
     <findbugs.effort>Max</findbugs.effort>
     <findbugs.excludeFilterFile>conf/findbugs/exclude.xml</findbugs.excludeFilterFile>
-    <checkstyle-plugin.version>2.12</checkstyle-plugin.version>
+    <checkstyle-plugin.version>2.12.1</checkstyle-plugin.version>
     <!-- To publish javadoc to github,
      uncomment com.github.github site-maven-plugin and
      see https://github.com/OPENNETWORKINGLAB/ONOS/pull/425
@@ -58,7 +58,7 @@
      -->
     <hazelcast.version>3.2.5</hazelcast.version>
     <metrics.version>3.0.2</metrics.version>
-    <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
+    <maven.surefire.plugin.version>2.17</maven.surefire.plugin.version>
     <curator.version>2.6.0</curator.version>
     <argLine/>
   </properties>
@@ -89,7 +89,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>2.5.1</version>
+        <version>2.5.2</version>
         <executions>
         </executions>
       </plugin>
@@ -117,11 +117,11 @@
       </plugin>
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>2.8</version>
+        <version>2.8.2</version>
       </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.4</version>
+        <version>2.5</version>
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
@@ -129,7 +129,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-site-plugin</artifactId>
-        <version>3.3</version>
+        <version>3.4</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -166,7 +166,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
+        <version>1.3.2</version>
         <configuration>
           <mainClass>net.onrc.onos.core.main.Main</mainClass>
         </configuration>
@@ -230,7 +230,7 @@
       -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.4</version>
+        <version>2.4.1</version>
         <configuration>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -321,7 +321,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.2</version>
         <configuration>
           <!--
             Note: Exclusion definition exists in multiple places.
