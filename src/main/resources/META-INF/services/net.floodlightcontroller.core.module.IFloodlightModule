@@ -10,6 +10,7 @@ net.floodlightcontroller.core.test.MockThreadPoolService
 net.onrc.onos.core.datagrid.HazelcastDatagrid
 net.onrc.onos.core.flowprogrammer.FlowProgrammer
 net.onrc.onos.apps.sdnip.SdnIp
+net.onrc.onos.apps.sdnip.SdnIpConfigReader
 net.onrc.onos.apps.websocket.WebSocketModule
 net.onrc.onos.core.registry.ZookeeperRegistry
 net.onrc.onos.core.registry.StandaloneRegistry
