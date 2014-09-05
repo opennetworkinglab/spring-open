@@ -13,6 +13,8 @@ public final class MatchActionOperationsId {
 
     /**
      * Constructs an Operations identifier and from a unique identifier.
+     *
+     * @param newId unique identifier to use for the new Id object
      */
     public MatchActionOperationsId(final long newId) {
         id = newId;

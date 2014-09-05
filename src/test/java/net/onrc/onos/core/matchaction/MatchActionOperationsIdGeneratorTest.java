@@ -18,6 +18,9 @@ public class MatchActionOperationsIdGeneratorTest {
 
     private IdBlockAllocator allocator;
 
+    /**
+     * Creates a mocked IdBlockAllocator.
+     */
     @Before
     public void setUp() {
         allocator = createMock(IdBlockAllocator.class);

@@ -13,8 +13,14 @@ import net.onrc.onos.core.util.SwitchPort;
 
 import org.junit.Test;
 
+/**
+ * Unit tests for MatchAction objects.
+ */
 public class MatchActionTest {
 
+    /**
+     * Tests that a MatchAction object can be constructed properly.
+     */
     @Test
     public void testConstructor() {
         SwitchPort port = new SwitchPort(123L, (short) 55);

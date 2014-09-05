@@ -8,14 +8,14 @@ import net.onrc.onos.core.util.IPv4Net;
  * A builder to instantiate PacketMatch class.
  */
 public class PacketMatchBuilder {
-    private MACAddress srcMac = null;
-    private MACAddress dstMac = null;
-    private Short etherType = null;
-    private IPv4Net srcIp = null;
-    private IPv4Net dstIp = null;
-    private Byte ipProto = null;
-    private Short srcTcpPort = null;
-    private Short dstTcpPort = null;
+    private MACAddress srcMac;
+    private MACAddress dstMac;
+    private Short etherType;
+    private IPv4Net srcIp;
+    private IPv4Net dstIp;
+    private Byte ipProto;
+    private Short srcTcpPort;
+    private Short dstTcpPort;
 
     /**
      * Sets source MAC address.

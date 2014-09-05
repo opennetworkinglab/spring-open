@@ -22,7 +22,10 @@ public class MatchActionOperations
      * The MatchAction operators.
      */
     public enum Operator {
+        /** Add a new match action. */
         ADD,
+
+        /** Remove an existing match action. */
         REMOVE,
     }
 
@@ -83,6 +86,12 @@ public class MatchActionOperations
         return dependencies;
     }
 
+    /**
+     * Adds a dependency to this set of Operations.
+     *
+     * @param dependentOperationId Identifier of the Operations that must
+     *                             complete before this one can be installed
+     */
     public void addDependency(MatchActionOperationsId dependentOperationId) {
         dependencies.add(dependentOperationId);
     }

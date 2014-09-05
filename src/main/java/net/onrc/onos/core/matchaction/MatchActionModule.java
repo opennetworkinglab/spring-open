@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EventListener;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 public class MatchActionModule implements MatchActionFloodlightService, IFloodlightModule {
 
-    private final HashSet<MatchAction> currentOperations = new HashSet<>();
     private static final Logger log = LoggerFactory
             .getLogger(MatchActionModule.class);
     private MatchActionComponent matchActionComponent;
@@ -99,7 +97,7 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
 
     @Override
     public void setConflictDetectionPolicy(ConflictDetectionPolicy policy) {
-
+        throw new UnsupportedOperationException("conflict detection not implemented yet");
     }
 
     @Override
@@ -119,11 +117,11 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
 
     @Override
     public void addEventListener(EventListener listener) {
-
+        throw new UnsupportedOperationException("events not implemented yet");
     }
 
     @Override
     public void removeEventListener(EventListener listener) {
-
+        throw new UnsupportedOperationException("events not implemented yet");
     }
 }

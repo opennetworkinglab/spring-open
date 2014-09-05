@@ -29,6 +29,9 @@ public class MatchActionModuleTest {
     private IDatagridService datagridService;
     private FloodlightModuleContext modContext;
 
+    /**
+     * Sets up the mocks used by the test.
+     */
     @Before
     @SuppressWarnings("unchecked")
     public void setUpMocks() {

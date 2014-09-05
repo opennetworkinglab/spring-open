@@ -22,7 +22,7 @@ import org.restlet.resource.ServerResource;
  */
 public class MatchActionResource extends ServerResource {
 
-    CustomSerializerHelper matchActionSerializers;
+    private final CustomSerializerHelper matchActionSerializers;
 
     /**
      * Constructs a MatchActionResource.

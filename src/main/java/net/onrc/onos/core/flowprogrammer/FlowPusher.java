@@ -739,7 +739,7 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
                 .setActions(actionList)
                 .setIdleTimeout(0) // hardcoded to zero for now
                 .setHardTimeout(0) // hardcoded to zero for now
-                .setCookie(U64.of(matchAction.getId().value()))
+                .setCookie(U64.of(matchAction.getId().getValue()))
                 .setBufferId(OFBufferId.NO_BUFFER)
                 .setPriority(PRIORITY_DEFAULT)
                 .setOutPort(outp);

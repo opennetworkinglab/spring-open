@@ -17,6 +17,9 @@ import static org.junit.Assert.assertThat;
 public class MatchActionIdGeneratorTest {
     private IdBlockAllocator allocator;
 
+    /**
+     * Creates a mocked ID Block allocator.
+     */
     @Before
     public void setUp() {
         allocator = createMock(IdBlockAllocator.class);

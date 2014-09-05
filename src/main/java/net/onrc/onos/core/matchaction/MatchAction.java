@@ -42,21 +42,6 @@ public final class MatchAction implements BatchOperationTarget {
     }
 
     /**
-     * Constructor. TEMPORARY
-     *
-     * @param id ID for this MatchAction object
-     * @param port switch port to apply changes to
-     * @param match the Match object as match condition on the port
-     * @param actions the list of Action objects as actions on the switch
-     */
-    public MatchAction(String id, SwitchPort port, Match match, List<Action> actions) {
-        this.id = null;
-        this.port = port;
-        this.match = match;
-        this.actions = actions;
-    }
-
-    /**
      * Gets ID for this object.
      *
      * @return the ID for this object
