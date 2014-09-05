@@ -9,4 +9,6 @@ target
 onos-logs
 onos.log
 logback.*.xml
+*.pyc
+*.egg-info
 
