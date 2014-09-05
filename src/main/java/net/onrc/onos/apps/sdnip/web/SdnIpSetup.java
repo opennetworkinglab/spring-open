@@ -13,8 +13,17 @@ public class SdnIpSetup extends ServerResource {
     public String sdnipSetupMethod() {
         ISdnIpService sdnIp = (ISdnIpService) getContext()
                               .getAttributes().get(ISdnIpService.class.getCanonicalName());
-        sdnIp.beginRouting();
-        return "SdnIp SetupBgpPaths Succeeded";
+        String version = (String) getRequestAttributes().get("version");
+        if (version.equals("new")) {
+            sdnIp.beginRoutingWithNewIntent();
+            return "SdnIp SetupBgpPaths Succeeded with New intent";
+        } else if (version.equals("old")) {
+
+            sdnIp.beginRouting();
+            return "SdnIp SetupBgpPaths Succeeded";
+        }
+
+        return "URL is wrong!";
     }
 
 }
