@@ -5,8 +5,8 @@ import java.util.List;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.core.configmanager.NetworkConfig.LinkConfig;
 import net.onrc.onos.core.configmanager.NetworkConfig.SwitchConfig;
-import net.onrc.onos.core.linkdiscovery.Link;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.LinkTuple;
 
 /**
  * Exposes methods to retrieve network configuration.
@@ -187,10 +187,10 @@ public interface INetworkConfigService extends IFloodlightService {
      * ConfigState contains the result of the check. The enclosed LinkConfig may
      * or may not be null, depending on the outcome of the check.
      *
-     * @param link unidirectional {@link Link} to be queried
+     * @param linkTuple unidirectional link to be queried
      * @return LinkConfigStatus with outcome of check and associated config.
      */
-    public LinkConfigStatus checkLinkConfig(Link link);
+    public LinkConfigStatus checkLinkConfig(LinkTuple linkTuple);
 
     /**
      * Retrieves a list of switches that have been configured, and have been

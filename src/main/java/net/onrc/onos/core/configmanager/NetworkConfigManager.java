@@ -19,10 +19,9 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.core.configmanager.NetworkConfig.LinkConfig;
 import net.onrc.onos.core.configmanager.NetworkConfig.SwitchConfig;
-import net.onrc.onos.core.linkdiscovery.Link;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.LinkTuple;
-import net.onrc.onos.core.util.SwitchPort;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -99,17 +98,17 @@ public class NetworkConfigManager implements IFloodlightModule,
 
     }
 
-    public LinkConfigStatus checkLinkConfig(Link link) {
-        LinkConfig lkc = getConfiguredLink(link);
+    public LinkConfigStatus checkLinkConfig(LinkTuple linkTuple) {
+        LinkConfig lkc = getConfiguredLink(linkTuple);
         // links are always disallowed if any one of the nodes that make up the
         // link are disallowed
-        Dpid linkNode1 = new Dpid(link.getSrc());
+        Dpid linkNode1 = linkTuple.getSrc().getDpid();
         SwitchConfigStatus scs1 = checkSwitchConfig(linkNode1);
         if (scs1.getConfigState() == NetworkConfigState.DENY) {
             return new LinkConfigStatus(NetworkConfigState.DENY, null,
                     "Link-node: " + linkNode1 + " denied by config: " + scs1.getMsg());
         }
-        Dpid linkNode2 = new Dpid(link.getDst());
+        Dpid linkNode2 = linkTuple.getDst().getDpid();
         SwitchConfigStatus scs2 = checkSwitchConfig(linkNode2);
         if (scs2.getConfigState() == NetworkConfigState.DENY) {
             return new LinkConfigStatus(NetworkConfigState.DENY, null,
@@ -349,18 +348,18 @@ public class NetworkConfigManager implements IFloodlightModule,
 
     }
 
-    private LinkConfig getConfiguredLink(Link link) {
+    private LinkConfig getConfiguredLink(LinkTuple linkTuple) {
         LinkConfig lkc = null;
         // first try the unidirectional link with the ports assigned
-        lkc = configuredLinks.get(new LinkTuple(
-                new SwitchPort(link.getSrc(), link.getSrcPort()),
-                new SwitchPort(link.getDst(), link.getDstPort())));
+        lkc = configuredLinks.get(linkTuple);
         if (lkc == null) {
             // try without ports, as configuration may be for all links
             // between the two switches
-            lkc = configuredLinks.get(new LinkTuple(
-                    new SwitchPort(link.getSrc(), (short) 0),
-                    new SwitchPort(link.getDst(), (short) 0)));
+            LinkTuple portlessLink = new LinkTuple(linkTuple.getSrc().getDpid(),
+                    PortNumber.uint32(0), linkTuple.getDst().getDpid(),
+                    PortNumber.uint32(0));
+
+            lkc = configuredLinks.get(portlessLink);
         }
         return lkc;
     }

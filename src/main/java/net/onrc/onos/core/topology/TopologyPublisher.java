@@ -42,6 +42,7 @@ import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.registry.IControllerRegistryService.ControlChangeCallback;
 import net.onrc.onos.core.registry.RegistryException;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.LinkTuple;
 import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumberUtils;
 import net.onrc.onos.core.util.SwitchPort;
@@ -292,16 +293,18 @@ public class TopologyPublisher implements IOFSwitchListener,
 
     @Override
     public void linkAdded(Link link) {
-        LinkConfigStatus ret = networkConfigService.checkLinkConfig(link);
+        LinkTuple linkTuple = new LinkTuple(
+                new SwitchPort(link.getSrc(), link.getSrcPort()),
+                new SwitchPort(link.getDst(), link.getDstPort()));
+
+        LinkConfigStatus ret = networkConfigService.checkLinkConfig(linkTuple);
         if (ret.getConfigState() == NetworkConfigState.DENY) {
             log.warn("Discovered {} denied by configuration. {} "
                     + "Not allowing it to proceed.", link, ret.getMsg());
             return;
         }
 
-        LinkData linkData = new LinkData(
-                new SwitchPort(link.getSrc(), link.getSrcPort()),
-                new SwitchPort(link.getDst(), link.getDstPort()));
+        LinkData linkData = new LinkData(linkTuple);
 
         // FIXME should be merging, with existing attrs, etc..
         // TODO define attr name as constant somewhere.
