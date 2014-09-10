@@ -50,7 +50,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
     private final BlockingQueue<MatchActionOperationsId> resolvedQueue = new ArrayBlockingQueue<>(100);
     private final BlockingQueue<MatchActionOperations> installationWorkQueue = new ArrayBlockingQueue<>(100);
 
-    private IEventChannel<String, MatchActionOperations> installSetChannel;
+    private IEventChannel<Long, MatchActionOperations> installSetChannel;
     private IEventChannel<String, SwitchResultList> installSetReplyChannel;
 
     private final IDatagridService datagrid;
@@ -88,23 +88,26 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         matchActionOperationsIdGenerator =
                 new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
 
-        installSetChannel = datagrid.createChannel("onos.matchaction.installSetChannel",
-                String.class,
+        final Installer installerListener = new Installer();
+        installSetChannel = datagrid.addListener(
+                "onos.matchaction.installSetChannel",
+                installerListener,
+                Long.class,
                 MatchActionOperations.class);
 
-        installSetReplyChannel = datagrid.createChannel("onos.matchaction.installSetReplyChannel",
+
+        final Coordinator coordinator = new Coordinator();
+        coordinator.start();
+        installSetReplyChannel = datagrid.addListener(
+                "onos.matchaction.installSetReplyChannel",
+                coordinator,
                 String.class,
                 SwitchResultList.class);
 
-        final Thread coordinator = new Coordinator();
-        coordinator.start();
-
         // TODO Single instance for now, should be a work queue of some sort eventually
-        final Thread installer = new InstallerWorker();
+        final InstallerWorker installer = new InstallerWorker();
         installer.start();
 
-        final Installer installerListener = new Installer();
-        installerListener.start();
     }
 
     /**
@@ -175,7 +178,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
          * Default constructor.
          */
         Coordinator() {
-            installSetReplyChannel.addListener(this);
+            // nothing to initialize
         }
 
         @Override
@@ -228,7 +231,8 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
             pendingMatchActionOperations.put(setId, switches);
 
             // distribute apply/undo sets to cluster
-            installSetChannel.addTransientEntry(setId.toString(), matchSet);
+            log.trace("MatchAction Coordinator distributing set: {}", matchSet);
+            installSetChannel.addTransientEntry(setId.getId(), matchSet);
         }
 
         @Override
@@ -404,20 +408,12 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
      * InstallerWorker threads.
      */
     class Installer
-            implements IEventChannelListener<String, MatchActionOperations> {
-
-        /**
-         * Starts the Installer consumer.  Adds a listener on the MatchActionOperations
-         * channel.
-         */
-        private void start() {
-            installSetChannel.addListener(this);
-        }
-
+            implements IEventChannelListener<Long, MatchActionOperations> {
 
         @Override
         public void entryAdded(MatchActionOperations value) {
             try {
+                log.trace("MatchAction Installer receiving set: {}", value);
                 installationWorkQueue.put(value);
             } catch (InterruptedException e) {
                 log.warn("Error adding to installer work queue: {}",
@@ -433,6 +429,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         @Override
         public void entryUpdated(MatchActionOperations value) {
             try {
+                log.trace("MatchAction Installer receiving set: {}", value);
                 installationWorkQueue.put(value);
             } catch (InterruptedException e) {
                 log.warn("Error adding to installer work queue: {}",

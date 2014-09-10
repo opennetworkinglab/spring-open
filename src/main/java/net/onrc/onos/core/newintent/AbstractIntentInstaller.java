@@ -1,8 +1,12 @@
 package net.onrc.onos.core.newintent;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static net.onrc.onos.api.flowmanager.FlowState.FAILED;
+import static net.onrc.onos.api.flowmanager.FlowState.INSTALLED;
+import static net.onrc.onos.api.flowmanager.FlowState.WITHDRAWN;
+
+import java.util.concurrent.CountDownLatch;
+
 import net.onrc.onos.api.flowmanager.Flow;
 import net.onrc.onos.api.flowmanager.FlowBatchHandle;
 import net.onrc.onos.api.flowmanager.FlowBatchStateChangedEvent;
@@ -16,12 +20,9 @@ import net.onrc.onos.api.newintent.InstallableIntent;
 import net.onrc.onos.api.newintent.Intent;
 import net.onrc.onos.api.newintent.IntentInstaller;
 
-import java.util.concurrent.CountDownLatch;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static net.onrc.onos.api.flowmanager.FlowState.FAILED;
-import static net.onrc.onos.api.flowmanager.FlowState.INSTALLED;
-import static net.onrc.onos.api.flowmanager.FlowState.WITHDRAWN;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 // TODO: consider naming because to call Flow manager's API will be removed
 // in long-term refactoring
@@ -53,16 +54,19 @@ public abstract class AbstractIntentInstaller<T extends InstallableIntent>
             throw new IntentInstallationException("intent installation failed: " + intent);
         }
 
-        try {
-            listener.await();
-            if (listener.getFinalState() == FAILED) {
-                throw new IntentInstallationException("intent installation failed: " + intent);
-            }
-        } catch (InterruptedException e) {
-            throw new IntentInstallationException("intent installation failed: " + intent, e);
-        } finally {
-            flowManager.removeListener(listener);
-        }
+        // TODO (BOC) this blocks a Hazelcast thread, commenting out for now
+        // try {
+        // listener.await();
+        // if (listener.getFinalState() == FAILED) {
+        // throw new IntentInstallationException("intent installation failed: "
+        // + intent);
+        // }
+        // } catch (InterruptedException e) {
+        // throw new IntentInstallationException("intent installation failed: "
+        // + intent, e);
+        // } finally {
+        // flowManager.removeListener(listener);
+        // }
     }
 
     protected void removeFlow(Intent intent, Flow flow) {

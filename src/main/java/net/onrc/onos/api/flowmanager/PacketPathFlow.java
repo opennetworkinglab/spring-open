@@ -3,6 +3,7 @@ package net.onrc.onos.api.flowmanager;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -139,8 +140,11 @@ public class PacketPathFlow extends PathFlow {
         List<SwitchPort> portList = new LinkedList<>();
         for (FlowLink link : path) {
             portList.add(link.getDstSwitchPort());
-            actionsList.add(Arrays.asList(
-                    (Action) new OutputAction(link.getSrcPortNumber())));
+            List<Action> l = new ArrayList<Action>();
+            l.add(new OutputAction(link.getSrcPortNumber()));
+            actionsList.add(l);
+            // Arrays.asList(
+            // (Action) new OutputAction(link.getSrcPortNumber())));
         }
 
         // The head switch's ingress port

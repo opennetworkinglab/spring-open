@@ -117,11 +117,13 @@ public class MatchActionModule implements MatchActionFloodlightService, IFloodli
 
     @Override
     public void addEventListener(EventListener listener) {
-        throw new UnsupportedOperationException("events not implemented yet");
+        // TODO
+        log.warn("Could not add MatchAction EventListener: {}", listener);
     }
 
     @Override
     public void removeEventListener(EventListener listener) {
-        throw new UnsupportedOperationException("events not implemented yet");
+        // TODO
+        log.warn("Could not remove MatchAction EventListener: {}", listener);
     }
 }

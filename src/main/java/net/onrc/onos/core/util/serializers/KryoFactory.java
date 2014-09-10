@@ -57,6 +57,7 @@ import net.onrc.onos.core.matchaction.SwitchResult;
 import net.onrc.onos.core.matchaction.SwitchResultList;
 import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
 import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
+import net.onrc.onos.core.matchaction.action.NullAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.newintent.IntentCompilationResult;
@@ -289,6 +290,7 @@ public class KryoFactory {
         kryo.register(SwitchResultList.class);
         kryo.register(SwitchResult.class);
         kryo.register(SwitchResult.Status.class);
+        kryo.register(NullAction.class);
 
         // Host-related classes
         kryo.register(HashSet.class);
