@@ -34,7 +34,6 @@ import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmInPort;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmMetadataMasked;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
 import org.projectfloodlight.openflow.types.EthType;
@@ -42,7 +41,6 @@ import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFGroup;
-import org.projectfloodlight.openflow.types.OFMetadata;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.OFVlanVidMatch;
 import org.projectfloodlight.openflow.types.TableId;
@@ -79,7 +77,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
 
     private static final int TABLE_VLAN = 0;
     private static final int TABLE_TMAC = 1;
-    private static final int TABLE_IPV4_UNICAST = 2;
+    private static final int TABLE_IPv4_UNICAST = 2;
     private static final int TABLE_MPLS = 3;
     private static final int TABLE_META = 4;
     private static final int TABLE_ACL = 5;
@@ -125,41 +123,31 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         if (!usePipeline13) {
             // Send packet-in to controller if a packet misses the first table
             populateTableMissEntry(0, true, false, false, 0);
-        } // else {
-          // configureSwitch();
-        // }
+        } else {
+           configureSwitch();
+        }
         sendBarrier(true);
     }
 
+
     @Override
     public boolean isDriverHandshakeComplete() {
-        if (!startDriverHandshakeCalled) {
+        if (!startDriverHandshakeCalled)
             throw new SwitchDriverSubHandshakeNotStarted();
-        }
         return driverHandshakeComplete.get();
     }
 
     @Override
     public void processDriverHandshakeMessage(OFMessage m) {
-        if (!startDriverHandshakeCalled) {
+        if (!startDriverHandshakeCalled)
             throw new SwitchDriverSubHandshakeNotStarted();
-        }
-        if (driverHandshakeComplete.get()) {
+        if (driverHandshakeComplete.get())
             throw new SwitchDriverSubHandshakeCompleted(m);
-        }
-
-        if (!startDriverHandshakeCalled) {
-            throw new SwitchDriverSubHandshakeNotStarted();
-        }
-        if (driverHandshakeComplete.get()) {
-            throw new SwitchDriverSubHandshakeCompleted(m);
-        }
 
         switch (m.getType()) {
         case BARRIER_REPLY:
-            if (m.getXid() == barrierXidToWaitFor) {
+            if (m.getXid() == barrierXidToWaitFor)
                 driverHandshakeComplete.set(true);
-            }
             break;
 
         case ERROR:
@@ -254,11 +242,11 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
 
     private void decodeAsyncGetReply(OFAsyncGetReply rep) {
         long frm = rep.getFlowRemovedMaskEqualMaster();
-        //long frs = rep.getFlowRemovedMaskSlave();
+        long frs = rep.getFlowRemovedMaskSlave();
         long pim = rep.getPacketInMaskEqualMaster();
-        //long pis = rep.getPacketInMaskSlave();
+        long pis = rep.getPacketInMaskSlave();
         long psm = rep.getPortStatusMaskEqualMaster();
-        //long pss = rep.getPortStatusMaskSlave();
+        long pss = rep.getPortStatusMaskSlave();
 
         if (role == Role.MASTER || role == Role.EQUAL) { // should separate
             log.info("FRM:{}", HexString.toHexString((frm & TEST_FLOW_REMOVED_MASK)));
@@ -306,7 +294,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
                         .setPort(p.getPortNo()).build();
                 OFAction popVlan = factory.actions().popVlan();
                 List<OFAction> actions = new ArrayList<OFAction>();
-                actions.add(popVlan);
+                // actions.add(popVlan);
                 actions.add(out);
                 OFBucket bucket = factory.buildBucket()
                         .setActions(actions).build();
@@ -336,12 +324,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
     }
 
     private MacAddress getRouterMacAddr() {
-        if (getId() == 0x3) {
+        if (getId() == 0x3)
             return MacAddress.of("00:00:07:07:07:80"); // router mac
-        }
-        if (getId() == 0x1) {
+        if (getId() == 0x1)
             return MacAddress.of("00:00:01:01:01:80");
-        }
         // switch 0x2
         return MacAddress.of("00:00:02:02:02:80");
     }
@@ -401,15 +387,14 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             List<OFAction> actions = new ArrayList<OFAction>();
             actions.add(decTtl); // decrement the IP TTL/do-checksum/check TTL
                                  // and MTU
-            actions.add(setVlan); // set the vlan-id of the exit-port (and
-                                  // l2group)
+            // actions.add(setVlan); // set the vlan-id of the exit-port (and
+            // l2group)
             actions.add(setSA); // set this routers mac address
             // make L3Unicast group setDA for known (configured) ports
             // that connect to other routers
             OFAction setDA = getDestAction(portnum);
-            if (setDA != null) {
+            if (setDA != null)
                 actions.add(setDA);
-            }
             actions.add(group);
 
             OFBucket bucket = factory.buildBucket()
@@ -458,7 +443,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
                 List<OFAction> actions = new ArrayList<OFAction>();
                 actions.add(decMplsTtl); // decrement the MPLS
                                          // TTL/do-checksum/check TTL and MTU
-                actions.add(setVlan); // set the vlan-id of the exit-port (and
+                // actions.add(setVlan); // set the vlan-id of the exit-port
+                // (and
                                       // l2group)
                 actions.add(setSA); // set this routers mac address
                 actions.add(setDA);
@@ -483,31 +469,31 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
      *
      * OFGroup group47 = OFGroup.of(47);
         OFAction outgroup1 = factory.actions()
-                        .buildGroup()
-                        .setGroup(group61)
-                        .build();
+                .buildGroup()
+                .setGroup(group61)
+                .build();
         OFBucket buc47_1 = factory.buildBucket()
-                        .setWeight(1)
-                        .setActions(Collections.singletonList(outgroup1))
-                        .build();
+                .setWeight(1)
+                .setActions(Collections.singletonList(outgroup1))
+                .build();
         OFAction outgroup2 = factory.actions()
-                        .buildGroup()
-                        .setGroup(group62)
-                        .build();
+                .buildGroup()
+                .setGroup(group62)
+                .build();
         OFBucket buc47_2 = factory.buildBucket()
-                        .setWeight(1)
-                        .setActions(Collections.singletonList(outgroup2))
-                        .build();
+                .setWeight(1)
+                .setActions(Collections.singletonList(outgroup2))
+                .build();
         List<OFBucket> buckets47 = new ArrayList<OFBucket>();
         buckets47.add(buc47_1);
         buckets47.add(buc47_2);
         OFMessage gmS12 = factory.buildGroupAdd()
-                        .setGroup(group47)
-                        .setBuckets(buckets47)
-                        .setGroupType(OFGroupType.SELECT)
-                        .setXid(getNextTransactionId())
-                        .build();
-        write(gmS12, null);     */
+                .setGroup(group47)
+                .setBuckets(buckets47)
+                .setGroupType(OFGroupType.SELECT)
+                .setXid(getNextTransactionId())
+                .build();
+        write(gmS12, null); */
 
     private void processStatsReply(OFStatsReply sr) {
         switch (sr.getStatsType()) {
@@ -574,7 +560,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
                 OFInstruction gotoTbl = factory.instructions().buildGotoTable()
                         .setTableId(TableId.of(TABLE_TMAC)).build();
                 List<OFInstruction> instructions = new ArrayList<OFInstruction>();
-                instructions.add(appAction);
+                // instructions.add(appAction);
                 instructions.add(gotoTbl);
                 OFMessage flowEntry = factory.buildFlowAdd()
                         .setTableId(TableId.of(TABLE_VLAN))
@@ -603,7 +589,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         OFMatchV3 matchIp = factory.buildMatchV3()
                 .setOxmList(oxmListIp).build();
         OFInstruction gotoTblIp = factory.instructions().buildGotoTable()
-                .setTableId(TableId.of(TABLE_IPV4_UNICAST)).build();
+                .setTableId(TableId.of(TABLE_IPv4_UNICAST)).build();
         List<OFInstruction> instructionsIp = Collections.singletonList(gotoTblIp);
         OFMessage ipEntry = factory.buildFlowAdd()
                 .setTableId(TableId.of(TABLE_TMAC))
@@ -672,16 +658,15 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             subnetIps.add("10.0.3.0");
             subnetIps.add("10.0.1.0");
         }
-        // TODO needed?
-        //if (getId() == 0x2) {
-        //}
+        if (getId() == 0x2) {
+        }
         if (getId() == 0x3) {
             subnetIps.add("7.7.7.0");
         }
         return subnetIps;
     }
 
-    private static class RouteEntry {
+    private class RouteEntry {
         String prefix;
         String mask;
         int nextHopPort;
@@ -712,7 +697,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
                     .add(new RouteEntry("192.168.0.3", "255.255.255.255", 6, 103));
             routerNextHopIps.add(new RouteEntry("7.7.7.0", "255.255.255.0", 6, 103));
         }
-        //if (getId() == 0x2) {
+        if (getId() == 0x2) {
             /* These are required for normal IP routing without labels.
             routerNextHopIps.add(new RouteEntry("192.168.0.1","255.255.255.255",1));
             routerNextHopIps.add(new RouteEntry("192.168.0.3","255.255.255.255",2));
@@ -720,7 +705,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             routerNextHopIps.add(new RouteEntry("10.0.2.0","255.255.255.0",1));
             routerNextHopIps.add(new RouteEntry("10.0.3.0","255.255.255.0",1));
             routerNextHopIps.add(new RouteEntry("7.7.7.0","255.255.255.0",2));*/
-        //}
+        }
         if (getId() == 0x3) {
             routerNextHopIps
                     .add(new RouteEntry("192.168.0.2", "255.255.255.255", 2, 102));
@@ -737,12 +722,12 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
     private List<RouteEntry> getHostNextHopIps() {
         List<RouteEntry> hostNextHopIps = new ArrayList<RouteEntry>();
         if (getId() == 0x1) {
+            //hostNextHopIps.add(new RouteEntry("10.0.1.1", 1, "00:00:00:00:01:01")); // Just for Test - SSH
             hostNextHopIps.add(new RouteEntry("10.0.2.1", 4, "00:00:00:00:02:01"));
             hostNextHopIps.add(new RouteEntry("10.0.3.1", 5, "00:00:00:00:03:01"));
         }
-        // TODO needed?
-        //if (getId() == 0x2) {
-        //}
+        if (getId() == 0x2) {
+        }
         if (getId() == 0x3) {
             hostNextHopIps.add(new RouteEntry("7.7.7.7", 1, "00:00:07:07:07:07"));
         }
@@ -750,14 +735,14 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
     }
 
     private void populateIpTable() throws IOException {
-        populateMyIps();
-        populateMySubnets();
+        // populateMyIps();
+        // populateMySubnets();
         populateRoutes();
         populateHostRoutes();
 
         // match for everything else to send to ACL table. Essentially
         // the table miss flow entry
-        populateTableMissEntry(TABLE_IPV4_UNICAST, false, true,
+        populateTableMissEntry(TABLE_IPv4_UNICAST, false, true,
                 true, TABLE_ACL);
     }
 
@@ -785,7 +770,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             instructions.add(writeInstr);
             instructions.add(gotoInstr);
             OFMessage myIpEntry = factory.buildFlowAdd()
-                    .setTableId(TableId.of(TABLE_IPV4_UNICAST))
+                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
                     .setMatch(match)
                     .setInstructions(instructions)
                     .setPriority(MAX_PRIORITY) // highest priority for exact
@@ -828,7 +813,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             instructions.add(writeInstr);
             instructions.add(gotoInstr);
             OFMessage myIpEntry = factory.buildFlowAdd()
-                    .setTableId(TableId.of(TABLE_IPV4_UNICAST))
+                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
                     .setMatch(match)
                     .setInstructions(instructions)
                     .setPriority(SLASH_24_PRIORITY)
@@ -877,47 +862,44 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             // OFAction setBos =
             // factory.actions().buildSetField().setField(bos).build();
 
-            /*
-            writeActions.add(pushlabel);  // need to be apply actions so can be
-            writeActions.add(copyTtlOut); // matched in pseudo-table
-            //writeActions.add(setlabelid); // bad support in cpqd
-            //writeActions.add(setBos); no support in loxigen
-            */
-
-            List<OFAction> applyActions = new ArrayList<OFAction>();
-            applyActions.add(pushlabel);
-            applyActions.add(copyTtlOut);
-            OFInstruction applyInstr = factory.instructions().buildApplyActions()
-                    .setActions(applyActions).build();
             List<OFAction> writeActions = new ArrayList<OFAction>();
+            writeActions.add(pushlabel);
+            writeActions.add(copyTtlOut);
+            writeActions.add(setlabelid);
+            // writeActions.add(setBos); no support in loxigen
+
+            // List<OFAction> applyActions = new ArrayList<OFAction>();
+            // applyActions.add(pushlabel);
+            // applyActions.add(copyTtlOut);
+            // OFInstruction applyInstr =
+            // factory.instructions().buildApplyActions()
+            // .setActions(applyActions).build();
             writeActions.add(outg); // group will decr mpls-ttl, set mac-sa/da,
                                     // vlan
             OFInstruction writeInstr = factory.instructions().buildWriteActions()
                     .setActions(writeActions).build();
+            OFInstruction gotoInstr = factory.instructions().buildGotoTable()
+                    .setTableId(TableId.of(TABLE_ACL)).build();
+            List<OFInstruction> instructions = new ArrayList<OFInstruction>();
+            instructions.add(writeInstr);
 
             // necessary to match in pseudo-table to overcome cpqd 1.3 flaw
-            OFInstruction writeMeta = factory.instructions().buildWriteMetadata()
+            /*OFInstruction writeMeta = factory.instructions().buildWriteMetadata()
                     .setMetadata(U64.of(routerNextHopIps.get(i).label))
                     .setMetadataMask(METADATA_MASK).build();
-            /*OFInstruction gotoInstr = factory.instructions().buildGotoTable()
-                        .setTableId(TableId.of(TABLE_ACL)).build();*/
             OFInstruction gotoInstr = factory.instructions().buildGotoTable()
-                    .setTableId(TableId.of(TABLE_META)).build();
-            List<OFInstruction> instructions = new ArrayList<OFInstruction>();
-            instructions.add(applyInstr);
-            // instructions.add(writeInstr);// cannot write here - causes switch
-            // to crash
-            instructions.add(writeMeta);
-            instructions.add(gotoInstr);
+                    .setTableId(TableId.of(TABLE_META)).build();*/
+            /*instructions.add(applyInstr);
+            instructions.add(writeMeta);*/
 
+            instructions.add(gotoInstr);
             int priority = -1;
-            if (routerNextHopIps.get(i).mask.equals("255.255.255.255")) {
+            if (routerNextHopIps.get(i).mask.equals("255.255.255.255"))
                 priority = MAX_PRIORITY;
-            } else {
+            else
                 priority = SLASH_24_PRIORITY;
-            }
             OFMessage myIpEntry = factory.buildFlowAdd()
-                    .setTableId(TableId.of(TABLE_IPV4_UNICAST))
+                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
                     .setMatch(match)
                     .setInstructions(instructions)
                     .setPriority(priority)
@@ -931,7 +913,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             // need to also handle psuedo-table entries to match-metadata and
             // set mpls
             // label-id
-            OFOxmEthType ethTypeMpls = factory.oxms()
+            /*OFOxmEthType ethTypeMpls = factory.oxms()
                     .ethType(EthType.MPLS_UNICAST);
             OFOxmMetadataMasked meta = factory.oxms()
                     .metadataMasked(
@@ -944,7 +926,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             writeActions2.add(setlabelid);
             OFAction outg2 = factory.actions().buildGroup()
                     .setGroup(OFGroup.of(routerNextHopIps.get(i).nextHopPort |
-                            (192 << VLAN_ID_OFFSET)))
+                                            (192 << VLAN_ID_OFFSET)))
                     .build();
             writeActions2.add(outg2);
             OFInstruction writeInstr2 = factory.instructions().buildWriteActions()
@@ -955,23 +937,23 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             // unfortunately have to apply this action too
             OFInstruction applyInstr2 = factory.instructions().buildApplyActions()
                     .setActions(writeActions2).build();
-            instructions2.add(applyInstr2);
+            instructions2.add(applyInstr2); */
             // instructions2.add(writeInstr2);
             // instructions2.add(gotoInstr2);
 
             /*OFMatchV3 match3 = factory.buildMatchV3()
-                        .setOxmList(OFOxmList.of(meta)).build();
+                    .setOxmList(OFOxmList.of(meta)).build();
             OFInstruction clearInstruction = factory.instructions().clearActions();
             List<OFInstruction> instructions3 = new ArrayList<OFInstruction>();
             OFAction outc = factory.actions().buildOutput()
-                        .setPort(OFPort.CONTROLLER).setMaxLen(OFPCML_NO_BUFFER)
-                        .build();
+                    .setPort(OFPort.CONTROLLER).setMaxLen(OFPCML_NO_BUFFER)
+                    .build();
             OFInstruction writec = factory.instructions()
-                        .writeActions(Collections.singletonList(outc));
+                    .writeActions(Collections.singletonList(outc));
             instructions3.add(clearInstruction);
             instructions3.add(writec);
             instructions3.add(gotoInstr2); */
-            OFMessage myMetaEntry = factory.buildFlowAdd()
+            /*OFMessage myMetaEntry = factory.buildFlowAdd()
                     .setTableId(TableId.of(TABLE_META))
                     .setMatch(matchMeta)
                     .setInstructions(instructions2)
@@ -981,7 +963,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
                     .setHardTimeout(0)
                     .setXid(getNextTransactionId())
                     .build();
-            msglist.add(myMetaEntry);
+            msglist.add(myMetaEntry); */
 
         }
         write(msglist);
@@ -1030,7 +1012,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             instructions.add(writeInstr);
             instructions.add(gotoInstr);
             OFMessage myIpEntry = factory.buildFlowAdd()
-                    .setTableId(TableId.of(TABLE_IPV4_UNICAST))
+                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
                     .setMatch(match)
                     .setInstructions(instructions)
                     .setPriority(MAX_PRIORITY) // highest priority for exact
@@ -1046,7 +1028,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         log.debug("Adding {} next-hop-host-rules in sw {}", msglist.size(), getStringId());
     }
 
-    private static class MplsEntry {
+    private class MplsEntry {
         int labelid;
         int portnum;
 
@@ -1086,15 +1068,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             OFMatchV3 matchlabel = factory.buildMatchV3()
                     .setOxmList(oxmList).build();
             OFAction poplabel = factory.actions().popMpls(EthType.IPv4);
+            OFAction copyttlin = factory.actions().copyTtlIn();
             OFAction sendTo = null;
             if (lfibEntries.get(i).portnum == OFPort.CONTROLLER.getPortNumber()) {
                 sendTo = factory.actions().output(OFPort.CONTROLLER,
                         OFPCML_NO_BUFFER);
             } else {
+                // after popping send to L3 intf, not MPLS intf
                 sendTo = factory.actions().group(OFGroup.of(
-                        0xa0000000 | lfibEntries.get(i).portnum));
+                        0x20000000 | lfibEntries.get(i).portnum));
             }
             List<OFAction> writeActions = new ArrayList<OFAction>();
+            writeActions.add(copyttlin);
             writeActions.add(poplabel);
             writeActions.add(sendTo);
             OFInstruction writeInstr = factory.instructions().buildWriteActions()
