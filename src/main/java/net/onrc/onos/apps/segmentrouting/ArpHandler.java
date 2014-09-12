@@ -33,7 +33,6 @@ import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
-import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
@@ -211,12 +210,14 @@ public class ArpHandler implements IFloodlightModule, IOFMessageListener, IPacke
         byte[] destinationMacAddress = getMacAddressFromIpAddress(destinationAddress);
 
         // Check TopologyService
+        /*
         for (Host host: mutableTopology.getHosts()) {
             IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
             if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
                 destinationMacAddress = host.getMacAddress().toBytes();
             }
         }
+        */
 
         // If MAC address is not known to the host, just return
         if (destinationMacAddress == null)
