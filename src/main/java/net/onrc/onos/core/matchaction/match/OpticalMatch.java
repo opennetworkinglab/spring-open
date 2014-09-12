@@ -9,7 +9,7 @@ package net.onrc.onos.core.matchaction.match;
 public class OpticalMatch implements Match {
 
     // Match fields
-    protected Integer srcLambda;
+    private Integer srcLambda;
 
     /**
      * Constructor.

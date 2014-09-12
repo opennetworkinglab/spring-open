@@ -132,8 +132,11 @@ public class PacketModule implements IOFMessageListener, IPacketService,
     @Override
     public void broadcastPacketOutInternalEdge(Ethernet eth, SwitchPort inSwitchPort) {
 
-        Set<SwitchPort> blacklistSwitchPorts = new HashSet<SwitchPort>(configService
-                .getExternalSwitchPorts());
+        Set<SwitchPort> blacklistSwitchPorts = new HashSet<SwitchPort>();
+        Set<SwitchPort> externalSwitchPorts = configService.getExternalSwitchPorts();
+        if (externalSwitchPorts != null) {
+            blacklistSwitchPorts.addAll(externalSwitchPorts);
+        }
         blacklistSwitchPorts.add(inSwitchPort);
 
         BroadcastPacketOutNotification notification =

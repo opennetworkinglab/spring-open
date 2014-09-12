@@ -13,6 +13,8 @@ public final class MatchActionOperationsId {
 
     /**
      * Constructs an Operations identifier and from a unique identifier.
+     *
+     * @param newId unique identifier to use for the new Id object
      */
     public MatchActionOperationsId(final long newId) {
         id = newId;
@@ -52,5 +54,10 @@ public final class MatchActionOperationsId {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "0x" + Long.toHexString(getId());
     }
 }

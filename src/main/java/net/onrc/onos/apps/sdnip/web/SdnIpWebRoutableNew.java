@@ -15,7 +15,8 @@ public class SdnIpWebRoutableNew implements RestletRoutable {
     @Override
     public Restlet getRestlet(Context context) {
         Router router = new Router(context);
-        router.attach("/beginRouting/json", SdnIpSetup.class);
+        //router.attach("/beginRouting/json", SdnIpSetup.class);
+        router.attach("/beginRouting/json/{version}", SdnIpSetup.class);
         return router;
     }
 

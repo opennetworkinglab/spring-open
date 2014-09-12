@@ -31,7 +31,7 @@ public final class MatchActionId implements BatchOperationTarget {
      *
      * @return MatchAction ID
      */
-    public long value() {
+    public long getValue() {
         return value;
     }
 

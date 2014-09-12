@@ -580,6 +580,10 @@ public class ZookeeperRegistry implements IFloodlightModule,
                     "net.onrc.onos.core.registry.ZookeeperRegistry.connectionString",
                     DEFAULT_CONNECTION_STRING);
         }
+
+        // Remove spaces from connection string otherwise Zookeeper complains
+        connectionString = connectionString.replaceAll("\\s", "");
+
         log.info("Setting Zookeeper connection string to {}", this.connectionString);
 
         namespace = System.getProperty(ZK_NAMESPACE_KEY, DEFAULT_NAMESPACE).trim();

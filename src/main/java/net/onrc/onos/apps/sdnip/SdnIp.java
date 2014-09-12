@@ -26,6 +26,7 @@ import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.newintent.IntentService;
 import net.onrc.onos.api.newintent.MultiPointToSinglePointIntent;
+import net.onrc.onos.api.newintent.PointToPointIntent;
 import net.onrc.onos.apps.proxyarp.IArpRequester;
 import net.onrc.onos.apps.proxyarp.IProxyArpService;
 import net.onrc.onos.apps.sdnip.RibUpdate.Operation;
@@ -37,10 +38,12 @@ import net.onrc.onos.core.intent.ShortestPathIntent;
 import net.onrc.onos.core.intent.runtime.IPathCalcRuntimeService;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
+import net.onrc.onos.core.matchaction.action.Actions;
 import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.matchaction.match.PacketMatchBuilder;
 import net.onrc.onos.core.newintent.IdBlockAllocatorBasedIntentIdGenerator;
+import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4;
@@ -100,7 +103,9 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
     private IdBlockAllocatorBasedIntentIdGenerator intentIdGenerator;
     //private static final short ARP_PRIORITY = 20;
 
-    //private static final short BGP_PORT = 179;
+    private static final short BGP_PORT = 179;
+    public static final byte PROTOCOL_ICMP = 0x1;
+    public static final byte PROTOCOL_TCP = 0x6;
 
     // Configuration stuff
     private List<String> switches;
@@ -604,6 +609,160 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         pathRuntime.executeIntentOperations(operations);
     }
 
+
+    /**
+     * Setup paths for BGP Daemon and its peers. Run a loop for all the bgpPeers.
+     * Push intent for path from BGPd to the peer. Push intent for path from peer
+     * to BGPd.
+     */
+    private void setupBgpPathsWithNewIntent() {
+        for (BgpPeer bgpPeer : bgpPeers.values()) {
+
+            log.debug("Start to set up BGP paths.");
+
+            Interface peerInterface = interfaces.get(bgpPeer.getInterfaceName());
+
+            IPv4 bgpdAddress = new IPv4(InetAddresses
+                    .coerceToInteger(peerInterface.getIpAddress()));
+            IPv4 bgpdPeerAddress = new IPv4(InetAddresses
+                    .coerceToInteger(bgpPeer.getIpAddress()));
+
+            SwitchPort bgpdSwitchPort = bgpdAttachmentPoint;
+            SwitchPort bgpdPeerSwitchPort = peerInterface.getSwitchPort();
+
+            // install intent for BGP path from BGPd to BGP peer matching
+            // destination TCP port 179
+
+            // TODO: The usage of PacketMatchBuilder will be improved, then we
+            // only need to new the PacketMatchBuilder once.
+            // By then, the code here will be improved accordingly.
+            PacketMatchBuilder builderMatchDstTcpPort = new PacketMatchBuilder();
+            builderMatchDstTcpPort.setEtherType(Ethernet.TYPE_IPV4);
+            builderMatchDstTcpPort.setIpProto(PROTOCOL_TCP);
+            builderMatchDstTcpPort.setSrcIp(bgpdAddress);
+            builderMatchDstTcpPort.setDstIp(bgpdPeerAddress);
+            builderMatchDstTcpPort.setDstTcpPort(BGP_PORT);
+
+            PacketMatch packetMatch = builderMatchDstTcpPort.build();
+
+            PointToPointIntent intentMatchDstTcpPort = new PointToPointIntent(
+                    intentIdGenerator.getNewId(), packetMatch, Actions
+                    .nullAction(), bgpdSwitchPort, bgpdPeerSwitchPort);
+            intentService.submit(intentMatchDstTcpPort);
+            log.debug("Submitted BGP path intent matching dst TCP port 179 "
+                    + "from BGPd to peer {}: {}",
+                    bgpdPeerAddress, intentMatchDstTcpPort);
+
+            // install intent for BGP path from BGPd to BGP peer matching
+            // source TCP port 179
+            PacketMatchBuilder builderMatchSrcTcpPort = new PacketMatchBuilder();
+            builderMatchSrcTcpPort.setEtherType(Ethernet.TYPE_IPV4);
+            builderMatchSrcTcpPort.setIpProto(PROTOCOL_TCP);
+            builderMatchSrcTcpPort.setSrcIp(bgpdAddress);
+            builderMatchSrcTcpPort.setDstIp(bgpdPeerAddress);
+            builderMatchSrcTcpPort.setSrcTcpPort(BGP_PORT);
+
+            packetMatch = builderMatchSrcTcpPort.build();
+
+            PointToPointIntent intentMatchSrcTcpPort = new PointToPointIntent(
+                    intentIdGenerator.getNewId(), packetMatch, Actions
+                    .nullAction(), bgpdSwitchPort, bgpdPeerSwitchPort);
+            intentService.submit(intentMatchSrcTcpPort);
+            log.debug("Submitted BGP path intent matching src TCP port 179"
+                    + "from BGPd to peer {}: {}",
+                    bgpdPeerAddress, intentMatchSrcTcpPort);
+
+            // install intent for reversed BGP path from BGP peer to BGPd
+            // matching destination TCP port 179
+            PacketMatchBuilder reversedBuilderMatchDstTcpPort = new PacketMatchBuilder();
+            reversedBuilderMatchDstTcpPort.setEtherType(Ethernet.TYPE_IPV4);
+            reversedBuilderMatchDstTcpPort.setIpProto(PROTOCOL_TCP);
+            reversedBuilderMatchDstTcpPort.setSrcIp(bgpdPeerAddress);
+            reversedBuilderMatchDstTcpPort.setDstIp(bgpdAddress);
+            reversedBuilderMatchDstTcpPort.setDstTcpPort(BGP_PORT);
+
+            packetMatch = reversedBuilderMatchDstTcpPort.build();
+
+            PointToPointIntent reversedIntentMatchDstTcpPort = new PointToPointIntent(
+                    intentIdGenerator.getNewId(), packetMatch, Actions
+                    .nullAction(), bgpdPeerSwitchPort, bgpdSwitchPort);
+            intentService.submit(reversedIntentMatchDstTcpPort);
+            log.debug("Submitted BGP path intent matching dst TCP port 179"
+                    + "from BGP peer {} to BGPd: {}",
+                    bgpdPeerAddress, reversedIntentMatchDstTcpPort);
+
+            // install intent for reversed BGP path from BGP peer to BGPd
+            // matching source TCP port 179
+            PacketMatchBuilder reversedBuilderMatchSrcTcpPort = new PacketMatchBuilder();
+            reversedBuilderMatchSrcTcpPort.setEtherType(Ethernet.TYPE_IPV4);
+            reversedBuilderMatchSrcTcpPort.setIpProto(PROTOCOL_TCP);
+            reversedBuilderMatchSrcTcpPort.setSrcIp(bgpdPeerAddress);
+            reversedBuilderMatchSrcTcpPort.setDstIp(bgpdAddress);
+            reversedBuilderMatchSrcTcpPort.setSrcTcpPort(BGP_PORT);
+
+            packetMatch = reversedBuilderMatchSrcTcpPort.build();
+
+            PointToPointIntent reversedIntentMatchSrcTcpPort = new PointToPointIntent(
+                    intentIdGenerator.getNewId(), packetMatch, Actions
+                    .nullAction(), bgpdPeerSwitchPort, bgpdSwitchPort);
+            intentService.submit(reversedIntentMatchSrcTcpPort);
+            log.debug("Submitted BGP path intent matching src TCP port 179"
+                    + "from BGP peer {} to BGPd: {}",
+                    bgpdPeerAddress, reversedIntentMatchSrcTcpPort);
+
+        }
+
+    }
+
+    /**
+     * Setup ICMP paths between BGP Daemon and its peers. Run a loop for all the
+     * bgpPeers. Push intent for path from BGPd to the peer. Push intent for path
+     * from peer to BGPd.
+     */
+    private void setupIcmpPaths() {
+        for (BgpPeer bgpPeer : bgpPeers.values()) {
+
+            Interface peerInterface = interfaces.get(bgpPeer.getInterfaceName());
+
+            PacketMatchBuilder builder = new PacketMatchBuilder();
+            builder.setEtherType(Ethernet.TYPE_IPV4);
+            builder.setIpProto(PROTOCOL_ICMP);
+
+            IPv4 bgpdAddress = new IPv4(InetAddresses
+                    .coerceToInteger(peerInterface.getIpAddress()));
+            IPv4 bgpdPeerAddress = new IPv4(InetAddresses
+                    .coerceToInteger(bgpPeer.getIpAddress()));
+
+            SwitchPort bgpdSwitchPort = bgpdAttachmentPoint;
+            SwitchPort bgpdPeerSwitchPort = peerInterface.getSwitchPort();
+
+            // install intent for ICMP path from BGPd to BGP peer
+            builder.setSrcIp(bgpdAddress);
+            builder.setDstIp(bgpdPeerAddress);
+            PacketMatch packetMatch = builder.build();
+
+            PointToPointIntent intent = new PointToPointIntent(
+                    intentIdGenerator.getNewId(), packetMatch, Actions
+                    .nullAction(), bgpdSwitchPort, bgpdPeerSwitchPort);
+            intentService.submit(intent);
+            log.debug("Submitted ICMP path intent from BGPd to peer {}: {}",
+                    bgpdPeerAddress, intent);
+
+            // install intent for reversed ICMP path from BGP peer to BGPd
+            builder.setSrcIp(bgpdPeerAddress);
+            builder.setDstIp(bgpdAddress);
+            packetMatch = builder.build();
+
+            PointToPointIntent reversedIntent = new PointToPointIntent(
+                    intentIdGenerator.getNewId(), packetMatch, Actions
+                    .nullAction(), bgpdPeerSwitchPort, bgpdSwitchPort);
+            intentService.submit(reversedIntent);
+            log.debug("Submitted ICMP path intent from BGP peer {} to BGPd: {}",
+                    bgpdPeerAddress, reversedIntent);
+        }
+
+    }
+
     /**
      * This method handles the prefixes which are waiting for ARP replies for
      * MAC addresses of next hops.
@@ -746,6 +905,35 @@ public class SdnIp implements IFloodlightModule, ISdnIpService,
         setupDefaultDropFlows();*/
 
         setupBgpPaths();
+
+        // Suppress link discovery on external-facing router ports
+        for (Interface intf : interfaces.values()) {
+            linkDiscoveryService.disableDiscoveryOnPort(intf.getDpid(), intf.getPort());
+        }
+
+        bgpUpdatesExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                doUpdatesThread();
+            }
+        });
+    }
+
+    /**
+     * The SDN-IP application is started from this method.
+     * Before intent framework is ready, we need two methods to start the
+     * application.
+     */
+    @Override
+    public void beginRoutingWithNewIntent() {
+        log.debug("Topology is now ready, beginning routing function");
+
+        // TODO
+        /*setupArpFlows();
+        setupDefaultDropFlows();*/
+
+        setupBgpPathsWithNewIntent();
+        setupIcmpPaths();
 
         // Suppress link discovery on external-facing router ports
         for (Interface intf : interfaces.values()) {

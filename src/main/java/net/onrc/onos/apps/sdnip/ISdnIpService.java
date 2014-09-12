@@ -54,4 +54,11 @@ public interface ISdnIpService extends IFloodlightService {
      */
     public void beginRouting();
 
+    /**
+     * Start SDN-IP Routing.
+     * Before intent framework is ready, we need two methods to start the
+     * application.
+     */
+    public void beginRoutingWithNewIntent();
+
 }

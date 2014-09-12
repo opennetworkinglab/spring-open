@@ -40,29 +40,33 @@ import org.slf4j.LoggerFactory;
 public class MatchActionComponent implements MatchActionService, IFloodlightService {
 
     private static final Logger log = LoggerFactory.getLogger(MatchActionService.class);
-    IFlowPusherService pusher;
-    IFloodlightProviderService provider;
+    private final IFlowPusherService pusher;
+    private final IFloodlightProviderService provider;
 
-    private ConcurrentMap<MatchActionId, MatchAction> matchActionMap = new ConcurrentHashMap<>();
-    private ConcurrentMap<MatchActionOperationsId, MatchActionOperations> matchSetMap =
+    private final ConcurrentMap<MatchActionId, MatchAction> matchActionMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<MatchActionOperationsId, MatchActionOperations> matchSetMap =
             new ConcurrentHashMap<>();
     //  TODO - want something better here for the resolved Queue
-    private BlockingQueue<MatchActionOperationsId> resolvedQueue = new ArrayBlockingQueue<>(100);
-    private BlockingQueue<MatchActionOperations> installationWorkQueue = new ArrayBlockingQueue<>(100);
+    private final BlockingQueue<MatchActionOperationsId> resolvedQueue = new ArrayBlockingQueue<>(100);
+    private final BlockingQueue<MatchActionOperations> installationWorkQueue = new ArrayBlockingQueue<>(100);
 
-    private IEventChannel<String, MatchActionOperations> installSetChannel;
+    private IEventChannel<Long, MatchActionOperations> installSetChannel;
     private IEventChannel<String, SwitchResultList> installSetReplyChannel;
 
-    // TODO Single instance for now, should be a work queue of some sort eventually
-    private Thread coordinator;
-    private Thread installer;
-    private Installer installerListener;
     private final IDatagridService datagrid;
-    private IControllerRegistryService registryService;
+    private final IControllerRegistryService registryService;
 
     private MatchActionIdGeneratorWithIdBlockAllocator matchActionIdGenerator;
     private MatchActionOperationsIdGeneratorWithIdBlockAllocator matchActionOperationsIdGenerator;
 
+    /**
+     * Constructs a MatchActionComponent given the services it depends on.
+     *
+     * @param newDatagrid datagrid dependency
+     * @param newPusher flow pusher dependency
+     * @param newProvider provider used for switch queries
+     * @param newRegistryService registry for ID block allocation
+     */
     public MatchActionComponent(final IDatagridService newDatagrid,
                                 final IFlowPusherService newPusher,
                                 final IFloodlightProviderService newProvider,
@@ -73,6 +77,10 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         registryService = newRegistryService;
     }
 
+    /**
+     * Starts the component.  Created channels used for communication and
+     * creates producer and consumer threads.
+     */
     public void start() {
         IdBlockAllocator idBlockAllocator = registryService;
         matchActionIdGenerator =
@@ -80,24 +88,34 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         matchActionOperationsIdGenerator =
                 new MatchActionOperationsIdGeneratorWithIdBlockAllocator(idBlockAllocator);
 
-        installSetChannel = datagrid.createChannel("onos.matchaction.installSetChannel",
-                String.class,
+        final Installer installerListener = new Installer();
+        installSetChannel = datagrid.addListener(
+                "onos.matchaction.installSetChannel",
+                installerListener,
+                Long.class,
                 MatchActionOperations.class);
 
-        installSetReplyChannel = datagrid.createChannel("onos.matchaction.installSetReplyChannel",
+
+        final Coordinator coordinator = new Coordinator();
+        coordinator.start();
+        installSetReplyChannel = datagrid.addListener(
+                "onos.matchaction.installSetReplyChannel",
+                coordinator,
                 String.class,
                 SwitchResultList.class);
 
-        coordinator = new Coordinator();
-        coordinator.start();
-
-        installer = new InstallerWorker();
+        // TODO Single instance for now, should be a work queue of some sort eventually
+        final InstallerWorker installer = new InstallerWorker();
         installer.start();
 
-        installerListener = new Installer();
-        installerListener.start();
     }
 
+    /**
+     * Installs a set of MatchActionOperations.
+     *
+     * @param matchSet the set of MatchActions to install
+     * @return identifier of the installed operations
+     */
     public MatchActionOperationsId installMatchActionOperations(MatchActionOperations matchSet) {
         if (checkResolved(matchSet)) {
             matchSet.setState(MatchActionOperationsState.RESOLVED);
@@ -115,12 +133,24 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         return matchSet.getOperationsId();
     }
 
+    /**
+     * Returns the state of a set of operations.
+     *
+     * @param matchSetId identifier of the MatchActionOperations being queried.
+     * @return state of the given operations
+     */
     public MatchActionOperationsState getMatchActionOperationsState(MatchActionOperationsId matchSetId) {
         MatchActionOperations set = matchSetMap.get(matchSetId);
         return (set == null) ? null : set.getState();
     }
 
-    protected boolean checkResolved(MatchActionOperations matchSet) {
+    /**
+     * Checks if a given set of operations has all of its dependencies resolved.
+     *
+     * @param matchSet Operations set to check
+     * @return true if all dependencies are resolved, false otherwise
+     */
+    private boolean checkResolved(MatchActionOperations matchSet) {
         boolean resolved = true;
         for (MatchActionOperationsId setId : matchSet.getDependencies()) {
             MatchActionOperations set = matchSetMap.get(setId);
@@ -132,17 +162,28 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         return resolved;
     }
 
-    class Coordinator extends Thread
+    /**
+     * Producer class for MatchActionOperations.  An instance of this runs on
+     * each ONOS node. Requests come in via the resolved queue, and are
+     * distributed to workers running on each ONOS instance via a channel.
+     */
+    private final class Coordinator extends Thread
             implements IEventChannelListener<String, SwitchResultList> {
 
-        private Map<MatchActionOperationsId, Map<Dpid, SwitchResult>> pendingMatchActionOperations = new HashMap<>();
+        private final Map<MatchActionOperationsId,
+                      Map<Dpid, SwitchResult>>
+                pendingMatchActionOperations = new HashMap<>();
 
-        protected Coordinator() {
-            installSetReplyChannel.addListener(this);
+        /**
+         * Default constructor.
+         */
+        Coordinator() {
+            // nothing to initialize
         }
 
         @Override
         public void run() {
+            //noinspection InfiniteLoopStatement - for IntelliJ
             while (true) {
                 // 1. Remove MatchActionOperations(s) from the Global Resolved Queue
                 try {
@@ -154,6 +195,11 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
             }
         }
 
+        /**
+         * Processes an inbound MatchActionOperations object.
+         *
+         * @param setId Identifier of the MatchActionOperations object
+         */
         private void processSet(MatchActionOperationsId setId) {
             MatchActionOperations matchSet = matchSetMap.get(setId);
             matchSet.setState(MatchActionOperationsState.PENDING);
@@ -185,7 +231,8 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
             pendingMatchActionOperations.put(setId, switches);
 
             // distribute apply/undo sets to cluster
-            installSetChannel.addTransientEntry(setId.toString(), matchSet);
+            log.trace("MatchAction Coordinator distributing set: {}", matchSet);
+            installSetChannel.addTransientEntry(setId.getId(), matchSet);
         }
 
         @Override
@@ -203,6 +250,11 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
             updateSwitchResults(value);
         }
 
+        /**
+         * Processes the response from a consumer.
+         *
+         * @param results List of switches modified by the consumer
+         */
         private void updateSwitchResults(SwitchResultList results) {
             if (results == null || results.size() == 0) {
                 return;
@@ -262,11 +314,28 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         }
     }
 
-    class InstallerWorker extends Thread {
+    /**
+     * Worker thread that pushes MatchActionOperations to the switches via
+     * the FlowPusher.
+     */
+    private class InstallerWorker extends Thread {
+
+        /**
+         * Default constructor.
+         */
+        InstallerWorker() {
+            // nothing to initialize
+        }
 
         // Note: we should consider using an alternative representation for
         // apply sets
-        protected void install(MatchActionOperations matchSet) {
+
+        /**
+         * Installs a set of MatchActionOperations using the Flow Pusher.
+         *
+         * @param matchSet set of MatchActions to install
+         */
+        private void install(MatchActionOperations matchSet) {
             Set<Long> masterDpids = provider.getAllMasterSwitchDpids();
 
             Set<MatchActionOperationEntry> installSet = new HashSet<>();
@@ -320,6 +389,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
 
         @Override
         public void run() {
+            //noinspection InfiniteLoopStatement - for IntelliJ
             while (true) {
                 // 1. Remove MatchActionOperations(s) from the Global Resolved Queue
                 try {
@@ -332,17 +402,18 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         }
     }
 
+    /**
+     * Consumer class for MatchActionOperations.  Listens on the MatchAction
+     * channel and places inbound requests on a queue to be handled by the
+     * InstallerWorker threads.
+     */
     class Installer
-            implements IEventChannelListener<String, MatchActionOperations> {
-
-        protected void start() {
-            installSetChannel.addListener(this);
-        }
-
+            implements IEventChannelListener<Long, MatchActionOperations> {
 
         @Override
         public void entryAdded(MatchActionOperations value) {
             try {
+                log.trace("MatchAction Installer receiving set: {}", value);
                 installationWorkQueue.put(value);
             } catch (InterruptedException e) {
                 log.warn("Error adding to installer work queue: {}",
@@ -358,6 +429,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
         @Override
         public void entryUpdated(MatchActionOperations value) {
             try {
+                log.trace("MatchAction Installer receiving set: {}", value);
                 installationWorkQueue.put(value);
             } catch (InterruptedException e) {
                 log.warn("Error adding to installer work queue: {}",
