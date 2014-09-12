@@ -52,7 +52,8 @@ BINARY_DATA_CONTENT_TYPE = 'application/octet-stream'
 onos = 1
 
 if onos == 1:
-    CONTROLLER_URL_PREFIX = 'http://localhost:9000/wm/'
+    #CONTROLLER_URL_PREFIX = 'http://localhost:9000/wm/'
+    CONTROLLER_URL_PREFIX = 'http://localhost:8080/wm/'
 else:
     CONTROLLER_URL_PREFIX = 'http://localhost:8080/wm/'
 

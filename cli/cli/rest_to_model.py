@@ -186,61 +186,86 @@ def get_model_from_url(obj_type, data):
         address_space_prefix = data.get('address-space__startswith')
 
         for entry in entries:
-            if len(entry['mac']) > 1:
-                raise error.CommandInternalError("host: >1 mac")
-            mac = entry['mac'][0]
-            lastseen = entry['lastSeen']
-
-            if not ip_match and not ip_prefix:
-                ipv4 = entry['ipv4']
-            elif ip_match:
-                ipv4 = [x for x in entry['ipv4'] if x == ip_match]
-            elif ip_prefix:
-                ipv4 = [x for x in entry['ipv4'] if x.startswith(ip_prefix)]
+            if onos==0:
+                if len(entry['mac']) > 1:
+                    raise error.CommandInternalError("host: >1 mac")
+                mac = entry['mac'][0]
+                lastseen = entry['lastSeen']
+            else:
+                mac = entry['mac']
+                lastseen = 0
 
             ips = None
-            if len(entry['ipv4']):
-                ips = [{'ip-address' : x, 'last-seen' : lastseen}
-                        for x in entry['ipv4'] ]
+            if onos == 0:
+                if not ip_match and not ip_prefix:
+                    ipv4 = entry['ipv4']
+            	elif ip_match:
+                    ipv4 = [x for x in entry['ipv4'] if x == ip_match]
+            	elif ip_prefix:
+                    ipv4 = [x for x in entry['ipv4'] if x.startswith(ip_prefix)]
+
+            	if len(entry['ipv4']):
+                    ips = [{'ip-address' : x, 'last-seen' : lastseen}
+                    	    for x in entry['ipv4'] ]
 
             aps = None
             switch = []
             port = []
 
-            dpid_match = entry.get('dpid')
+            #dpid_match = entry.get('dpid')
+            if onos == 0:
+                attachPoint = 'attachmentPoint'
+                attachDpid = 'switchDPID'
+                attachPort = 'port'
+            else:
+                attachPoint = 'attachmentPoints'
+                attachDpid = 'dpid'
+                attachPort = 'portNumber'
 
-            if len(entry['attachmentPoint']):
-                aps = [{'switch' : x['switchDPID'], 'ingress-port' : x['port'] }
-                       for x in entry['attachmentPoint']]
+            if len(entry[attachPoint]):
+                aps = [{'switch' : x[attachDpid], 'ingress-port' : x[attachPort] }
+                       for x in entry[attachPoint]]
 
                 if not dpid_match and not dpid_prefix:
-                    switch = [x['switchDPID'] for x in entry['attachmentPoint']]
+                    switch = [x[attachDpid] for x in entry[attachPoint]]
                 elif dpid_match:
-                    switch = [x['switchDPID'] for x in entry['attachmentPoint']
-                              if x['switchDPID'] == dpid_match]
+                    switch = [x[attachDpid] for x in entry[attachPoint]
+                              if x[attachDpid] == dpid_match]
                 elif dpid_prefix:
-                    switch = [x['switchDPID'] for x in entry['attachmentPoint']
-                              if x['switchDPID'].startswith(dpid_prefix)]
-                
+                    switch = [x[attachDpid] for x in entry[attachPoint]
+                              if x[attachDpid].startswith(dpid_prefix)]
+
                 if not port_match and not port_prefix:
-                    port = [x['port'] for x in entry['attachmentPoint']]
+                    port = [x[attachPort] for x in entry[attachPoint]]
                 elif port_match:
-                    port = [x['port'] for x in entry['attachmentPoint']
-                            if x['port'] == port_match]
+                    port = [x[attachPort] for x in entry[attachPoint]
+                            if x[attachPort] == port_match]
                 elif port_prefix:
-                    port = [x['port'] for x in entry['attachmentPoint']
-                            if x['port'].startswith(port_prefix)]
+                    port = [x[attachPort] for x in entry[attachPoint]
+                            if x[attachPort].startswith(port_prefix)]
 
-            address_space = entry['entityClass']
-            dhcp_client_name = entry.get('dhcpClientName', '')
-            if address_space_match and address_space != address_space_match:
-                continue
-            if address_space_prefix and not address_space.startswith(address_space_prefix):
-                continue
+            if onos == 0:
+                address_space = entry['entityClass']
+                dhcp_client_name = entry.get('dhcpClientName', '')
+                if address_space_match and address_space != address_space_match:
+                    continue
+                if address_space_prefix and not address_space.startswith(address_space_prefix):
+                    continue
 
-            if len(entry['vlan']) == 0:
-                id = '%s||%s' % (address_space, mac)
+            if onos == 1:
+                id = '%s' % (mac)
                 result.append({'id'                : id,
+                           'mac'               : mac,
+                           'ips'               : ips,
+                           'ipv4'              : 0,
+                           'attachment-points' : aps,
+                           'dpid'              : switch,
+                           'port'              : port,
+                           'last-seen'         : 0})
+            else:
+                if len(entry['vlan']) == 0:
+                    id = '%s||%s' % (address_space, mac)
+                    result.append({'id'                : id,
                                'mac'               : mac,
                                'ips'               : ips,
                                'ipv4'              : ipv4,
@@ -250,12 +275,12 @@ def get_model_from_url(obj_type, data):
                                'address-space'     : address_space,
                                'dhcp-client-name'  : dhcp_client_name,
                                'last-seen'         : lastseen})
-            else:
-                for vlan in entry['vlan']:
-                    if address_space != 'default':
-                        id = '%s||%s' % (address_space, mac)
-                    else:
-                        id = '%s|%s|%s' % (address_space, vlan, mac)
+                else:
+                    for vlan in entry['vlan']:
+                        if address_space != 'default':
+                            id = '%s||%s' % (address_space, mac)
+                        else:
+                            id = '%s|%s|%s' % (address_space, vlan, mac)
                     result.append({'id'                : id,
                                    'mac'               : mac,
                                    'vlan'              : vlan,
@@ -393,8 +418,9 @@ def get_model_from_url(obj_type, data):
             if onos == 1:
                 result.append({
                    'dpid'                : entry['dpid'],
-                   'connected-since'     : 0,
+                   'connected-since'     : entry['stringAttributes']['ConnectedSince'],
                    'ip-address'          : 0,
+                   'type'                : entry['stringAttributes']['type']
                 })
             else:
                 attrs = entry['attributes']
@@ -483,12 +509,11 @@ def get_model_from_url(obj_type, data):
                 continue
 
             for p in entry['ports']:
+                portNumber = p['portNumber']
                 if onos == 0:
-                    portNumber = p['portNumber']
                     name = p['name']
                 else:
-                    portNumber = p['number']
-                    name = 0
+                    name = p['stringAttributes']['name']
 
                 if name_match and name.lower() != name_match:
                     continue
@@ -511,7 +536,7 @@ def get_model_from_url(obj_type, data):
                                     'id'                 : '%s|%s' % (dpid,name),
                                     'portNumber'         : portNumber,
                                     'switch'             : dpid,
-                                    'portName'           : 0,
+                                    'portName'           : name,
                                     'config'             : 0,
                                     'state'              : p['state'],
                                     'advertisedFeatures' : 0,
