@@ -28,4 +28,4 @@ net.onrc.onos.core.newintent.IntentFloodlightModule
 net.onrc.onos.core.matchaction.MatchActionModule
 net.onrc.onos.core.flowmanager.FlowManagerModule
 net.onrc.onos.core.configmanager.NetworkConfigManager
-net.onrc.onos.apps.segmentrouting.ArpHandler
+net.onrc.onos.apps.segmentrouting.SegmentRoutingManager
