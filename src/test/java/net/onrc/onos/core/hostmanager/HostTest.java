@@ -45,8 +45,8 @@ public class HostTest {
      */
     @Test
     public void testHashCode() {
-        Host host1 = new Host(mac1, null, dpid1, portNum1, date1);
-        Host host2 = new Host(mac2, null, dpid2, portNum2, date2);
+        Host host1 = new Host(mac1, 0, null, dpid1, portNum1, date1);
+        Host host2 = new Host(mac2, 0, null, dpid2, portNum2, date2);
 
         assertTrue(host1.hashCode() == host2.hashCode());
     }
@@ -56,8 +56,8 @@ public class HostTest {
      */
     @Test
     public void testEqualsObject() {
-        Host host1 = new Host(mac1, null, dpid1, portNum1, date1);
-        Host host2 = new Host(mac2, null, dpid2, portNum2, date2);
+        Host host1 = new Host(mac1, 0, null, dpid1, portNum1, date1);
+        Host host2 = new Host(mac2, 0, null, dpid2, portNum2, date2);
 
         assertTrue(host1.equals(host2));
     }

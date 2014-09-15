@@ -242,6 +242,7 @@ public class HostManagerTest extends FloodlightTestCase {
         byte[] address = new byte[] {0x00, 0x44, 0x33, 0x22, 0x11, 0x01};
         MACAddress srcMac = new MACAddress(address);
         Host host1 = new Host(srcMac,
+                0,
                 null,
                 sw1Dpid,
                 sw1DevPort,

@@ -41,6 +41,17 @@ public class HostData extends TopologyElement<HostData> {
      *
      * @param mac the MAC address to identify the host
      */
+    public HostData(MACAddress mac) {
+        this.mac = checkNotNull(mac);
+        this.ip = 0;
+        this.attachmentPoints = new LinkedList<>();
+    }
+
+    /**
+     * Constructor for a given host MAC address.
+     *
+     * @param mac the MAC address to identify the host
+     */
     public HostData(MACAddress mac, int ip) {
         this.mac = checkNotNull(mac);
         this.ip = ip;
