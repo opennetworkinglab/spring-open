@@ -614,7 +614,7 @@ public class TopologyPublisher implements IOFSwitchListener,
         SwitchPort sp = new SwitchPort(host.getSwitchDPID(), host.getSwitchPort());
         List<SwitchPort> spLists = new ArrayList<SwitchPort>();
         spLists.add(sp);
-        HostData hostData = new HostData(host.getMacAddress());
+        HostData hostData = new HostData(host.getMacAddress(), host.getIpAddress());
         hostData.setAttachmentPoints(spLists);
         hostData.setLastSeenTime(host.getLastSeenTimestamp().getTime());
         // Does not use vlan info now.

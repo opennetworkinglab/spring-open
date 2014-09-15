@@ -11,25 +11,13 @@ package net.onrc.onos.apps.segmentrouting;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
-import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.IOFMessageListener;
-import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.floodlightcontroller.core.module.FloodlightModuleException;
-import net.floodlightcontroller.core.module.IFloodlightModule;
-import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
-import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
@@ -39,23 +27,7 @@ import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.SwitchPort;
 
-import org.projectfloodlight.openflow.protocol.OFFactory;
-import org.projectfloodlight.openflow.protocol.OFMatchV3;
-import org.projectfloodlight.openflow.protocol.OFMessage;
-import org.projectfloodlight.openflow.protocol.OFOxmList;
-import org.projectfloodlight.openflow.protocol.OFType;
-import org.projectfloodlight.openflow.protocol.action.OFAction;
-import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
-import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
-import org.projectfloodlight.openflow.types.MacAddress;
-import org.projectfloodlight.openflow.types.OFBufferId;
-import org.projectfloodlight.openflow.types.OFPort;
-import org.projectfloodlight.openflow.types.TableId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +40,7 @@ import com.esotericsoftware.minlog.Log;
  * hosts to the controllers.
  * TODO: need to check the network config file for all hosts and packets
  */
-public class ArpHandler implements IFloodlightModule, IOFMessageListener, IPacketListener  {
+public class ArpHandler implements IPacketListener  {
 
     private static final Logger log = LoggerFactory
             .getLogger(ArpHandler.class);
@@ -78,7 +50,8 @@ public class ArpHandler implements IFloodlightModule, IOFMessageListener, IPacke
     private IFlowPusherService flowPusher;
     private ITopologyService topologyService;
     private MutableTopology mutableTopology;
-    private List<ArpEntry> arpEntries;
+    //private List<ArpEntry> arpEntries;
+    private SegmentRoutingManager srManager;
 
     private static final short IDLE_TIMEOUT = 0;
     private static final short HARD_TIMEOUT = 0;
@@ -97,73 +70,23 @@ public class ArpHandler implements IFloodlightModule, IOFMessageListener, IPacke
     private static final short MIN_PRIORITY = 0x0;
 
 
-    @Override
-    public Collection<Class<? extends IFloodlightService>> getModuleServices() {
-        return null;
-    }
+    /*
+     * Default Constructor
+     */
+    public ArpHandler(FloodlightModuleContext context, SegmentRoutingManager segmentRoutingManager) {
 
-    @Override
-    public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
-        Collection<Class<? extends IFloodlightService>> l = new ArrayList<Class<? extends IFloodlightService>>();
-        l.add(IFloodlightProviderService.class);
-        l.add(IConfigInfoService.class);
-        l.add(ITopologyService.class);
-        l.add(IPacketService.class);
-        l.add(IFlowPusherService.class);
-        l.add(ITopologyService.class);
-
-        return l;
-    }
-
-    @Override
-    public void init(FloodlightModuleContext context) throws FloodlightModuleException {
         this.floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         this.packetService = context.getServiceImpl(IPacketService.class);
         this.flowPusher = context.getServiceImpl(IFlowPusherService.class);
         this.topologyService = context.getServiceImpl(ITopologyService.class);
+        this.srManager = segmentRoutingManager;
+        this.mutableTopology = topologyService.getTopology();
+
+        packetService.registerPacketListener(this);
+        //arpEntries = new ArrayList<ArpEntry>();
 
         Log.debug("Arp Handler is initialized");
 
-    }
-
-    @Override
-    public String getName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean isCallbackOrderingPrereq(OFType type, String name) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isCallbackOrderingPostreq(OFType type, String name) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public net.floodlightcontroller.core.IListener.Command receive(IOFSwitch sw,
-            OFMessage msg, FloodlightContext cntx) {
-
-        return Command.CONTINUE;
-    }
-
-    @Override
-    public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
-
-        packetService.registerPacketListener(this);
-        floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
-        mutableTopology = topologyService.getTopology();
-        arpEntries = new ArrayList<ArpEntry>();
     }
 
     @Override
@@ -173,7 +96,7 @@ public class ArpHandler implements IFloodlightModule, IOFMessageListener, IPacke
         if (payload.getEtherType() == Ethernet.TYPE_ARP) {
 
             ARP arp = (ARP)payload.getPayload();
-            updateArpCache(arp);
+            srManager.updateArpCache(arp);
 
             if (arp.getOpCode() == ARP.OP_REQUEST) {
 
@@ -181,130 +104,9 @@ public class ArpHandler implements IFloodlightModule, IOFMessageListener, IPacke
             }
 
         }
-        else if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
-
-            IPv4 ipv4 = (IPv4)payload.getPayload();
-            if (ipv4.getProtocol() == IPv4.PROTOCOL_ICMP) {
-
-                addRouteToHost(sw, ipv4);
-
-            }
-
-        }
 
     }
 
-    /**
-     * Add routing rules to forward packets to known hosts
-     *
-     * @param sw Switch
-     * @param hostIp Host IP address to forwards packets to
-     */
-    private void addRouteToHost(Switch sw, IPv4 hostIp) {
-
-
-        IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
-        OFFactory factory = ofSwitch.getFactory();
-        int destinationAddress = hostIp.getDestinationAddress();
-        // Check APR entries
-        byte[] destinationMacAddress = getMacAddressFromIpAddress(destinationAddress);
-
-        // Check TopologyService
-        /*
-        for (Host host: mutableTopology.getHosts()) {
-            IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
-            if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
-                destinationMacAddress = host.getMacAddress().toBytes();
-            }
-        }
-        */
-
-        // If MAC address is not known to the host, just return
-        if (destinationMacAddress == null)
-            return;
-
-        OFOxmEthType ethTypeIp = factory.oxms()
-                .ethType(EthType.IPv4);
-        OFOxmIpv4DstMasked ipPrefix = factory.oxms()
-                .ipv4DstMasked(
-                        IPv4Address.of(destinationAddress),
-                        IPv4Address.NO_MASK); // host addr should be /32
-        OFOxmList oxmListSlash32 = OFOxmList.of(ethTypeIp, ipPrefix);
-        OFMatchV3 match = factory.buildMatchV3()
-                .setOxmList(oxmListSlash32).build();
-        OFAction setDmac = null;
-        OFOxmEthDst dmac = factory.oxms()
-                .ethDst(MacAddress.of(destinationMacAddress));
-        setDmac = factory.actions().buildSetField()
-                .setField(dmac).build();
-
-        OFAction decTtl = factory.actions().decNwTtl();
-
-        // Set the source MAC address with the switch MAC address
-        String switchMacAddress = sw.getStringAttribute("routerMac");
-        OFOxmEthSrc srcAddr = factory.oxms().ethSrc(MacAddress.of(switchMacAddress));
-        OFAction setSA = factory.actions().buildSetField()
-                .setField(srcAddr).build();
-
-        List<OFAction> actionList = new ArrayList<OFAction>();
-        actionList.add(setDmac);
-        actionList.add(decTtl);
-        actionList.add(setSA);
-
-
-        /* TODO : need to check the config file for all packets
-        String subnets = sw.getStringAttribute("subnets");
-        try {
-            JSONArray arry = new JSONArray(subnets);
-            for (int i = 0; i < arry.length(); i++) {
-                String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
-                int portNo = (int) arry.getJSONObject(i).get("portNo");
-
-                if (netMatch(subnetIp, IPv4Address.of(hostIp.getDestinationAddress()).toString())) {
-                    OFAction out = factory.actions().buildOutput()
-                            .setPort(OFPort.of(portNo)).build();
-                    actionList.add(out);
-                }
-            }
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        */
-
-        // Set output port
-        net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress.valueOf(destinationMacAddress));
-        if (host != null) {
-            for (Port port: host.getAttachmentPoints()) {
-                OFAction out = factory.actions().buildOutput()
-                                .setPort(OFPort.of(port.getPortNumber().shortValue())).build();
-                actionList.add(out);
-            }
-        }
-
-        OFInstruction writeInstr = factory.instructions().buildWriteActions()
-                .setActions(actionList).build();
-
-        List<OFInstruction> instructions = new ArrayList<OFInstruction>();
-        instructions.add(writeInstr);
-
-        OFMessage myIpEntry = factory.buildFlowAdd()
-                .setTableId(TableId.of(TABLE_IPv4_UNICAST))
-                .setMatch(match)
-                .setInstructions(instructions)
-                .setPriority(MAX_PRIORITY)
-                .setBufferId(OFBufferId.NO_BUFFER)
-                .setIdleTimeout(0)
-                .setHardTimeout(0)
-                //.setXid(getNextTransactionId())
-                .build();
-
-        log.debug("Sending 'Routing information' OF message to the switch {}.", sw.getDpid().toString());
-
-        flowPusher.add(sw.getDpid(), myIpEntry);
-
-
-    }
 
     /**
      * Send an ARP response for the ARP request to the known switches
@@ -345,68 +147,6 @@ public class ArpHandler implements IFloodlightModule, IOFMessageListener, IPacke
                 packetService.sendPacket(eth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()));
             }
         }
-    }
-
-    /**
-     * Update ARP Cache using ARP packets
-     * It is used to set destination MAC address to forward packets to known hosts.
-     * But, it will be replace with Host information of Topology service later.
-     *
-     * @param arp APR packets to use for updating ARP entries
-     */
-    private void updateArpCache(ARP arp) {
-
-        ArpEntry arpEntry = new ArpEntry(arp.getSenderHardwareAddress(), arp.getSenderProtocolAddress());
-        // TODO: Need to check the duplication
-        arpEntries.add(arpEntry);
-    }
-
-    /**
-     * Temporary class to to keep ARP entry
-     *
-     */
-
-    private class ArpEntry {
-
-        byte[] targetMacAddress;
-        byte[] targetIpAddress;
-
-        private ArpEntry(byte[] macAddress, byte[] ipAddress) {
-            this.targetMacAddress = macAddress;
-            this.targetIpAddress = ipAddress;
-        }
-
-    }
-
-    /**
-     * Get MAC address to known hosts
-     *
-     * @param destinationAddress IP address to get MAC address
-     * @return MAC Address to given IP address
-     */
-    private byte[] getMacAddressFromIpAddress(int destinationAddress) {
-
-        // Can't we get the host IP address from the TopologyService ??
-
-        Iterator<ArpEntry> iterator = arpEntries.iterator();
-
-        IPv4Address ipAddress = IPv4Address.of(destinationAddress);
-        byte[] ipAddressInByte = ipAddress.getBytes();
-
-        while (iterator.hasNext() ) {
-            ArpEntry arpEntry = iterator.next();
-            byte[] address = arpEntry.targetIpAddress;
-
-            IPv4Address a = IPv4Address.of(address);
-            IPv4Address b = IPv4Address.of(ipAddressInByte);
-
-            if ( a.equals(b)) {
-                log.debug("Found an arp entry");
-                return arpEntry.targetMacAddress;
-            }
-        }
-
-        return null;
     }
 
     /**

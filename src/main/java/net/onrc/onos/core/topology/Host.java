@@ -23,6 +23,14 @@ public interface Host extends ITopologyElement {
     public MACAddress getMacAddress();
 
     /**
+     * Gets the Host IP address.
+     *
+     * @return the Host IP address.
+     */
+    public int getIpAddress();
+
+
+    /**
      * Gets the Host attachment points.
      * <p/>
      * TODO: There is only 1 attachment point right now.

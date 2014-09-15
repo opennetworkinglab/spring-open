@@ -1,5 +1,7 @@
 package net.onrc.onos.core.topology;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +14,6 @@ import net.onrc.onos.core.topology.web.serializers.HostDataSerializer;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.SwitchPort;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 /**
@@ -22,6 +23,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class HostData extends TopologyElement<HostData> {
 
     private final MACAddress mac;
+    private final int ip;
     private List<SwitchPort> attachmentPoints;
     private long lastSeenTime;
 
@@ -31,6 +33,7 @@ public class HostData extends TopologyElement<HostData> {
     @Deprecated
     protected HostData() {
         mac = null;
+        ip = 0;
     }
 
     /**
@@ -38,8 +41,9 @@ public class HostData extends TopologyElement<HostData> {
      *
      * @param mac the MAC address to identify the host
      */
-    public HostData(MACAddress mac) {
+    public HostData(MACAddress mac, int ip) {
         this.mac = checkNotNull(mac);
+        this.ip = ip;
         this.attachmentPoints = new LinkedList<>();
     }
 
@@ -53,6 +57,7 @@ public class HostData extends TopologyElement<HostData> {
     public HostData(HostData original) {
         super(original);
         this.mac = original.mac;
+        this.ip = original.ip;
         this.attachmentPoints = new ArrayList<>(original.attachmentPoints);
         this.lastSeenTime = original.lastSeenTime;
     }
@@ -64,6 +69,15 @@ public class HostData extends TopologyElement<HostData> {
      */
     public MACAddress getMac() {
         return mac;
+    }
+
+    /**
+     * Gets the host IP address.
+     *
+     * @return the IP address.
+     */
+    public int getIp() {
+        return ip;
     }
 
     /**
@@ -185,11 +199,12 @@ public class HostData extends TopologyElement<HostData> {
         HostData other = (HostData) o;
         // XXX lastSeenTime excluded from Equality condition, is it OK?
         return Objects.equals(mac, other.mac) &&
+                ip == other.ip &&
                 Objects.equals(this.attachmentPoints, other.attachmentPoints);
     }
 
     @Override
     public String toString() {
-        return "[HostData " + mac + " attachmentPoints:" + attachmentPoints + "]";
+        return "[HostData " + mac + "(ip:" + ip + ")" + " attachmentPoints:" + attachmentPoints + "]";
     }
 }

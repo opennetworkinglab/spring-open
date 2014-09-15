@@ -261,7 +261,7 @@ public class BaseTopologyAdaptor implements BaseTopology {
         }
         List<Host> list = new ArrayList<>(hosts.size());
         for (HostData elm : hosts) {
-            list.add(new HostImpl(internalTopology, elm.getMac()));
+            list.add(new HostImpl(internalTopology, elm.getMac(), elm.getIp()));
         }
         return list;
     }

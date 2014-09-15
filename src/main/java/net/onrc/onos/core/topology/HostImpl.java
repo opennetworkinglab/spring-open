@@ -1,9 +1,10 @@
 package net.onrc.onos.core.topology;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -13,6 +14,7 @@ import net.onrc.onos.core.util.SwitchPort;
 public class HostImpl extends TopologyObject implements Host {
 
     private final MACAddress id;
+    private final int ipAddress;
 
 
     /**
@@ -24,6 +26,20 @@ public class HostImpl extends TopologyObject implements Host {
     HostImpl(BaseInternalTopology topology, MACAddress mac) {
         super(topology);
         this.id = checkNotNull(mac);
+        this.ipAddress = 0;
+    }
+
+    /**
+     * Creates a Host handler object.
+     *
+     * @param topology Topology instance this object belongs to
+     * @param mac MAC address of the host
+     * @param ipv4Address IP address of ths host
+     */
+    HostImpl(BaseInternalTopology topology, MACAddress mac, int ipv4Address) {
+        super(topology);
+        this.id = checkNotNull(mac);
+        this.ipAddress = ipv4Address;
     }
 
     @Override
@@ -92,5 +108,15 @@ public class HostImpl extends TopologyObject implements Host {
     @Override
     public AdminStatus getStatus() {
         return AdminStatus.ACTIVE;
+    }
+
+
+    /**
+     *  Returns the IP address of the Host
+     */
+    @Override
+    public int getIpAddress() {
+        // TODO Auto-generated method stub
+        return ipAddress;
     }
 }

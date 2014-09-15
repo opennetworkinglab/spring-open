@@ -23,10 +23,12 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
+import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.MutableTopology;
+import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.PortNumberUtils;
@@ -34,6 +36,7 @@ import net.onrc.onos.core.util.PortNumberUtils;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.types.IPv4Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,14 +217,26 @@ IHostService {
     protected Host getSourceHostFromPacket(Ethernet eth,
             long swdpid, long port) {
         MACAddress sourceMac = eth.getSourceMAC();
+        int sourceIp = 0;
+
+
+        if (eth.getEtherType() == Ethernet.TYPE_IPV4) {
+            IPv4 ipv4 = (IPv4)eth.getPayload();
+            sourceIp = ipv4.getSourceAddress();
+        }
+        else if (eth.getEtherType() == Ethernet.TYPE_ARP) {
+            ARP arp = (ARP)eth.getPayload();
+            sourceIp = IPv4Address.of(arp.getSenderProtocolAddress()).getInt();
+        }
 
         // Ignore broadcast/multicast source
-        if (sourceMac.isBroadcast() || sourceMac.isBroadcast()) {
+        if (sourceMac.isBroadcast() || sourceMac.isMulticast()) {
             return null;
         }
 
         short vlan = eth.getVlanID();
         return new Host(sourceMac,
+                sourceIp,
                 ((vlan >= 0) ? vlan : null),
                 swdpid,
                 port,
@@ -287,6 +302,7 @@ IHostService {
             for (Port switchPort : host.getAttachmentPoints()) {
                 // We don't handle vlan now and multiple attachment points.
                 deleteHost = new Host(host.getMacAddress(),
+                        host.getIpAddress(),
                         null,
                         switchPort.getDpid().value(),
                         switchPort.getNumber().value(),

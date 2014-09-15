@@ -10,9 +10,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
@@ -369,7 +369,7 @@ public class TopologyImpl implements MutableTopology, MutableInternalTopology {
         }
         List<Host> list = new ArrayList<>(events.size());
         for (HostData elm : events) {
-            list.add(new HostImpl(this, elm.getMac()));
+            list.add(new HostImpl(this, elm.getMac(), elm.getIp()));
         }
         return list;
     }

@@ -48,6 +48,12 @@ public class Host implements Serializable {
     private MACAddress macAddress;
 
     /**
+     * The IP address associated with this entity.
+     */
+    private int ipAddress;
+
+
+    /**
      * The VLAN tag on this entity, or null if untagged.
      */
     private Short vlan;
@@ -81,14 +87,16 @@ public class Host implements Serializable {
      * Create a new host and its information.
      *
      * @param macAddress mac address of this host
+     * @param ipAddress ip address of this host (if any)
      * @param vlan vlan ID of this host
      * @param switchDPID switch DPID where the host is attached
      * @param switchPort port number where the host is attached
      * @param lastSeenTimestamp last packet-in time of this host
      */
-    public Host(MACAddress macAddress, Short vlan, Long switchDPID,
+    public Host(MACAddress macAddress, int ipAddress, Short vlan, Long switchDPID,
             Long switchPort, Date lastSeenTimestamp) {
         this.macAddress = macAddress;
+        this.ipAddress = ipAddress;
         this.vlan = vlan;
         this.switchDPID = switchDPID;
         this.switchPort = switchPort;
@@ -105,6 +113,10 @@ public class Host implements Serializable {
 
     public MACAddress getMacAddress() {
         return macAddress;
+    }
+
+    public int getIpAddress() {
+        return ipAddress;
     }
 
     public Short getVlan() {
@@ -135,6 +147,7 @@ public class Host implements Serializable {
         final int prime = 31;
         hashCode = 1;
         hashCode = prime * hashCode + (int) (macAddress.toLong() ^ (macAddress.toLong() >>> 32));
+        hashCode = prime * hashCode + ipAddress;
         hashCode = prime * hashCode + ((switchDPID == null) ? 0 : switchDPID.hashCode());
         hashCode = prime * hashCode + ((switchPort == null) ? 0 : switchPort.hashCode());
         hashCode = prime * hashCode + ((vlan == null) ? 0 : vlan.hashCode());
@@ -159,6 +172,9 @@ public class Host implements Serializable {
         if (!Objects.equals(macAddress, other.macAddress)) {
             return false;
         }
+        if (!Objects.equals(ipAddress, other.ipAddress)) {
+            return false;
+        }
         if (!Objects.equals(switchDPID, other.switchDPID)) {
             return false;
         }
@@ -176,6 +192,8 @@ public class Host implements Serializable {
         StringBuilder builder = new StringBuilder();
         builder.append("Host [macAddress=");
         builder.append(macAddress.toString());
+        builder.append(", ipAddressn=");
+        builder.append(ipAddress);
         builder.append(", vlan=");
         builder.append(vlan);
         builder.append(", switchDPID=");
