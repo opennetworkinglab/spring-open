@@ -1,7 +1,10 @@
 package net.onrc.onos.apps.segmentrouting;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Vector;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
@@ -11,11 +14,15 @@ import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.Ethernet;
+import net.onrc.onos.core.packet.ICMP;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.SwitchPort;
 
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
@@ -82,15 +89,116 @@ public class IcmpHandler implements IPacketListener {
         if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
 
             IPv4 ipv4 = (IPv4)payload.getPayload();
+
             if (ipv4.getProtocol() == IPv4.PROTOCOL_ICMP) {
+                int destinationAddress = ipv4.getDestinationAddress();
 
-                addRouteToHost(sw, ipv4);
+                // Check if it is ICMP request to the switch
+                String switchIpAddressSlash = sw.getStringAttribute("routerIp");
+                if (switchIpAddressSlash != null) {
+                    String switchIpAddressStr = switchIpAddressSlash.substring(0, switchIpAddressSlash.indexOf('/'));
+                    IPv4Address switchIpAddress = IPv4Address.of(switchIpAddressStr);
 
+                    if (((ICMP)ipv4.getPayload()).getIcmpType() == 0x08 &&
+                            destinationAddress == switchIpAddress.getInt()) {
+                        sendICMPResponse(sw, inPort, payload);
+                        return;
+                    }
+                }
+
+                // Check if the destination is any host known to TopologyService
+                for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts()) {
+                    IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
+                    if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
+                        byte[] destinationMacAddress = host.getMacAddress().toBytes();
+                        addRouteToHost(sw, destinationAddress, destinationMacAddress);
+                        return;
+                    }
+                }
+
+                // What if the ICMP destination is neither to switch nor known to TopologyService ??
+                lookupPath(sw, inPort);
             }
 
         }
 
     }
+
+
+    /**
+     * Test method for ECMP path computation
+     *
+     */
+    private void lookupPath(Switch sw, Port inPort) {
+        // TODO Auto-generated method stub
+
+        Queue<Dpid> switchQueue = new LinkedList();
+        Vector<Dpid> switchVectorDone = new Vector();
+        switchQueue.add(sw.getDpid());
+        Dpid dpid = null;
+        Switch s = null;
+
+        dpid = sw.getDpid();
+        while (dpid != null) {
+            s = mutableTopology.getSwitch(dpid);
+            for (Port port : mutableTopology.getPorts(s.getDpid())) {
+                SwitchPort sport1 = new SwitchPort(port.getDpid(), port.getPortNumber());
+                for (Link link : mutableTopology.getOutgoingLinks(sport1)) {
+                    if (!switchVectorDone.contains(link.getDstSwitch().getDpid())) {
+                        log.debug("{} --- {} ",link.getSrcSwitch().getDpid(), link.getDstSwitch().getDpid());
+                        switchQueue.add(link.getDstSwitch().getDpid());
+                    }
+                }
+            }
+            switchVectorDone.add(s.getDpid());
+            dpid = s.getDpid();
+            switchQueue.remove(dpid);
+            dpid = switchQueue.poll();
+
+        }
+
+
+    }
+
+    /**
+     * Send ICMP reply back
+     *
+     * @param sw Switch
+     * @param inPort Port the ICMP packet is forwarded from
+     * @param icmpRequest the ICMP request to handle
+     * @param destinationAddress destination address to send ICMP response to
+     */
+    private void sendICMPResponse(Switch sw, Port inPort, Ethernet icmpRequest) {
+
+        Ethernet icmpReplyEth = new Ethernet();
+
+        IPv4 icmpRequestIpv4 = (IPv4) icmpRequest.getPayload();
+        IPv4 icmpReplyIpv4 = new IPv4();
+        int destAddress = icmpRequestIpv4.getDestinationAddress();
+        icmpReplyIpv4.setDestinationAddress(icmpRequestIpv4.getSourceAddress());
+        icmpReplyIpv4.setSourceAddress(destAddress);
+        icmpReplyIpv4.setTtl((byte)64);
+        icmpReplyIpv4.setChecksum((short)0);
+
+
+        ICMP icmpReply = (ICMP)icmpRequestIpv4.getPayload().clone();
+        icmpReply.setIcmpCode((byte)0x00);
+        icmpReply.setIcmpType((byte) 0x00);
+        icmpReply.setChecksum((short)0);
+
+        icmpReplyIpv4.setPayload(icmpReply);
+
+        icmpReplyEth.setPayload(icmpReplyIpv4);
+        icmpReplyEth.setEtherType(Ethernet.TYPE_IPV4);
+        icmpReplyEth.setDestinationMACAddress(icmpRequest.getSourceMACAddress());
+        icmpReplyEth.setSourceMACAddress(icmpRequest.getDestinationMACAddress());
+
+        packetService.sendPacket(icmpReplyEth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()));
+
+        log.debug("Send an ICMP response {}", icmpReplyIpv4.toString());
+
+    }
+
 
     /**
      * Add routing rules to forward packets to known hosts
@@ -98,29 +206,11 @@ public class IcmpHandler implements IPacketListener {
      * @param sw Switch
      * @param hostIp Host IP address to forwards packets to
      */
-    private void addRouteToHost(Switch sw, IPv4 hostIp) {
+    private void addRouteToHost(Switch sw, int destinationAddress, byte[] destinationMacAddress) {
 
         IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
         OFFactory factory = ofSwitch.getFactory();
-        int destinationAddress = hostIp.getDestinationAddress();
-        // Check APR entries
-        byte[] destinationMacAddress = null;;
 
-       //         srManager.getMacAddressFromIpAddress(destinationAddress);
-
-        // Check TopologyService
-
-        for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts()) {
-            IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
-            if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
-                destinationMacAddress = host.getMacAddress().toBytes();
-            }
-        }
-
-
-        // If MAC address is not known to the host, just return
-        if (destinationMacAddress == null)
-            return;
 
         OFOxmEthType ethTypeIp = factory.oxms()
                 .ethType(EthType.IPv4);
