@@ -12,19 +12,27 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.api.packet.IPacketService;
+import net.onrc.onos.core.datastore.serializers.Topology;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.ITopologyListener;
+import net.onrc.onos.core.topology.MutableTopology;
+import net.onrc.onos.core.topology.TopologyEvents;
+import net.onrc.onos.core.topology.Switch;
 
 import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SegmentRoutingManager implements IFloodlightModule {
+public class SegmentRoutingManager implements IFloodlightModule, ITopologyListener {
 
     private static final Logger log = LoggerFactory
             .getLogger(SegmentRoutingManager.class);
+    private ITopologyService topologyService;
+    private MutableTopology mutableTopology;
 
     private List<ArpEntry> arpEntries;
 
@@ -61,6 +69,9 @@ public class SegmentRoutingManager implements IFloodlightModule {
         ArpHandler aprHandler = new ArpHandler(context, this);
         IcmpHandler icmpHandler = new IcmpHandler(context, this);
         arpEntries = new ArrayList<ArpEntry>();
+        topologyService = context.getServiceImpl(ITopologyService.class);
+        mutableTopology = topologyService.getTopology();
+        topologyService.addListener(this, false);
 
     }
 
@@ -131,5 +142,26 @@ public class SegmentRoutingManager implements IFloodlightModule {
         }
 
     }
-
+    /**
+     * Topology events that have been generated.
+     *
+     * @param topologyEvents the generated Topology Events
+     * @see TopologyEvents
+     */
+    public void topologyEvents(TopologyEvents topologyEvents)
+    {
+    	/**
+    	 * Any Link update events, compute the ECMP path graph for all switch nodes
+    	 */
+    	if ((topologyEvents.getAddedLinkDataEntries() != null) ||
+    		(topologyEvents.getRemovedLinkDataEntries() != null))
+    	{
+    		Iterable<Switch> switches= mutableTopology.getSwitches();
+            for (Switch sw : switches) {
+            	ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
+                log.debug("ECMPShortestPathGraph for switch {}",
+                		HexString.toHexString(sw.getDpid().value()));
+            }
+    	}
+    }
 }
