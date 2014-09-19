@@ -21,6 +21,7 @@ import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.intent.Path;
 
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.util.HexString;
@@ -159,8 +160,17 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
     		Iterable<Switch> switches= mutableTopology.getSwitches();
             for (Switch sw : switches) {
             	ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
-                log.debug("ECMPShortestPathGraph for switch {}",
+                log.debug("ECMPShortestPathGraph is computed for switch {}",
                 		HexString.toHexString(sw.getDpid().value()));
+                for (Switch dstSw: mutableTopology.getSwitches()){
+                	if (sw.getDpid().equals(dstSw.getDpid())){
+                		continue;
+                	}
+                	ArrayList<Path> paths = ecmpSPG.getPath(dstSw);
+                    log.debug("ECMPShortestPathGraph:Paths from switch {} to switch {} is {}",
+                            HexString.toHexString(sw.getDpid().value()),
+                            HexString.toHexString(dstSw.getDpid().value()), paths);
+                }
             }
     	}
     }
