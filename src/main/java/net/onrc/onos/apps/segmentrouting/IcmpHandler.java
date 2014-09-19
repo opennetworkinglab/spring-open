@@ -1,10 +1,7 @@
 package net.onrc.onos.apps.segmentrouting;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Vector;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
@@ -17,29 +14,32 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.ICMP;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFOxmList;
+import org.projectfloodlight.openflow.protocol.OFPacketOut;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
+import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
+import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.OFVlanVidMatch;
 import org.projectfloodlight.openflow.types.TableId;
+import org.projectfloodlight.openflow.types.U32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,9 +51,10 @@ public class IcmpHandler implements IPacketListener {
     private IPacketService packetService;
     private ITopologyService topologyService;
     private static final Logger log = LoggerFactory
-            .getLogger(ArpHandler.class);
+            .getLogger(IcmpHandler.class);
 
     private IFlowPusherService flowPusher;
+    private boolean added;
 
     private static final int TABLE_VLAN = 0;
     private static final int TABLE_TMAC = 1;
@@ -78,6 +79,7 @@ public class IcmpHandler implements IPacketListener {
         this.mutableTopology = topologyService.getTopology();
 
         this.srManager = manager;
+        this.added = false;
 
         packetService.registerPacketListener(this);
 
@@ -101,10 +103,12 @@ public class IcmpHandler implements IPacketListener {
 
                     if (((ICMP)ipv4.getPayload()).getIcmpType() == 0x08 &&
                             destinationAddress == switchIpAddress.getInt()) {
+                        //addControlPortInVlanTable(sw);
                         sendICMPResponse(sw, inPort, payload);
                         return;
                     }
                 }
+
 
                 // Check if the destination is any host known to TopologyService
                 for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts()) {
@@ -115,9 +119,6 @@ public class IcmpHandler implements IPacketListener {
                         return;
                     }
                 }
-
-                // What if the ICMP destination is neither to switch nor known to TopologyService ??
-                lookupPath(sw, inPort);
             }
 
         }
@@ -125,40 +126,6 @@ public class IcmpHandler implements IPacketListener {
     }
 
 
-    /**
-     * Test method for ECMP path computation
-     *
-     */
-    private void lookupPath(Switch sw, Port inPort) {
-        // TODO Auto-generated method stub
-
-        Queue<Dpid> switchQueue = new LinkedList();
-        Vector<Dpid> switchVectorDone = new Vector();
-        switchQueue.add(sw.getDpid());
-        Dpid dpid = null;
-        Switch s = null;
-
-        dpid = sw.getDpid();
-        while (dpid != null) {
-            s = mutableTopology.getSwitch(dpid);
-            for (Port port : mutableTopology.getPorts(s.getDpid())) {
-                SwitchPort sport1 = new SwitchPort(port.getDpid(), port.getPortNumber());
-                for (Link link : mutableTopology.getOutgoingLinks(sport1)) {
-                    if (!switchVectorDone.contains(link.getDstSwitch().getDpid())) {
-                        log.debug("{} --- {} ",link.getSrcSwitch().getDpid(), link.getDstSwitch().getDpid());
-                        switchQueue.add(link.getDstSwitch().getDpid());
-                    }
-                }
-            }
-            switchVectorDone.add(s.getDpid());
-            dpid = s.getDpid();
-            switchQueue.remove(dpid);
-            dpid = switchQueue.poll();
-
-        }
-
-
-    }
 
     /**
      * Send ICMP reply back
@@ -193,12 +160,62 @@ public class IcmpHandler implements IPacketListener {
         icmpReplyEth.setDestinationMACAddress(icmpRequest.getSourceMACAddress());
         icmpReplyEth.setSourceMACAddress(icmpRequest.getDestinationMACAddress());
 
-        packetService.sendPacket(icmpReplyEth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()));
+        sendPacketOut(sw, icmpReplyEth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()));
 
         log.debug("Send an ICMP response {}", icmpReplyIpv4.toString());
 
     }
 
+
+
+    /**
+     * Send PACKET_OUT message with some actions
+     *
+     * @param sw  Switch the packet came from
+     * @param packet Ethernet packet to send
+     * @param switchPort port to send the packet
+     */
+    private void sendPacketOut(Switch sw, Ethernet packet, SwitchPort switchPort) {
+
+        boolean sameSubnet = false;
+        IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
+        OFFactory factory = ofSwitch.getFactory();
+
+        List<OFAction> actions = new ArrayList<>();
+
+        // Check if the destination is the host attached to the switch
+        int destinationAddress = ((IPv4)packet.getPayload()).getDestinationAddress();
+        for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts(switchPort)) {
+            IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
+            if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
+                sameSubnet = true;
+                break;
+            }
+        }
+
+        // If the destination host is not attached in the switch, add MPLS label
+        if (!sameSubnet) {
+            OFAction pushlabel = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+            OFOxmMplsLabel l = factory.oxms()
+                    .mplsLabel(U32.of(103));
+            OFAction setlabelid = factory.actions().buildSetField()
+                    .setField(l).build();
+            OFAction copyTtlOut = factory.actions().copyTtlOut();
+            actions.add(pushlabel);
+            actions.add(setlabelid);
+            actions.add(copyTtlOut);
+        }
+
+        OFAction outport = factory.actions().output(OFPort.of((int) switchPort.getPortNumber().value()), Short.MAX_VALUE);
+        actions.add(outport);
+
+        OFPacketOut po = factory.buildPacketOut()
+                .setData(packet.serialize())
+                .setActions(actions)
+                .build();
+
+        flowPusher.add(sw.getDpid(), po);
+    }
 
     /**
      * Add routing rules to forward packets to known hosts
@@ -292,6 +309,53 @@ public class IcmpHandler implements IPacketListener {
 
         flowPusher.add(sw.getDpid(), myIpEntry);
 
+    }
+
+    /**
+     * Add a new rule to VLAN table to forward packets from any port to the next table
+     * It is required to forward packets from controller to pipeline
+     *
+     * @param sw  Switch the packet came from
+     */
+    private void addControlPortInVlanTable(Switch sw) {
+
+        if (added)
+            return;
+        else
+            added = true;
+
+        IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
+        OFFactory factory = ofSwitch.getFactory();
+
+        //OFOxmInPort oxp = factory.oxms().inPort(p.getPortNo());
+        OFOxmVlanVid oxv = factory.oxms()
+                .vlanVid(OFVlanVidMatch.UNTAGGED);
+        OFOxmList oxmList = OFOxmList.of(oxv);
+
+
+        OFMatchV3 match = factory.buildMatchV3()
+                .setOxmList(oxmList)
+                .build();
+
+        OFInstruction gotoTbl = factory.instructions().buildGotoTable()
+                .setTableId(TableId.of(TABLE_TMAC)).build();
+        List<OFInstruction> instructions = new ArrayList<OFInstruction>();
+        // instructions.add(appAction);
+        instructions.add(gotoTbl);
+        OFMessage flowEntry = factory.buildFlowAdd()
+                .setTableId(TableId.of(TABLE_VLAN))
+                .setMatch(match)
+                .setInstructions(instructions)
+                .setPriority(1000) // does not matter - all rules
+                                   // exclusive
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setIdleTimeout(0)
+                .setHardTimeout(0)
+                //.setXid(getNextTransactionId())
+                .build();
+
+        flowPusher.add(sw.getDpid(), flowEntry);;
+        //log.debug("Adding {} vlan-rules in sw {}", msglist.size(), getStringId());
 
     }
 
