@@ -57,36 +57,48 @@ public class ECMPShortestPathGraph {
             currDistance = distanceQueue.poll();
             for (Link link : sw.getOutgoingLinks()) {
                 Switch reachedSwitch = link.getDstPort().getSwitch();
-                if (prevSw == null)
+                if ((prevSw != null) && (prevSw.getDpid().equals(reachedSwitch.getDpid())))
                 {
-                        prevSw = reachedSwitch;
+                    /* Ignore LAG links between the same set of switches */
+                	continue;
                 }
-                else if (prevSw.getDpid().equals(reachedSwitch.getDpid()))
+                else
                 {
-                        /* Ignore LAG links between the same set of switches */
-                        continue;
+                    prevSw = reachedSwitch;
                 }
+                	
                 Integer distance = switchSearched.get(reachedSwitch.getDpid());
                 if ((distance != null) && (distance.intValue() < (currDistance+1))) {
                     continue;
                 }
                 if (distance == null){
-                        switchQueue.add(reachedSwitch);
-                        distanceQueue.add(currDistance+1);
-                        switchSearched.put(reachedSwitch.getDpid(),currDistance+1);
-                        ArrayList<LinkData> upstreamLinkArray = new ArrayList<>();
-                        upstreamLinkArray.add(new LinkData(link));
-                        upstreamLinks.put(reachedSwitch.getDpid(), upstreamLinkArray);
-                        ArrayList<Switch> distanceSwArray = distanceSwitchMap.get(currDistance+1);
-                        if (distanceSwArray == null)
-                        {
-                                distanceSwArray = new ArrayList<Switch>();
-                                distanceSwArray.add(reachedSwitch);
-                                distanceSwitchMap.put(currDistance+1, distanceSwArray);
-                        }
-                        else
-                                distanceSwArray.add(reachedSwitch);
+                	/* First time visiting this switch node */
+                    switchQueue.add(reachedSwitch);
+                    distanceQueue.add(currDistance+1);
+                    switchSearched.put(reachedSwitch.getDpid(),currDistance+1);
+                    
+                    ArrayList<Switch> distanceSwArray = distanceSwitchMap.get(currDistance+1);
+                    if (distanceSwArray == null)
+                    {
+                            distanceSwArray = new ArrayList<Switch>();
+                            distanceSwArray.add(reachedSwitch);
+                            distanceSwitchMap.put(currDistance+1, distanceSwArray);
+                    }
+                    else
+                            distanceSwArray.add(reachedSwitch);
                 }
+
+                ArrayList<LinkData> upstreamLinkArray = 
+                		upstreamLinks.get(reachedSwitch.getDpid());
+                if (upstreamLinkArray == null)
+                {
+                	upstreamLinkArray = new ArrayList<LinkData>();
+                	upstreamLinkArray.add(new LinkData(link));
+                	upstreamLinks.put(reachedSwitch.getDpid(), upstreamLinkArray);
+                }
+                else
+                	/* ECMP links */
+                	upstreamLinkArray.add(new LinkData(link));
             }
         }
 
@@ -111,15 +123,18 @@ public class ECMPShortestPathGraph {
     private void getDFSPaths(Dpid dstSwitchDpid, Path path, ArrayList<Path> paths) {
         Dpid rootSwitchDpid = rootSwitch.getDpid();
         for (LinkData upstreamLink : upstreamLinks.get(dstSwitchDpid)) {
-                Path sofarPath = path;
-                sofarPath.add(upstreamLink);
-                if (upstreamLink.getSrc().getDpid().equals(rootSwitchDpid))
-                {
-                        paths.add(sofarPath);
-                        return;
-                }
-                else
-                        getDFSPaths(upstreamLink.getSrc().getDpid(),sofarPath, paths);
+        	/* Deep clone the path object */
+            Path sofarPath = new Path();
+            if (!path.isEmpty())
+            	sofarPath.addAll(path.subList(0, path.size()));
+            sofarPath.add(upstreamLink);
+            if (upstreamLink.getSrc().getDpid().equals(rootSwitchDpid))
+            {
+                    paths.add(sofarPath);
+                    return;
+            }
+            else
+                    getDFSPaths(upstreamLink.getSrc().getDpid(),sofarPath, paths);
         }
     }
 
@@ -132,7 +147,7 @@ public class ECMPShortestPathGraph {
     public ArrayList<Path> getPath(Switch leafSwitch) {
         ArrayList<Path> pathArray = paths.get(leafSwitch.getDpid());
         if (pathArray == null && switchSearched.containsKey(leafSwitch.getDpid())) {
-                pathArray = new ArrayList<>();
+            pathArray = new ArrayList<>();
             Path path = new Path();
             Dpid sw = leafSwitch.getDpid();
             getDFSPaths(sw, path, pathArray);
