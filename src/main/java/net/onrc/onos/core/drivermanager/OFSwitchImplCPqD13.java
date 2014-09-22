@@ -191,6 +191,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         sendBarrier(false);
         setL3Groups();
         setL25Groups();
+        setEcmpGroup();
         sendGroupDescRequest();
         populateTableVlan();
         populateTableTMac();
@@ -339,6 +340,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         if (getId() == 0x1 && portnum == 6) { // connected to switch 2
             dAddr = MacAddress.of("00:00:02:02:02:80");
         }
+        if (getId() == 0x1 && portnum == 7) { // connected to switch 2
+            dAddr = MacAddress.of("00:00:02:02:02:80");
+        }
         if (getId() == 0x2) {
             if (portnum == 1) { // connected to sw 1
                 dAddr = MacAddress.of("00:00:01:01:01:80");
@@ -465,25 +469,30 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
         log.debug("Creating {} MPLS groups in sw {}", msglist.size(), getStringId());
     }
 
-    /* Using ECMP groups
-     *
-     * OFGroup group47 = OFGroup.of(47);
-        OFAction outgroup1 = factory.actions()
-                .buildGroup()
-                .setGroup(group61)
+    private void setEcmpGroup() throws IOException {
+        if (getId() != 0x1)
+            return;
+        List<OFMessage> msglist = new ArrayList<OFMessage>();
+        OFGroup group47 = OFGroup.of(47);
+
+        OFAction outg1 = factory.actions().buildGroup()
+                .setGroup(OFGroup.of(0xa0000000 | // mpls group id
+                        6))
                 .build();
         OFBucket buc47_1 = factory.buildBucket()
                 .setWeight(1)
-                .setActions(Collections.singletonList(outgroup1))
+                .setActions(Collections.singletonList(outg1))
                 .build();
-        OFAction outgroup2 = factory.actions()
-                .buildGroup()
-                .setGroup(group62)
+
+        OFAction outg2 = factory.actions().buildGroup()
+                .setGroup(OFGroup.of(0xa0000000 | // mpls group id
+                        7))
                 .build();
         OFBucket buc47_2 = factory.buildBucket()
                 .setWeight(1)
-                .setActions(Collections.singletonList(outgroup2))
+                .setActions(Collections.singletonList(outg2))
                 .build();
+
         List<OFBucket> buckets47 = new ArrayList<OFBucket>();
         buckets47.add(buc47_1);
         buckets47.add(buc47_2);
@@ -493,7 +502,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
                 .setGroupType(OFGroupType.SELECT)
                 .setXid(getNextTransactionId())
                 .build();
-        write(gmS12, null); */
+        msglist.add(gmS12);
+        write(msglist);
+        log.debug("Creating {} ECMP groups in sw {}", msglist.size(), getStringId());
+    }
 
     private void processStatsReply(OFStatsReply sr) {
         switch (sr.getStatsType()) {
@@ -874,8 +886,17 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase {
             // OFInstruction applyInstr =
             // factory.instructions().buildApplyActions()
             // .setActions(applyActions).build();
-            writeActions.add(outg); // group will decr mpls-ttl, set mac-sa/da,
+
+            if (getId() == 0x1) {
+                OFAction group47 = factory.actions().buildGroup()
+                        .setGroup(OFGroup.of(47)).build();
+                writeActions.add(group47);
+            } else {
+                writeActions.add(outg); // group will decr mpls-ttl, set
+                                        // mac-sa/da,
                                     // vlan
+            }
+
             OFInstruction writeInstr = factory.instructions().buildWriteActions()
                     .setActions(writeActions).build();
             OFInstruction gotoInstr = factory.instructions().buildGotoTable()
