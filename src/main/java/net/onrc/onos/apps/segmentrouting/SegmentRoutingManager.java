@@ -173,7 +173,7 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
                     log.debug("ECMPShortestPathGraph:Paths from switch {} to switch {} is {}",
                             HexString.toHexString(sw.getDpid().value()),
                             HexString.toHexString(dstSw.getDpid().value()), paths);
-                    setSegmentRoutingRule(sw, paths);
+                    //setSegmentRoutingRule(sw, paths);
                 }
             }
     	}
