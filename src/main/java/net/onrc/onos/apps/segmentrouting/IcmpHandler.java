@@ -19,6 +19,8 @@ import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.SwitchPort;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFMessage;
@@ -29,6 +31,7 @@ import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
+import org.projectfloodlight.openflow.protocol.oxm.OFOxmInPort;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
@@ -54,7 +57,7 @@ public class IcmpHandler implements IPacketListener {
             .getLogger(IcmpHandler.class);
 
     private IFlowPusherService flowPusher;
-    private boolean added;
+    private boolean controllerPortAllowed = false;
 
     private static final int TABLE_VLAN = 0;
     private static final int TABLE_TMAC = 1;
@@ -69,6 +72,9 @@ public class IcmpHandler implements IPacketListener {
     private static final short SLASH_8_PRIORITY = (short) 0xf000;
     private static final short MIN_PRIORITY = 0x0;
 
+    private static final int ICMP_TYPE_ECHO = 0x08;
+    private static final int ICMP_TYPE_REPLY = 0x00;
+
 
     public IcmpHandler(FloodlightModuleContext context, SegmentRoutingManager manager) {
 
@@ -79,7 +85,6 @@ public class IcmpHandler implements IPacketListener {
         this.mutableTopology = topologyService.getTopology();
 
         this.srManager = manager;
-        this.added = false;
 
         packetService.registerPacketListener(this);
 
@@ -101,9 +106,8 @@ public class IcmpHandler implements IPacketListener {
                     String switchIpAddressStr = switchIpAddressSlash.substring(0, switchIpAddressSlash.indexOf('/'));
                     IPv4Address switchIpAddress = IPv4Address.of(switchIpAddressStr);
 
-                    if (((ICMP)ipv4.getPayload()).getIcmpType() == 0x08 &&
+                    if (((ICMP)ipv4.getPayload()).getIcmpType() == ICMP_TYPE_ECHO &&
                             destinationAddress == switchIpAddress.getInt()) {
-                        //addControlPortInVlanTable(sw);
                         sendICMPResponse(sw, inPort, payload);
                         return;
                     }
@@ -150,7 +154,7 @@ public class IcmpHandler implements IPacketListener {
 
         ICMP icmpReply = (ICMP)icmpRequestIpv4.getPayload().clone();
         icmpReply.setIcmpCode((byte)0x00);
-        icmpReply.setIcmpType((byte) 0x00);
+        icmpReply.setIcmpType((byte) ICMP_TYPE_REPLY);
         icmpReply.setChecksum((short)0);
 
         icmpReplyIpv4.setPayload(icmpReply);
@@ -160,22 +164,23 @@ public class IcmpHandler implements IPacketListener {
         icmpReplyEth.setDestinationMACAddress(icmpRequest.getSourceMACAddress());
         icmpReplyEth.setSourceMACAddress(icmpRequest.getDestinationMACAddress());
 
-        sendPacketOut(sw, icmpReplyEth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()));
+        sendPacketOut(sw, icmpReplyEth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()), false);
 
         log.debug("Send an ICMP response {}", icmpReplyIpv4.toString());
 
     }
 
-
-
     /**
-     * Send PACKET_OUT message with some actions
+     * Send PACKET_OUT message with actions
+     * If switches support OFPP_TABLE action, it sends out packet to TABLE port
+     * Otherwise, it sends the packet to the port the packet came from
+     * (in this case, MPLS label is added if the packet needs go through transit switches)
      *
      * @param sw  Switch the packet came from
      * @param packet Ethernet packet to send
      * @param switchPort port to send the packet
      */
-    private void sendPacketOut(Switch sw, Ethernet packet, SwitchPort switchPort) {
+    private void sendPacketOut(Switch sw, Ethernet packet, SwitchPort switchPort, boolean supportOfppTable) {
 
         boolean sameSubnet = false;
         IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
@@ -183,31 +188,50 @@ public class IcmpHandler implements IPacketListener {
 
         List<OFAction> actions = new ArrayList<>();
 
-        // Check if the destination is the host attached to the switch
-        int destinationAddress = ((IPv4)packet.getPayload()).getDestinationAddress();
-        for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts(switchPort)) {
-            IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
-            if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
-                sameSubnet = true;
-                break;
+        // If OFPP_TABLE action is not supported in the switch, MPLS label needs to be set
+        // if the packet needs to be delivered crossing switches
+        if (!supportOfppTable) {
+            // Check if the destination is the host attached to the switch
+            int destinationAddress = ((IPv4)packet.getPayload()).getDestinationAddress();
+            for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts(switchPort)) {
+                IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
+                if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
+                    sameSubnet = true;
+                    break;
+                }
             }
-        }
 
-        // If the destination host is not attached in the switch, add MPLS label
-        if (!sameSubnet) {
-            OFAction pushlabel = factory.actions().pushMpls(EthType.MPLS_UNICAST);
-            OFOxmMplsLabel l = factory.oxms()
-                    .mplsLabel(U32.of(103));
-            OFAction setlabelid = factory.actions().buildSetField()
-                    .setField(l).build();
-            OFAction copyTtlOut = factory.actions().copyTtlOut();
-            actions.add(pushlabel);
-            actions.add(setlabelid);
-            actions.add(copyTtlOut);
-        }
+            // If the destination host is not attached in the switch, add MPLS label
+            if (!sameSubnet) {
 
-        OFAction outport = factory.actions().output(OFPort.of((int) switchPort.getPortNumber().value()), Short.MAX_VALUE);
-        actions.add(outport);
+                IPv4Address targetAddress = IPv4Address.of(((IPv4)packet.getPayload()).getDestinationAddress());
+                int mplsLabel = getMplsLabelFromConfig(targetAddress);
+                if (mplsLabel > 0) {
+                    OFAction pushlabel = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+                    OFOxmMplsLabel l = factory.oxms()
+                            .mplsLabel(U32.of(mplsLabel));
+                    OFAction setlabelid = factory.actions().buildSetField()
+                            .setField(l).build();
+                    OFAction copyTtlOut = factory.actions().copyTtlOut();
+                    actions.add(pushlabel);
+                    actions.add(setlabelid);
+                    actions.add(copyTtlOut);
+                }
+            }
+
+            OFAction outport = factory.actions().output(OFPort.of(switchPort.getPortNumber().shortValue()), Short.MAX_VALUE);
+            actions.add(outport);
+        }
+        // If OFPP_TABLE action is supported, first set a rule to allow packet from CONTROLLER port.
+        // Then, send the packet to the table port
+        else {
+            if (!controllerPortAllowed) {
+                addControlPortInVlanTable(sw);
+                controllerPortAllowed = true;
+            }
+            OFAction outport = factory.actions().output(OFPort.TABLE, Short.MAX_VALUE);
+            actions.add(outport);
+        }
 
         OFPacketOut po = factory.buildPacketOut()
                 .setData(packet.serialize())
@@ -215,6 +239,38 @@ public class IcmpHandler implements IPacketListener {
                 .build();
 
         flowPusher.add(sw.getDpid(), po);
+    }
+
+    /**
+     * Get MPLS label for the target address from the network config file
+     *
+     * @param targetAddress - IP address of the target host
+     * @return MPLS label of the switch to send packets to the target address
+     */
+    private int getMplsLabelFromConfig(IPv4Address targetAddress) {
+
+        int mplsLabel = -1;
+
+        for (Switch sw: mutableTopology.getSwitches()) {
+
+            String subnets = sw.getStringAttribute("subnets");
+            try {
+                JSONArray arry = new JSONArray(subnets);
+                for (int i = 0; i < arry.length(); i++) {
+                    String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
+                    if (srManager.netMatch(subnetIp, targetAddress.toString())) {
+                        String mplsLabelStr = sw.getStringAttribute("nodeSid");
+                        if (mplsLabelStr != null)
+                            mplsLabel = Integer.parseInt(mplsLabelStr);
+                    }
+                }
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        return mplsLabel;
     }
 
     /**
@@ -319,19 +375,16 @@ public class IcmpHandler implements IPacketListener {
      */
     private void addControlPortInVlanTable(Switch sw) {
 
-        if (added)
-            return;
-        else
-            added = true;
-
         IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
         OFFactory factory = ofSwitch.getFactory();
 
-        //OFOxmInPort oxp = factory.oxms().inPort(p.getPortNo());
+        OFOxmInPort oxp = factory.oxms().inPort(OFPort.CONTROLLER);
         OFOxmVlanVid oxv = factory.oxms()
                 .vlanVid(OFVlanVidMatch.UNTAGGED);
         OFOxmList oxmList = OFOxmList.of(oxv);
 
+        /* Cqpd switch does not seems to support CONTROLLER port as in_port match rule */
+        //OFOxmList oxmList = OFOxmList.of(oxp, oxv);
 
         OFMatchV3 match = factory.buildMatchV3()
                 .setOxmList(oxmList)
@@ -340,7 +393,6 @@ public class IcmpHandler implements IPacketListener {
         OFInstruction gotoTbl = factory.instructions().buildGotoTable()
                 .setTableId(TableId.of(TABLE_TMAC)).build();
         List<OFInstruction> instructions = new ArrayList<OFInstruction>();
-        // instructions.add(appAction);
         instructions.add(gotoTbl);
         OFMessage flowEntry = factory.buildFlowAdd()
                 .setTableId(TableId.of(TABLE_VLAN))
@@ -355,7 +407,7 @@ public class IcmpHandler implements IPacketListener {
                 .build();
 
         flowPusher.add(sw.getDpid(), flowEntry);;
-        //log.debug("Adding {} vlan-rules in sw {}", msglist.size(), getStringId());
+        log.debug("Adding a new vlan-rules in sw {}", sw.getDpid());
 
     }
 

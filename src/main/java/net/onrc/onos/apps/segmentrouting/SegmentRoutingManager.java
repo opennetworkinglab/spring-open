@@ -1,5 +1,8 @@
 package net.onrc.onos.apps.segmentrouting;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -12,16 +15,16 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.api.packet.IPacketService;
-import net.onrc.onos.core.datastore.serializers.Topology;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
+import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
-import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.ITopologyListener;
+import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MutableTopology;
-import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.intent.Path;
+import net.onrc.onos.core.topology.TopologyEvents;
 
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.util.HexString;
@@ -170,8 +173,77 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
                     log.debug("ECMPShortestPathGraph:Paths from switch {} to switch {} is {}",
                             HexString.toHexString(sw.getDpid().value()),
                             HexString.toHexString(dstSw.getDpid().value()), paths);
+                    setSegmentRoutingRule(sw, paths);
                 }
             }
     	}
+    }
+
+    /**
+     * Set segment routing rule to switches in the ECMP shortest path to the switch
+     *
+     * @param sw source switch
+     * @param paths  ECMP path
+     */
+    private void setSegmentRoutingRule(Switch sw, ArrayList<Path> paths) {
+
+        log.debug("Set routing infor for {} to .. ", sw.getDpid());
+        for (Path path: paths) {
+
+            for (Object obj : path.toArray()) {
+                LinkData link = (LinkData)obj;
+                log.debug("  ---- Set a rule in {} [Forward to {}] " , link.getSrc(), link.getDst().getDpid());
+            }
+        }
+
+    }
+
+    /**
+     * The function checks if given IP matches to the given subnet mask
+     *
+     * @param addr - subnet address to match
+     * @param addr1 - IP address to check
+     * @return true if the IP address matches to the subnet, otherwise false
+     */
+
+    public boolean netMatch(String addr, String addr1){ //addr is subnet address and addr1 is ip address. Function will return true, if addr1 is within addr(subnet)
+
+        String[] parts = addr.split("/");
+        String ip = parts[0];
+        int prefix;
+
+        if (parts.length < 2) {
+            prefix = 0;
+        } else {
+            prefix = Integer.parseInt(parts[1]);
+        }
+
+        Inet4Address a =null;
+        Inet4Address a1 =null;
+        try {
+            a = (Inet4Address) InetAddress.getByName(ip);
+            a1 = (Inet4Address) InetAddress.getByName(addr1);
+        } catch (UnknownHostException e){}
+
+        byte[] b = a.getAddress();
+        int ipInt = ((b[0] & 0xFF) << 24) |
+                         ((b[1] & 0xFF) << 16) |
+                         ((b[2] & 0xFF) << 8)  |
+                         ((b[3] & 0xFF) << 0);
+
+        byte[] b1 = a1.getAddress();
+        int ipInt1 = ((b1[0] & 0xFF) << 24) |
+                         ((b1[1] & 0xFF) << 16) |
+                         ((b1[2] & 0xFF) << 8)  |
+                         ((b1[3] & 0xFF) << 0);
+
+        int mask = ~((1 << (32 - prefix)) - 1);
+
+        if ((ipInt & mask) == (ipInt1 & mask)) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 }
