@@ -33,8 +33,8 @@ public class ECMPShortestPathGraph {
             .getLogger(SegmentRoutingManager.class);
 
     /**
-     * Constructor.
-     *
+     * Constructor
+     * 
      * @param rootSwitch root of the BFS tree
      */
     public ECMPShortestPathGraph(Switch rootSwitch) {
