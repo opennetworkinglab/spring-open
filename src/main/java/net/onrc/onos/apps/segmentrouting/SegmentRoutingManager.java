@@ -24,6 +24,7 @@ import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MutableTopology;
+import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
@@ -41,6 +42,8 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
     private MutableTopology mutableTopology;
 
     private List<ArpEntry> arpEntries;
+    private ArpHandler arpHandler;
+    private GenericIpHandler ipHandler;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -72,8 +75,9 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
 
-        ArpHandler aprHandler = new ArpHandler(context, this);
+        arpHandler = new ArpHandler(context, this);
         IcmpHandler icmpHandler = new IcmpHandler(context, this);
+        ipHandler = new GenericIpHandler(context, this);
         arpEntries = new ArrayList<ArpEntry>();
         topologyService = context.getServiceImpl(ITopologyService.class);
         mutableTopology = topologyService.getTopology();
@@ -132,6 +136,16 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
         return null;
     }
 
+    /**
+     * Send an ARP request via ArpHandler
+     * @param destinationAddress
+     * @param sw
+     * @param inPort
+     *
+     */
+    public void sendArpRequest(Switch sw, int destinationAddress, Port inPort) {
+        arpHandler.sendArpRequest(sw, destinationAddress, inPort);
+    }
 
     /**
      * Temporary class to to keep ARP entry
@@ -146,8 +160,8 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
             this.targetMacAddress = macAddress;
             this.targetIpAddress = ipAddress;
         }
-
     }
+
     /**
      * Topology events that have been generated.
      *
@@ -230,16 +244,62 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
      */
     private void setSegmentRoutingRule(Switch sw, ArrayList<Path> paths) {
 
-        log.debug("Set routing infor for {} to .. ", sw.getDpid());
+        log.debug("Set routing info for {} to .. ", sw.getDpid());
         for (Path path: paths) {
 
             for (Object obj : path.toArray()) {
                 LinkData link = (LinkData)obj;
-                log.debug("  ---- Set a rule in {} [Forward to {}] " , link.getSrc(), link.getDst().getDpid());
+                String destMplsLabel = getMplslabel(link.getDst().getDpid());
+                String targetMplsLabel = getMplslabel(sw.getDpid());
+                if (destMplsLabel != null && targetMplsLabel != null)
+                    setTransitRouterRule(targetMplsLabel, destMplsLabel);
+            }
+        }
+    }
+
+    /**
+     * Get MPLS label reading the config file
+     *
+     * @param dipid  DPID of the switch
+     * @return MPLS label for the switch
+     */
+
+    private String getMplslabel(Dpid dpid) {
+
+        String mplsLabel = null;
+        for (Switch sw: mutableTopology.getSwitches()) {
+            String dpidStr = sw.getStringAttribute("nodeDpid");
+            if (dpid.toString().endsWith(dpidStr)) {
+                mplsLabel = sw.getStringAttribute("nodeSid");
+                break;
             }
         }
 
+        return mplsLabel;
     }
+
+    /**
+     * Test function
+     *
+     *
+     */
+    private void setTransitRouterRule(String targetMplsLabel, String destMplsLabel) {
+
+        log.debug("Match: MPLS label {}, action: forward to {}", targetMplsLabel, destMplsLabel);
+
+    }
+
+    /**
+     * Test function
+     *
+     */
+    private void setBorderRouterRule() {
+
+
+
+    }
+
+
 
     /**
      * The function checks if given IP matches to the given subnet mask
@@ -248,7 +308,6 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
      * @param addr1 - IP address to check
      * @return true if the IP address matches to the subnet, otherwise false
      */
-
     public boolean netMatch(String addr, String addr1){ //addr is subnet address and addr1 is ip address. Function will return true, if addr1 is within addr(subnet)
 
         String[] parts = addr.split("/");
@@ -288,5 +347,10 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
         else {
             return false;
         }
+    }
+
+    public void addRouteToHost(Switch sw, int hostIpAddress, byte[] hostMacAddress) {
+        ipHandler.addRouteToHost(sw, hostIpAddress, hostMacAddress);
+
     }
 }

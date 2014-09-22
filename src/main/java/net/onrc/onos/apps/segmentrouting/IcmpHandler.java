@@ -6,7 +6,6 @@ import java.util.List;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
@@ -28,16 +27,11 @@ import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.OFPacketOut;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmInPort;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
-import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.OFVlanVidMatch;
@@ -99,34 +93,53 @@ public class IcmpHandler implements IPacketListener {
 
             if (ipv4.getProtocol() == IPv4.PROTOCOL_ICMP) {
                 int destinationAddress = ipv4.getDestinationAddress();
+                String destAddressStr = IPv4Address.of(destinationAddress).toString();
 
                 // Check if it is ICMP request to the switch
                 String switchIpAddressSlash = sw.getStringAttribute("routerIp");
                 if (switchIpAddressSlash != null) {
-                    String switchIpAddressStr = switchIpAddressSlash.substring(0, switchIpAddressSlash.indexOf('/'));
+                    String switchIpAddressStr
+                        = switchIpAddressSlash.substring(0, switchIpAddressSlash.indexOf('/'));
                     IPv4Address switchIpAddress = IPv4Address.of(switchIpAddressStr);
-
+                    List<String> gatewayIps = getSubnetGatewayIps(sw);
                     if (((ICMP)ipv4.getPayload()).getIcmpType() == ICMP_TYPE_ECHO &&
-                            destinationAddress == switchIpAddress.getInt()) {
+                            (destinationAddress == switchIpAddress.getInt() ||
+                             gatewayIps.contains(destAddressStr))) {
                         sendICMPResponse(sw, inPort, payload);
-                        return;
-                    }
-                }
-
-
-                // Check if the destination is any host known to TopologyService
-                for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts()) {
-                    IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
-                    if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
-                        byte[] destinationMacAddress = host.getMacAddress().toBytes();
-                        addRouteToHost(sw, destinationAddress, destinationMacAddress);
                         return;
                     }
                 }
             }
 
         }
+    }
 
+    /**
+     * Retrieve Gateway IP address of all subnets defined in net config file
+     *
+     * @param sw Switch to retrieve subnet GW IPs for
+     * @return list of GW IP addresses for all subnets
+     */
+    private List<String> getSubnetGatewayIps(Switch sw) {
+
+        List<String> gatewayIps = new ArrayList<String>();
+
+        String subnets = sw.getStringAttribute("subnets");
+        try {
+            JSONArray arry = new JSONArray(subnets);
+            for (int i = 0; i < arry.length(); i++) {
+                String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
+                if (subnetIpSlash != null) {
+                    String subnetIp = subnetIpSlash.substring(0, subnetIpSlash.indexOf('/'));
+                    gatewayIps.add(subnetIp);
+                }
+            }
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return gatewayIps;
     }
 
 
@@ -273,99 +286,7 @@ public class IcmpHandler implements IPacketListener {
         return mplsLabel;
     }
 
-    /**
-     * Add routing rules to forward packets to known hosts
-     *
-     * @param sw Switch
-     * @param hostIp Host IP address to forwards packets to
-     */
-    private void addRouteToHost(Switch sw, int destinationAddress, byte[] destinationMacAddress) {
 
-        IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
-        OFFactory factory = ofSwitch.getFactory();
-
-
-        OFOxmEthType ethTypeIp = factory.oxms()
-                .ethType(EthType.IPv4);
-        OFOxmIpv4DstMasked ipPrefix = factory.oxms()
-                .ipv4DstMasked(
-                        IPv4Address.of(destinationAddress),
-                        IPv4Address.NO_MASK); // host addr should be /32
-        OFOxmList oxmListSlash32 = OFOxmList.of(ethTypeIp, ipPrefix);
-        OFMatchV3 match = factory.buildMatchV3()
-                .setOxmList(oxmListSlash32).build();
-        OFAction setDmac = null;
-        OFOxmEthDst dmac = factory.oxms()
-                .ethDst(MacAddress.of(destinationMacAddress));
-        setDmac = factory.actions().buildSetField()
-                .setField(dmac).build();
-
-        OFAction decTtl = factory.actions().decNwTtl();
-
-        // Set the source MAC address with the switch MAC address
-        String switchMacAddress = sw.getStringAttribute("routerMac");
-        OFOxmEthSrc srcAddr = factory.oxms().ethSrc(MacAddress.of(switchMacAddress));
-        OFAction setSA = factory.actions().buildSetField()
-                .setField(srcAddr).build();
-
-        List<OFAction> actionList = new ArrayList<OFAction>();
-        actionList.add(setDmac);
-        actionList.add(decTtl);
-        actionList.add(setSA);
-
-
-        /* TODO : need to check the config file for all packets
-        String subnets = sw.getStringAttribute("subnets");
-        try {
-            JSONArray arry = new JSONArray(subnets);
-            for (int i = 0; i < arry.length(); i++) {
-                String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
-                int portNo = (int) arry.getJSONObject(i).get("portNo");
-
-                if (netMatch(subnetIp, IPv4Address.of(hostIp.getDestinationAddress()).toString())) {
-                    OFAction out = factory.actions().buildOutput()
-                            .setPort(OFPort.of(portNo)).build();
-                    actionList.add(out);
-                }
-            }
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        */
-
-        // Set output port
-        net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress.valueOf(destinationMacAddress));
-        if (host != null) {
-            for (Port port: host.getAttachmentPoints()) {
-                OFAction out = factory.actions().buildOutput()
-                                .setPort(OFPort.of(port.getPortNumber().shortValue())).build();
-                actionList.add(out);
-            }
-        }
-
-        OFInstruction writeInstr = factory.instructions().buildWriteActions()
-                .setActions(actionList).build();
-
-        List<OFInstruction> instructions = new ArrayList<OFInstruction>();
-        instructions.add(writeInstr);
-
-        OFMessage myIpEntry = factory.buildFlowAdd()
-                .setTableId(TableId.of(TABLE_IPv4_UNICAST))
-                .setMatch(match)
-                .setInstructions(instructions)
-                .setPriority(MAX_PRIORITY)
-                .setBufferId(OFBufferId.NO_BUFFER)
-                .setIdleTimeout(0)
-                .setHardTimeout(0)
-                //.setXid(getNextTransactionId())
-                .build();
-
-        log.debug("Sending 'Routing information' OF message to the switch {}.", sw.getDpid().toString());
-
-        flowPusher.add(sw.getDpid(), myIpEntry);
-
-    }
 
     /**
      * Add a new rule to VLAN table to forward packets from any port to the next table

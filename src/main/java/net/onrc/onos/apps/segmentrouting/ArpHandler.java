@@ -8,7 +8,12 @@
 
 package net.onrc.onos.apps.segmentrouting;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
@@ -21,9 +26,16 @@ import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
-import net.onrc.onos.core.util.SwitchPort;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFPacketOut;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.U32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,8 +107,15 @@ public class ArpHandler implements IPacketListener  {
             srManager.updateArpCache(arp);
 
             if (arp.getOpCode() == ARP.OP_REQUEST) {
-
                 handleArpRequest(sw, inPort, arp);
+            }
+            else {
+                byte[] senderMacAddressByte = arp.getSenderHardwareAddress();
+                String targetMacAddressStr = MacAddress.of(senderMacAddressByte).toString();
+                if (targetMacAddressStr.equals(sw.getStringAttribute("routerMac"))) {
+                    IPv4Address hostIpAddress = IPv4Address.of(arp.getSenderProtocolAddress());
+                    srManager.addRouteToHost(sw,hostIpAddress.getInt(), senderMacAddressByte);
+                }
             }
 
         }
@@ -113,14 +132,12 @@ public class ArpHandler implements IPacketListener  {
      */
     private void handleArpRequest(Switch sw, Port inPort, ARP arpRequest) {
 
-        String switchIpAddressSlash = sw.getStringAttribute("routerIp");
+        List<String> subnetGatewayIPs = getSubnetGatewayIps(sw);
         String switchMacAddressStr = sw.getStringAttribute("routerMac");
-        if (switchIpAddressSlash != null && switchMacAddressStr != null) {
-
-            String switchIpAddressStr = switchIpAddressSlash.substring(0, switchIpAddressSlash.indexOf('/'));
-            IPv4Address switchIpAddress = IPv4Address.of(switchIpAddressStr);
+        if (!subnetGatewayIPs.isEmpty()) {
             IPv4Address targetProtocolAddress = IPv4Address.of(arpRequest.getTargetProtocolAddress());
-            if (targetProtocolAddress.equals(switchIpAddress)) {
+            // Do we have to check port also ??
+            if (subnetGatewayIPs.contains(targetProtocolAddress.toString())) {
                 MACAddress targetMac = MACAddress.valueOf(switchMacAddressStr);
 
                 ARP arpReply = new ARP();
@@ -140,14 +157,117 @@ public class ArpHandler implements IPacketListener  {
                         .setSourceMACAddress(targetMac.toBytes())
                         .setEtherType(Ethernet.TYPE_ARP).setPayload(arpReply);
 
-                packetService.sendPacket(eth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()));
+                sendPacketOut(sw, eth, inPort.getPortNumber().shortValue());
             }
         }
     }
 
+    /**
+     * Retrieve Gateway IP address of all subnets defined in net config file
+     *
+     * @param sw Switch to retrieve subnet GW IPs for
+     * @return list of GW IP addresses for all subnets
+     */
+    private List<String> getSubnetGatewayIps(Switch sw) {
 
+        List<String> gatewayIps = new ArrayList<String>();
 
+        String subnets = sw.getStringAttribute("subnets");
+        try {
+            JSONArray arry = new JSONArray(subnets);
+            for (int i = 0; i < arry.length(); i++) {
+                String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
+                if (subnetIpSlash != null) {
+                    String subnetIp = subnetIpSlash.substring(0, subnetIpSlash.indexOf('/'));
+                    gatewayIps.add(subnetIp);
+                }
+            }
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
+        return gatewayIps;
+    }
 
+    /**
+     * Send an ARP request
+     *
+     * @param sw Switch
+     * @param targetAddress Target IP address
+     * @param inPort Port to send the ARP request
+     *
+     */
+    public void sendArpRequest(Switch sw, int targetAddressInt, Port inPort) {
+
+        IPv4Address targetAddress = IPv4Address.of(targetAddressInt);
+        String senderMacAddressStr = sw.getStringAttribute("routerMac");
+        String senderIpAddressSlash = sw.getStringAttribute("routerIp");
+        if (senderMacAddressStr == null || senderIpAddressSlash == null)
+            return;
+        String senderIpAddressStr =
+                senderIpAddressSlash.substring(0, senderIpAddressSlash.indexOf('/'));
+        byte[] senderMacAddress = MacAddress.of(senderMacAddressStr).getBytes();
+        byte[] senderIpAddress = IPv4Address.of(senderIpAddressStr).getBytes();
+
+        ARP arpRequest = new ARP();
+        arpRequest.setHardwareType(ARP.HW_TYPE_ETHERNET)
+                .setProtocolType(ARP.PROTO_TYPE_IP)
+                .setHardwareAddressLength(
+                        (byte) Ethernet.DATALAYER_ADDRESS_LENGTH)
+                .setProtocolAddressLength((byte) IPv4.ADDRESS_LENGTH)
+                .setOpCode(ARP.OP_REQUEST)
+                .setSenderHardwareAddress(senderMacAddress)
+                .setTargetHardwareAddress(MacAddress.NONE.getBytes())
+                .setSenderProtocolAddress(senderIpAddress)
+                .setTargetProtocolAddress(targetAddress.getBytes());
+
+        Ethernet eth = new Ethernet();
+        eth.setDestinationMACAddress(MacAddress.BROADCAST.getBytes())
+                .setSourceMACAddress(senderMacAddress)
+                .setEtherType(Ethernet.TYPE_ARP).setPayload(arpRequest);
+
+        sendPacketOut(sw, eth, (short)-1);
+
+    }
+
+    /**
+     * Send PACKET_OUT packet to switch
+     *
+     * @param sw Switch to send the packet to
+     * @param packet Packet to send
+     * @param switchPort port to send (if -1, broadcast)
+     */
+    private void sendPacketOut(Switch sw, Ethernet packet, short port) {
+
+        IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
+        OFFactory factory = ofSwitch.getFactory();
+
+        List<OFAction> actions = new ArrayList<>();
+
+        if (port > 0) {
+            OFAction outport = factory.actions().output(OFPort.of(port), Short.MAX_VALUE);
+            actions.add(outport);
+        }
+        else {
+            Iterator<Port> iter = sw.getPorts().iterator();
+            while (iter.hasNext()) {
+                Port p = iter.next();
+                int pnum = p.getPortNumber().shortValue();
+                if (U32.of(pnum).compareTo(U32.of(OFPort.MAX.getPortNumber())) < 1) {
+                    OFAction outport = factory.actions().output(OFPort.of(p.getNumber().shortValue()),
+                            Short.MAX_VALUE);
+                    actions.add(outport);
+                }
+            }
+        }
+
+        OFPacketOut po = factory.buildPacketOut()
+                .setData(packet.serialize())
+                .setActions(actions)
+                .build();
+
+        flowPusher.add(sw.getDpid(), po);
+    }
 
 }
