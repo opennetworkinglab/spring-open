@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.TopologyEvents;
+import net.onrc.onos.core.util.Dpid;
 
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.util.HexString;
@@ -165,15 +167,56 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
             	ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
                 log.debug("ECMPShortestPathGraph is computed for switch {}",
                 		HexString.toHexString(sw.getDpid().value()));
+                /*
                 for (Switch dstSw: mutableTopology.getSwitches()){
                 	if (sw.getDpid().equals(dstSw.getDpid())){
                 		continue;
                 	}
-                	ArrayList<Path> paths = ecmpSPG.getPath(dstSw);
+                	ArrayList<Path> paths = ecmpSPG.getECMPPaths(dstSw);
                     log.debug("ECMPShortestPathGraph:Paths from switch {} to switch {} is {}",
                             HexString.toHexString(sw.getDpid().value()),
                             HexString.toHexString(dstSw.getDpid().value()), paths);
                     //setSegmentRoutingRule(sw, paths);
+                }
+                */
+                /*
+                HashMap<Integer, HashMap<Switch,ArrayList<Path>>> pathGraph =
+                                    ecmpSPG.getCompleteLearnedSwitchesAndPaths();
+                for (Integer itrIdx: pathGraph.keySet()){
+
+                    HashMap<Switch, ArrayList<Path>> swPathsMap =
+                                                pathGraph.get(itrIdx);
+                    for (Switch targetSw: swPathsMap.keySet()){
+                        log.debug("ECMPShortestPathGraph:Paths in Pass{} from "
+                                + "             switch {} to switch {}:****",
+                                itrIdx,
+                                HexString.toHexString(sw.getDpid().value()),
+                                HexString.toHexString(targetSw.getDpid().value()));
+                        int i=0;
+                        for (Path path:swPathsMap.get(targetSw)){
+                            log.debug("****ECMPShortestPathGraph:Path{} is {}",i++,path);
+                        }
+                    }
+                }
+                */
+                HashMap<Integer, HashMap<Switch,ArrayList<ArrayList<Dpid>>>> switchVia =
+                        ecmpSPG.getAllLearnedSwitchesAndVia();
+                for (Integer itrIdx: switchVia.keySet()){
+                    log.debug("ECMPShortestPathGraph:Switches learned in "
+                            + "Iteration{} from switch {}:",
+                            itrIdx,
+                            HexString.toHexString(sw.getDpid().value()));
+
+                    HashMap<Switch, ArrayList<ArrayList<Dpid>>> swViaMap =
+                                    switchVia.get(itrIdx);
+                    for (Switch targetSw: swViaMap.keySet()){
+                        log.debug("ECMPShortestPathGraph:****switch {} via:",
+                                HexString.toHexString(targetSw.getDpid().value()));
+                        int i=0;
+                        for (ArrayList<Dpid> via:swViaMap.get(targetSw)){
+                            log.debug("ECMPShortestPathGraph:******{}) {}",++i,via);
+                        }
+                    }
                 }
             }
     	}
