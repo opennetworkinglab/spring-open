@@ -7,8 +7,6 @@ import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.api.packet.IPacketListener;
-import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
@@ -36,13 +34,12 @@ import org.projectfloodlight.openflow.types.TableId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GenericIpHandler implements IPacketListener {
+public class GenericIpHandler {
 
     private MutableTopology mutableTopology;
     private ITopologyService topologyService;
     private IFloodlightProviderService floodlightProvider;
     private IFlowPusherService flowPusher;
-    private IPacketService packetService;
     private SegmentRoutingManager srManager;
 
     private static final Logger log = LoggerFactory
@@ -66,38 +63,30 @@ public class GenericIpHandler implements IPacketListener {
         this.topologyService = context.getServiceImpl(ITopologyService.class);
         this.mutableTopology = topologyService.getTopology();
         this.flowPusher = context.getServiceImpl(IFlowPusherService.class);
-        this.packetService = context.getServiceImpl(IPacketService.class);
         this.srManager = sr;
-
-        packetService.registerPacketListener(this);
 
     }
 
-    @Override
-    public void receive(Switch sw, Port inPort, Ethernet payload) {
+    public void processPacketIn(Switch sw, Port inPort, Ethernet payload) {
         // TODO Auto-generated method stub
-        if ((payload.getEtherType() == Ethernet.TYPE_IPV4) &&
-            (((IPv4)payload.getPayload()).getProtocol() != IPv4.PROTOCOL_ICMP)){
+        log.debug("GenericIPHandler: Received a IP packet {} from sw {} ",
+                payload.toString(), sw.getDpid());
+        IPv4 ipv4 = (IPv4)payload.getPayload();
+        int destinationAddress = ipv4.getDestinationAddress();
 
-            log.debug("GenericIPHandler: Received a IP packet {} from sw {} ",
-                    payload.toString(), sw.getDpid());
-            IPv4 ipv4 = (IPv4)payload.getPayload();
-            int destinationAddress = ipv4.getDestinationAddress();
-
-            // Check if the destination is any host known to TopologyService
-            for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts()) {
-                IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
-                if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
-                    byte[] destinationMacAddress = host.getMacAddress().toBytes();
-                    addRouteToHost(sw, destinationAddress, destinationMacAddress);
-                    return;
-                }
+        // Check if the destination is any host known to TopologyService
+        for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts()) {
+            IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
+            if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
+                byte[] destinationMacAddress = host.getMacAddress().toBytes();
+                addRouteToHost(sw, destinationAddress, destinationMacAddress);
+                return;
             }
+        }
 
-            // Check if the destination is within subnets of the swtich
-            if (isWithinSubnets(sw, IPv4Address.of(destinationAddress).toString())) {
-                srManager.sendArpRequest(sw, destinationAddress, inPort);
-            }
+        // Check if the destination is within subnets of the swtich
+        if (isWithinSubnets(sw, IPv4Address.of(destinationAddress).toString())) {
+            srManager.sendArpRequest(sw, destinationAddress, inPort);
         }
     }
 

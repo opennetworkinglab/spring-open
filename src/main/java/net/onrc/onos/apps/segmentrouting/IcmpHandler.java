@@ -6,8 +6,6 @@ import java.util.List;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.onrc.onos.api.packet.IPacketListener;
-import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.ICMP;
@@ -41,12 +39,11 @@ import org.projectfloodlight.openflow.types.U32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IcmpHandler implements IPacketListener {
+public class IcmpHandler {
 
     private SegmentRoutingManager srManager;
     private IFloodlightProviderService floodlightProvider;
     private MutableTopology mutableTopology;
-    private IPacketService packetService;
     private ITopologyService topologyService;
     private static final Logger log = LoggerFactory
             .getLogger(IcmpHandler.class);
@@ -75,18 +72,13 @@ public class IcmpHandler implements IPacketListener {
 
         this.floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         this.flowPusher = context.getServiceImpl(IFlowPusherService.class);
-        this.packetService = context.getServiceImpl(IPacketService.class);
         this.topologyService = context.getServiceImpl(ITopologyService.class);
         this.mutableTopology = topologyService.getTopology();
 
         this.srManager = manager;
-
-        packetService.registerPacketListener(this);
-
     }
 
-    @Override
-    public void receive(Switch sw, Port inPort, Ethernet payload) {
+    public void processPacketIn(Switch sw, Port inPort, Ethernet payload) {
 
         if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
 

@@ -15,11 +15,14 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.packet.ARP;
+import net.onrc.onos.core.packet.Ethernet;
+import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.LinkData;
@@ -34,16 +37,19 @@ import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SegmentRoutingManager implements IFloodlightModule, ITopologyListener {
+public class SegmentRoutingManager implements IFloodlightModule,
+						ITopologyListener, IPacketListener {
 
     private static final Logger log = LoggerFactory
             .getLogger(SegmentRoutingManager.class);
     private ITopologyService topologyService;
+    private IPacketService packetService;
     private MutableTopology mutableTopology;
 
     private List<ArpEntry> arpEntries;
     private ArpHandler arpHandler;
     private GenericIpHandler ipHandler;
+    private IcmpHandler icmpHandler;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -76,13 +82,15 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
 
         arpHandler = new ArpHandler(context, this);
-        IcmpHandler icmpHandler = new IcmpHandler(context, this);
+        icmpHandler = new IcmpHandler(context, this);
         ipHandler = new GenericIpHandler(context, this);
         arpEntries = new ArrayList<ArpEntry>();
         topologyService = context.getServiceImpl(ITopologyService.class);
         mutableTopology = topologyService.getTopology();
         topologyService.addListener(this, false);
 
+        this.packetService = context.getServiceImpl(IPacketService.class);
+        packetService.registerPacketListener(this);
     }
 
     @Override
@@ -91,6 +99,17 @@ public class SegmentRoutingManager implements IFloodlightModule, ITopologyListen
 
     }
 
+    @Override
+    public void receive(Switch sw, Port inPort, Ethernet payload) {
+    	if (payload.getEtherType() == Ethernet.TYPE_ARP)
+    		arpHandler.processPacketIn(sw, inPort, payload);
+        if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
+        	if (((IPv4)payload.getPayload()).getProtocol() != IPv4.PROTOCOL_ICMP)
+        		icmpHandler.processPacketIn(sw, inPort, payload);
+        	else
+        		ipHandler.processPacketIn(sw, inPort, payload);
+        }
+    }
     /**
      * Update ARP Cache using ARP packets
      * It is used to set destination MAC address to forward packets to known hosts.

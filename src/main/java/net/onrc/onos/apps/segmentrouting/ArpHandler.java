@@ -16,8 +16,6 @@ import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.api.packet.IPacketListener;
-import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
@@ -48,13 +46,12 @@ import com.esotericsoftware.minlog.Log;
  * hosts to the controllers.
  * TODO: need to check the network config file for all hosts and packets
  */
-public class ArpHandler implements IPacketListener  {
+public class ArpHandler {
 
     private static final Logger log = LoggerFactory
             .getLogger(ArpHandler.class);
 
     private IFloodlightProviderService floodlightProvider;
-    private IPacketService packetService;
     private IFlowPusherService flowPusher;
     private ITopologyService topologyService;
     private MutableTopology mutableTopology;
@@ -84,44 +81,30 @@ public class ArpHandler implements IPacketListener  {
     public ArpHandler(FloodlightModuleContext context, SegmentRoutingManager segmentRoutingManager) {
 
         this.floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-        this.packetService = context.getServiceImpl(IPacketService.class);
         this.flowPusher = context.getServiceImpl(IFlowPusherService.class);
         this.topologyService = context.getServiceImpl(ITopologyService.class);
         this.srManager = segmentRoutingManager;
         this.mutableTopology = topologyService.getTopology();
 
-        packetService.registerPacketListener(this);
-        //arpEntries = new ArrayList<ArpEntry>();
-
         Log.debug("Arp Handler is initialized");
 
     }
 
-    @Override
-    public void receive(Switch sw, Port inPort, Ethernet payload) {
-        log.debug("Received a packet {} from sw {} ", payload.toString(), sw.getDpid());
+    public void processPacketIn(Switch sw, Port inPort, Ethernet payload){
 
-        if (payload.getEtherType() == Ethernet.TYPE_ARP) {
+    	log.debug("ArpHandler: Received a ARP packet from sw {} ", sw.getDpid());
 
-            ARP arp = (ARP)payload.getPayload();
-            srManager.updateArpCache(arp);
+        ARP arp = (ARP)payload.getPayload();
 
-            if (arp.getOpCode() == ARP.OP_REQUEST) {
-                handleArpRequest(sw, inPort, arp);
-            }
-            else {
-                byte[] senderMacAddressByte = arp.getSenderHardwareAddress();
-                String targetMacAddressStr = MacAddress.of(senderMacAddressByte).toString();
-                if (targetMacAddressStr.equals(sw.getStringAttribute("routerMac"))) {
-                    IPv4Address hostIpAddress = IPv4Address.of(arp.getSenderProtocolAddress());
-                    srManager.addRouteToHost(sw,hostIpAddress.getInt(), senderMacAddressByte);
-                }
-            }
-
+        if (arp.getOpCode() == ARP.OP_REQUEST) {
+        	log.debug("ArpHandler: Received a ARP Requestfrom sw {} ", sw.getDpid());
+            handleArpRequest(sw, inPort, payload);
         }
-
+        byte[] senderMacAddressByte = arp.getSenderHardwareAddress();
+        IPv4Address hostIpAddress = IPv4Address.of(arp.getSenderProtocolAddress());
+    	log.debug("ArpHandler: Add IP route to Host {} ", hostIpAddress);
+        srManager.addRouteToHost(sw,hostIpAddress.getInt(), senderMacAddressByte);
     }
-
 
     /**
      * Send an ARP response for the ARP request to the known switches
@@ -130,8 +113,9 @@ public class ArpHandler implements IPacketListener  {
      * @param inPort port to send ARP response to
      * @param arpRequest ARP request packet to handle
      */
-    private void handleArpRequest(Switch sw, Port inPort, ARP arpRequest) {
+    private void handleArpRequest(Switch sw, Port inPort, Ethernet payload) {
 
+    	ARP arpRequest = (ARP)payload.getPayload();
         List<String> subnetGatewayIPs = getSubnetGatewayIps(sw);
         String switchMacAddressStr = sw.getStringAttribute("routerMac");
         if (!subnetGatewayIPs.isEmpty()) {
