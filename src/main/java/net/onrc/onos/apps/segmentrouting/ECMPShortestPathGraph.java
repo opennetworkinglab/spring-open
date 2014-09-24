@@ -203,10 +203,11 @@ public class ECMPShortestPathGraph {
                 ArrayList<ArrayList<Dpid>>>> getAllLearnedSwitchesAndVia() {
 
         HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>>
-            switchViaMap = new HashMap();
+            switchViaMap = new HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>>();
 
         for (Integer itrIndx : distanceSwitchMap.keySet()) {
-            HashMap<Switch, ArrayList<ArrayList<Dpid>>> swMap = new HashMap();
+            HashMap<Switch, ArrayList<ArrayList<Dpid>>> swMap =
+                    new HashMap<Switch, ArrayList<ArrayList<Dpid>>>();
 
             for (Switch sw : distanceSwitchMap.get(itrIndx)) {
                 ArrayList<ArrayList<Dpid>> swViaArray = new ArrayList<>();

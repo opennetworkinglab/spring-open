@@ -76,8 +76,11 @@ public class GenericIpHandler implements IPacketListener {
     @Override
     public void receive(Switch sw, Port inPort, Ethernet payload) {
         // TODO Auto-generated method stub
-        if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
+        if ((payload.getEtherType() == Ethernet.TYPE_IPV4) &&
+            (((IPv4)payload.getPayload()).getProtocol() != IPv4.PROTOCOL_ICMP)){
 
+            log.debug("GenericIPHandler: Received a IP packet {} from sw {} ",
+                    payload.toString(), sw.getDpid());
             IPv4 ipv4 = (IPv4)payload.getPayload();
             int destinationAddress = ipv4.getDestinationAddress();
 

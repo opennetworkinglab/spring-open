@@ -12,6 +12,7 @@ import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.ICMP;
 import net.onrc.onos.core.packet.IPv4;
+import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
@@ -92,6 +93,9 @@ public class IcmpHandler implements IPacketListener {
             IPv4 ipv4 = (IPv4)payload.getPayload();
 
             if (ipv4.getProtocol() == IPv4.PROTOCOL_ICMP) {
+
+                log.debug("ICMPHandler: Received a ICMP packet {} from sw {} ",
+                        payload.toString(), sw.getDpid());
                 int destinationAddress = ipv4.getDestinationAddress();
                 String destAddressStr = IPv4Address.of(destinationAddress).toString();
 
@@ -105,10 +109,35 @@ public class IcmpHandler implements IPacketListener {
                     if (((ICMP)ipv4.getPayload()).getIcmpType() == ICMP_TYPE_ECHO &&
                             (destinationAddress == switchIpAddress.getInt() ||
                              gatewayIps.contains(destAddressStr))) {
+                        log.debug("ICMPHandler: ICMP packet for sw {} and "
+                                + "sending ICMP response ", sw.getDpid());
                         sendICMPResponse(sw, inPort, payload);
                         return;
                     }
                 }
+
+                /* Check if ICMP is for any switch known host */
+                for (Host host: sw.getHosts()) {
+                    IPv4Address hostIpAddress =
+                            IPv4Address.of(host.getIpAddress());
+                    if (hostIpAddress != null &&
+                            hostIpAddress.equals(destinationAddress)) {
+                        /* TODO: We should not have come here as ARP itself
+                         * would have installed a Route to the host. See if
+                         * we can remove this code
+                         */
+                        log.debug("ICMPHandler: ICMP request for known host {}",
+                                         hostIpAddress);
+                        byte[] destinationMacAddress = host.getMacAddress().toBytes();
+                        srManager.addRouteToHost(sw,
+                                destinationAddress, destinationMacAddress);
+                        return;
+                    }
+                }
+                /* ICMP for an unknown host */
+                log.debug("ICMPHandler: ICMP request for unknown host {}"
+                        + " and sending ARP request", destinationAddress);
+                srManager.sendArpRequest(sw, destinationAddress, inPort);
             }
 
         }
