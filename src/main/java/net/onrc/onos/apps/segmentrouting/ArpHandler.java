@@ -281,8 +281,17 @@ public class ArpHandler {
                 .setSourceMACAddress(senderMacAddress)
                 .setEtherType(Ethernet.TYPE_ARP).setPayload(arpRequest);
 
-        sendPacketOut(sw, eth, (short)-1);
-
+		/* Broadcast the ARP request to all switch ports
+		 * that subnets are connected to except the port from which
+		 * ARP request is received
+		 */
+		for (Integer portNo : getSwitchSubnetPorts(sw)) {
+			if (portNo.shortValue() == inPort.getPortNumber().shortValue())
+				continue;
+        	log.debug("ArpHandler: Sending ARP request on switch {} port {}",
+        			sw.getDpid(), portNo.shortValue());
+            sendPacketOut(sw, eth, portNo.shortValue());
+		}
     }
 
     /**
