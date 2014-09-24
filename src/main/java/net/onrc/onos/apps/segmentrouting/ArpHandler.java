@@ -9,6 +9,7 @@
 package net.onrc.onos.apps.segmentrouting;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
+import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
@@ -116,36 +118,86 @@ public class ArpHandler {
     private void handleArpRequest(Switch sw, Port inPort, Ethernet payload) {
 
     	ARP arpRequest = (ARP)payload.getPayload();
-        List<String> subnetGatewayIPs = getSubnetGatewayIps(sw);
-        String switchMacAddressStr = sw.getStringAttribute("routerMac");
-        if (!subnetGatewayIPs.isEmpty()) {
-            IPv4Address targetProtocolAddress = IPv4Address.of(arpRequest.getTargetProtocolAddress());
-            // Do we have to check port also ??
-            if (subnetGatewayIPs.contains(targetProtocolAddress.toString())) {
-                MACAddress targetMac = MACAddress.valueOf(switchMacAddressStr);
+    	MACAddress targetMac = null;
 
-                ARP arpReply = new ARP();
-                arpReply.setHardwareType(ARP.HW_TYPE_ETHERNET)
-                        .setProtocolType(ARP.PROTO_TYPE_IP)
-                        .setHardwareAddressLength(
-                                (byte) Ethernet.DATALAYER_ADDRESS_LENGTH)
-                        .setProtocolAddressLength((byte) IPv4.ADDRESS_LENGTH)
-                        .setOpCode(ARP.OP_REPLY)
-                        .setSenderHardwareAddress(targetMac.toBytes())
-                        .setSenderProtocolAddress(arpRequest.getTargetProtocolAddress())
-                        .setTargetHardwareAddress(arpRequest.getSenderHardwareAddress())
-                        .setTargetProtocolAddress(arpRequest.getSenderProtocolAddress());
+    	if (isArpReqForSwitch(sw, arpRequest)) {
+            String switchMacAddressStr = sw.getStringAttribute("routerMac");
+            targetMac = MACAddress.valueOf(switchMacAddressStr);
+        	log.debug("ArpHandler: Received a ARP query for a sw {} ", sw.getDpid());
+    	}
 
-                Ethernet eth = new Ethernet();
-                eth.setDestinationMACAddress(arpRequest.getSenderHardwareAddress())
-                        .setSourceMACAddress(targetMac.toBytes())
-                        .setEtherType(Ethernet.TYPE_ARP).setPayload(arpReply);
+    	Host knownHost = isArpReqForKnownHost(sw, arpRequest);
+    	if (knownHost != null) {
+            targetMac = knownHost.getMacAddress();
+        	log.debug("ArpHandler: Received a ARP query for a known host {} ",
+        						IPv4Address.of(knownHost.getIpAddress()));
+    	}
 
-                sendPacketOut(sw, eth, inPort.getPortNumber().shortValue());
-            }
-        }
+    	if (targetMac != null) {
+    		/* ARP Destination is known. Packet out ARP Reply */
+            ARP arpReply = new ARP();
+            arpReply.setHardwareType(ARP.HW_TYPE_ETHERNET)
+                    .setProtocolType(ARP.PROTO_TYPE_IP)
+                    .setHardwareAddressLength(
+                            (byte) Ethernet.DATALAYER_ADDRESS_LENGTH)
+                    .setProtocolAddressLength((byte) IPv4.ADDRESS_LENGTH)
+                    .setOpCode(ARP.OP_REPLY)
+                    .setSenderHardwareAddress(targetMac.toBytes())
+                    .setSenderProtocolAddress(arpRequest.getTargetProtocolAddress())
+                    .setTargetHardwareAddress(arpRequest.getSenderHardwareAddress())
+                    .setTargetProtocolAddress(arpRequest.getSenderProtocolAddress());
+
+            Ethernet eth = new Ethernet();
+            eth.setDestinationMACAddress(arpRequest.getSenderHardwareAddress())
+                    .setSourceMACAddress(targetMac.toBytes())
+                    .setEtherType(Ethernet.TYPE_ARP).setPayload(arpReply);
+
+            sendPacketOut(sw, eth, inPort.getPortNumber().shortValue());
+    	}
+    	else
+    	{
+    		/* Broadcast the received ARP request to all switch ports
+    		 * that subnets are connected to except the port from which
+    		 * ARP request is received
+    		 */
+        	log.debug("ArpHandler: Received a ARP query for unknown host {} ",
+        			IPv4Address.of(arpRequest.getTargetProtocolAddress()));
+    		for (Integer portNo : getSwitchSubnetPorts(sw)) {
+    			if (portNo.shortValue() == inPort.getPortNumber().shortValue())
+    				continue;
+            	log.debug("ArpHandler: Sending ARP request on switch {} port {}",
+            			sw.getDpid(), portNo.shortValue());
+                sendPacketOut(sw, payload, portNo.shortValue());
+    		}
+    	}
     }
 
+    private Host isArpReqForKnownHost(Switch sw, ARP arpRequest) {
+    	Host knownHost = null;
+
+        IPv4Address targetIPAddress = IPv4Address.of(
+        					arpRequest.getTargetProtocolAddress());
+
+        for (Host host:sw.getHosts()) {
+        	if (host.getIpAddress() == targetIPAddress.getInt()) {
+        		knownHost = host;
+        		break;
+        	}
+        }
+        return knownHost;
+
+    }
+    private boolean isArpReqForSwitch(Switch sw, ARP arpRequest) {
+        List<String> subnetGatewayIPs = getSubnetGatewayIps(sw);
+        boolean isArpForSwitch = false;
+        if (!subnetGatewayIPs.isEmpty()) {
+            IPv4Address targetProtocolAddress = IPv4Address.of(arpRequest.getTargetProtocolAddress());
+            if (subnetGatewayIPs.contains(targetProtocolAddress.toString())) {
+            	isArpForSwitch = true;
+            }
+        }
+        return isArpForSwitch;
+    }
     /**
      * Retrieve Gateway IP address of all subnets defined in net config file
      *
@@ -172,6 +224,24 @@ public class ArpHandler {
         }
 
         return gatewayIps;
+    }
+
+    private HashSet<Integer> getSwitchSubnetPorts(Switch sw) {
+        HashSet<Integer> switchSubnetPorts = new HashSet<Integer>();
+
+        String subnets = sw.getStringAttribute("subnets");
+        try {
+            JSONArray arry = new JSONArray(subnets);
+            for (int i = 0; i < arry.length(); i++) {
+                Integer subnetPort = (Integer)arry.getJSONObject(i).get("portNo");
+                switchSubnetPorts.add(subnetPort);
+            }
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return switchSubnetPorts;
     }
 
     /**
