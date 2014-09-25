@@ -12,7 +12,7 @@ public class GroupAction implements Action {
         fwdSws = new ArrayList<Dpid>();
     }
 
-    public void AddSwitch(Dpid d) {
+    public void addSwitch(Dpid d) {
         fwdSws.add(d);
     }
 

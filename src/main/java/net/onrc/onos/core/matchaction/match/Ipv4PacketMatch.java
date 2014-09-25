@@ -2,11 +2,11 @@ package net.onrc.onos.core.matchaction.match;
 
 import net.onrc.onos.core.util.IPv4Net;
 
-public class IpPacketMatch implements Match {
+public class Ipv4PacketMatch implements Match {
 
     IPv4Net dstIp;
 
-    public IpPacketMatch(String ipAddressSlash) {
+    public Ipv4PacketMatch(String ipAddressSlash) {
         this.dstIp = new IPv4Net(ipAddressSlash);
     }
 

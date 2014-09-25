@@ -1,10 +1,10 @@
 package net.onrc.onos.core.matchaction.match;
 
-public class MplsPacketMatch implements Match {
+public class MplsMatch implements Match {
 
     private final int mplsLabel;
 
-    public MplsPacketMatch(int label) {
+    public MplsMatch(int label) {
         this.mplsLabel = label;
     }
 

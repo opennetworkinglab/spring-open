@@ -9,29 +9,50 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.core.util.SingletonTask;
+import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
-import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
+import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionId;
+import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.action.CopyTtlInAction;
+import net.onrc.onos.core.matchaction.action.CopyTtlOutAction;
+import net.onrc.onos.core.matchaction.action.DecMplsTtlAction;
+import net.onrc.onos.core.matchaction.action.DecNwTtlAction;
+import net.onrc.onos.core.matchaction.action.GroupAction;
+import net.onrc.onos.core.matchaction.action.PopMplsAction;
+import net.onrc.onos.core.matchaction.action.PushMplsAction;
+import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
+import net.onrc.onos.core.matchaction.match.Ipv4PacketMatch;
+import net.onrc.onos.core.matchaction.match.Match;
+import net.onrc.onos.core.matchaction.match.MplsMatch;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
-import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.IPv4Net;
+import net.onrc.onos.core.util.SwitchPort;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
@@ -50,6 +71,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ArpHandler arpHandler;
     private GenericIpHandler ipHandler;
     private IcmpHandler icmpHandler;
+    private boolean networkConverged;
+    private IThreadPoolService threadPool;
+    private SingletonTask discoveryTask;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -86,6 +110,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         ipHandler = new GenericIpHandler(context, this);
         arpEntries = new ArrayList<ArpEntry>();
         topologyService = context.getServiceImpl(ITopologyService.class);
+        threadPool = context.getServiceImpl(IThreadPoolService.class);
         mutableTopology = topologyService.getTopology();
         topologyService.addListener(this, false);
 
@@ -95,8 +120,18 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
-        // TODO Auto-generated method stub
+        networkConverged = false;
 
+        ScheduledExecutorService ses = threadPool.getScheduledExecutor();
+
+        discoveryTask = new SingletonTask(ses, new Runnable() {
+            @Override
+            public void run() {
+                populateEcmpRoutingRules();
+            }
+        });
+
+        discoveryTask.reschedule(10, TimeUnit.SECONDS);
     }
 
     @Override
@@ -191,7 +226,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     {
     	/**
     	 * Any Link update events, compute the ECMP path graph for all switch nodes
-    	 */
+
     	if ((topologyEvents.getAddedLinkDataEntries() != null) ||
     		(topologyEvents.getRemovedLinkDataEntries() != null))
     	{
@@ -200,19 +235,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             	ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
                 log.debug("ECMPShortestPathGraph is computed for switch {}",
                 		HexString.toHexString(sw.getDpid().value()));
-                /*
-                for (Switch dstSw: mutableTopology.getSwitches()){
-                	if (sw.getDpid().equals(dstSw.getDpid())){
-                		continue;
-                	}
-                	ArrayList<Path> paths = ecmpSPG.getECMPPaths(dstSw);
-                    log.debug("ECMPShortestPathGraph:Paths from switch {} to switch {} is {}",
-                            HexString.toHexString(sw.getDpid().value()),
-                            HexString.toHexString(dstSw.getDpid().value()), paths);
-                    //setSegmentRoutingRule(sw, paths);
-                }
-                */
-                /*
+
+
                 HashMap<Integer, HashMap<Switch,ArrayList<Path>>> pathGraph =
                                     ecmpSPG.getCompleteLearnedSwitchesAndPaths();
                 for (Integer itrIdx: pathGraph.keySet()){
@@ -231,7 +255,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         }
                     }
                 }
-                */
+
                 HashMap<Integer, HashMap<Switch,ArrayList<ArrayList<Dpid>>>> switchVia =
                         ecmpSPG.getAllLearnedSwitchesAndVia();
                 for (Integer itrIdx: switchVia.keySet()){
@@ -251,29 +275,313 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         }
                     }
                 }
+
             }
     	}
+    	*/
+
+        if ((topologyEvents.getAddedLinkDataEntries() != null) ||
+                (topologyEvents.getRemovedLinkDataEntries() != null))
+        {
+
+            if (networkConverged) {
+                populateEcmpRoutingRules();
+            }
+        }
+
     }
 
     /**
-     * Set segment routing rule to switches in the ECMP shortest path to the switch
+     * Populate routing rules walking through the ECMP shortest paths
      *
-     * @param sw source switch
-     * @param paths  ECMP path
      */
-    private void setSegmentRoutingRule(Switch sw, ArrayList<Path> paths) {
+    private void populateEcmpRoutingRules() {
 
-        log.debug("Set routing info for {} to .. ", sw.getDpid());
-        for (Path path: paths) {
+        Iterable<Switch> switches= mutableTopology.getSwitches();
+        for (Switch sw : switches) {
+            ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
+            log.debug("ECMPShortestPathGraph is computed for switch {}",
+                    HexString.toHexString(sw.getDpid().value()));
 
-            for (Object obj : path.toArray()) {
-                LinkData link = (LinkData)obj;
-                String destMplsLabel = getMplslabel(link.getDst().getDpid());
-                String targetMplsLabel = getMplslabel(sw.getDpid());
-                if (destMplsLabel != null && targetMplsLabel != null)
-                    setTransitRouterRule(targetMplsLabel, destMplsLabel);
+            HashMap<Integer, HashMap<Switch,ArrayList<ArrayList<Dpid>>>> switchVia =
+                    ecmpSPG.getAllLearnedSwitchesAndVia();
+            for (Integer itrIdx: switchVia.keySet()){
+                log.debug("ECMPShortestPathGraph:Switches learned in "
+                        + "Iteration{} from switch {}:",
+                        itrIdx,
+                        HexString.toHexString(sw.getDpid().value()));
+                HashMap<Switch, ArrayList<ArrayList<Dpid>>> swViaMap =
+                                switchVia.get(itrIdx);
+                for (Switch targetSw: swViaMap.keySet()){
+                    log.debug("ECMPShortestPathGraph:****switch {} via:",
+                            HexString.toHexString(targetSw.getDpid().value()));
+                    String destSw = sw.getDpid().toString();
+                    List<String> fwdToSw = new ArrayList<String>();
+
+                    int i=0;
+                    for (ArrayList<Dpid> via:swViaMap.get(targetSw)){
+                        log.debug("ECMPShortestPathGraph:******{}) {}",++i,via);
+                        if (via.isEmpty()) {
+                            fwdToSw.add(destSw);
+                        }
+                        else {
+                            fwdToSw.add(via.get(0).toString());
+                        }
+                    }
+                    setRoutingRule(targetSw, destSw, fwdToSw);
+                }
             }
         }
+
+        networkConverged = true;
+    }
+
+    /**
+     *
+     * Set routing rules in targetSw
+     * {forward packets to fwdToSw switches in order to send packets to destSw}
+     * - If the target switch is an edge router and final destnation switch is also
+     *   an edge router, then set IP forwarding rules to subnets
+     * - If only the target switch is an edge router, then set IP forwarding rule to
+     *   the transit router loopback IP address
+     * - If the target is a transit router, then just set the MPLS forwarding rule
+     *
+     * @param targetSw Switch to set the rules
+     * @param destSw  Final destination switches
+     * @param fwdToSw next hop switches
+     */
+    private void setRoutingRule(Switch targetSw, String destSw, List<String> fwdToSw) {
+
+
+        if (fwdToSw.isEmpty()) {
+            fwdToSw.add(destSw);
+        }
+
+        // if it is an edge router, then set IP table
+        if (IsEdgeRouter(targetSw.getDpid().toString()) &&
+                IsEdgeRouter(destSw)) {
+            // We assume that there is at least one transit router b/w edge routers
+            Switch destSwitch = mutableTopology.getSwitch(new Dpid(destSw));
+            String subnets = destSwitch.getStringAttribute("subnets");
+            try {
+                JSONArray arry = new JSONArray(subnets);
+                for (int i = 0; i < arry.length(); i++) {
+                    String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
+                    setIpTableRouter(targetSw, subnetIp, getMplsLabel(destSw)
+                            ,fwdToSw);
+
+                }
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            String routerIp = destSwitch.getStringAttribute("routerIp");
+            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw);
+        }
+        // if the target switch is the edge router, then set the IP rule to router IPs
+        else if (IsEdgeRouter(targetSw.getDpid().toString())) {
+            // We assume that there is at least one transit router b/w edge routers
+            Switch destSwitch = mutableTopology.getSwitch(new Dpid(destSw));
+            String routerIp = destSwitch.getStringAttribute("routerIp");
+            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw);
+        }
+        // if it is a transit router, then set rules in the MPLS table
+        else {
+            setMplsTable(targetSw, getMplsLabel(destSw), fwdToSw);
+        }
+
+    }
+
+    /**
+     * Check if the switch is the edge router or not
+     * If any subnet information is defined in the config file, the we assume
+     * it is an edge router
+     *
+     * @param dpid  Dpid of the switch to check
+     * @return true if it is an edge router, otherwise false
+     */
+    private boolean IsEdgeRouter(String dpid) {
+
+        for (Switch sw: mutableTopology.getSwitches()) {
+            String dpidStr = sw.getDpid().toString();
+            if (dpid.equals(dpidStr)) {
+                String subnetInfo = sw.getStringAttribute("subnets");
+                if (subnetInfo == null || subnetInfo.equals("[]")) {
+                    return false;
+                }
+                else
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Set IP forwarding rule
+     *  - If the destination is the next hop, then do not push MPLS,
+     *    just decrease the NW TTL
+     *  - Otherwise, push MPLS label and set the MPLS ID
+     *
+     * @param sw  target switch to set rules
+     * @param subnetIp Match IP address
+     * @param mplsLabel MPLS label of final destination router
+     * @param fwdToSws next hop routers
+     */
+    private void setIpTableRouter(Switch sw, String subnetIp, String mplsLabel,
+            List<String> fwdToSws) {
+
+        Ipv4PacketMatch ipMatch = new Ipv4PacketMatch(subnetIp);
+        List<Action> actions = new ArrayList<>();
+
+        // If destination SW is the same as the fwd SW, then do not push MPLS label
+        if (fwdToSws.size() == 1) {
+            String fwdToSw = fwdToSws.get(0);
+            if (getMplsLabel(fwdToSw).equals(mplsLabel)) {
+                DecNwTtlAction decTtlAction = new DecNwTtlAction(1);
+                actions.add(decTtlAction);
+            }
+        }
+        else {
+            PushMplsAction pushMplsAction = new PushMplsAction();
+            SetMplsIdAction setIdAction = new SetMplsIdAction(Integer.parseInt(mplsLabel));
+            CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
+
+            actions.add(pushMplsAction);
+            actions.add(setIdAction);
+            actions.add(copyTtlOutAction);
+        }
+
+        GroupAction groupAction = new GroupAction();
+
+        for (String fwdSw : fwdToSws) {
+            groupAction.addSwitch(new Dpid(fwdSw));
+        }
+        actions.add(groupAction);
+
+        //MatchAction matchAction = new MatchAction(maIdGenerator.getNewId(),
+        MatchAction matchAction = new MatchAction(new MatchActionId(0),
+                new SwitchPort((long)0,(short)0), ipMatch, actions);
+
+        MatchActionOperationEntry maEntry =
+            new MatchActionOperationEntry(
+                    net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
+                    matchAction);
+
+        MatchActionOperationEntry(maEntry);
+
+    }
+
+
+    /**
+     * Set MPLS forwarding rules to MPLS table
+     *   - If the destination is the same as the next hop to forward packets
+     *     then, pop the MPLS label according to PHP rule
+     *   - Otherwise, just forward packets to next hops using Group action
+     *
+     * @param sw  Switch to set the rules
+     * @param mplsLabel destination MPLS label
+     * @param fwdSws  next hop switches
+     */
+    private void setMplsTable(Switch sw, String mplsLabel, List<String> fwdSws) {
+
+        MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel));
+
+        List<Action> actions = new ArrayList<Action>();
+        // Either when packet is forwarded to edge router or the dest is the router
+
+        if (fwdSws.size() == 1) {
+            String fwdSw = fwdSws.get(0);
+            if (mplsLabel.equals(getMplsLabel(fwdSw))) {
+                PopMplsAction popAction = new PopMplsAction();
+                CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
+
+                actions.add(popAction);
+                actions.add(copyTtlInAction);
+            }
+        }
+        else {
+            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
+            actions.add(decMplsTtlAction);
+        }
+
+        GroupAction groupAction = new GroupAction();
+        for (String fwdSw: fwdSws)
+            groupAction.addSwitch(new Dpid(fwdSw));
+        actions.add(groupAction);
+
+        MatchAction matchAction = new MatchAction(new MatchActionId(0),
+                new SwitchPort((long)0,(short)0), mplsMatch, actions);
+
+        MatchActionOperationEntry maEntry =
+            new MatchActionOperationEntry(
+                    net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
+                    matchAction);
+
+        MatchActionOperationEntry(maEntry);
+
+    }
+
+
+    /**
+     * Debugging function to print out the Match Action Entry
+     *
+     * @param maEntry
+     */
+    private void MatchActionOperationEntry(MatchActionOperationEntry maEntry) {
+
+        StringBuilder logStr = new StringBuilder();
+
+        MatchAction ma = maEntry.getTarget();
+        Match m = ma.getMatch();
+        List<Action> actions = ma.getActions();
+
+        if (m instanceof Ipv4PacketMatch) {
+            logStr.append("If the IP matches with ");
+            IPv4Net ip = ((Ipv4PacketMatch) m).getDestination();
+            logStr.append(ip.toString());
+            logStr.append(" then ");
+        }
+        else if (m instanceof MplsMatch) {
+            logStr.append("If the MPLS label matches with ");
+            int mplsLabel = ((MplsMatch) m).getMplsLabel();
+            logStr.append(mplsLabel);
+            logStr.append(" then ");
+        }
+
+        logStr.append(" do { ");
+        for (Action action: actions) {
+            if (action instanceof CopyTtlInAction) {
+                logStr.append("copy ttl In, ");
+            }
+            else if (action instanceof CopyTtlOutAction) {
+                logStr.append("copy ttl Out, ");
+            }
+            else if (action instanceof DecMplsTtlAction) {
+                logStr.append("Dec MPLS TTL , ");
+            }
+            else if (action instanceof GroupAction) {
+                logStr.append("Forward packet to < ");
+                List<Dpid> dpids = ((GroupAction)action).getDpids();
+                for (Dpid dpid: dpids) {
+                    logStr.append(dpid.toString() + ",");
+                }
+            }
+            else if (action instanceof PopMplsAction) {
+                logStr.append("Pop MPLS label, ");
+            }
+            else if (action instanceof PushMplsAction) {
+                logStr.append("Push MPLS label, ");
+            }
+            else if (action instanceof SetMplsIdAction) {
+                int id = ((SetMplsIdAction)action).getMplsId();
+                logStr.append("Set MPLS ID as " + id + ", ");
+
+            }
+        }
+
+        log.debug(logStr.toString());
+
     }
 
     /**
@@ -283,39 +591,18 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @return MPLS label for the switch
      */
 
-    private String getMplslabel(Dpid dpid) {
+    private String getMplsLabel(String dpid) {
 
         String mplsLabel = null;
         for (Switch sw: mutableTopology.getSwitches()) {
-            String dpidStr = sw.getStringAttribute("nodeDpid");
-            if (dpid.toString().endsWith(dpidStr)) {
+            String dpidStr = sw.getDpid().toString();
+            if (dpid.equals(dpidStr)) {
                 mplsLabel = sw.getStringAttribute("nodeSid");
                 break;
             }
         }
 
         return mplsLabel;
-    }
-
-    /**
-     * Test function
-     *
-     *
-     */
-    private void setTransitRouterRule(String targetMplsLabel, String destMplsLabel) {
-
-        log.debug("Match: MPLS label {}, action: forward to {}", targetMplsLabel, destMplsLabel);
-
-    }
-
-    /**
-     * Test function
-     *
-     */
-    private void setBorderRouterRule() {
-
-
-
     }
 
 
