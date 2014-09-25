@@ -1546,6 +1546,12 @@ def command_query_rest(data,
             result = []
             if (onos == 1) and (url == 'links'):
                 for entry in entries:
+                    src = entry.get('src')
+                    dst = entry.get('dst')
+                    for tempEntry in entries:
+                        if cmp(src, tempEntry.get('dst')) == 0:
+                            if cmp(dst, tempEntry.get('src')) == 0:
+                                entries.remove(tempEntry)
                     result.append({
                        'src-switch'          : entry['src']['dpid'],
                        'src-port'            : entry['src']['portNumber'],

@@ -18,6 +18,7 @@
 package net.floodlightcontroller.core;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -113,6 +114,12 @@ public interface IOFSwitch {
      * @return whether the switch is still disconnected
      */
     public boolean isConnected();
+    
+    /**
+     * retun the channelSocket ip address with port number
+     * @return channelSocketAddress
+     */
+    public SocketAddress getChannelSocketAddress();
 
     /**
      * Sets whether the switch is connected.

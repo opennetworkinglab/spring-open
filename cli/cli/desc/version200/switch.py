@@ -951,11 +951,10 @@ SWITCH_FORMAT = {
     'switch' : {
         'field-orderings' : {
             'default' : [ 'Idx', '@', 'switch-alias', 'connected-since',
-                          'ip-address', 'type'],
+                          'ip-address', 'type', 'controller'],
             'details' : [ 'Idx','@', 'switch-alias', 'connected-since',
-                          'ip-address', 'type'],
-            'brief'   : [ 'Idx', '@', 'switch-alias', 'connected-since',
-                          'ip-address', ],
+                          'ip-address', 'type', 'controller'],
+            'brief'   : [ 'Idx', '@', 'switch-alias', 'controller'],
             },
         'fields' : {
             '@'                  : {
@@ -978,13 +977,14 @@ SWITCH_FORMAT = {
                                      'formatter' : fmtcnv.decode_switch_actions,
                                    },
             'ip-address'         : {
-                                     'verbose-name' : 'IP Address',
+                                     'verbose-name' : 'Connected At',
                                    },
             'socket-address'     : {
                                    },
             'buffers'            : {
                                    },
             'controller'         : {
+                                     'verbose-name' : 'Controller',
                                    },
             'tables'             : {
                                    },

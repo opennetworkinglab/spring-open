@@ -18,6 +18,7 @@ package net.floodlightcontroller.core.internal;
  **/
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -322,6 +323,10 @@ public class OFSwitchImplBase implements IOFSwitch {
     @Override
     public void setChannel(Channel channel) {
         this.channel = channel;
+    }
+    @Override
+    public SocketAddress getChannelSocketAddress(){
+        return channel.getRemoteAddress();
     }
 
     @Override

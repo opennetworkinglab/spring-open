@@ -377,6 +377,12 @@ public class TopologyPublisher implements IOFSwitchListener,
                 sw.getConnectedSince().toString());
         switchData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                 AdminStatus.ACTIVE.toString());
+        //setting name from config file.
+        switchData.createStringAttribute("name",
+                ret.getSwitchConfig().getName());
+        //set the switch socketAddress and port
+        switchData.createStringAttribute("remoteAddress",
+                sw.getChannelSocketAddress().toString().substring(1));
         if (ret.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
             Map<String, String> attr = ret.getSwitchConfig().getPublishAttributes();
             for (Entry<String, String> e : attr.entrySet()) {
@@ -389,6 +395,7 @@ public class TopologyPublisher implements IOFSwitchListener,
                     ConfigState.NOT_CONFIGURED.toString());
         }
         switchData.freeze();
+        System.out.println("getOnosInstanceId().toString():\n\n\n\n\n"+getOnosInstanceId());
         // The Port events
         List<PortData> portDataEntries = new ArrayList<PortData>();
         for (OFPortDesc port : sw.getPorts()) {

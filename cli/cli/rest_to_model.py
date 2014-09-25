@@ -410,7 +410,23 @@ def get_model_from_url(obj_type, data):
 
         # this synthetic obj_type's name is 'switches' in an attempt
         # to disabigutate it from 'class Switch'
+        #TODO: Need figure out a better way to get url (Through sdncon framework)
+        url = "http://%s/rest/v1/mastership" % sdnsh.controller
+        try:
+            result2 = sdnsh.store.rest_simple_request(url)
+            check_rest_result(result2)
+            mastership_data = json.loads(result2)
+        except Exception, e:
+            if sdnsh.description:   # description debugging
+                print "get_model_from_url: failed request %s: '%s'" % (url, e)
+            entries = []
         for entry in entries:
+            dpid = entry.get('dpid')
+            if(dpid in mastership_data.keys()):
+                #As there is only one master for switch
+                controller = mastership_data[dpid][0].get('controllerId')
+            else:
+                controller = None
             if switch_match and switch_match != entry['dpid']:
                 continue
             if switch_prefix and not entry['dpid'].startswith(switch_prefix):
@@ -418,9 +434,11 @@ def get_model_from_url(obj_type, data):
             if onos == 1:
                 result.append({
                    'dpid'                : entry['dpid'],
+                   'switch-alias'        : entry['stringAttributes']['name'],
                    'connected-since'     : entry['stringAttributes']['ConnectedSince'],
-                   'ip-address'          : 0,
-                   'type'                : entry['stringAttributes']['type']
+                   'ip-address'          : entry['stringAttributes']['remoteAddress'],
+                   'type'                : entry['stringAttributes']['type'],
+                   'controller'          : controller
                 })
             else:
                 attrs = entry['attributes']
@@ -476,8 +494,7 @@ def get_model_from_url(obj_type, data):
                         sw['tcp-port'] = ''
                         sw['connected-since'] = ''
                         result.append(sw)
-                else:
-                    known_dpids[dpid].update(sw)
+                [dpid].update(sw)
     elif obj_type == 'interfaces':
 
         # These are called interfaces because the primary
