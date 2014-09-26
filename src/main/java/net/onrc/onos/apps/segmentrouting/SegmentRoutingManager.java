@@ -1,5 +1,6 @@
 package net.onrc.onos.apps.segmentrouting;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -13,7 +14,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOF13Switch;
 import net.floodlightcontroller.core.IOF13Switch.NeighborSet;
+import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.IOFSwitch.PortChangeType;
+import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -54,6 +59,7 @@ import net.onrc.onos.core.util.SwitchPort;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.util.HexString;
@@ -61,7 +67,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SegmentRoutingManager implements IFloodlightModule,
-						ITopologyListener, IPacketListener {
+						ITopologyListener, IPacketListener, IOFSwitchListener {
 
     private static final Logger log = LoggerFactory
             .getLogger(SegmentRoutingManager.class);
@@ -76,6 +82,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private boolean networkConverged;
     private IThreadPoolService threadPool;
     private SingletonTask discoveryTask;
+    private IFloodlightProviderService floodlightProvider;
+    private IOFSwitch masterSwitch;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -106,7 +114,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
-
+        floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         arpHandler = new ArpHandler(context, this);
         icmpHandler = new IcmpHandler(context, this);
         ipHandler = new GenericIpHandler(context, this);
@@ -118,11 +126,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         this.packetService = context.getServiceImpl(IPacketService.class);
         packetService.registerPacketListener(this);
+
     }
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         networkConverged = false;
+        floodlightProvider.addOFSwitchListener(this);
 
         ScheduledExecutorService ses = threadPool.getScheduledExecutor();
 
@@ -133,7 +143,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         });
 
-        discoveryTask.reschedule(10, TimeUnit.SECONDS);
+        discoveryTask.reschedule(15, TimeUnit.SECONDS);
     }
 
     @Override
@@ -141,7 +151,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     	if (payload.getEtherType() == Ethernet.TYPE_ARP)
     		arpHandler.processPacketIn(sw, inPort, payload);
         if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
-        	if (((IPv4)payload.getPayload()).getProtocol() != IPv4.PROTOCOL_ICMP)
+            int protocol = ((IPv4)payload.getPayload()).getProtocol();
+        	if (((IPv4)payload.getPayload()).getProtocol() == IPv4.PROTOCOL_ICMP)
         		icmpHandler.processPacketIn(sw, inPort, payload);
         	else
         		ipHandler.processPacketIn(sw, inPort, payload);
@@ -359,7 +370,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             fwdToSw.add(destSw);
         }
 
-        // if it is an edge router, then set IP table
+        // if both target SW and dest SW are an edge router, then set IP table
         if (IsEdgeRouter(targetSw.getDpid().toString()) &&
                 IsEdgeRouter(destSw)) {
             // We assume that there is at least one transit router b/w edge routers
@@ -380,7 +391,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             String routerIp = destSwitch.getStringAttribute("routerIp");
             setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw);
         }
-        // if the target switch is the edge router, then set the IP rule to router IPs
+        // Only if the target switch is the edge router, then set the IP rules
         else if (IsEdgeRouter(targetSw.getDpid().toString())) {
             // We assume that there is at least one transit router b/w edge routers
             Switch destSwitch = mutableTopology.getSwitch(new Dpid(destSw));
@@ -437,14 +448,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         List<Action> actions = new ArrayList<>();
 
         // If destination SW is the same as the fwd SW, then do not push MPLS label
-        if (fwdToSws.size() == 1) {
-            String fwdToSw = fwdToSws.get(0);
-            if (getMplsLabel(fwdToSw).equals(mplsLabel)) {
-                DecNwTtlAction decTtlAction = new DecNwTtlAction(1);
-                actions.add(decTtlAction);
-            }
-        }
-        else {
+
+        if (fwdToSws.size() > 1) {
             PushMplsAction pushMplsAction = new PushMplsAction();
             SetMplsIdAction setIdAction = new SetMplsIdAction(Integer.parseInt(mplsLabel));
             CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
@@ -452,6 +457,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(pushMplsAction);
             actions.add(setIdAction);
             actions.add(copyTtlOutAction);
+        }
+        else {
+            String fwdToSw = fwdToSws.get(0);
+            if (getMplsLabel(fwdToSw).equals(mplsLabel)) {
+                DecNwTtlAction decTtlAction = new DecNwTtlAction(1);
+                actions.add(decTtlAction);
+            }
+            else {
+                PushMplsAction pushMplsAction = new PushMplsAction();
+                SetMplsIdAction setIdAction = new SetMplsIdAction(Integer.parseInt(mplsLabel));
+                CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
+
+                actions.add(pushMplsAction);
+                actions.add(setIdAction);
+                actions.add(copyTtlOutAction);
+            }
         }
 
         GroupAction groupAction = new GroupAction();
@@ -470,10 +491,37 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
                     matchAction);
 
-        printMatchActionOperationEntry(sw, maEntry);
+
+       // IOF13Switch sw13 = (IOF13Switch)masterSwitch;
+        IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                getSwId(sw.getDpid().toString()));
+
+        try {
+            printMatchActionOperationEntry(sw, maEntry);
+            sw13.pushFlow(maEntry);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
+        sw13.flush();
+
+        //printMatchActionOperationEntry(sw, maEntry);
 
     }
 
+
+    private long getSwId(String dpid) {
+
+        long swId = 0;
+
+        String swIdStr = dpid.substring(dpid.lastIndexOf(":")+1);
+        if (swIdStr != null)
+            swId = Integer.parseInt(swIdStr);
+
+        return swId;
+    }
 
     /**
      * Set MPLS forwarding rules to MPLS table
@@ -490,21 +538,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel));
 
         List<Action> actions = new ArrayList<Action>();
-        // Either when packet is forwarded to edge router or the dest is the router
 
-        if (fwdSws.size() == 1) {
-            String fwdSw = fwdSws.get(0);
-            if (mplsLabel.equals(getMplsLabel(fwdSw))) {
-                PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
-                CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
-
-                actions.add(popAction);
-                actions.add(copyTtlInAction);
-            }
-        }
-        else {
+        if (fwdSws.size() > 1) {
             DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
             actions.add(decMplsTtlAction);
+        }
+        // If the destination is the same as the next hop, then pop MPLS
+        else {
+            String fwdMplsId = getMplsLabel(fwdSws.get(0));
+            if (fwdMplsId.equals(mplsLabel)) {
+                String fwdSw = fwdSws.get(0);
+                if (mplsLabel.equals(getMplsLabel(fwdSw))) {
+                    PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
+                    CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
+
+                    actions.add(popAction);
+                    actions.add(copyTtlInAction);
+                }
+            }
         }
 
         GroupAction groupAction = new GroupAction();
@@ -520,7 +571,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
                     matchAction);
 
-        printMatchActionOperationEntry(sw, maEntry);
+        //printMatchActionOperationEntry(sw, maEntry);
+        //IOF13Switch sw13 = (IOF13Switch)masterSwitch;
+        IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                getSwId(sw.getDpid().toString()));
+
+        try {
+            printMatchActionOperationEntry(sw, maEntry);
+            sw13.pushFlow(maEntry);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
+        sw13.flush();
 
     }
 
@@ -658,6 +723,48 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     public void addRouteToHost(Switch sw, int hostIpAddress, byte[] hostMacAddress) {
         ipHandler.addRouteToHost(sw, hostIpAddress, hostMacAddress);
+
+    }
+
+    @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void switchActivatedMaster(long swId) {
+        masterSwitch = floodlightProvider.getMasterSwitch(swId);
+
+    }
+
+    @Override
+    public void switchActivatedEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchMasterToEqual(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchEqualToMaster(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchDisconnected(long swId) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void switchPortChanged(long swId, OFPortDesc port, PortChangeType changeType) {
+        // TODO Auto-generated method stub
 
     }
 }

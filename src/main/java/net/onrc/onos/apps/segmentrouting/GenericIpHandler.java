@@ -104,6 +104,12 @@ public class GenericIpHandler {
      */
     public void addRouteToHost(Switch sw, int destinationAddress, byte[] destinationMacAddress) {
 
+        // If we do not know the host, then we cannot set the forwarding rule
+        net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress.valueOf(destinationMacAddress));
+        if (host == null) {
+            return;
+        }
+
         IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
         OFFactory factory = ofSwitch.getFactory();
 
@@ -158,13 +164,10 @@ public class GenericIpHandler {
         */
 
         // Set output port
-        net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress.valueOf(destinationMacAddress));
-        if (host != null) {
-            for (Port port: host.getAttachmentPoints()) {
-                OFAction out = factory.actions().buildOutput()
-                                .setPort(OFPort.of(port.getPortNumber().shortValue())).build();
-                actionList.add(out);
-            }
+        for (Port port: host.getAttachmentPoints()) {
+            OFAction out = factory.actions().buildOutput()
+                    .setPort(OFPort.of(port.getPortNumber().shortValue())).build();
+            actionList.add(out);
         }
 
         OFInstruction writeInstr = factory.instructions().buildWriteActions()

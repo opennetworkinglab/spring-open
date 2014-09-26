@@ -235,10 +235,12 @@ public class IcmpHandler {
                 }
             }
 
-            // If the destination host is not attached in the switch, add MPLS label
-            if (!sameSubnet) {
-
-                IPv4Address targetAddress = IPv4Address.of(((IPv4)packet.getPayload()).getDestinationAddress());
+            IPv4Address targetAddress = IPv4Address.of(((IPv4)packet.getPayload()).getDestinationAddress());
+            String destMacAddress = packet.getDestinationMAC().toString();
+            // If the destination host is not attached in the switch
+            // and the destination is not the neighbor switch, then add MPLS label
+            String targetMac = getRouterMACFromConfig(targetAddress);
+            if (!sameSubnet && !targetMac.equals(destMacAddress)) {
                 int mplsLabel = getMplsLabelFromConfig(targetAddress);
                 if (mplsLabel > 0) {
                     OFAction pushlabel = factory.actions().pushMpls(EthType.MPLS_UNICAST);
@@ -308,6 +310,35 @@ public class IcmpHandler {
     }
 
 
+    /**
+     * Get Router MAC Address for the target address from the network config file
+     *
+     * @param targetAddress - IP address of the target host
+     * @return Router MAC of the switch to send packets to the target address
+     */
+    private String getRouterMACFromConfig(IPv4Address targetAddress) {
+
+        String routerMac = null;
+
+        for (Switch sw: mutableTopology.getSwitches()) {
+
+            String subnets = sw.getStringAttribute("subnets");
+            try {
+                JSONArray arry = new JSONArray(subnets);
+                for (int i = 0; i < arry.length(); i++) {
+                    String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
+                    if (srManager.netMatch(subnetIp, targetAddress.toString())) {
+                             routerMac = sw.getStringAttribute("routerMac");
+                    }
+                }
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        return routerMac;
+    }
 
     /**
      * Add a new rule to VLAN table to forward packets from any port to the next table
