@@ -22,17 +22,22 @@ public interface IOF13Switch extends IOFSwitch {
      * operation and match-action definition, and subject to the TTP supported
      * by a switch implementing this interface. It is up to the implementation
      * to translate the 'matchActionOp' into a match-instruction with actions,
-     * as expected by OF 1.3 switches.
-     * 
-     * @param matchActionOp
+     * as expected by OF 1.3 switches. For better performance, use
+     * {@link pushFlows}
+     *
+     * @param matchActionOp information required to create a flow-mod and push
+     *        it to the switch
      * @throws IOException
      */
     public void pushFlow(MatchActionOperationEntry matchActionOp) throws IOException;
 
     /**
-     * Pushes a collection of flows to the switch.
-     *
-     * @param matchActionOps
+     * Pushes a collection of flows to the switch, at the same time. Can result
+     * in better performance, when compared to sending flows one at a time using
+     * {@link pushFlow}, especially if the number of flows is large.
+     * 
+     * @param matchActionOps a collection of information required to create a
+     *        flowmod
      * @throws IOException
      */
     public void pushFlows(Collection<MatchActionOperationEntry> matchActionOps)

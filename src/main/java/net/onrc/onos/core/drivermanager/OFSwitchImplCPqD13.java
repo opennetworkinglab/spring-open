@@ -723,8 +723,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     .ethDst(b.dstMac);
             OFAction setDA = factory.actions().buildSetField()
                     .setField(dmac).build();
-            OFOxmEthDst smac = factory.oxms()
-                    .ethDst(b.srcMac);
+            OFOxmEthSrc smac = factory.oxms()
+                    .ethSrc(b.srcMac);
             OFAction setSA = factory.actions().buildSetField()
                     .setField(smac).build();
             OFAction outp = factory.actions().buildOutput()
@@ -838,7 +838,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         return ofAction;
     }
 
-    private void pushIpEntry(MatchActionOperationEntry mao) throws IOException {
+    private OFMessage getIpEntry(MatchActionOperationEntry mao) {
         MatchAction ma = mao.getTarget();
         Operator op = mao.getOperator();
         Ipv4Match ipm = (Ipv4Match) ma.getMatch();
@@ -905,14 +905,14 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     .setXid(getNextTransactionId())
                     .build();
         }
-        write(ipFlow, null);
         log.debug("{} ip-rule {}-{} in sw {}",
                 (op == MatchActionOperations.Operator.ADD) ? "Adding" : "Deleting",
                 match, writeActions,
                 getStringId());
+        return ipFlow;
     }
 
-    private void pushMplsEntry(MatchActionOperationEntry mao) throws IOException {
+    private OFMessage getMplsEntry(MatchActionOperationEntry mao) {
         MatchAction ma = mao.getTarget();
         Operator op = mao.getOperator();
         MplsMatch mplsm = (MplsMatch) ma.getMatch();
@@ -968,15 +968,17 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     .setXid(getNextTransactionId())
                     .build();
         }
-        write(mplsFlow, null);
         log.debug("{} mpls-rule {}-{} in sw {}",
                 (op == MatchActionOperations.Operator.ADD) ? "Adding" : "Deleting",
                 matchlabel, writeActions,
                 getStringId());
+        return mplsFlow;
     }
 
-    private void pushAclEntry(MatchActionOperationEntry mao) {
+    private OFMessage getAclEntry(MatchActionOperationEntry mao) {
 
+        OFMessage aclFlow = null;
+        return aclFlow;
     }
 
     // *****************************
@@ -985,26 +987,39 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
 
     @Override
     public void pushFlow(MatchActionOperationEntry matchActionOp) throws IOException {
+        OFMessage ofm = getFlow(matchActionOp);
+        if (ofm != null) {
+            write(Collections.singletonList(ofm));
+        }
+    }
+
+    private OFMessage getFlow(MatchActionOperationEntry matchActionOp) {
         final MatchAction matchAction = matchActionOp.getTarget();
         final Match match = matchAction.getMatch();
         if (match instanceof Ipv4Match) {
-            pushIpEntry(matchActionOp);
+            return getIpEntry(matchActionOp);
         } else if (match instanceof MplsMatch) {
-            pushMplsEntry(matchActionOp);
+            return getMplsEntry(matchActionOp);
         } else if (match instanceof PacketMatch) {
-            pushAclEntry(matchActionOp);
+            return getAclEntry(matchActionOp);
         } else {
             log.error("Unknown match type {} pushed to switch {}", match,
                     getStringId());
         }
+        return null;
     }
 
     @Override
     public void pushFlows(Collection<MatchActionOperationEntry> matchActionOps)
             throws IOException {
+        List<OFMessage> flowMods = new ArrayList<OFMessage>();
         for (MatchActionOperationEntry matchActionOp : matchActionOps) {
-            pushFlow(matchActionOp);
+            OFMessage ofm = getFlow(matchActionOp);
+            if (ofm != null) {
+                flowMods.add(ofm);
+            }
         }
+        write(flowMods);
     }
 
     @Override

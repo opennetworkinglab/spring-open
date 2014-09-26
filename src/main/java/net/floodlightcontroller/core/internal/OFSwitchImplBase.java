@@ -372,7 +372,7 @@ public class OFSwitchImplBase implements IOFSwitch {
         this.write(msglist);
     }
 
-    public void write(List<OFMessage> msglist) throws IOException {
+    protected void write(List<OFMessage> msglist) throws IOException {
         this.channel.write(msglist);
     }
 
