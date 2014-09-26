@@ -1,22 +1,20 @@
 package net.onrc.onos.core.matchaction.action;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import net.floodlightcontroller.core.IOF13Switch.NeighborSet;
 import net.onrc.onos.core.util.Dpid;
 
 public class GroupAction implements Action {
-    List<Dpid> fwdSws;
+    NeighborSet fwdSws;
 
     public GroupAction() {
-        fwdSws = new ArrayList<Dpid>();
+        fwdSws = new NeighborSet();
     }
 
     public void addSwitch(Dpid d) {
-        fwdSws.add(d);
+        fwdSws.addDpid(d);
     }
 
-    public List<Dpid> getDpids() {
+    public NeighborSet getDpids() {
         return fwdSws;
     }
 }

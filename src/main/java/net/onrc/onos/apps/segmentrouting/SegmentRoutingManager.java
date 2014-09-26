@@ -13,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOF13Switch.NeighborSet;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -468,7 +469,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
                     matchAction);
 
-        MatchActionOperationEntry(maEntry);
+        printMatchActionOperationEntry(sw, maEntry);
 
     }
 
@@ -518,7 +519,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
                     matchAction);
 
-        MatchActionOperationEntry(maEntry);
+        printMatchActionOperationEntry(sw, maEntry);
 
     }
 
@@ -528,9 +529,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      * @param maEntry
      */
-    private void MatchActionOperationEntry(MatchActionOperationEntry maEntry) {
+    private void printMatchActionOperationEntry(Switch sw, MatchActionOperationEntry maEntry) {
 
-        StringBuilder logStr = new StringBuilder();
+        StringBuilder logStr = new StringBuilder("In switch " + sw.getDpid() + ", ");
 
         MatchAction ma = maEntry.getTarget();
         Match m = ma.getMatch();
@@ -562,10 +563,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
             else if (action instanceof GroupAction) {
                 logStr.append("Forward packet to < ");
-                List<Dpid> dpids = ((GroupAction)action).getDpids();
-                for (Dpid dpid: dpids) {
-                    logStr.append(dpid.toString() + ",");
-                }
+                NeighborSet dpids = ((GroupAction)action).getDpids();
+                logStr.append(dpids.toString() + ",");
+
             }
             else if (action instanceof PopMplsAction) {
                 logStr.append("Pop MPLS label, ");
