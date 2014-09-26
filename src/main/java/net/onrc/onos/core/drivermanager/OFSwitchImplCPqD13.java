@@ -27,6 +27,7 @@ import net.onrc.onos.core.configmanager.PktLinkConfig;
 import net.onrc.onos.core.configmanager.SegmentRouterConfig;
 import net.onrc.onos.core.matchaction.MatchAction;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.CopyTtlInAction;
@@ -823,17 +824,26 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 ofAction = factory.actions().buildSetField()
                         .setField(lid).build();
             } else if (action instanceof PopMplsAction) {
-
+                EthType ethertype = ((PopMplsAction) action).getEthType();
+                ofAction = factory.actions().popMpls(ethertype);
             } else if (action instanceof GroupAction) {
-                ofAction = factory.actions().buildGroup()
-                        .setGroup(OFGroup.of(0)) // TODO fail
-                        .build();
+                NeighborSet ns = ((GroupAction) action).getDpids();
+                EcmpInfo ei = ecmpGroups.get(ns);
+                if (ei != null) {
+                    int gid = ei.groupId;
+                    ofAction = factory.actions().buildGroup()
+                            .setGroup(OFGroup.of(gid))
+                            .build();
+                } else {
+                    log.error("Unable to find ecmp group for neighbors {} at "
+                            + "switch {}", ns, getStringId());
+                }
             } else if (action instanceof DecNwTtlAction) {
-
+                ofAction = factory.actions().decNwTtl();
             } else if (action instanceof DecMplsTtlAction) {
-
+                ofAction = factory.actions().decMplsTtl();
             } else if (action instanceof CopyTtlInAction) {
-
+                ofAction = factory.actions().copyTtlIn();
             } else if (action instanceof CopyTtlOutAction) {
                 ofAction = factory.actions().copyTtlOut();
             } else {
@@ -861,20 +871,35 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             priority = MAX_PRIORITY;
         }
 
-        // set flow-mod XXX - This is only ADD (not doing DELETE yet)
-        OFMessage ipFlow = factory.buildFlowAdd()
-                .setTableId(TableId.of(TABLE_IPv4_UNICAST))
-                .setMatch(match)
-                .setInstructions(instructions)
-                .setPriority(priority)
-                .setBufferId(OFBufferId.NO_BUFFER)
-                .setIdleTimeout(0)
-                .setHardTimeout(0)
-                .setXid(getNextTransactionId())
-                .build();
-
+        // set flow-mod
+        OFMessage ipFlow = null;
+        if (op == MatchActionOperations.Operator.ADD) {
+            ipFlow = factory.buildFlowAdd()
+                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
+                    .setMatch(match)
+                    .setInstructions(instructions)
+                    .setPriority(priority)
+                    .setBufferId(OFBufferId.NO_BUFFER)
+                    .setIdleTimeout(0)
+                    .setHardTimeout(0)
+                    .setXid(getNextTransactionId())
+                    .build();
+        } else {
+            ipFlow = factory.buildFlowDeleteStrict()
+                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
+                    .setMatch(match)
+                    .setInstructions(instructions)
+                    .setPriority(priority)
+                    .setBufferId(OFBufferId.NO_BUFFER)
+                    .setIdleTimeout(0)
+                    .setHardTimeout(0)
+                    .setXid(getNextTransactionId())
+                    .build();
+        }
         write(ipFlow, null);
-        log.debug("Adding ip-rule {}-{} in sw {}", match, writeActions,
+        log.debug("{} ip-rule {}-{} in sw {}",
+                (op == MatchActionOperations.Operator.ADD) ? "Adding" : "Deleting",
+                match, writeActions,
                 getStringId());
     }
 

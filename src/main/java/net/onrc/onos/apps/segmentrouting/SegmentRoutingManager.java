@@ -54,6 +54,7 @@ import net.onrc.onos.core.util.SwitchPort;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
@@ -494,7 +495,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         if (fwdSws.size() == 1) {
             String fwdSw = fwdSws.get(0);
             if (mplsLabel.equals(getMplsLabel(fwdSw))) {
-                PopMplsAction popAction = new PopMplsAction();
+                PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
                 CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
 
                 actions.add(popAction);
