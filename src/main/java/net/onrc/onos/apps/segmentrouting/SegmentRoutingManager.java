@@ -36,7 +36,7 @@ import net.onrc.onos.core.matchaction.action.GroupAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
 import net.onrc.onos.core.matchaction.action.PushMplsAction;
 import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
-import net.onrc.onos.core.matchaction.match.Ipv4PacketMatch;
+import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.MplsMatch;
 import net.onrc.onos.core.packet.ARP;
@@ -432,7 +432,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private void setIpTableRouter(Switch sw, String subnetIp, String mplsLabel,
             List<String> fwdToSws) {
 
-        Ipv4PacketMatch ipMatch = new Ipv4PacketMatch(subnetIp);
+        Ipv4Match ipMatch = new Ipv4Match(subnetIp);
         List<Action> actions = new ArrayList<>();
 
         // If destination SW is the same as the fwd SW, then do not push MPLS label
@@ -537,9 +537,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         Match m = ma.getMatch();
         List<Action> actions = ma.getActions();
 
-        if (m instanceof Ipv4PacketMatch) {
+        if (m instanceof Ipv4Match) {
             logStr.append("If the IP matches with ");
-            IPv4Net ip = ((Ipv4PacketMatch) m).getDestination();
+            IPv4Net ip = ((Ipv4Match) m).getDestination();
             logStr.append(ip.toString());
             logStr.append(" then ");
         }

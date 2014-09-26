@@ -45,6 +45,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.ListenerDispatcher;
+import net.onrc.onos.core.configmanager.INetworkConfigService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.util.OnosInstanceId;
 
@@ -368,4 +369,11 @@ public class MockFloodlightProvider implements IFloodlightModule,
     public IOFSwitch getEqualSwitch(long dpid) {
         return this.activeEqualSwitches.get(dpid);
     }
+
+    @Override
+    public INetworkConfigService getNetworkConfigService() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

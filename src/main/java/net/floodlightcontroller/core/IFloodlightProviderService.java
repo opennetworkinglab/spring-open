@@ -23,6 +23,7 @@ import java.util.Set;
 
 import net.floodlightcontroller.core.internal.Controller.Counters;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.onrc.onos.core.configmanager.INetworkConfigService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.util.OnosInstanceId;
 
@@ -186,6 +187,28 @@ public interface IFloodlightProviderService extends IFloodlightService {
     public void removeOFSwitchListener(IOFSwitchListener listener);
 
 
+    Set<Long> getAllSwitchDpids();
+
+    IOFSwitch getSwitch(long dpid);
+
+    /**
+     * Record a switch event in in-memory debug-event
+     * 
+     * @param switchDPID
+     * @param reason Reason for this event
+     * @param flushNow see debug-event flushing in IDebugEventService
+     */
+    public void addSwitchEvent(long switchDPID, String reason, boolean flushNow);
+
+    Set<Long> getAllMasterSwitchDpids();
+
+    Set<Long> getAllEqualSwitchDpids();
+
+    IOFSwitch getMasterSwitch(long dpid);
+
+    IOFSwitch getEqualSwitch(long dpid);
+
+    void setAlwaysClearFlowsOnSwActivate(boolean value);
 
     //************************
     //  Utility methods
@@ -235,29 +258,12 @@ public interface IFloodlightProviderService extends IFloodlightService {
      */
     public Counters getCounters();
 
-    void setAlwaysClearFlowsOnSwActivate(boolean value);
+
 
     Map<String, Long> getMemory();
 
     Long getUptime();
 
-    Set<Long> getAllSwitchDpids();
 
-    IOFSwitch getSwitch(long dpid);
-
-    /**
-     * Record a switch event in in-memory debug-event
-     * @param switchDPID
-     * @param reason Reason for this event
-     * @param flushNow see debug-event flushing in IDebugEventService
-     */
-    public void addSwitchEvent(long switchDPID, String reason, boolean flushNow);
-
-    Set<Long> getAllMasterSwitchDpids();
-
-    Set<Long> getAllEqualSwitchDpids();
-
-    IOFSwitch getMasterSwitch(long dpid);
-
-    IOFSwitch getEqualSwitch(long dpid);
+    public INetworkConfigService getNetworkConfigService();
 }

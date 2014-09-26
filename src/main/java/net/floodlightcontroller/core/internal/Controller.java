@@ -68,6 +68,7 @@ import net.floodlightcontroller.debugevent.NullDebugEvent;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.util.LoadMonitor;
+import net.onrc.onos.core.configmanager.INetworkConfigService;
 import net.onrc.onos.core.drivermanager.DriverManager;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.packet.Ethernet;
@@ -136,6 +137,7 @@ public class Controller implements IFloodlightProviderService {
     protected IDebugEventService debugEvents;
 
     protected ILinkDiscoveryService linkDiscovery;
+    protected INetworkConfigService networkConfig;
 
     // Configuration options
     protected int openFlowPort = 6633;
@@ -481,6 +483,10 @@ public class Controller implements IFloodlightProviderService {
 
     public void setLinkDiscoveryService(ILinkDiscoveryService linkDiscovery) {
         this.linkDiscovery = linkDiscovery;
+    }
+
+    public void setNetworkConfigService(INetworkConfigService networkConfigService) {
+        this.networkConfig = networkConfigService;
     }
 
     public void setDebugCounter(IDebugCounterService debugCounters) {
@@ -991,6 +997,10 @@ public class Controller implements IFloodlightProviderService {
             if (update != null)
                 update.dispatch();
         }
+    }
+
+    public INetworkConfigService getNetworkConfigService() {
+        return networkConfig;
     }
 
     // **************

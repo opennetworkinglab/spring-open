@@ -132,6 +132,7 @@ public class PktLinkConfig extends LinkConfig {
     private void validateParams() {
         // TODO - wrong-names, duplicate links,
         // duplicate use of port, is switch-allowed for which link is allowed?
+        // valid port numbers
     }
 
     public static class PktLinkParamsNotSpecified extends RuntimeException {

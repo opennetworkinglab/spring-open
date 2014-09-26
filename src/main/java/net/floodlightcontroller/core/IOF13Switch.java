@@ -1,5 +1,6 @@
 package net.floodlightcontroller.core;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,17 +23,20 @@ public interface IOF13Switch extends IOFSwitch {
      * by a switch implementing this interface. It is up to the implementation
      * to translate the 'matchActionOp' into a match-instruction with actions,
      * as expected by OF 1.3 switches.
-     *
+     * 
      * @param matchActionOp
+     * @throws IOException
      */
-    public void pushFlow(MatchActionOperationEntry matchActionOp);
+    public void pushFlow(MatchActionOperationEntry matchActionOp) throws IOException;
 
     /**
      * Pushes a collection of flows to the switch.
-     * 
+     *
      * @param matchActionOps
+     * @throws IOException
      */
-    public void pushFlows(Collection<MatchActionOperationEntry> matchActionOps);
+    public void pushFlows(Collection<MatchActionOperationEntry> matchActionOps)
+            throws IOException;
 
     // ****************************
     // Group related

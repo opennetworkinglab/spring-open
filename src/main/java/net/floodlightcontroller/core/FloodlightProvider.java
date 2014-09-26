@@ -30,6 +30,7 @@ import net.floodlightcontroller.debugcounter.IDebugCounterService;
 import net.floodlightcontroller.debugevent.IDebugEventService;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
+import net.onrc.onos.core.configmanager.INetworkConfigService;
 import net.onrc.onos.core.linkdiscovery.ILinkDiscoveryService;
 import net.onrc.onos.core.registry.IControllerRegistryService;
 
@@ -83,6 +84,8 @@ public class FloodlightProvider implements IFloodlightModule {
                context.getServiceImpl(IControllerRegistryService.class));
        controller.setLinkDiscoveryService(
                context.getServiceImpl(ILinkDiscoveryService.class));
+        controller.setNetworkConfigService(
+                context.getServiceImpl(INetworkConfigService.class));
 
        controller.init(context.getConfigParams(this));
     }

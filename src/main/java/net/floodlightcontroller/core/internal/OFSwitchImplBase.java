@@ -1286,4 +1286,9 @@ public class OFSwitchImplBase implements IOFSwitch {
     public Lock getListenerWriteLock() {
         return listenerLock.writeLock();
     }
+
+    public String getSwitchDriverState() {
+        return "";
+    }
+
 }

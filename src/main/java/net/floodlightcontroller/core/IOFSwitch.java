@@ -624,4 +624,9 @@ public interface IOFSwitch {
      */
     public void setTableFull(boolean isFull);
 
+    /**
+     * Get the switch driver hanshake state
+     */
+    public String getSwitchDriverState();
+
 }

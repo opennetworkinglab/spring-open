@@ -46,13 +46,13 @@ public class NetworkConfigManager implements IFloodlightModule,
      * JSON Config file needs to use one of the following types for defining the
      * kind of switch or link it wishes to configure.
      */
-    private static final String SEGMENT_ROUTER = "Router_SR";
-    private static final String ROADM = "Roadm";
-    private static final String OF10SWITCH = "Switch_OF10";
+    public static final String SEGMENT_ROUTER = "Router_SR";
+    public static final String ROADM = "Roadm";
+    public static final String OF10SWITCH = "Switch_OF10";
 
-    private static final String PKT_LINK = "pktLink";
-    private static final String WDM_LINK = "wdmLink";
-    private static final String PKT_OPT_LINK = "pktOptLink";
+    public static final String PKT_LINK = "pktLink";
+    public static final String WDM_LINK = "wdmLink";
+    public static final String PKT_OPT_LINK = "pktOptLink";
 
     NetworkConfig networkConfig;
     private ConcurrentMap<Long, SwitchConfig> configuredSwitches;

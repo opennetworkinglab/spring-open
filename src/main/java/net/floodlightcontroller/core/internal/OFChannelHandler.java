@@ -1069,7 +1069,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * controller. Next State: depends on the role of this controller for
          * this switch - either MASTER or EQUAL.
          */
-        WAIT_SWITCH_DRIVER_SUB_HANDSHAKE(true) {
+        WAIT_SWITCH_DRIVER_SUB_HANDSHAKE(false) {
 
             @Override
             void processOFError(OFChannelHandler h, OFErrorMsg m)
@@ -1871,7 +1871,14 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         void processOFRoleReply(OFChannelHandler h, OFRoleReply m)
                 throws SwitchStateException, IOException {
-            unhandledMessageReceived(h, m);
+            // A role reply message received by the default handler implies
+            // that the channel state-machine is in a state where it does not
+            // expect a role message. That in turn implies that role-request was
+            // sent out by this controller, as a result of a callback
+            // from the registry service, because the chosen master (some other
+            // instance) died, while this controller instance has not completed
+            // handshake yet. Best to disconnect switch and start over.
+            illegalMessageReceived(h, m);
         }
 
         void processOFGetAsyncReply(OFChannelHandler h,
@@ -1925,15 +1932,17 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * controller that wins mastership. Once the registry API changes to
          * reply to every request, we would not need to wait for a timeout to
          * move to Role.EQUAL (or SLAVE).
-         * 
+         *
          * @param h the channel handler for this switch
          * @param ctx the netty channel handler context for the channel 'h'
          * @throws IOException
          */
         public void handleTimedOutHandshake(OFChannelHandler h,
                 ChannelHandlerContext ctx) throws IOException {
-            log.error("Disconnecting switch {}: failed to complete handshake",
-                    h.getSwitchInfoString());
+            log.error("Disconnecting switch {}: failed to complete handshake " +
+                    "in state {} (with driverState: {})",
+                    h.getSwitchInfoString(), h.getStateForTesting(),
+                    h.sw.getSwitchDriverState());
             h.counters.switchDisconnectHandshakeTimeout.updateCounterWithFlush();
             ctx.getChannel().close();
         }
