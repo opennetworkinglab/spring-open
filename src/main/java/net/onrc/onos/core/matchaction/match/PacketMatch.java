@@ -9,7 +9,8 @@ import com.google.common.base.Objects;
  * A match object (traffic specifier) for packet nodes, flow-paths and intents.
  * <p>
  * This class does not have a switch ID and a in-port number. They are handled
- * by MatchAction, Flow and Intent classes.
+ * by MatchAction, Flow and Intent classes (for example MatchAction class has a
+ * separate SwitchPort field). Also, this class does not handle vlans or ttls.
  * <p>
  * TODO: This class should be extensible.
  */

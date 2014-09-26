@@ -18,6 +18,7 @@ import net.floodlightcontroller.core.SwitchDriverSubHandshakeAlreadyStarted;
 import net.floodlightcontroller.core.SwitchDriverSubHandshakeCompleted;
 import net.floodlightcontroller.core.SwitchDriverSubHandshakeNotStarted;
 import net.floodlightcontroller.core.internal.OFSwitchImplBase;
+import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.configmanager.INetworkConfigService;
 import net.onrc.onos.core.configmanager.INetworkConfigService.NetworkConfigState;
 import net.onrc.onos.core.configmanager.INetworkConfigService.SwitchConfigStatus;
@@ -55,6 +56,7 @@ import org.projectfloodlight.openflow.protocol.OFBucket;
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFErrorMsg;
 import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFGroupFeaturesStatsReply;
 import org.projectfloodlight.openflow.protocol.OFGroupType;
@@ -65,6 +67,8 @@ import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
+import org.projectfloodlight.openflow.protocol.match.Match.Builder;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
@@ -74,12 +78,14 @@ import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.IpProtocol;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFGroup;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.OFVlanVidMatch;
 import org.projectfloodlight.openflow.types.TableId;
+import org.projectfloodlight.openflow.types.TransportPort;
 import org.projectfloodlight.openflow.types.U32;
 import org.projectfloodlight.openflow.types.U64;
 import org.projectfloodlight.openflow.util.HexString;
@@ -881,30 +887,31 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
 
         // set flow-mod
-        OFMessage ipFlow = null;
-        if (op == MatchActionOperations.Operator.ADD) {
-            ipFlow = factory.buildFlowAdd()
-                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
-                    .setMatch(match)
-                    .setInstructions(instructions)
-                    .setPriority(priority)
-                    .setBufferId(OFBufferId.NO_BUFFER)
-                    .setIdleTimeout(0)
-                    .setHardTimeout(0)
-                    .setXid(getNextTransactionId())
-                    .build();
-        } else {
-            ipFlow = factory.buildFlowDeleteStrict()
-                    .setTableId(TableId.of(TABLE_IPv4_UNICAST))
-                    .setMatch(match)
-                    .setInstructions(instructions)
-                    .setPriority(priority)
-                    .setBufferId(OFBufferId.NO_BUFFER)
-                    .setIdleTimeout(0)
-                    .setHardTimeout(0)
-                    .setXid(getNextTransactionId())
-                    .build();
+        OFFlowMod.Builder fmBuilder = null;
+        switch (op) {
+        case ADD:
+            fmBuilder = factory.buildFlowAdd();
+            break;
+        case REMOVE:
+            fmBuilder = factory.buildFlowDeleteStrict();
+            break;
+        // case MODIFY: // TODO
+        // fmBuilder = factory.buildFlowModifyStrict();
+        // break;
+        default:
+            log.warn("Unsupported MatchAction Operator: {}", op);
+            return null;
         }
+        OFMessage ipFlow = fmBuilder
+                .setTableId(TableId.of(TABLE_IPv4_UNICAST))
+                .setMatch(match)
+                .setInstructions(instructions)
+                .setPriority(priority)
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setIdleTimeout(0)
+                .setHardTimeout(0)
+                .setXid(getNextTransactionId())
+                .build();
         log.debug("{} ip-rule {}-{} in sw {}",
                 (op == MatchActionOperations.Operator.ADD) ? "Adding" : "Deleting",
                 match, writeActions,
@@ -944,30 +951,33 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         instructions.add(writeInstr);
         instructions.add(gotoInstr);
 
-        OFMessage mplsFlow = null;
-        if (op == MatchActionOperations.Operator.ADD) {
-            mplsFlow = factory.buildFlowAdd()
-                    .setTableId(TableId.of(TABLE_MPLS))
-                    .setMatch(matchlabel)
-                    .setInstructions(instructions)
-                    .setPriority(MAX_PRIORITY) // exact match and exclusive
-                    .setBufferId(OFBufferId.NO_BUFFER)
-                    .setIdleTimeout(0)
-                    .setHardTimeout(0)
-                    .setXid(getNextTransactionId())
-                    .build();
-        } else {
-            mplsFlow = factory.buildFlowDeleteStrict()
-                    .setTableId(TableId.of(TABLE_MPLS))
-                    .setMatch(matchlabel)
-                    .setInstructions(instructions)
-                    .setPriority(MAX_PRIORITY) // exact match and exclusive
-                    .setBufferId(OFBufferId.NO_BUFFER)
-                    .setIdleTimeout(0)
-                    .setHardTimeout(0)
-                    .setXid(getNextTransactionId())
-                    .build();
+        // set flow-mod
+        OFFlowMod.Builder fmBuilder = null;
+        switch (op) {
+        case ADD:
+            fmBuilder = factory.buildFlowAdd();
+            break;
+        case REMOVE:
+            fmBuilder = factory.buildFlowDeleteStrict();
+            break;
+        // case MODIFY: // TODO
+        // fmBuilder = factory.buildFlowModifyStrict();
+        // break;
+        default:
+            log.warn("Unsupported MatchAction Operator: {}", op);
+            return null;
         }
+
+        OFMessage mplsFlow = fmBuilder
+                .setTableId(TableId.of(TABLE_MPLS))
+                .setMatch(matchlabel)
+                .setInstructions(instructions)
+                .setPriority(MAX_PRIORITY) // exact match and exclusive
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setIdleTimeout(0)
+                .setHardTimeout(0)
+                .setXid(getNextTransactionId())
+                .build();
         log.debug("{} mpls-rule {}-{} in sw {}",
                 (op == MatchActionOperations.Operator.ADD) ? "Adding" : "Deleting",
                 matchlabel, writeActions,
@@ -976,8 +986,102 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     }
 
     private OFMessage getAclEntry(MatchActionOperationEntry mao) {
+        MatchAction ma = mao.getTarget();
+        Operator op = mao.getOperator();
+        PacketMatch packetMatch = (PacketMatch) ma.getMatch();
+        Builder matchBuilder = factory.buildMatch();
 
-        OFMessage aclFlow = null;
+        // set match
+        int inport = 0;
+        if (ma.getSwitchPort() != null) {
+            inport = (int) ma.getSwitchPort().getPortNumber().value();
+        }
+        final MACAddress srcMac = packetMatch.getSrcMacAddress();
+        final MACAddress dstMac = packetMatch.getDstMacAddress();
+        final Short etherType = packetMatch.getEtherType();
+        final IPv4Net srcIp = packetMatch.getSrcIpAddress();
+        final IPv4Net dstIp = packetMatch.getDstIpAddress();
+        final Byte ipProto = packetMatch.getIpProtocolNumber();
+        final Short srcTcpPort = packetMatch.getSrcTcpPortNumber();
+        final Short dstTcpPort = packetMatch.getDstTcpPortNumber();
+        if (inport > 0) {
+            matchBuilder.setExact(MatchField.IN_PORT,
+                    OFPort.of(inport));
+        }
+        if (srcMac != null) {
+            matchBuilder.setExact(MatchField.ETH_SRC, MacAddress.of(srcMac.toLong()));
+        }
+        if (dstMac != null) {
+            matchBuilder.setExact(MatchField.ETH_DST, MacAddress.of(dstMac.toLong()));
+        }
+        if (etherType != null) {
+            matchBuilder.setExact(MatchField.ETH_TYPE, EthType.of(etherType));
+        }
+        if (srcIp != null) {
+            matchBuilder.setMasked(MatchField.IPV4_SRC,
+                    IPv4Address.of(srcIp.address().value())
+                            .withMaskOfLength(srcIp.prefixLen()));
+        }
+        if (dstIp != null) {
+            matchBuilder.setMasked(MatchField.IPV4_DST,
+                    IPv4Address.of(dstIp.address().value())
+                            .withMaskOfLength(dstIp.prefixLen()));
+        }
+        if (ipProto != null) {
+            matchBuilder.setExact(MatchField.IP_PROTO, IpProtocol.of(ipProto));
+        }
+        if (srcTcpPort != null) {
+            matchBuilder.setExact(MatchField.TCP_SRC, TransportPort.of(srcTcpPort));
+        }
+        if (dstTcpPort != null) {
+            matchBuilder.setExact(MatchField.TCP_DST, TransportPort.of(dstTcpPort));
+        }
+
+        // set actions
+        List<OFAction> applyActions = new ArrayList<OFAction>();
+        for (Action action : ma.getActions()) {
+            OFAction ofAction = getOFAction(action);
+            if (ofAction != null) {
+                applyActions.add(ofAction);
+            }
+        }
+
+        // set instructions
+        OFInstruction clearInstr = factory.instructions().clearActions();
+        OFInstruction applyInstr = factory.instructions().buildApplyActions()
+                .setActions(applyActions).build();
+        List<OFInstruction> instructions = new ArrayList<OFInstruction>();
+        instructions.add(clearInstr);
+        instructions.add(applyInstr);
+
+        // set flow-mod
+        OFFlowMod.Builder fmBuilder = null;
+        switch (op) {
+        case ADD:
+            fmBuilder = factory.buildFlowAdd();
+            break;
+        case REMOVE:
+            fmBuilder = factory.buildFlowDeleteStrict();
+            break;
+        // case MODIFY: // TODO
+        // fmBuilder = factory.buildFlowModifyStrict();
+        // break;
+        default:
+            log.warn("Unsupported MatchAction Operator: {}", op);
+            return null;
+        }
+
+        OFMessage aclFlow = fmBuilder
+                .setTableId(TableId.of(TABLE_ACL))
+                .setMatch(matchBuilder.build())
+                .setInstructions(instructions)
+                .setPriority(MAX_PRIORITY / 2) // TODO: wrong - should be MA
+                                               // priority
+                .setBufferId(OFBufferId.NO_BUFFER)
+                .setIdleTimeout(0)
+                .setHardTimeout(0)
+                .setXid(getNextTransactionId())
+                .build();
         return aclFlow;
     }
 
