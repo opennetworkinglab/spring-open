@@ -777,6 +777,67 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
+    private OFAction getOFAction(Action action) {
+        OFAction ofAction = null;
+        if (action instanceof OutputAction) {
+            OutputAction outputAction = (OutputAction) action;
+            OFPort port = OFPort.of((int) outputAction.getPortNumber().value());
+            ofAction = factory.actions().output(port, Short.MAX_VALUE);
+        } else if (action instanceof ModifyDstMacAction) {
+            long dstMac = ((ModifyDstMacAction) action).getDstMac().toLong();
+            OFOxmEthDst dmac = factory.oxms()
+                    .ethDst(MacAddress.of(dstMac));
+            ofAction = factory.actions().buildSetField()
+                    .setField(dmac).build();
+        } else if (action instanceof ModifySrcMacAction) {
+            long srcMac = ((ModifySrcMacAction) action).getSrcMac().toLong();
+            OFOxmEthSrc smac = factory.oxms()
+                    .ethSrc(MacAddress.of(srcMac));
+            ofAction = factory.actions().buildSetField()
+                    .setField(smac).build();
+        } else if (action instanceof PushMplsAction) {
+            ofAction = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+        } else if (action instanceof SetMplsIdAction) {
+            int labelid = ((SetMplsIdAction) action).getMplsId();
+            OFOxmMplsLabel lid = factory.oxms()
+                    .mplsLabel(U32.of(labelid));
+            ofAction = factory.actions().buildSetField()
+                    .setField(lid).build();
+        } else if (action instanceof PopMplsAction) {
+            EthType ethertype = ((PopMplsAction) action).getEthType();
+            ofAction = factory.actions().popMpls(ethertype);
+        } else if (action instanceof GroupAction) {
+            NeighborSet ns = ((GroupAction) action).getDpids();
+            EcmpInfo ei = ecmpGroups.get(ns);
+            if (ei != null) {
+                int gid = ei.groupId;
+                ofAction = factory.actions().buildGroup()
+                        .setGroup(OFGroup.of(gid))
+                        .build();
+            } else {
+                log.error("Unable to find ecmp group for neighbors {} at "
+                        + "switch {}", ns, getStringId());
+            }
+        } else if (action instanceof DecNwTtlAction) {
+            ofAction = factory.actions().decNwTtl();
+        } else if (action instanceof DecMplsTtlAction) {
+            ofAction = factory.actions().decMplsTtl();
+        } else if (action instanceof CopyTtlInAction) {
+            ofAction = factory.actions().copyTtlIn();
+        } else if (action instanceof CopyTtlOutAction) {
+            ofAction = factory.actions().copyTtlOut();
+        } else {
+            log.warn("Unsupported Action type: {}", action.getClass().getName());
+            return null;
+        }
+
+        // not supported by loxigen
+        // OFAction setBos =
+        // factory.actions().buildSetField().setField(bos).build();
+
+        return ofAction;
+    }
+
     private void pushIpEntry(MatchActionOperationEntry mao) throws IOException {
         MatchAction ma = mao.getTarget();
         Operator op = mao.getOperator();
@@ -798,63 +859,11 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         // set actions
         List<OFAction> writeActions = new ArrayList<OFAction>();
         for (Action action : ma.getActions()) {
-            OFAction ofAction = null;
-            if (action instanceof OutputAction) {
-                OutputAction outputAction = (OutputAction) action;
-                OFPort port = OFPort.of((int) outputAction.getPortNumber().value());
-                ofAction = factory.actions().output(port, Short.MAX_VALUE);
-            } else if (action instanceof ModifyDstMacAction) {
-                long dstMac = ((ModifyDstMacAction) action).getDstMac().toLong();
-                OFOxmEthDst dmac = factory.oxms()
-                        .ethDst(MacAddress.of(dstMac));
-                ofAction = factory.actions().buildSetField()
-                        .setField(dmac).build();
-            } else if (action instanceof ModifySrcMacAction) {
-                long srcMac = ((ModifySrcMacAction) action).getSrcMac().toLong();
-                OFOxmEthSrc smac = factory.oxms()
-                        .ethSrc(MacAddress.of(srcMac));
-                ofAction = factory.actions().buildSetField()
-                        .setField(smac).build();
-            } else if (action instanceof PushMplsAction) {
-                ofAction = factory.actions().pushMpls(EthType.MPLS_UNICAST);
-            } else if (action instanceof SetMplsIdAction) {
-                int labelid = ((SetMplsIdAction) action).getMplsId();
-                OFOxmMplsLabel lid = factory.oxms()
-                        .mplsLabel(U32.of(labelid));
-                ofAction = factory.actions().buildSetField()
-                        .setField(lid).build();
-            } else if (action instanceof PopMplsAction) {
-                EthType ethertype = ((PopMplsAction) action).getEthType();
-                ofAction = factory.actions().popMpls(ethertype);
-            } else if (action instanceof GroupAction) {
-                NeighborSet ns = ((GroupAction) action).getDpids();
-                EcmpInfo ei = ecmpGroups.get(ns);
-                if (ei != null) {
-                    int gid = ei.groupId;
-                    ofAction = factory.actions().buildGroup()
-                            .setGroup(OFGroup.of(gid))
-                            .build();
-                } else {
-                    log.error("Unable to find ecmp group for neighbors {} at "
-                            + "switch {}", ns, getStringId());
-                }
-            } else if (action instanceof DecNwTtlAction) {
-                ofAction = factory.actions().decNwTtl();
-            } else if (action instanceof DecMplsTtlAction) {
-                ofAction = factory.actions().decMplsTtl();
-            } else if (action instanceof CopyTtlInAction) {
-                ofAction = factory.actions().copyTtlIn();
-            } else if (action instanceof CopyTtlOutAction) {
-                ofAction = factory.actions().copyTtlOut();
-            } else {
-                log.warn("Unsupported Action type: {}", action.getClass().getName());
-                continue;
+            OFAction ofAction = getOFAction(action);
+            if (ofAction != null) {
+                writeActions.add(ofAction);
             }
-            writeActions.add(ofAction);
         }
-
-        // OFAction setBos =
-        // factory.actions().buildSetField().setField(bos).build();
 
         // set instructions
         OFInstruction writeInstr = factory.instructions().buildWriteActions()
@@ -865,7 +874,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         instructions.add(writeInstr);
         instructions.add(gotoInstr);
 
-        // set flow priority
+        // set flow priority to emulate longest prefix match
         int priority = ipdst.prefixLen() * PRIORITY_MULTIPLIER;
         if (ipdst.prefixLen() == (short) 32) {
             priority = MAX_PRIORITY;
@@ -903,8 +912,67 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 getStringId());
     }
 
-    private void pushMplsEntry(MatchActionOperationEntry mao) {
+    private void pushMplsEntry(MatchActionOperationEntry mao) throws IOException {
+        MatchAction ma = mao.getTarget();
+        Operator op = mao.getOperator();
+        MplsMatch mplsm = (MplsMatch) ma.getMatch();
 
+        // set match
+        OFOxmEthType ethTypeMpls = factory.oxms()
+                .ethType(EthType.MPLS_UNICAST);
+        OFOxmMplsLabel labelid = factory.oxms()
+                .mplsLabel(U32.of(mplsm.getMplsLabel()));
+        OFOxmList oxmList = OFOxmList.of(ethTypeMpls, labelid);
+        OFMatchV3 matchlabel = factory.buildMatchV3()
+                .setOxmList(oxmList).build();
+
+        // set actions
+        List<OFAction> writeActions = new ArrayList<OFAction>();
+        for (Action action : ma.getActions()) {
+            OFAction ofAction = getOFAction(action);
+            if (ofAction != null) {
+                writeActions.add(ofAction);
+            }
+        }
+
+        // set instructions
+        OFInstruction writeInstr = factory.instructions().buildWriteActions()
+                .setActions(writeActions).build();
+        OFInstruction gotoInstr = factory.instructions().buildGotoTable()
+                .setTableId(TableId.of(TABLE_ACL)).build();
+        List<OFInstruction> instructions = new ArrayList<OFInstruction>();
+        instructions.add(writeInstr);
+        instructions.add(gotoInstr);
+
+        OFMessage mplsFlow = null;
+        if (op == MatchActionOperations.Operator.ADD) {
+            mplsFlow = factory.buildFlowAdd()
+                    .setTableId(TableId.of(TABLE_MPLS))
+                    .setMatch(matchlabel)
+                    .setInstructions(instructions)
+                    .setPriority(MAX_PRIORITY) // exact match and exclusive
+                    .setBufferId(OFBufferId.NO_BUFFER)
+                    .setIdleTimeout(0)
+                    .setHardTimeout(0)
+                    .setXid(getNextTransactionId())
+                    .build();
+        } else {
+            mplsFlow = factory.buildFlowDeleteStrict()
+                    .setTableId(TableId.of(TABLE_MPLS))
+                    .setMatch(matchlabel)
+                    .setInstructions(instructions)
+                    .setPriority(MAX_PRIORITY) // exact match and exclusive
+                    .setBufferId(OFBufferId.NO_BUFFER)
+                    .setIdleTimeout(0)
+                    .setHardTimeout(0)
+                    .setXid(getNextTransactionId())
+                    .build();
+        }
+        write(mplsFlow, null);
+        log.debug("{} mpls-rule {}-{} in sw {}",
+                (op == MatchActionOperations.Operator.ADD) ? "Adding" : "Deleting",
+                matchlabel, writeActions,
+                getStringId());
     }
 
     private void pushAclEntry(MatchActionOperationEntry mao) {
