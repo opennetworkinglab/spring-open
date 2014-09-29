@@ -406,7 +406,8 @@ def do_realtimestats(request, stattype, dpid):
     """
     if request.method != 'GET':
         raise RestInvalidMethodException()
-    url = controller_url('core', 'switch', dpid, stattype, 'json')
+    #url = controller_url('core', 'switch', dpid, stattype, 'json')
+    url = "http://localhost:8080/wm/floodlight/core/switch/%s/%s/json" % (dpid, stattype)
     return get_sdnplatform_response(url)
 
 @safe_rest_view
