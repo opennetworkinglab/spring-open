@@ -17,7 +17,27 @@
 
 package net.floodlightcontroller.core.web;
 
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.annotations.LogMessageDoc;
+
+import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFMatchV3;
+import org.projectfloodlight.openflow.protocol.OFOxmList;
+import org.projectfloodlight.openflow.protocol.OFStatsReply;
+import org.projectfloodlight.openflow.protocol.OFStatsRequest;
+import org.projectfloodlight.openflow.protocol.OFStatsType;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.TableId;
+import org.projectfloodlight.openflow.util.HexString;
+import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for server resources related to switches
@@ -26,7 +46,7 @@ import org.restlet.resource.ServerResource;
  */
 
 public class SwitchResourceBase extends ServerResource {
-    /*protected final static Logger log = LoggerFactory.getLogger(SwitchResourceBase.class);
+    protected final static Logger log = LoggerFactory.getLogger(SwitchResourceBase.class);
 
     public enum REQUESTTYPE {
         OFSTATS,
@@ -45,29 +65,30 @@ public class SwitchResourceBase extends ServerResource {
                     "from the switch",
             recommendation = LogMessageDoc.CHECK_SWITCH + " " +
                     LogMessageDoc.GENERIC_ACTION)
-    protected List<OFStatistics> getSwitchStatistics(long switchId,
-                                                     OFStatisticsType statType) {
+
+    protected List<OFStatsReply> getSwitchStatistics(long switchId,
+    							OFStatsType statType) {
         IFloodlightProviderService floodlightProvider =
                 (IFloodlightProviderService) getContext().getAttributes().
                         get(IFloodlightProviderService.class.getCanonicalName());
 
         IOFSwitch sw = floodlightProvider.getSwitches().get(switchId);
-        Future<List<OFStatistics>> future;
-        List<OFStatistics> values = null;
+        Future<List<OFStatsReply>> future;
+        List<OFStatsReply> values = null;
         if (sw != null) {
-            OFStatisticsRequest req = new OFStatisticsRequest();
-            req.setStatisticType(statType);
-            int requestLength = req.getLengthU();
-            if (statType == OFStatisticsType.FLOW) {
-                OFFlowStatisticsRequest specificReq = new OFFlowStatisticsRequest();
-                OFMatch match = new OFMatch();
-                match.setWildcards(0xffffffff);
-                specificReq.setMatch(match);
-                specificReq.setOutPort(OFPort.OFPP_NONE.getValue());
-                specificReq.setTableId((byte) 0xff);
-                req.setStatistics(Collections.singletonList((OFStatistics) specificReq));
-                requestLength += specificReq.getLength();
-            } else if (statType == OFStatisticsType.AGGREGATE) {
+       	    OFStatsRequest<?> req = null;
+            if (statType == OFStatsType.FLOW) {
+            	log.debug("Switch Flow Stats req sent for switch {}",
+           						sw.getStringId());
+                OFMatchV3 match = sw.getFactory().buildMatchV3()
+               					.setOxmList(OFOxmList.EMPTY).build();
+        	req = sw.getFactory()
+        	 		.buildFlowStatsRequest()
+        			.setMatch(match)
+        			.setOutPort(OFPort.ANY)
+        			.setTableId(TableId.ALL)
+        			.setXid(sw.getNextTransactionId()).build();
+            } /*else if (statType == OFStatisticsType.AGGREGATE) {
                 OFAggregateStatisticsRequest specificReq = new OFAggregateStatisticsRequest();
                 OFMatch match = new OFMatch();
                 match.setWildcards(0xffffffff);
@@ -76,12 +97,14 @@ public class SwitchResourceBase extends ServerResource {
                 specificReq.setTableId((byte) 0xff);
                 req.setStatistics(Collections.singletonList((OFStatistics) specificReq));
                 requestLength += specificReq.getLength();
-            } else if (statType == OFStatisticsType.PORT) {
-                OFPortStatisticsRequest specificReq = new OFPortStatisticsRequest();
-                specificReq.setPortNumber(OFPort.OFPP_NONE.getValue());
-                req.setStatistics(Collections.singletonList((OFStatistics) specificReq));
-                requestLength += specificReq.getLength();
-            } else if (statType == OFStatisticsType.QUEUE) {
+            } */else if (statType == OFStatsType.PORT) {
+            	log.debug("Switch Port Stats: req sent for all "
+            			+ "ports in switch {}", sw.getStringId());
+                req = sw.getFactory()
+        	 		.buildPortStatsRequest()
+        	 		.setPortNo(OFPort.ANY).setXid
+        	 		(sw.getNextTransactionId()).build();
+            } /*else if (statType == OFStatisticsType.QUEUE) {
                 OFQueueStatisticsRequest specificReq = new OFQueueStatisticsRequest();
                 specificReq.setPortNumber(OFPort.OFPP_ALL.getValue());
                 // LOOK! openflowj does not define OFPQ_ALL! pulled this from openflow.h
@@ -92,8 +115,7 @@ public class SwitchResourceBase extends ServerResource {
             } else if (statType == OFStatisticsType.DESC ||
                     statType == OFStatisticsType.TABLE) {
                 // pass - nothing todo besides set the type above
-            }
-            req.setLengthU(requestLength);
+            }*/
             // XXX S fix when we fix stats
             try {
                 future = sw.getStatistics(req);
@@ -105,7 +127,7 @@ public class SwitchResourceBase extends ServerResource {
         return values;
     }
 
-    protected List<OFStatistics> getSwitchStatistics(String switchId, OFStatisticsType statType) {
+    protected List<OFStatsReply> getSwitchStatistics(String switchId, OFStatsType statType) {
         return getSwitchStatistics(HexString.toLong(switchId), statType);
     }
 
@@ -115,13 +137,13 @@ public class SwitchResourceBase extends ServerResource {
                         get(IFloodlightProviderService.class.getCanonicalName());
 
         IOFSwitch sw = floodlightProvider.getSwitches().get(switchId);
-        Future<OFFeaturesReply> future;
+        //uture<OFFeaturesReply> future;
         OFFeaturesReply featuresReply = null;
         if (sw != null) {
         	// XXX S fix when we fix stats
             try {
-                future = sw.getFeaturesReplyFromSwitch();
-                featuresReply = future.get(10, TimeUnit.SECONDS);
+                //future = sw.getFeaturesReplyFromSwitch();
+                //featuresReply = future.get(10, TimeUnit.SECONDS);
             } catch (Exception e) {
                 log.error("Failure getting features reply from switch" + sw, e);
             }
@@ -132,6 +154,6 @@ public class SwitchResourceBase extends ServerResource {
 
     protected OFFeaturesReply getSwitchFeaturesReply(String switchId) {
         return getSwitchFeaturesReply(HexString.toLong(switchId));
-    }*/
+    }
 
 }
