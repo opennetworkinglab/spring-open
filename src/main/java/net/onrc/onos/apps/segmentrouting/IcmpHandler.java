@@ -1,7 +1,18 @@
+
+/*******************************************************************************
+ * Copyright (c) 2014 Open Networking Laboratory.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Apache License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ ******************************************************************************/
+
 package net.onrc.onos.apps.segmentrouting;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
@@ -51,6 +62,8 @@ public class IcmpHandler {
     private IFlowPusherService flowPusher;
     private boolean controllerPortAllowed = false;
 
+    private Queue<IPv4> icmpQueue = new LinkedList<IPv4>();
+
     private static final int TABLE_VLAN = 0;
     private static final int TABLE_TMAC = 1;
     private static final int TABLE_IPv4_UNICAST = 2;
@@ -78,6 +91,18 @@ public class IcmpHandler {
         this.srManager = manager;
     }
 
+    /**
+     * handle ICMP packets
+     * If it is for ICMP echo to router IP or any subnet GW IP,
+     * then send ICMP response on behalf of the switch.
+     * If it is for any hosts in subnets of the switches, but if the MAC
+     * address is not known, then send an ARP request to the subent.
+     * If the MAC address is known, then set the routing rule to the switch
+     *
+     * @param sw
+     * @param inPort
+     * @param payload
+     */
     public void processPacketIn(Switch sw, Port inPort, Ethernet payload) {
 
         if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
@@ -88,8 +113,8 @@ public class IcmpHandler {
 
                 log.debug("ICMPHandler: Received a ICMP packet {} from sw {} ",
                         payload.toString(), sw.getDpid());
-                int destinationAddress = ipv4.getDestinationAddress();
-                String destAddressStr = IPv4Address.of(destinationAddress).toString();
+                IPv4Address destinationAddress =
+                        IPv4Address.of(ipv4.getDestinationAddress());
 
                 // Check if it is ICMP request to the switch
                 String switchIpAddressSlash = sw.getStringAttribute("routerIp");
@@ -99,11 +124,12 @@ public class IcmpHandler {
                     IPv4Address switchIpAddress = IPv4Address.of(switchIpAddressStr);
                     List<String> gatewayIps = getSubnetGatewayIps(sw);
                     if (((ICMP)ipv4.getPayload()).getIcmpType() == ICMP_TYPE_ECHO &&
-                            (destinationAddress == switchIpAddress.getInt() ||
-                             gatewayIps.contains(destAddressStr))) {
+                            (destinationAddress.getInt() == switchIpAddress.getInt() ||
+                             gatewayIps.contains(destinationAddress.toString()))) {
                         log.debug("ICMPHandler: ICMP packet for sw {} and "
                                 + "sending ICMP response ", sw.getDpid());
                         sendICMPResponse(sw, inPort, payload);
+                        srManager.getIpPacketFromQueue(destinationAddress.getBytes());
                         return;
                     }
                 }
@@ -122,18 +148,20 @@ public class IcmpHandler {
                                          hostIpAddress);
                         byte[] destinationMacAddress = host.getMacAddress().toBytes();
                         srManager.addRouteToHost(sw,
-                                destinationAddress, destinationMacAddress);
+                                destinationAddress.getInt(), destinationMacAddress);
                         return;
                     }
                 }
                 /* ICMP for an unknown host */
                 log.debug("ICMPHandler: ICMP request for unknown host {}"
                         + " and sending ARP request", destinationAddress);
-                srManager.sendArpRequest(sw, destinationAddress, inPort);
+                srManager.sendArpRequest(sw, destinationAddress.getInt(), inPort);
             }
 
         }
     }
+
+
 
     /**
      * Retrieve Gateway IP address of all subnets defined in net config file
@@ -162,7 +190,6 @@ public class IcmpHandler {
 
         return gatewayIps;
     }
-
 
 
     /**

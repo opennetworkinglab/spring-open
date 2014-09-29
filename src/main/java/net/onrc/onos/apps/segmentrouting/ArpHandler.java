@@ -92,20 +92,43 @@ public class ArpHandler {
 
     }
 
+    /**
+     * process ARP packets from switches
+     * It add a IP routing rule to the host
+     * If it is an ARP response, then flush out all pending packets to the host
+     *
+     * @param sw
+     * @param inPort
+     * @param payload
+     */
     public void processPacketIn(Switch sw, Port inPort, Ethernet payload){
 
     	log.debug("ArpHandler: Received a ARP packet from sw {} ", sw.getDpid());
 
         ARP arp = (ARP)payload.getPayload();
 
+        byte[] senderMacAddressByte = arp.getSenderHardwareAddress();
+        IPv4Address hostIpAddress = IPv4Address.of(arp.getSenderProtocolAddress());
+        log.debug("ArpHandler: Add IP route to Host {} ", hostIpAddress);
+        srManager.addRouteToHost(sw,hostIpAddress.getInt(), senderMacAddressByte);
+
         if (arp.getOpCode() == ARP.OP_REQUEST) {
         	log.debug("ArpHandler: Received a ARP Requestfrom sw {} ", sw.getDpid());
             handleArpRequest(sw, inPort, payload);
         }
-        byte[] senderMacAddressByte = arp.getSenderHardwareAddress();
-        IPv4Address hostIpAddress = IPv4Address.of(arp.getSenderProtocolAddress());
-    	log.debug("ArpHandler: Add IP route to Host {} ", hostIpAddress);
-        srManager.addRouteToHost(sw,hostIpAddress.getInt(), senderMacAddressByte);
+        else {
+            byte[] destIp = arp.getSenderProtocolAddress();
+            for (IPv4 ipPacket: srManager.getIpPacketFromQueue(destIp)) {
+                if (ipPacket != null && !inSameSubnet(sw, ipPacket)) {
+                    Ethernet eth = new Ethernet();
+                    eth.setDestinationMACAddress(payload.getSourceMACAddress());
+                    eth.setSourceMACAddress(sw.getStringAttribute("routerMac"));
+                    eth.setEtherType(Ethernet.TYPE_IPV4);
+                    eth.setPayload(ipPacket);
+                    sendPacketOut(sw, eth, inPort.getNumber().shortValue());
+                }
+            }
+        }
     }
 
     /**
@@ -172,6 +195,12 @@ public class ArpHandler {
     	}
     }
 
+    /**
+     * Check if the ARP request is to known hosts
+     *
+     * @param sw  Switch
+     * @param arpRequest  ARP request to check
+     */
     private Host isArpReqForKnownHost(Switch sw, ARP arpRequest) {
     	Host knownHost = null;
 
@@ -187,6 +216,15 @@ public class ArpHandler {
         return knownHost;
 
     }
+
+    /**
+     *
+     * Check if the ARP is for the switch
+     *
+     * @param sw Switch
+     * @param arpRequest ARP request to check
+     * @return true if the ARP is for the switch
+     */
     private boolean isArpReqForSwitch(Switch sw, ARP arpRequest) {
         List<String> subnetGatewayIPs = getSubnetGatewayIps(sw);
         boolean isArpForSwitch = false;
@@ -198,6 +236,7 @@ public class ArpHandler {
         }
         return isArpForSwitch;
     }
+
     /**
      * Retrieve Gateway IP address of all subnets defined in net config file
      *
@@ -331,6 +370,56 @@ public class ArpHandler {
                 .build();
 
         flowPusher.add(sw.getDpid(), po);
+    }
+
+    /**
+     * Check if the source IP and destination IP are in the same subnet
+     *
+     * @param sw Switch
+     * @param ipv4 IP address to check
+     * @return return true if the IP packet is within the same subnet
+     */
+    private boolean inSameSubnet(Switch sw, IPv4 ipv4) {
+
+        String gwIpSrc = getGwIpForSubnet(ipv4.getSourceAddress());
+        String gwIpDest = getGwIpForSubnet(ipv4.getDestinationAddress());
+
+        if (gwIpSrc.equals(gwIpDest)) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Get router IP address for the given IP address
+     *
+     * @param sourceAddress
+     * @return
+     */
+    private String getGwIpForSubnet(int sourceAddress) {
+
+        String gwIp = null;
+        IPv4Address srcIp = IPv4Address.of(sourceAddress);
+
+        for (Switch sw: mutableTopology.getSwitches()) {
+
+            String subnets = sw.getStringAttribute("subnets");
+            try {
+                JSONArray arry = new JSONArray(subnets);
+                for (int i = 0; i < arry.length(); i++) {
+                    String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
+                    if (srManager.netMatch(subnetIpSlash, srcIp.toString())) {
+                        gwIp = subnetIpSlash;
+                    }
+                }
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        return gwIp;
     }
 
 }

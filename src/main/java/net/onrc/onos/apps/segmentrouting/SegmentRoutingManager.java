@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -70,6 +72,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ITopologyService topologyService;
     private IPacketService packetService;
     private MutableTopology mutableTopology;
+    private Queue<IPv4> ipPacketQueue;
 
     private List<ArpEntry> arpEntries;
     private ArpHandler arpHandler;
@@ -118,6 +121,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         threadPool = context.getServiceImpl(IThreadPoolService.class);
         mutableTopology = topologyService.getTopology();
         topologyService.addListener(this, false);
+        ipPacketQueue = new LinkedList<IPv4>();
 
         this.packetService = context.getServiceImpl(IPacketService.class);
         packetService.registerPacketListener(this);
@@ -145,6 +149,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     	if (payload.getEtherType() == Ethernet.TYPE_ARP)
     		arpHandler.processPacketIn(sw, inPort, payload);
         if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
+            addPacket((IPv4)payload.getPayload());
         	if (((IPv4)payload.getPayload()).getProtocol() == IPv4.PROTOCOL_ICMP)
         		icmpHandler.processPacketIn(sw, inPort, payload);
         	else
@@ -446,10 +451,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
             PushMplsAction pushMplsAction = new PushMplsAction();
             SetMplsIdAction setIdAction = new SetMplsIdAction(Integer.parseInt(mplsLabel));
             CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
+            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
 
             actions.add(pushMplsAction);
-            actions.add(setIdAction);
             actions.add(copyTtlOutAction);
+            actions.add(decMplsTtlAction);
+            actions.add(setIdAction);
         }
         else {
             String fwdToSw = fwdToSws.get(0);
@@ -461,10 +468,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 PushMplsAction pushMplsAction = new PushMplsAction();
                 SetMplsIdAction setIdAction = new SetMplsIdAction(Integer.parseInt(mplsLabel));
                 CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
+                DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
 
                 actions.add(pushMplsAction);
-                actions.add(setIdAction);
                 actions.add(copyTtlOutAction);
+                actions.add(decMplsTtlAction);
+                actions.add(setIdAction);
             }
         }
 
@@ -484,7 +493,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
                     matchAction);
 
-      IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+        IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
 
         try {
@@ -526,33 +535,29 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param fwdSws  next hop switches
      */
     private void setMplsTable(Switch sw, String mplsLabel, List<String> fwdSws) {
-        if (mplsLabel == null) {
-            log.error("mpls label not configured for sw: {}. Not populating"
-                    + " MPLS table entries.", sw.getDpid());
-            return;
-        }
+
         MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel));
 
         List<Action> actions = new ArrayList<Action>();
 
-        if (fwdSws.size() > 1) {
-            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
-            actions.add(decMplsTtlAction);
-        }
         // If the destination is the same as the next hop, then pop MPLS
-        else {
+        if (fwdSws.size() == 1) {
             String fwdMplsId = getMplsLabel(fwdSws.get(0));
             if (fwdMplsId.equals(mplsLabel)) {
                 String fwdSw = fwdSws.get(0);
                 if (mplsLabel.equals(getMplsLabel(fwdSw))) {
                     PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
                     CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
+                    DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
 
-                    actions.add(popAction);
                     actions.add(copyTtlInAction);
+                    actions.add(popAction);
+                    actions.add(decNwTtlAction);
                 }
             }
         }
+        DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
+        actions.add(decMplsTtlAction);
 
         GroupAction groupAction = new GroupAction();
         for (String fwdSw: fwdSws)
@@ -723,6 +728,40 @@ public class SegmentRoutingManager implements IFloodlightModule,
     public void addRouteToHost(Switch sw, int hostIpAddress, byte[] hostMacAddress) {
         ipHandler.addRouteToHost(sw, hostIpAddress, hostMacAddress);
 
+    }
+
+    /**
+     * Add IP packet to a buffer queue
+     *
+     * @param ipv4
+     */
+    public void addPacket(IPv4 ipv4) {
+        synchronized (ipPacketQueue) {
+            ipPacketQueue.add(ipv4);
+        }
+    }
+
+    /**
+     * Retrieve all packets whose destination is the given address.
+     *
+     * @param destIp Destination address of packets to retrieve
+     */
+    public List<IPv4> getIpPacketFromQueue(byte[] destIp) {
+
+        List<IPv4> bufferedPackets = new ArrayList<IPv4>();
+
+        synchronized (ipPacketQueue) {
+            for (IPv4 ip: ipPacketQueue) {
+                int dest = ip.getDestinationAddress();
+                IPv4Address ip1 = IPv4Address.of(dest);
+                IPv4Address ip2 = IPv4Address.of(destIp);
+                if (ip1.equals(ip2)) {
+                    bufferedPackets.add(ipPacketQueue.poll());
+                }
+            }
+        }
+
+        return bufferedPackets;
     }
 
 }
