@@ -1113,6 +1113,10 @@ def command_display_rest_join_entries(table_format, data, entries, detail):
     @return string replacing detail
 
     """
+
+    if sdnsh.description:   # description debugging
+        print "command_display_rest_join_entries: ", table_format, data, detail
+        
     if table_format == 'controller-interface':
         # join firewall rules for these interfaces
         for intf in entries:
@@ -1136,6 +1140,9 @@ def command_display_rest_type_converter(table_format, rest_type, data, entries):
     of the value returned from the rest api.
     """
 
+    if sdnsh.description:   # description debugging
+        print "command_display_rest_type_converter: ", table_format, rest_type
+        
     if rest_type.startswith('dict-of-list-of-'):
         # entries look like { row_name : [value, ...], ... more-row-value-pairs }
         #
