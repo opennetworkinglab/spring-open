@@ -526,7 +526,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param fwdSws  next hop switches
      */
     private void setMplsTable(Switch sw, String mplsLabel, List<String> fwdSws) {
-
+        if (mplsLabel == null) {
+            log.error("mpls label not configured for sw: {}. Not populating"
+                    + " MPLS table entries.", sw.getDpid());
+            return;
+        }
         MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel));
 
         List<Action> actions = new ArrayList<Action>();

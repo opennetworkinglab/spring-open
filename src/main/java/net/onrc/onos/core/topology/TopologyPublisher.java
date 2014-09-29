@@ -377,9 +377,11 @@ public class TopologyPublisher implements IOFSwitchListener,
                 sw.getConnectedSince().toString());
         switchData.createStringAttribute(TopologyElement.ELEMENT_ADMIN_STATUS,
                 AdminStatus.ACTIVE.toString());
-        //setting name from config file.
-        switchData.createStringAttribute("name",
-                ret.getSwitchConfig().getName());
+        // setting name from configuration (if it exists).
+        if (ret.getSwitchConfig() != null) {
+            switchData.createStringAttribute("name",
+                    ret.getSwitchConfig().getName());
+        }
         //set the switch socketAddress and port
         switchData.createStringAttribute("remoteAddress",
                 sw.getChannelSocketAddress().toString().substring(1));
