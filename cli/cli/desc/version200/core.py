@@ -1687,7 +1687,7 @@ EV_HIST_PACKET_IN_FORMAT = {
             }
         },
 }
-
+"""
 
 def realtime_flow_timeout(i, data=None):
     return ('%s/%s' % 
@@ -2069,7 +2069,7 @@ REALTIME_QUEUE_FORMAT = {
     },
 }
 
-
+"""
 SWITCH_CLUSTER_FORMAT = {
     'switch-cluster' : {
         'field-orderings' : {
