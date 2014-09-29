@@ -17,6 +17,14 @@
 
 package net.floodlightcontroller.core.web;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.projectfloodlight.openflow.protocol.OFStatsType;
+import org.restlet.resource.Get;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Return switch statistics information for specific switches
@@ -24,7 +32,7 @@ package net.floodlightcontroller.core.web;
  * @author readams
  */
 public class SwitchStatisticsResource extends SwitchResourceBase {
-    /*protected final static Logger log =
+    protected final static Logger log =
             LoggerFactory.getLogger(SwitchStatisticsResource.class);
 
     @Get("json")
@@ -36,22 +44,22 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
         String statType = (String) getRequestAttributes().get("statType");
 
         if (statType.equals("port")) {
-            values = getSwitchStatistics(switchId, OFStatisticsType.PORT);
+            values = getSwitchStatistics(switchId, OFStatsType.PORT);
         } else if (statType.equals("queue")) {
-            values = getSwitchStatistics(switchId, OFStatisticsType.QUEUE);
+            values = getSwitchStatistics(switchId, OFStatsType.QUEUE);
         } else if (statType.equals("flow")) {
-            values = getSwitchStatistics(switchId, OFStatisticsType.FLOW);
+            values = getSwitchStatistics(switchId, OFStatsType.FLOW);
         } else if (statType.equals("aggregate")) {
-            values = getSwitchStatistics(switchId, OFStatisticsType.AGGREGATE);
+            values = getSwitchStatistics(switchId, OFStatsType.AGGREGATE);
         } else if (statType.equals("desc")) {
-            values = getSwitchStatistics(switchId, OFStatisticsType.DESC);
+            values = getSwitchStatistics(switchId, OFStatsType.DESC);
         } else if (statType.equals("table")) {
-            values = getSwitchStatistics(switchId, OFStatisticsType.TABLE);
+            values = getSwitchStatistics(switchId, OFStatsType.TABLE);
         } else if (statType.equals("features")) {
             values = getSwitchFeaturesReply(switchId);
         }
 
         result.put(switchId, values);
         return result;
-    }*/
+    }
 }
