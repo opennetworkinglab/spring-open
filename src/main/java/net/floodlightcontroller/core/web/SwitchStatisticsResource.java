@@ -18,9 +18,9 @@
 package net.floodlightcontroller.core.web;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.projectfloodlight.openflow.protocol.OFStatsType;
+import org.projectfloodlight.openflow.util.HexString;
 import org.restlet.resource.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
             LoggerFactory.getLogger(SwitchStatisticsResource.class);
 
     @Get("json")
-    public Map<String, Object> retrieve() {
+    public HashMap<String, Object> retrieve() {
         HashMap<String, Object> result = new HashMap<String, Object>();
         Object values = null;
 
@@ -44,7 +44,7 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
         String statType = (String) getRequestAttributes().get("statType");
 
         if (statType.equals("port")) {
-            values = getSwitchStatistics(switchId, OFStatsType.PORT);
+            values = getSwitchPortStatistics(HexString.toLong(switchId));
         } else if (statType.equals("queue")) {
             values = getSwitchStatistics(switchId, OFStatsType.QUEUE);
         } else if (statType.equals("flow")) {
@@ -61,5 +61,6 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
 
         result.put(switchId, values);
         return result;
+        //return toRepresentation(result, null);
     }
 }

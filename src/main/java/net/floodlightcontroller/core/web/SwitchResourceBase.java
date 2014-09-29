@@ -17,6 +17,7 @@
 
 package net.floodlightcontroller.core.web;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,9 @@ import net.floodlightcontroller.core.annotations.LogMessageDoc;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFOxmList;
+import org.projectfloodlight.openflow.protocol.OFPortStatsEntry;
+import org.projectfloodlight.openflow.protocol.OFPortStatsReply;
+import org.projectfloodlight.openflow.protocol.OFPortStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.OFStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFStatsType;
@@ -97,13 +101,6 @@ public class SwitchResourceBase extends ServerResource {
                 specificReq.setTableId((byte) 0xff);
                 req.setStatistics(Collections.singletonList((OFStatistics) specificReq));
                 requestLength += specificReq.getLength();
-            } */else if (statType == OFStatsType.PORT) {
-            	log.debug("Switch Port Stats: req sent for all "
-            			+ "ports in switch {}", sw.getStringId());
-                req = sw.getFactory()
-        	 		.buildPortStatsRequest()
-        	 		.setPortNo(OFPort.ANY).setXid
-        	 		(sw.getNextTransactionId()).build();
             } /*else if (statType == OFStatisticsType.QUEUE) {
                 OFQueueStatisticsRequest specificReq = new OFQueueStatisticsRequest();
                 specificReq.setPortNumber(OFPort.OFPP_ALL.getValue());
@@ -127,7 +124,43 @@ public class SwitchResourceBase extends ServerResource {
         return values;
     }
 
-    protected List<OFStatsReply> getSwitchStatistics(String switchId, OFStatsType statType) {
+    protected List<OFPortStatsEntryMod> getSwitchPortStatistics(long switchId) {
+    	IFloodlightProviderService floodlightProvider =
+    				(IFloodlightProviderService) getContext().getAttributes().
+    				get(IFloodlightProviderService.class.getCanonicalName());
+
+    	IOFSwitch sw = floodlightProvider.getSwitches().get(switchId);
+    	Future<List<OFStatsReply>> future;
+    	List<OFStatsReply> values = null;
+    	List<OFPortStatsEntryMod> portStats = null;
+
+    	if (sw != null) {
+        	log.debug("Switch Port Stats: req sent for all "
+        			+ "ports in switch {}", sw.getStringId());
+       	    OFPortStatsRequest req = sw.getFactory()
+    	 		.buildPortStatsRequest()
+    	 		.setPortNo(OFPort.ANY).setXid
+    	 		(sw.getNextTransactionId()).build();
+
+            try {
+                future = sw.getStatistics(req);
+                values = future.get(10, TimeUnit.SECONDS);
+                portStats = new ArrayList<OFPortStatsEntryMod>();
+                for (OFPortStatsEntry entry : ((OFPortStatsReply)values.get(0)).getEntries()) {
+                    OFPortStatsEntryMod entryMod = new OFPortStatsEntryMod(entry);
+                    portStats.add(entryMod);
+                }
+            	log.debug("Switch Port Stats Entries from switch {} are {}",
+            			sw.getStringId(), portStats);
+            } catch (Exception e) {
+                log.error("Failure retrieving statistics from switch " + sw, e);
+            }
+    	}
+
+    	return portStats;
+    }
+
+    protected Object getSwitchStatistics(String switchId, OFStatsType statType) {
         return getSwitchStatistics(HexString.toLong(switchId), statType);
     }
 
