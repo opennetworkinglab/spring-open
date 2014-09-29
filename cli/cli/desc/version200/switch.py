@@ -153,7 +153,6 @@ SWITCH_SHOW_WITH_DPID_COMMAND_DESCRIPTION = {
         },
     )
 }
-"""
 SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
     'name'                : 'show',
     'mode'                : 'login',
@@ -484,7 +483,7 @@ SWITCH_SHOW_SWITCH_DPID_INTERFACES_COMMAND_DESCRIPTION = {
     )
 }
 
-
+"""
 SWITCH_SUBMODE_SHOW_INTERFACE_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'mode'         : 'config-switch*',
@@ -1069,7 +1068,7 @@ SWITCH_INTERFACE_ALIAS_FORMAT = {
             }
         },
 }
-
+"""
 
 SWITCH_INTERFACES_FORMAT = {
     'switch-interfaces' : {
@@ -1134,7 +1133,7 @@ SWITCH_INTERFACES_FORMAT = {
             },
         },
 }
-
+"""
 TUNNEL_DETAILS_FORMAT = {
     'tunnel-details' : {
         'field-orderings' : {
