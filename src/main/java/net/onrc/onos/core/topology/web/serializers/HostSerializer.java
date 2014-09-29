@@ -43,6 +43,7 @@ public class HostSerializer extends SerializerBase<Host> {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField(TopologyElement.TYPE, host.getType());
         jsonGenerator.writeStringField("mac", host.getMacAddress().toString());
+        jsonGenerator.writeStringField("ipv4", IPAddressToString(host.getIpAddress()));
         jsonGenerator.writeFieldName("attachmentPoints");
         jsonGenerator.writeStartArray();
         for (Port port : host.getAttachmentPoints()) {
@@ -61,5 +62,11 @@ public class HostSerializer extends SerializerBase<Host> {
         */
         jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
+    }
+    public  String IPAddressToString(int ip) {
+        return ((ip >> 24) & 0xFF) + "." +
+                ((ip >> 16) & 0xFF) + "." +
+                ((ip >> 8) & 0xFF) + "." +
+                (ip & 0xFF);
     }
 }

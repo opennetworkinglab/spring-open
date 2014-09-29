@@ -395,7 +395,6 @@ public class TopologyPublisher implements IOFSwitchListener,
                     ConfigState.NOT_CONFIGURED.toString());
         }
         switchData.freeze();
-        System.out.println("getOnosInstanceId().toString():\n\n\n\n\n"+getOnosInstanceId());
         // The Port events
         List<PortData> portDataEntries = new ArrayList<PortData>();
         for (OFPortDesc port : sw.getPorts()) {

@@ -44,6 +44,7 @@ public class HostDataSerializer extends SerializerBase<HostData> {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField(TopologyElement.TYPE, hostData.getType());
         jsonGenerator.writeStringField("mac", hostData.getMac().toString());
+        jsonGenerator.writeStringField("ipv4", IPAddressToString(hostData.getIp()));
         jsonGenerator.writeFieldName("attachmentPoints");
         jsonGenerator.writeStartArray();
         for (SwitchPort switchPort : hostData.getAttachmentPoints()) {
@@ -56,5 +57,11 @@ public class HostDataSerializer extends SerializerBase<HostData> {
         }
         jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
+    }
+    public  String IPAddressToString(int ip) {
+        return ((ip >> 24) & 0xFF) + "." +
+                ((ip >> 16) & 0xFF) + "." +
+                ((ip >> 8) & 0xFF) + "." +
+                (ip & 0xFF);
     }
 }

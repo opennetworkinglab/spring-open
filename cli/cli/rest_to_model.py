@@ -196,18 +196,16 @@ def get_model_from_url(obj_type, data):
                 lastseen = 0
 
             ips = None
-            if onos == 0:
-                if not ip_match and not ip_prefix:
-                    ipv4 = entry['ipv4']
-            	elif ip_match:
-                    ipv4 = [x for x in entry['ipv4'] if x == ip_match]
-            	elif ip_prefix:
-                    ipv4 = [x for x in entry['ipv4'] if x.startswith(ip_prefix)]
+            if not ip_match and not ip_prefix:
+                ipv4 = entry['ipv4']
+            elif ip_match:
+                ipv4 = [x for x in entry['ipv4'] if x == ip_match]
+            elif ip_prefix:
+                ipv4 = [x for x in entry['ipv4'] if x.startswith(ip_prefix)]
 
-            	if len(entry['ipv4']):
-                    ips = [{'ip-address' : x, 'last-seen' : lastseen}
-                    	    for x in entry['ipv4'] ]
-
+            if len(entry['ipv4']):
+                ips = [{'ip-address' : entry['ipv4'], 'last-seen' : lastseen}]
+                    	    #for x in entry['ipv4'] ]
             aps = None
             switch = []
             port = []
@@ -257,7 +255,7 @@ def get_model_from_url(obj_type, data):
                 result.append({'id'                : id,
                            'mac'               : mac,
                            'ips'               : ips,
-                           'ipv4'              : 0,
+                           'ipv4'              : ipv4,
                            'attachment-points' : aps,
                            'dpid'              : switch,
                            'port'              : port,
