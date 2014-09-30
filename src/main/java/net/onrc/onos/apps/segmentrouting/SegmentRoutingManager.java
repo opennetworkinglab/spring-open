@@ -51,8 +51,10 @@ import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.ITopologyListener;
 import net.onrc.onos.core.topology.ITopologyService;
+import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
+import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
@@ -132,7 +134,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
+        ScheduledExecutorService ses = threadPool.getScheduledExecutor();
 
+        discoveryTask = new SingletonTask(ses, new Runnable() {
+            @Override
+            public void run() {
+                populateEcmpRoutingRules();
+            }
+        });
     }
 
     @Override
@@ -232,18 +241,34 @@ public class SegmentRoutingManager implements IFloodlightModule,
         if ((topologyEvents.getAddedLinkDataEntries() != null) ||
                 (topologyEvents.getRemovedLinkDataEntries() != null))
         {
-
-            ScheduledExecutorService ses = threadPool.getScheduledExecutor();
-
-            discoveryTask = new SingletonTask(ses, new Runnable() {
-                @Override
-                public void run() {
-                    populateEcmpRoutingRules();
-                }
-            });
-
             discoveryTask.reschedule(1, TimeUnit.SECONDS);
         }
+
+        Collection<PortData> portEntries =
+                topologyEvents.getRemovedPortDataEntries();
+        if (!portEntries.isEmpty()) {
+            // report port removal to the driver
+            for (PortData port: portEntries) {
+                Dpid dpid = port.getDpid();
+                int portNo = (int) port.getPortNumber().value();
+                log.debug("Remove port {} from switch {}", portNo, dpid.toString());
+            }
+        }
+
+        Collection<LinkData> linkEntries =
+                topologyEvents.getRemovedLinkDataEntries();
+        if (!linkEntries.isEmpty()) {
+            for (LinkData link: linkEntries) {
+                Dpid srcSwDpid = link.getSrc().getDpid();
+                Dpid dstSwDpid = link.getDst().getDpid();
+
+                Switch srcSwitch = mutableTopology.getSwitch(srcSwDpid);
+                Switch dstSwitch = mutableTopology.getSwitch(dstSwDpid);
+
+
+            }
+        }
+
     }
 
     /**
@@ -294,7 +319,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     OFBarrierReplyFuture replyFuture = sw13.sendBarrier();
                     replyFuture.get(10, TimeUnit.SECONDS);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -365,7 +389,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 setIpTableRouter(targetSw, subnetIp, mplsLabel, fwdToSw, entries);
             }
         } catch (JSONException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -376,7 +399,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             try {
                 sw13.pushFlows(entries);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -465,7 +487,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
         actions.add(groupAction);
 
-        //MatchAction matchAction = new MatchAction(maIdGenerator.getNewId(),
+        // TODO: Mactch Action Id should be set correctly
         MatchAction matchAction = new MatchAction(new MatchActionId(0),
                 new SwitchPort((long)0,(short)0), ipMatch, actions);
 
@@ -484,7 +506,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             else
                 sw13.pushFlow(maEntry);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -525,6 +546,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         List<Action> actions = new ArrayList<Action>();
 
         // If the destination is the same as the next hop, then pop MPLS
+        // Otherwise, just decrease the MPLS TTL.
         if (fwdSws.size() == 1) {
             String fwdMplsId = getMplsLabel(fwdSws.get(0));
             if (fwdMplsId.equals(mplsLabel)) {
@@ -539,10 +561,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     actions.add(decNwTtlAction);
                 }
             }
+            else {
+                DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
+                actions.add(decMplsTtlAction);
+            }
         }
-        DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
-        actions.add(decMplsTtlAction);
-
         GroupAction groupAction = new GroupAction();
         for (String fwdSw: fwdSws)
             groupAction.addSwitch(new Dpid(fwdSw));
@@ -563,7 +586,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             printMatchActionOperationEntry(sw, maEntry);
             sw13.pushFlow(maEntry);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
