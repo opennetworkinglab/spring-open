@@ -1241,6 +1241,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             @Override
             void processOFBarrierReply(OFChannelHandler h, OFBarrierReply m)
                     throws IOException {
+                h.sw.deliverBarrierReply(m);
                 h.dispatchMessage(m);
             }
 
@@ -1665,6 +1666,9 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             if ((h.sw.getRole() == Role.MASTER && role == Role.SLAVE) ||
                     (h.sw.getRole() == Role.MASTER && role == Role.EQUAL)) {
                 // the mastership has changed
+                if (role == Role.SLAVE) {
+                    role = Role.EQUAL;
+                }
                 h.sw.setRole(role);
                 h.setState(EQUAL);
                 h.controller.transitionToEqualSwitch(h.sw.getId());

@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
+import net.floodlightcontroller.core.internal.OFBarrierReplyFuture;
 import net.floodlightcontroller.core.web.serializers.IOFSwitchSerializer;
 import net.floodlightcontroller.debugcounter.IDebugCounterService;
 import net.floodlightcontroller.debugcounter.IDebugCounterService.CounterException;
@@ -36,6 +37,7 @@ import net.floodlightcontroller.util.OrderedCollection;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.jboss.netty.channel.Channel;
 import org.projectfloodlight.openflow.protocol.OFActionType;
+import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFFactory;
@@ -114,7 +116,7 @@ public interface IOFSwitch {
      * @return whether the switch is still disconnected
      */
     public boolean isConnected();
-    
+
     /**
      * retun the channelSocket ip address with port number
      * @return channelSocketAddress
@@ -632,8 +634,28 @@ public interface IOFSwitch {
     public void setTableFull(boolean isFull);
 
     /**
-     * Get the switch driver hanshake state
+     * Get the switch driver handshake state
      */
     public String getSwitchDriverState();
+
+    /**
+     * sendBarrier sends an OF Barrier message to the switch and returns a
+     * future object to the caller. The future will automatically deregister
+     * itself after 60 secs if the corresponding barrier reply message is not
+     * received from the switch in that time.
+     * <p>
+     * The caller should use OFBarrierReplyFuture.get(timeout,timeunit) to wait
+     * for a specified time interval shorter than 60secs.
+     *
+     * @throws IOException
+     */
+    public OFBarrierReplyFuture sendBarrier() throws IOException;
+
+    /**
+     * Delivers the barrier future reply.
+     *
+     * @param reply the reply to deliver
+     */
+    public void deliverBarrierReply(OFBarrierReply reply);
 
 }

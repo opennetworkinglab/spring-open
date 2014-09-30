@@ -60,6 +60,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.jboss.netty.channel.Channel;
 import org.projectfloodlight.openflow.protocol.OFActionType;
+import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFFactories;
@@ -133,6 +134,7 @@ public class OFSwitchImplBase implements IOFSwitch {
     // XXX Consider removing the following 2 maps - not used anymore
     protected Map<Integer, IOFMessageListener> iofMsgListenersMap;
     protected Map<Integer, OFFeaturesReplyFuture> featuresFutureMap;
+    protected Map<Long, OFBarrierReplyFuture> barrierFutureMap;
     protected boolean connected;
     protected Role role;
     protected ReentrantReadWriteLock listenerLock;
@@ -209,6 +211,7 @@ public class OFSwitchImplBase implements IOFSwitch {
         this.statsFutureMap = new ConcurrentHashMap<Integer, OFStatisticsFuture>();
         this.featuresFutureMap = new ConcurrentHashMap<Integer, OFFeaturesReplyFuture>();
         this.iofMsgListenersMap = new ConcurrentHashMap<Integer, IOFMessageListener>();
+        this.barrierFutureMap = new ConcurrentHashMap<Long, OFBarrierReplyFuture>();
         this.role = null;
         this.listenerLock = new ReentrantReadWriteLock();
         this.pendingRoleRequests = new LinkedList<OFSwitchImplBase.PendingRoleRequestEntry>();
@@ -1296,4 +1299,24 @@ public class OFSwitchImplBase implements IOFSwitch {
         return "";
     }
 
+    public OFBarrierReplyFuture sendBarrier() throws IOException {
+        long xid = getNextTransactionId();
+        OFMessage br = getFactory()
+                .buildBarrierRequest()
+                .setXid(xid)
+                .build();
+        write(Collections.singletonList(br));
+        OFBarrierReplyFuture future = new OFBarrierReplyFuture(threadPool, this,
+                (int) xid);
+        barrierFutureMap.put(xid, future);
+        return future;
+    }
+
+    public void deliverBarrierReply(OFBarrierReply br) {
+        OFBarrierReplyFuture f = barrierFutureMap.get(br.getXid());
+        if (f != null) {
+            f.deliverFuture(this, br);
+            barrierFutureMap.remove(br.getXid());
+        }
+    }
 }

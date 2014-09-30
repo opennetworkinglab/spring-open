@@ -35,13 +35,14 @@ public interface IOF13Switch extends IOFSwitch {
      * Pushes a collection of flows to the switch, at the same time. Can result
      * in better performance, when compared to sending flows one at a time using
      * {@link pushFlow}, especially if the number of flows is large.
-     * 
+     *
      * @param matchActionOps a collection of information required to create a
      *        flowmod
      * @throws IOException
      */
     public void pushFlows(Collection<MatchActionOperationEntry> matchActionOps)
             throws IOException;
+
 
     // ****************************
     // Group related

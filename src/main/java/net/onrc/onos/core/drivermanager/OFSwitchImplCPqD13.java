@@ -234,19 +234,19 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         case INIT:
             driverState = DriverState.SET_TABLE_MISS_ENTRIES;
             setTableMissEntries();
-            sendBarrier();
+            sendHandshakeBarrier();
             break;
         case SET_TABLE_MISS_ENTRIES:
             driverState = DriverState.SET_TABLE_VLAN_TMAC;
             getNetworkConfig();
             populateTableVlan();
             populateTableTMac();
-            sendBarrier();
+            sendHandshakeBarrier();
             break;
         case SET_TABLE_VLAN_TMAC:
             driverState = DriverState.SET_GROUPS;
             createGroups();
-            sendBarrier();
+            sendHandshakeBarrier();
             break;
         case SET_GROUPS:
             driverState = DriverState.VERIFY_GROUPS;
@@ -378,7 +378,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         populateTableMissEntry(TABLE_ACL, false, false, false, -1);
     }
 
-    private void sendBarrier() throws IOException {
+    private void sendHandshakeBarrier() throws IOException {
         long xid = getNextTransactionId();
         barrierXidToWaitFor = xid;
         OFBarrierRequest br = getFactory()
@@ -1145,7 +1145,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         // getTableFeatures();
         sendGroupFeaturesRequest();
         setL2Groups();
-        sendBarrier();
+        sendHandshakeBarrier();
         setL3Groups();
         setL25Groups();
         // setEcmpGroup();
@@ -1155,7 +1155,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         populateIpTable();
         populateMplsTable();
         populateTableMissEntry(TABLE_ACL, false, false, false, -1);
-        sendBarrier();
+        sendHandshakeBarrier();
     }
 
     private void setAsyncConfig() throws IOException {
