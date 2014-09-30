@@ -12,12 +12,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOF13Switch;
 import net.floodlightcontroller.core.IOF13Switch.NeighborSet;
+import net.floodlightcontroller.core.internal.OFBarrierReplyFuture;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -78,7 +81,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ArpHandler arpHandler;
     private GenericIpHandler ipHandler;
     private IcmpHandler icmpHandler;
-    private boolean networkConverged;
     private IThreadPoolService threadPool;
     private SingletonTask discoveryTask;
     private IFloodlightProviderService floodlightProvider;
@@ -130,18 +132,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
-        networkConverged = false;
 
-        ScheduledExecutorService ses = threadPool.getScheduledExecutor();
-
-        discoveryTask = new SingletonTask(ses, new Runnable() {
-            @Override
-            public void run() {
-                populateEcmpRoutingRules();
-            }
-        });
-
-        discoveryTask.reschedule(15, TimeUnit.SECONDS);
     }
 
     @Override
@@ -154,6 +145,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         		icmpHandler.processPacketIn(sw, inPort, payload);
         	else
         		ipHandler.processPacketIn(sw, inPort, payload);
+        }
+        else {
+            log.debug("{}", payload.toString());
         }
     }
     /**
@@ -235,71 +229,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void topologyEvents(TopologyEvents topologyEvents)
     {
-    	/**
-    	 * Any Link update events, compute the ECMP path graph for all switch nodes
-
-    	if ((topologyEvents.getAddedLinkDataEntries() != null) ||
-    		(topologyEvents.getRemovedLinkDataEntries() != null))
-    	{
-    		Iterable<Switch> switches= mutableTopology.getSwitches();
-            for (Switch sw : switches) {
-            	ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
-                log.debug("ECMPShortestPathGraph is computed for switch {}",
-                		HexString.toHexString(sw.getDpid().value()));
-
-
-                HashMap<Integer, HashMap<Switch,ArrayList<Path>>> pathGraph =
-                                    ecmpSPG.getCompleteLearnedSwitchesAndPaths();
-                for (Integer itrIdx: pathGraph.keySet()){
-
-                    HashMap<Switch, ArrayList<Path>> swPathsMap =
-                                                pathGraph.get(itrIdx);
-                    for (Switch targetSw: swPathsMap.keySet()){
-                        log.debug("ECMPShortestPathGraph:Paths in Pass{} from "
-                                + "             switch {} to switch {}:****",
-                                itrIdx,
-                                HexString.toHexString(sw.getDpid().value()),
-                                HexString.toHexString(targetSw.getDpid().value()));
-                        int i=0;
-                        for (Path path:swPathsMap.get(targetSw)){
-                            log.debug("****ECMPShortestPathGraph:Path{} is {}",i++,path);
-                        }
-                    }
-                }
-
-                HashMap<Integer, HashMap<Switch,ArrayList<ArrayList<Dpid>>>> switchVia =
-                        ecmpSPG.getAllLearnedSwitchesAndVia();
-                for (Integer itrIdx: switchVia.keySet()){
-                    log.debug("ECMPShortestPathGraph:Switches learned in "
-                            + "Iteration{} from switch {}:",
-                            itrIdx,
-                            HexString.toHexString(sw.getDpid().value()));
-
-                    HashMap<Switch, ArrayList<ArrayList<Dpid>>> swViaMap =
-                                    switchVia.get(itrIdx);
-                    for (Switch targetSw: swViaMap.keySet()){
-                        log.debug("ECMPShortestPathGraph:****switch {} via:",
-                                HexString.toHexString(targetSw.getDpid().value()));
-                        int i=0;
-                        for (ArrayList<Dpid> via:swViaMap.get(targetSw)){
-                            log.debug("ECMPShortestPathGraph:******{}) {}",++i,via);
-                        }
-                    }
-                }
-
-            }
-    	}
-    	*/
-
         if ((topologyEvents.getAddedLinkDataEntries() != null) ||
                 (topologyEvents.getRemovedLinkDataEntries() != null))
         {
 
-            if (networkConverged) {
-                populateEcmpRoutingRules();
-            }
-        }
+            ScheduledExecutorService ses = threadPool.getScheduledExecutor();
 
+            discoveryTask = new SingletonTask(ses, new Runnable() {
+                @Override
+                public void run() {
+                    populateEcmpRoutingRules();
+                }
+            });
+
+            discoveryTask.reschedule(1, TimeUnit.SECONDS);
+        }
     }
 
     /**
@@ -341,10 +285,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     }
                     setRoutingRule(targetSw, destSw, fwdToSw);
                 }
+
+                // Send Barrier Message and make sure all rules are set
+                // before we set the rules to next routers
+                IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                        getSwId(sw.getDpid().toString()));
+                try {
+                    OFBarrierReplyFuture replyFuture = sw13.sendBarrier();
+                    replyFuture.get(10, TimeUnit.SECONDS);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (InterruptedException | ExecutionException | TimeoutException e) {
+                    log.error("Barrier message not received for sw: {}", sw.getDpid());
+                    e.printStackTrace();
+                }
             }
         }
-
-        networkConverged = true;
     }
 
     /**
@@ -374,31 +332,53 @@ public class SegmentRoutingManager implements IFloodlightModule,
             // We assume that there is at least one transit router b/w edge routers
             Switch destSwitch = mutableTopology.getSwitch(new Dpid(destSw));
             String subnets = destSwitch.getStringAttribute("subnets");
-            try {
-                JSONArray arry = new JSONArray(subnets);
-                for (int i = 0; i < arry.length(); i++) {
-                    String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
-                    setIpTableRouter(targetSw, subnetIp, getMplsLabel(destSw)
-                            ,fwdToSw);
+            setIpTableRouterSubnet(targetSw, subnets, getMplsLabel(destSw)
+                    ,fwdToSw);
 
-                }
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
             String routerIp = destSwitch.getStringAttribute("routerIp");
-            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw);
+            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw, null);
         }
         // Only if the target switch is the edge router, then set the IP rules
         else if (IsEdgeRouter(targetSw.getDpid().toString())) {
             // We assume that there is at least one transit router b/w edge routers
             Switch destSwitch = mutableTopology.getSwitch(new Dpid(destSw));
             String routerIp = destSwitch.getStringAttribute("routerIp");
-            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw);
+            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw, null);
         }
         // if it is a transit router, then set rules in the MPLS table
         else {
             setMplsTable(targetSw, getMplsLabel(destSw), fwdToSw);
+        }
+
+    }
+
+    private void setIpTableRouterSubnet(Switch targetSw, String subnets,
+            String mplsLabel, List<String> fwdToSw) {
+
+        Collection <MatchActionOperationEntry> entries =
+                new ArrayList<MatchActionOperationEntry>();
+
+        try {
+            JSONArray arry = new JSONArray(subnets);
+            for (int i = 0; i < arry.length(); i++) {
+                String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
+                setIpTableRouter(targetSw, subnetIp, mplsLabel, fwdToSw, entries);
+            }
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        if (!entries.isEmpty()) {
+            IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                    getSwId(targetSw.getDpid().toString()));
+
+            try {
+                sw13.pushFlows(entries);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
 
     }
@@ -438,9 +418,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param subnetIp Match IP address
      * @param mplsLabel MPLS label of final destination router
      * @param fwdToSws next hop routers
+     * @param entries
      */
     private void setIpTableRouter(Switch sw, String subnetIp, String mplsLabel,
-            List<String> fwdToSws) {
+            List<String> fwdToSws, Collection<MatchActionOperationEntry> entries) {
 
         Ipv4Match ipMatch = new Ipv4Match(subnetIp);
         List<Action> actions = new ArrayList<>();
@@ -498,7 +479,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         try {
             printMatchActionOperationEntry(sw, maEntry);
-            sw13.pushFlow(maEntry);
+            if (entries != null)
+                entries.add(maEntry);
+            else
+                sw13.pushFlow(maEntry);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -751,12 +735,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
         List<IPv4> bufferedPackets = new ArrayList<IPv4>();
 
         synchronized (ipPacketQueue) {
-            for (IPv4 ip: ipPacketQueue) {
-                int dest = ip.getDestinationAddress();
-                IPv4Address ip1 = IPv4Address.of(dest);
-                IPv4Address ip2 = IPv4Address.of(destIp);
-                if (ip1.equals(ip2)) {
-                    bufferedPackets.add(ipPacketQueue.poll());
+            if (!ipPacketQueue.isEmpty()) {
+                for (IPv4 ip: ipPacketQueue) {
+                    int dest = ip.getDestinationAddress();
+                    IPv4Address ip1 = IPv4Address.of(dest);
+                    IPv4Address ip2 = IPv4Address.of(destIp);
+                    if (ip1.equals(ip2)) {
+                        bufferedPackets.add((IPv4)(ipPacketQueue.poll()).clone());
+                    }
                 }
             }
         }

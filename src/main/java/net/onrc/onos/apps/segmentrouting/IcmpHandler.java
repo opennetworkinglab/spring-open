@@ -143,12 +143,29 @@ public class IcmpHandler {
                         /* TODO: We should not have come here as ARP itself
                          * would have installed a Route to the host. See if
                          * we can remove this code
+                         *  - It can happen when the rule is set later in switches
+                         *  (Ex: Ping reply arrives before the rules is set in the table)
+                         *  - The rule must be set by ARP handler. But, we set the rule
+                         *  again just in case and flush any pending packets to the host.
                          */
                         log.debug("ICMPHandler: ICMP request for known host {}",
                                          hostIpAddress);
                         byte[] destinationMacAddress = host.getMacAddress().toBytes();
                         srManager.addRouteToHost(sw,
                                 destinationAddress.getInt(), destinationMacAddress);
+
+                        byte[] destIp = destinationAddress.getBytes();
+                        for (IPv4 ipPacket: srManager.getIpPacketFromQueue(destIp)) {
+                            if (ipPacket != null && !inSameSubnet(sw, ipPacket)) {
+                                Ethernet eth = new Ethernet();
+                                eth.setDestinationMACAddress(payload.getSourceMACAddress());
+                                eth.setSourceMACAddress(sw.getStringAttribute("routerMac"));
+                                eth.setEtherType(Ethernet.TYPE_IPV4);
+                                eth.setPayload(ipPacket);
+                                sendPacketOut(sw, eth, inPort.getSwitchPort(), false);
+                            }
+                        }
+
                         return;
                     }
                 }
@@ -409,6 +426,56 @@ public class IcmpHandler {
         flowPusher.add(sw.getDpid(), flowEntry);;
         log.debug("Adding a new vlan-rules in sw {}", sw.getDpid());
 
+    }
+
+    /**
+     * Check if the source IP and destination IP are in the same subnet
+     *
+     * @param sw Switch
+     * @param ipv4 IP address to check
+     * @return return true if the IP packet is within the same subnet
+     */
+    private boolean inSameSubnet(Switch sw, IPv4 ipv4) {
+
+        String gwIpSrc = getGwIpForSubnet(ipv4.getSourceAddress());
+        String gwIpDest = getGwIpForSubnet(ipv4.getDestinationAddress());
+
+        if (gwIpSrc.equals(gwIpDest)) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Get router IP address for the given IP address
+     *
+     * @param sourceAddress
+     * @return
+     */
+    private String getGwIpForSubnet(int sourceAddress) {
+
+        String gwIp = null;
+        IPv4Address srcIp = IPv4Address.of(sourceAddress);
+
+        for (Switch sw: mutableTopology.getSwitches()) {
+
+            String subnets = sw.getStringAttribute("subnets");
+            try {
+                JSONArray arry = new JSONArray(subnets);
+                for (int i = 0; i < arry.length(); i++) {
+                    String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
+                    if (srManager.netMatch(subnetIpSlash, srcIp.toString())) {
+                        gwIp = subnetIpSlash;
+                    }
+                }
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        return gwIp;
     }
 
 }
