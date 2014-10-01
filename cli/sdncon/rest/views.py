@@ -708,6 +708,14 @@ def do_mastership(request):
     #url = "http://127.0.0.1:8080/wm/onos/registry/switches/json"
     if request.META['QUERY_STRING']:
         url += '?' + request.META['QUERY_STRING']
+    return get_sdnplatform_response(url)
+
+@safe_rest_view
+def do_controller(request):
+    url = controller_url("onos", "registry", "controllers" ,"json")
+    #url = "http://127.0.0.1:8080/wm/onos/registry/switches/json"
+    if request.META['QUERY_STRING']:
+        url += '?' + request.META['QUERY_STRING']
     return get_sdnplatform_response(url) 
 #'''
 

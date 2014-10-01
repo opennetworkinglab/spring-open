@@ -113,7 +113,7 @@ class Feature(models.Model):
             {'name': 'static_flow_pusher_feature', 'rest_name': 'static-flow-pusher-feature'},
             {'name': 'performance_monitor_feature','rest_name': 'performance-monitor-feature'},
             )
-"""
+'''
 
 #
 # ------------------------------------------------------------
@@ -237,7 +237,7 @@ class ForwardingConfig(models.Model):
             {'name': 'core_priority',      'rest_name': 'core-priority'},
         )
 
-"""
+'''
 #
 # ------------------------------------------------------------
 
@@ -384,7 +384,7 @@ class Controller(models.Model):
             {'name': 'logging_level',           'rest_name': 'logging-level'},
             )
 
-"""
+
 #
 # ------------------------------------------------------------
 
@@ -409,7 +409,7 @@ class ControllerAlias(models.Model):
 
     class Rest:
         NAME = 'controller-alias'
-
+'''
 #
 # ------------------------------------------------------------
 
@@ -611,7 +611,7 @@ class ControllerDomainNameServer(models.Model):
         NAME = 'controller-domain-name-server'
         FIELD_INFO = (
             )
-"""
+'''
 
 #
 # ------------------------------------------------------------
