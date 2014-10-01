@@ -44,9 +44,9 @@ import com.esotericsoftware.minlog.Log;
 /**
  * Handling ARP requests to switches for Segment Routing.
  * <p/>
- * The module is for handling ARP requests to switches. It sends ARP response for any known
- * hosts to the controllers.
- * TODO: need to check the network config file for all hosts and packets
+ * The module is for handling ARP requests to switches. It sends ARP response
+ * for any known hosts to the controllers. TODO: need to check the network
+ * config file for all hosts and packets
  */
 public class ArpHandler {
 
@@ -57,7 +57,7 @@ public class ArpHandler {
     private IFlowPusherService flowPusher;
     private ITopologyService topologyService;
     private MutableTopology mutableTopology;
-    //private List<ArpEntry> arpEntries;
+    // private List<ArpEntry> arpEntries;
     private SegmentRoutingManager srManager;
 
     private static final short IDLE_TIMEOUT = 0;
@@ -76,13 +76,14 @@ public class ArpHandler {
     private static final short SLASH_8_PRIORITY = (short) 0xf000;
     private static final short MIN_PRIORITY = 0x0;
 
-
     /*
      * Default Constructor
      */
-    public ArpHandler(FloodlightModuleContext context, SegmentRoutingManager segmentRoutingManager) {
+    public ArpHandler(FloodlightModuleContext context,
+            SegmentRoutingManager segmentRoutingManager) {
 
-        this.floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+        this.floodlightProvider = context
+                .getServiceImpl(IFloodlightProviderService.class);
         this.flowPusher = context.getServiceImpl(IFlowPusherService.class);
         this.topologyService = context.getServiceImpl(ITopologyService.class);
         this.srManager = segmentRoutingManager;
@@ -93,32 +94,31 @@ public class ArpHandler {
     }
 
     /**
-     * process ARP packets from switches
-     * It add a IP routing rule to the host
-     * If it is an ARP response, then flush out all pending packets to the host
-     *
+     * process ARP packets from switches It add a IP routing rule to the host If
+     * it is an ARP response, then flush out all pending packets to the host
+     * 
      * @param sw
      * @param inPort
      * @param payload
      */
-    public void processPacketIn(Switch sw, Port inPort, Ethernet payload){
+    public void processPacketIn(Switch sw, Port inPort, Ethernet payload) {
 
-    	log.debug("ArpHandler: Received a ARP packet from sw {} ", sw.getDpid());
+        log.debug("ArpHandler: Received a ARP packet from sw {} ", sw.getDpid());
 
-        ARP arp = (ARP)payload.getPayload();
+        ARP arp = (ARP) payload.getPayload();
 
         byte[] senderMacAddressByte = arp.getSenderHardwareAddress();
         IPv4Address hostIpAddress = IPv4Address.of(arp.getSenderProtocolAddress());
         log.debug("ArpHandler: Add IP route to Host {} ", hostIpAddress);
-        srManager.addRouteToHost(sw,hostIpAddress.getInt(), senderMacAddressByte);
+        srManager.addRouteToHost(sw, hostIpAddress.getInt(), senderMacAddressByte);
 
         if (arp.getOpCode() == ARP.OP_REQUEST) {
-        	log.debug("ArpHandler: Received a ARP Requestfrom sw {} ", sw.getDpid());
+            log.debug("ArpHandler: Received a ARP Requestfrom sw {} ", sw.getDpid());
             handleArpRequest(sw, inPort, payload);
         }
         else {
             byte[] destIp = arp.getSenderProtocolAddress();
-            for (IPv4 ipPacket: srManager.getIpPacketFromQueue(destIp)) {
+            for (IPv4 ipPacket : srManager.getIpPacketFromQueue(destIp)) {
                 if (ipPacket != null && !inSameSubnet(sw, ipPacket)) {
                     Ethernet eth = new Ethernet();
                     eth.setDestinationMACAddress(payload.getSourceMACAddress());
@@ -133,32 +133,32 @@ public class ArpHandler {
 
     /**
      * Send an ARP response for the ARP request to the known switches
-     *
+     * 
      * @param sw Switch
      * @param inPort port to send ARP response to
      * @param arpRequest ARP request packet to handle
      */
     private void handleArpRequest(Switch sw, Port inPort, Ethernet payload) {
 
-    	ARP arpRequest = (ARP)payload.getPayload();
-    	MACAddress targetMac = null;
+        ARP arpRequest = (ARP) payload.getPayload();
+        MACAddress targetMac = null;
 
-    	if (isArpReqForSwitch(sw, arpRequest)) {
+        if (isArpReqForSwitch(sw, arpRequest)) {
             String switchMacAddressStr = sw.getStringAttribute("routerMac");
             targetMac = MACAddress.valueOf(switchMacAddressStr);
-        	log.debug("ArpHandler: Received a ARP query for a sw {} ", sw.getDpid());
-    	}
-    	else {
-        	Host knownHost = isArpReqForKnownHost(sw, arpRequest);
-        	if (knownHost != null) {
+            log.debug("ArpHandler: Received a ARP query for a sw {} ", sw.getDpid());
+        }
+        else {
+            Host knownHost = isArpReqForKnownHost(sw, arpRequest);
+            if (knownHost != null) {
                 targetMac = knownHost.getMacAddress();
-            	log.debug("ArpHandler: Received a ARP query for a known host {} ",
-            						IPv4Address.of(knownHost.getIpAddress()));
-        	}
-    	}
+                log.debug("ArpHandler: Received a ARP query for a known host {} ",
+                        IPv4Address.of(knownHost.getIpAddress()));
+            }
+        }
 
-    	if (targetMac != null) {
-    		/* ARP Destination is known. Packet out ARP Reply */
+        if (targetMac != null) {
+            /* ARP Destination is known. Packet out ARP Reply */
             ARP arpReply = new ARP();
             arpReply.setHardwareType(ARP.HW_TYPE_ETHERNET)
                     .setProtocolType(ARP.PROTO_TYPE_IP)
@@ -177,53 +177,53 @@ public class ArpHandler {
                     .setEtherType(Ethernet.TYPE_ARP).setPayload(arpReply);
 
             sendPacketOut(sw, eth, inPort.getPortNumber().shortValue());
-    	}
-    	else
-    	{
-    		/* Broadcast the received ARP request to all switch ports
-    		 * that subnets are connected to except the port from which
-    		 * ARP request is received
-    		 */
-    	    IPv4Address targetAddress =
-    	            IPv4Address.of(arpRequest.getTargetProtocolAddress());
-        	log.debug("ArpHandler: Received a ARP query for unknown host {} ",
-        			IPv4Address.of(arpRequest.getTargetProtocolAddress()));
-    		for (Integer portNo : getSwitchSubnetPorts(sw, targetAddress)) {
-    			if (portNo.shortValue() == inPort.getPortNumber().shortValue())
-    				continue;
-            	log.debug("ArpHandler: Sending ARP request on switch {} port {}",
-            			sw.getDpid(), portNo.shortValue());
+        }
+        else
+        {
+            /* Broadcast the received ARP request to all switch ports
+             * that subnets are connected to except the port from which
+             * ARP request is received
+             */
+            IPv4Address targetAddress =
+                    IPv4Address.of(arpRequest.getTargetProtocolAddress());
+            log.debug("ArpHandler: Received a ARP query for unknown host {} ",
+                    IPv4Address.of(arpRequest.getTargetProtocolAddress()));
+            for (Integer portNo : getSwitchSubnetPorts(sw, targetAddress)) {
+                if (portNo.shortValue() == inPort.getPortNumber().shortValue())
+                    continue;
+                log.debug("ArpHandler: Sending ARP request on switch {} port {}",
+                        sw.getDpid(), portNo.shortValue());
                 sendPacketOut(sw, payload, portNo.shortValue());
-    		}
-    	}
+            }
+        }
     }
 
     /**
      * Check if the ARP request is to known hosts
-     *
-     * @param sw  Switch
-     * @param arpRequest  ARP request to check
+     * 
+     * @param sw Switch
+     * @param arpRequest ARP request to check
      */
     private Host isArpReqForKnownHost(Switch sw, ARP arpRequest) {
-    	Host knownHost = null;
+        Host knownHost = null;
 
         IPv4Address targetIPAddress = IPv4Address.of(
-        					arpRequest.getTargetProtocolAddress());
+                arpRequest.getTargetProtocolAddress());
 
-        for (Host host:sw.getHosts()) {
-        	if (host.getIpAddress() == targetIPAddress.getInt()) {
-        		knownHost = host;
-        		break;
-        	}
+        for (Host host : sw.getHosts()) {
+            if (host.getIpAddress() == targetIPAddress.getInt()) {
+                knownHost = host;
+                break;
+            }
         }
         return knownHost;
 
     }
 
     /**
-     *
+     * 
      * Check if the ARP is for the switch
-     *
+     * 
      * @param sw Switch
      * @param arpRequest ARP request to check
      * @return true if the ARP is for the switch
@@ -232,9 +232,10 @@ public class ArpHandler {
         List<String> subnetGatewayIPs = getSubnetGatewayIps(sw);
         boolean isArpForSwitch = false;
         if (!subnetGatewayIPs.isEmpty()) {
-            IPv4Address targetProtocolAddress = IPv4Address.of(arpRequest.getTargetProtocolAddress());
+            IPv4Address targetProtocolAddress = IPv4Address.of(arpRequest
+                    .getTargetProtocolAddress());
             if (subnetGatewayIPs.contains(targetProtocolAddress.toString())) {
-            	isArpForSwitch = true;
+                isArpForSwitch = true;
             }
         }
         return isArpForSwitch;
@@ -242,7 +243,7 @@ public class ArpHandler {
 
     /**
      * Retrieve Gateway IP address of all subnets defined in net config file
-     *
+     * 
      * @param sw Switch to retrieve subnet GW IPs for
      * @return list of GW IP addresses for all subnets
      */
@@ -256,7 +257,8 @@ public class ArpHandler {
             for (int i = 0; i < arry.length(); i++) {
                 String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
                 if (subnetIpSlash != null) {
-                    String subnetIp = subnetIpSlash.substring(0, subnetIpSlash.indexOf('/'));
+                    String subnetIp = subnetIpSlash.substring(0,
+                            subnetIpSlash.indexOf('/'));
                     gatewayIps.add(subnetIp);
                 }
             }
@@ -277,7 +279,7 @@ public class ArpHandler {
             for (int i = 0; i < arry.length(); i++) {
                 String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
                 if (srManager.netMatch(subnetIpSlash, targetAddress.toString())) {
-                    Integer subnetPort = (Integer)arry.getJSONObject(i).get("portNo");
+                    Integer subnetPort = (Integer) arry.getJSONObject(i).get("portNo");
                     switchSubnetPorts.add(subnetPort);
                 }
             }
@@ -291,11 +293,11 @@ public class ArpHandler {
 
     /**
      * Send an ARP request
-     *
+     * 
      * @param sw Switch
      * @param targetAddress Target IP address
      * @param inPort Port to send the ARP request
-     *
+     * 
      */
     public void sendArpRequest(Switch sw, int targetAddressInt, Port inPort) {
 
@@ -326,22 +328,22 @@ public class ArpHandler {
                 .setSourceMACAddress(senderMacAddress)
                 .setEtherType(Ethernet.TYPE_ARP).setPayload(arpRequest);
 
-		/* Broadcast the ARP request to all switch ports
-		 * that subnets are connected to except the port from which
-		 * ARP request is received
-		 */
-		for (Integer portNo : getSwitchSubnetPorts(sw, targetAddress)) {
-			if (portNo.shortValue() == inPort.getPortNumber().shortValue())
-				continue;
-        	log.debug("ArpHandler: Sending ARP request on switch {} port {}",
-        			sw.getDpid(), portNo.shortValue());
+        /* Broadcast the ARP request to all switch ports
+         * that subnets are connected to except the port from which
+         * ARP request is received
+         */
+        for (Integer portNo : getSwitchSubnetPorts(sw, targetAddress)) {
+            if (portNo.shortValue() == inPort.getPortNumber().shortValue())
+                continue;
+            log.debug("ArpHandler: Sending ARP request on switch {} port {}",
+                    sw.getDpid(), portNo.shortValue());
             sendPacketOut(sw, eth, portNo.shortValue());
-		}
+        }
     }
 
     /**
      * Send PACKET_OUT packet to switch
-     *
+     * 
      * @param sw Switch to send the packet to
      * @param packet Packet to send
      * @param switchPort port to send (if -1, broadcast)
@@ -363,7 +365,8 @@ public class ArpHandler {
                 Port p = iter.next();
                 int pnum = p.getPortNumber().shortValue();
                 if (U32.of(pnum).compareTo(U32.of(OFPort.MAX.getPortNumber())) < 1) {
-                    OFAction outport = factory.actions().output(OFPort.of(p.getNumber().shortValue()),
+                    OFAction outport = factory.actions().output(
+                            OFPort.of(p.getNumber().shortValue()),
                             Short.MAX_VALUE);
                     actions.add(outport);
                 }
@@ -380,7 +383,7 @@ public class ArpHandler {
 
     /**
      * Check if the source IP and destination IP are in the same subnet
-     *
+     * 
      * @param sw Switch
      * @param ipv4 IP address to check
      * @return return true if the IP packet is within the same subnet
@@ -399,7 +402,7 @@ public class ArpHandler {
 
     /**
      * Get router IP address for the given IP address
-     *
+     * 
      * @param sourceAddress
      * @return
      */
@@ -408,7 +411,7 @@ public class ArpHandler {
         String gwIp = null;
         IPv4Address srcIp = IPv4Address.of(sourceAddress);
 
-        for (Switch sw: mutableTopology.getSwitches()) {
+        for (Switch sw : mutableTopology.getSwitches()) {
 
             String subnets = sw.getStringAttribute("subnets");
             try {
@@ -429,4 +432,3 @@ public class ArpHandler {
     }
 
 }
-

@@ -49,17 +49,18 @@ public class ECMPShortestPathGraph {
         switchQueue.add(rootSwitch);
         int currDistance = 0;
         distanceQueue.add(currDistance);
-        switchSearched.put(rootSwitch.getDpid(),currDistance);
+        switchSearched.put(rootSwitch.getDpid(), currDistance);
         while (!switchQueue.isEmpty()) {
             Switch sw = switchQueue.poll();
             Switch prevSw = null;
             currDistance = distanceQueue.poll();
             for (Link link : sw.getOutgoingLinks()) {
                 Switch reachedSwitch = link.getDstPort().getSwitch();
-                if ((prevSw != null) && (prevSw.getDpid().equals(reachedSwitch.getDpid())))
+                if ((prevSw != null)
+                        && (prevSw.getDpid().equals(reachedSwitch.getDpid())))
                 {
                     /* Ignore LAG links between the same set of switches */
-                	continue;
+                    continue;
                 }
                 else
                 {
@@ -67,46 +68,47 @@ public class ECMPShortestPathGraph {
                 }
 
                 Integer distance = switchSearched.get(reachedSwitch.getDpid());
-                if ((distance != null) && (distance.intValue() < (currDistance+1))) {
+                if ((distance != null) && (distance.intValue() < (currDistance + 1))) {
                     continue;
                 }
-                if (distance == null){
-                	/* First time visiting this switch node */
+                if (distance == null) {
+                    /* First time visiting this switch node */
                     switchQueue.add(reachedSwitch);
-                    distanceQueue.add(currDistance+1);
-                    switchSearched.put(reachedSwitch.getDpid(),currDistance+1);
+                    distanceQueue.add(currDistance + 1);
+                    switchSearched.put(reachedSwitch.getDpid(), currDistance + 1);
 
-                    ArrayList<Switch> distanceSwArray = distanceSwitchMap.get(currDistance+1);
+                    ArrayList<Switch> distanceSwArray = distanceSwitchMap
+                            .get(currDistance + 1);
                     if (distanceSwArray == null)
                     {
-                            distanceSwArray = new ArrayList<Switch>();
-                            distanceSwArray.add(reachedSwitch);
-                            distanceSwitchMap.put(currDistance+1, distanceSwArray);
+                        distanceSwArray = new ArrayList<Switch>();
+                        distanceSwArray.add(reachedSwitch);
+                        distanceSwitchMap.put(currDistance + 1, distanceSwArray);
                     }
                     else
-                            distanceSwArray.add(reachedSwitch);
+                        distanceSwArray.add(reachedSwitch);
                 }
 
                 ArrayList<LinkData> upstreamLinkArray =
-                		upstreamLinks.get(reachedSwitch.getDpid());
+                        upstreamLinks.get(reachedSwitch.getDpid());
                 if (upstreamLinkArray == null)
                 {
-                	upstreamLinkArray = new ArrayList<LinkData>();
-                	upstreamLinkArray.add(new LinkData(link));
-                	upstreamLinks.put(reachedSwitch.getDpid(), upstreamLinkArray);
+                    upstreamLinkArray = new ArrayList<LinkData>();
+                    upstreamLinkArray.add(new LinkData(link));
+                    upstreamLinks.put(reachedSwitch.getDpid(), upstreamLinkArray);
                 }
                 else
-                	/* ECMP links */
-                	upstreamLinkArray.add(new LinkData(link));
+                    /* ECMP links */
+                    upstreamLinkArray.add(new LinkData(link));
             }
         }
 
         log.debug("ECMPShortestPathGraph:switchSearched for switch {} is {}",
-                        HexString.toHexString(rootSwitch.getDpid().value()), switchSearched);
+                HexString.toHexString(rootSwitch.getDpid().value()), switchSearched);
         log.debug("ECMPShortestPathGraph:upstreamLinks for switch {} is {}",
-                        HexString.toHexString(rootSwitch.getDpid().value()), upstreamLinks);
+                HexString.toHexString(rootSwitch.getDpid().value()), upstreamLinks);
         log.debug("ECMPShortestPathGraph:distanceSwitchMap for switch {} is {}",
-                        HexString.toHexString(rootSwitch.getDpid().value()), distanceSwitchMap);
+                HexString.toHexString(rootSwitch.getDpid().value()), distanceSwitchMap);
         /*
         for (Integer distance: distanceSwitchMap.keySet()){
                 for (Switch sw: distanceSwitchMap.get(distance)){
@@ -122,25 +124,25 @@ public class ECMPShortestPathGraph {
     private void getDFSPaths(Dpid dstSwitchDpid, Path path, ArrayList<Path> paths) {
         Dpid rootSwitchDpid = rootSwitch.getDpid();
         for (LinkData upstreamLink : upstreamLinks.get(dstSwitchDpid)) {
-        	/* Deep clone the path object */
+            /* Deep clone the path object */
             Path sofarPath = new Path();
             if (!path.isEmpty())
-            	sofarPath.addAll(path.subList(0, path.size()));
+                sofarPath.addAll(path.subList(0, path.size()));
             sofarPath.add(upstreamLink);
             if (upstreamLink.getSrc().getDpid().equals(rootSwitchDpid))
             {
-                    paths.add(sofarPath);
-                    return;
+                paths.add(sofarPath);
+                return;
             }
             else
-                    getDFSPaths(upstreamLink.getSrc().getDpid(),sofarPath, paths);
+                getDFSPaths(upstreamLink.getSrc().getDpid(), sofarPath, paths);
         }
     }
 
     /**
-     * Return the computed ECMP paths from the root switch to a given switch
-     * in the network
-     *
+     * Return the computed ECMP paths from the root switch to a given switch in
+     * the network
+     * 
      * @param targetSwitch the target switch
      * @return the list of ECMP Paths from the root switch to the target switch
      */
@@ -160,19 +162,20 @@ public class ECMPShortestPathGraph {
     /**
      * Return the complete info of the computed ECMP paths for each switch
      * learned in multiple iterations from the root switch
-     *
+     * 
      * @return the hash table of Switches learned in multiple Dijkstra
-     * iterations and corresponding ECMP paths to it from the root switch
+     *         iterations and corresponding ECMP paths to it from the root
+     *         switch
      */
     public HashMap<Integer, HashMap<Switch,
-                ArrayList<Path>>> getCompleteLearnedSwitchesAndPaths() {
+            ArrayList<Path>>> getCompleteLearnedSwitchesAndPaths() {
 
         HashMap<Integer, HashMap<Switch, ArrayList<Path>>> pathGraph = new
-                        HashMap<Integer, HashMap<Switch, ArrayList<Path>>>();
+                HashMap<Integer, HashMap<Switch, ArrayList<Path>>>();
 
         for (Integer itrIndx : distanceSwitchMap.keySet()) {
             HashMap<Switch, ArrayList<Path>> swMap = new
-                            HashMap<Switch, ArrayList<Path>>();
+                    HashMap<Switch, ArrayList<Path>>();
             for (Switch sw : distanceSwitchMap.get(itrIndx)) {
                 swMap.put(sw, getECMPPaths(sw));
             }
@@ -184,26 +187,20 @@ public class ECMPShortestPathGraph {
 
     /**
      * Return the complete info of the computed ECMP paths for each switch
-     * learned in multiple iterations from the root switch in the form of
-     * {
-     * Iteration1,
-     *              Switch<> via {Switch<>, Switch<>}
-     *              Switch<> via {Switch<>, Switch<>}
-     * Iteration2,
-     *              Switch<> via {Switch<>, Switch<>, Switch<>}
-     *                           {Switch<>, Switch<>, Switch<>}
-     *              Switch<> via {Switch<>, Switch<>, Switch<>}
-     * }
-     *
+     * learned in multiple iterations from the root switch in the form of {
+     * Iteration1, Switch<> via {Switch<>, Switch<>} Switch<> via {Switch<>,
+     * Switch<>} Iteration2, Switch<> via {Switch<>, Switch<>, Switch<>}
+     * {Switch<>, Switch<>, Switch<>} Switch<> via {Switch<>, Switch<>,
+     * Switch<>} }
+     * 
      * @return the hash table of Switches learned in multiple Dijkstra
-     * iterations and corresponding ECMP paths in terms of Switches to be
-     * traversed to it from the root switch
+     *         iterations and corresponding ECMP paths in terms of Switches to
+     *         be traversed to it from the root switch
      */
     public HashMap<Integer, HashMap<Switch,
-                ArrayList<ArrayList<Dpid>>>> getAllLearnedSwitchesAndVia() {
+            ArrayList<ArrayList<Dpid>>>> getAllLearnedSwitchesAndVia() {
 
-        HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>>
-            switchViaMap = new HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>>();
+        HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>> switchViaMap = new HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>>();
 
         for (Integer itrIndx : distanceSwitchMap.keySet()) {
             HashMap<Switch, ArrayList<ArrayList<Dpid>>> swMap =
@@ -211,10 +208,10 @@ public class ECMPShortestPathGraph {
 
             for (Switch sw : distanceSwitchMap.get(itrIndx)) {
                 ArrayList<ArrayList<Dpid>> swViaArray = new ArrayList<>();
-                for (Path path:getECMPPaths(sw)){
+                for (Path path : getECMPPaths(sw)) {
                     ArrayList<Dpid> swVia = new ArrayList<>();
-                    for (LinkData link:path.subList(0, path.size())){
-                        if (link.getSrc().getDpid().equals(rootSwitch.getDpid())){
+                    for (LinkData link : path.subList(0, path.size())) {
+                        if (link.getSrc().getDpid().equals(rootSwitch.getDpid())) {
                             /* No need to add the root switch again in
                              * the Via list
                              */

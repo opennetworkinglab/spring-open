@@ -18,9 +18,9 @@ public class OFPortStatsEntrySerializer extends SerializerBase<OFPortStatsEntryM
 
     @Override
     public void serialize(OFPortStatsEntryMod portStatModEntry, JsonGenerator jGen,
-    		SerializerProvider sp) throws IOException, JsonGenerationException {
+            SerializerProvider sp) throws IOException, JsonGenerationException {
 
-    	OFPortStatsEntry portStatEntry = portStatModEntry.getPortStatsEntry();
+        OFPortStatsEntry portStatEntry = portStatModEntry.getPortStatsEntry();
         jGen.writeStartObject();
         jGen.writeNumberField("portNumber", portStatEntry.getPortNo().getPortNumber());
         jGen.writeNumberField("receivePackets", portStatEntry.getRxPackets().getValue());
@@ -31,8 +31,10 @@ public class OFPortStatsEntrySerializer extends SerializerBase<OFPortStatsEntryM
         jGen.writeNumberField("transmitDropped", portStatEntry.getTxDropped().getValue());
         jGen.writeNumberField("receiveErrors", portStatEntry.getRxErrors().getValue());
         jGen.writeNumberField("transmitErrors", portStatEntry.getTxErrors().getValue());
-        jGen.writeNumberField("receiveFrameErrors", portStatEntry.getRxFrameErr().getValue());
-        jGen.writeNumberField("receiveOverrunErrors", portStatEntry.getRxOverErr().getValue());
+        jGen.writeNumberField("receiveFrameErrors", portStatEntry.getRxFrameErr()
+                .getValue());
+        jGen.writeNumberField("receiveOverrunErrors", portStatEntry.getRxOverErr()
+                .getValue());
         jGen.writeNumberField("receiveCRCErrors", portStatEntry.getRxCrcErr().getValue());
         jGen.writeNumberField("collisions", portStatEntry.getCollisions().getValue());
 

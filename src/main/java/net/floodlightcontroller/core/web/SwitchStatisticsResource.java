@@ -25,10 +25,9 @@ import org.restlet.resource.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * Return switch statistics information for specific switches
- *
+ * 
  * @author readams
  */
 public class SwitchStatisticsResource extends SwitchResourceBase {
@@ -61,6 +60,6 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
 
         result.put(switchId, values);
         return result;
-        //return toRepresentation(result, null);
+        // return toRepresentation(result, null);
     }
 }

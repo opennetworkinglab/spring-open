@@ -59,7 +59,8 @@ public class GenericIpHandler {
     private static final short MIN_PRIORITY = 0x0;
 
     public GenericIpHandler(FloodlightModuleContext context, SegmentRoutingManager sr) {
-        this.floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+        this.floodlightProvider = context
+                .getServiceImpl(IFloodlightProviderService.class);
         this.topologyService = context.getServiceImpl(ITopologyService.class);
         this.mutableTopology = topologyService.getTopology();
         this.flowPusher = context.getServiceImpl(IFlowPusherService.class);
@@ -71,11 +72,11 @@ public class GenericIpHandler {
         // TODO Auto-generated method stub
         log.debug("GenericIPHandler: Received a IP packet {} from sw {} ",
                 payload.toString(), sw.getDpid());
-        IPv4 ipv4 = (IPv4)payload.getPayload();
+        IPv4 ipv4 = (IPv4) payload.getPayload();
         int destinationAddress = ipv4.getDestinationAddress();
 
         // Check if the destination is any host known to TopologyService
-        for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts()) {
+        for (net.onrc.onos.core.topology.Host host : mutableTopology.getHosts()) {
             IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
             if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
                 byte[] destinationMacAddress = host.getMacAddress().toBytes();
@@ -96,24 +97,24 @@ public class GenericIpHandler {
         return true;
     }
 
-
     /**
      * Add routing rules to forward packets to known hosts
-     *
+     * 
      * @param sw Switch
      * @param hostIp Host IP address to forwards packets to
      */
-    public void addRouteToHost(Switch sw, int destinationAddress, byte[] destinationMacAddress) {
+    public void addRouteToHost(Switch sw, int destinationAddress,
+            byte[] destinationMacAddress) {
 
         // If we do not know the host, then we cannot set the forwarding rule
-        net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress.valueOf(destinationMacAddress));
+        net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress
+                .valueOf(destinationMacAddress));
         if (host == null) {
             return;
         }
 
         IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
         OFFactory factory = ofSwitch.getFactory();
-
 
         OFOxmEthType ethTypeIp = factory.oxms()
                 .ethType(EthType.IPv4);
@@ -143,7 +144,6 @@ public class GenericIpHandler {
         actionList.add(decTtl);
         actionList.add(setSA);
 
-
         /* TODO : need to check the config file for all packets
         String subnets = sw.getStringAttribute("subnets");
         try {
@@ -165,7 +165,7 @@ public class GenericIpHandler {
         */
 
         // Set output port
-        for (Port port: host.getAttachmentPoints()) {
+        for (Port port : host.getAttachmentPoints()) {
             OFAction out = factory.actions().buildOutput()
                     .setPort(OFPort.of(port.getPortNumber().shortValue())).build();
             actionList.add(out);
@@ -185,14 +185,14 @@ public class GenericIpHandler {
                 .setBufferId(OFBufferId.NO_BUFFER)
                 .setIdleTimeout(0)
                 .setHardTimeout(0)
-                //.setXid(getNextTransactionId())
+                // .setXid(getNextTransactionId())
                 .build();
 
-        log.debug("Sending 'Routing information' OF message to the switch {}.", sw.getDpid().toString());
+        log.debug("Sending 'Routing information' OF message to the switch {}.", sw
+                .getDpid().toString());
 
         flowPusher.add(sw.getDpid(), myIpEntry);
 
     }
-
 
 }

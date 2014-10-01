@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (c) 2014 Open Networking Laboratory.
  * All rights reserved. This program and the accompanying materials
@@ -80,10 +79,10 @@ public class IcmpHandler {
     private static final int ICMP_TYPE_ECHO = 0x08;
     private static final int ICMP_TYPE_REPLY = 0x00;
 
-
     public IcmpHandler(FloodlightModuleContext context, SegmentRoutingManager manager) {
 
-        this.floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+        this.floodlightProvider = context
+                .getServiceImpl(IFloodlightProviderService.class);
         this.flowPusher = context.getServiceImpl(IFlowPusherService.class);
         this.topologyService = context.getServiceImpl(ITopologyService.class);
         this.mutableTopology = topologyService.getTopology();
@@ -92,13 +91,12 @@ public class IcmpHandler {
     }
 
     /**
-     * handle ICMP packets
-     * If it is for ICMP echo to router IP or any subnet GW IP,
-     * then send ICMP response on behalf of the switch.
-     * If it is for any hosts in subnets of the switches, but if the MAC
-     * address is not known, then send an ARP request to the subent.
-     * If the MAC address is known, then set the routing rule to the switch
-     *
+     * handle ICMP packets If it is for ICMP echo to router IP or any subnet GW
+     * IP, then send ICMP response on behalf of the switch. If it is for any
+     * hosts in subnets of the switches, but if the MAC address is not known,
+     * then send an ARP request to the subent. If the MAC address is known, then
+     * set the routing rule to the switch
+     * 
      * @param sw
      * @param inPort
      * @param payload
@@ -107,7 +105,7 @@ public class IcmpHandler {
 
         if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
 
-            IPv4 ipv4 = (IPv4)payload.getPayload();
+            IPv4 ipv4 = (IPv4) payload.getPayload();
 
             if (ipv4.getProtocol() == IPv4.PROTOCOL_ICMP) {
 
@@ -119,13 +117,13 @@ public class IcmpHandler {
                 // Check if it is ICMP request to the switch
                 String switchIpAddressSlash = sw.getStringAttribute("routerIp");
                 if (switchIpAddressSlash != null) {
-                    String switchIpAddressStr
-                        = switchIpAddressSlash.substring(0, switchIpAddressSlash.indexOf('/'));
+                    String switchIpAddressStr = switchIpAddressSlash.substring(0,
+                            switchIpAddressSlash.indexOf('/'));
                     IPv4Address switchIpAddress = IPv4Address.of(switchIpAddressStr);
                     List<String> gatewayIps = getSubnetGatewayIps(sw);
-                    if (((ICMP)ipv4.getPayload()).getIcmpType() == ICMP_TYPE_ECHO &&
+                    if (((ICMP) ipv4.getPayload()).getIcmpType() == ICMP_TYPE_ECHO &&
                             (destinationAddress.getInt() == switchIpAddress.getInt() ||
-                             gatewayIps.contains(destinationAddress.toString()))) {
+                            gatewayIps.contains(destinationAddress.toString()))) {
                         log.debug("ICMPHandler: ICMP packet for sw {} and "
                                 + "sending ICMP response ", sw.getDpid());
                         sendICMPResponse(sw, inPort, payload);
@@ -135,7 +133,7 @@ public class IcmpHandler {
                 }
 
                 /* Check if ICMP is for any switch known host */
-                for (Host host: sw.getHosts()) {
+                for (Host host : sw.getHosts()) {
                     IPv4Address hostIpAddress =
                             IPv4Address.of(host.getIpAddress());
                     if (hostIpAddress != null &&
@@ -149,17 +147,19 @@ public class IcmpHandler {
                          *  again just in case and flush any pending packets to the host.
                          */
                         log.debug("ICMPHandler: ICMP request for known host {}",
-                                         hostIpAddress);
+                                hostIpAddress);
                         byte[] destinationMacAddress = host.getMacAddress().toBytes();
                         srManager.addRouteToHost(sw,
                                 destinationAddress.getInt(), destinationMacAddress);
 
                         byte[] destIp = destinationAddress.getBytes();
-                        for (IPv4 ipPacket: srManager.getIpPacketFromQueue(destIp)) {
+                        for (IPv4 ipPacket : srManager.getIpPacketFromQueue(destIp)) {
                             if (ipPacket != null && !inSameSubnet(sw, ipPacket)) {
                                 Ethernet eth = new Ethernet();
-                                eth.setDestinationMACAddress(payload.getSourceMACAddress());
-                                eth.setSourceMACAddress(sw.getStringAttribute("routerMac"));
+                                eth.setDestinationMACAddress(payload
+                                        .getSourceMACAddress());
+                                eth.setSourceMACAddress(sw
+                                        .getStringAttribute("routerMac"));
                                 eth.setEtherType(Ethernet.TYPE_IPV4);
                                 eth.setPayload(ipPacket);
                                 sendPacketOut(sw, eth, inPort.getSwitchPort(), false);
@@ -178,11 +178,9 @@ public class IcmpHandler {
         }
     }
 
-
-
     /**
      * Retrieve Gateway IP address of all subnets defined in net config file
-     *
+     * 
      * @param sw Switch to retrieve subnet GW IPs for
      * @return list of GW IP addresses for all subnets
      */
@@ -196,7 +194,8 @@ public class IcmpHandler {
             for (int i = 0; i < arry.length(); i++) {
                 String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
                 if (subnetIpSlash != null) {
-                    String subnetIp = subnetIpSlash.substring(0, subnetIpSlash.indexOf('/'));
+                    String subnetIp = subnetIpSlash.substring(0,
+                            subnetIpSlash.indexOf('/'));
                     gatewayIps.add(subnetIp);
                 }
             }
@@ -208,10 +207,9 @@ public class IcmpHandler {
         return gatewayIps;
     }
 
-
     /**
      * Send ICMP reply back
-     *
+     * 
      * @param sw Switch
      * @param inPort Port the ICMP packet is forwarded from
      * @param icmpRequest the ICMP request to handle
@@ -226,14 +224,13 @@ public class IcmpHandler {
         int destAddress = icmpRequestIpv4.getDestinationAddress();
         icmpReplyIpv4.setDestinationAddress(icmpRequestIpv4.getSourceAddress());
         icmpReplyIpv4.setSourceAddress(destAddress);
-        icmpReplyIpv4.setTtl((byte)64);
-        icmpReplyIpv4.setChecksum((short)0);
+        icmpReplyIpv4.setTtl((byte) 64);
+        icmpReplyIpv4.setChecksum((short) 0);
 
-
-        ICMP icmpReply = (ICMP)icmpRequestIpv4.getPayload().clone();
-        icmpReply.setIcmpCode((byte)0x00);
+        ICMP icmpReply = (ICMP) icmpRequestIpv4.getPayload().clone();
+        icmpReply.setIcmpCode((byte) 0x00);
         icmpReply.setIcmpType((byte) ICMP_TYPE_REPLY);
-        icmpReply.setChecksum((short)0);
+        icmpReply.setChecksum((short) 0);
 
         icmpReplyIpv4.setPayload(icmpReply);
 
@@ -242,23 +239,25 @@ public class IcmpHandler {
         icmpReplyEth.setDestinationMACAddress(icmpRequest.getSourceMACAddress());
         icmpReplyEth.setSourceMACAddress(icmpRequest.getDestinationMACAddress());
 
-        sendPacketOut(sw, icmpReplyEth, new SwitchPort(sw.getDpid(), inPort.getPortNumber()), false);
+        sendPacketOut(sw, icmpReplyEth,
+                new SwitchPort(sw.getDpid(), inPort.getPortNumber()), false);
 
         log.debug("Send an ICMP response {}", icmpReplyIpv4.toString());
 
     }
 
     /**
-     * Send PACKET_OUT message with actions
-     * If switches support OFPP_TABLE action, it sends out packet to TABLE port
-     * Otherwise, it sends the packet to the port the packet came from
-     * (in this case, MPLS label is added if the packet needs go through transit switches)
-     *
-     * @param sw  Switch the packet came from
+     * Send PACKET_OUT message with actions If switches support OFPP_TABLE
+     * action, it sends out packet to TABLE port Otherwise, it sends the packet
+     * to the port the packet came from (in this case, MPLS label is added if
+     * the packet needs go through transit switches)
+     * 
+     * @param sw Switch the packet came from
      * @param packet Ethernet packet to send
      * @param switchPort port to send the packet
      */
-    private void sendPacketOut(Switch sw, Ethernet packet, SwitchPort switchPort, boolean supportOfppTable) {
+    private void sendPacketOut(Switch sw, Ethernet packet, SwitchPort switchPort,
+            boolean supportOfppTable) {
 
         boolean sameSubnet = false;
         IOFSwitch ofSwitch = floodlightProvider.getMasterSwitch(sw.getDpid().value());
@@ -266,12 +265,14 @@ public class IcmpHandler {
 
         List<OFAction> actions = new ArrayList<>();
 
-        // If OFPP_TABLE action is not supported in the switch, MPLS label needs to be set
+        // If OFPP_TABLE action is not supported in the switch, MPLS label needs
+        // to be set
         // if the packet needs to be delivered crossing switches
         if (!supportOfppTable) {
             // Check if the destination is the host attached to the switch
-            int destinationAddress = ((IPv4)packet.getPayload()).getDestinationAddress();
-            for (net.onrc.onos.core.topology.Host host: mutableTopology.getHosts(switchPort)) {
+            int destinationAddress = ((IPv4) packet.getPayload()).getDestinationAddress();
+            for (net.onrc.onos.core.topology.Host host : mutableTopology
+                    .getHosts(switchPort)) {
                 IPv4Address hostIpAddress = IPv4Address.of(host.getIpAddress());
                 if (hostIpAddress != null && hostIpAddress.getInt() == destinationAddress) {
                     sameSubnet = true;
@@ -279,10 +280,12 @@ public class IcmpHandler {
                 }
             }
 
-            IPv4Address targetAddress = IPv4Address.of(((IPv4)packet.getPayload()).getDestinationAddress());
+            IPv4Address targetAddress = IPv4Address.of(((IPv4) packet.getPayload())
+                    .getDestinationAddress());
             String destMacAddress = packet.getDestinationMAC().toString();
             // If the destination host is not attached in the switch
-            // and the destination is not the neighbor switch, then add MPLS label
+            // and the destination is not the neighbor switch, then add MPLS
+            // label
             String targetMac = getRouterMACFromConfig(targetAddress);
             if (!sameSubnet && !targetMac.equals(destMacAddress)) {
                 int mplsLabel = getMplsLabelFromConfig(targetAddress);
@@ -299,10 +302,12 @@ public class IcmpHandler {
                 }
             }
 
-            OFAction outport = factory.actions().output(OFPort.of(switchPort.getPortNumber().shortValue()), Short.MAX_VALUE);
+            OFAction outport = factory.actions().output(
+                    OFPort.of(switchPort.getPortNumber().shortValue()), Short.MAX_VALUE);
             actions.add(outport);
         }
-        // If OFPP_TABLE action is supported, first set a rule to allow packet from CONTROLLER port.
+        // If OFPP_TABLE action is supported, first set a rule to allow packet
+        // from CONTROLLER port.
         // Then, send the packet to the table port
         else {
             if (!controllerPortAllowed) {
@@ -323,7 +328,7 @@ public class IcmpHandler {
 
     /**
      * Get MPLS label for the target address from the network config file
-     *
+     * 
      * @param targetAddress - IP address of the target host
      * @return MPLS label of the switch to send packets to the target address
      */
@@ -331,7 +336,7 @@ public class IcmpHandler {
 
         int mplsLabel = -1;
 
-        for (Switch sw: mutableTopology.getSwitches()) {
+        for (Switch sw : mutableTopology.getSwitches()) {
 
             String subnets = sw.getStringAttribute("subnets");
             try {
@@ -353,10 +358,10 @@ public class IcmpHandler {
         return mplsLabel;
     }
 
-
     /**
-     * Get Router MAC Address for the target address from the network config file
-     *
+     * Get Router MAC Address for the target address from the network config
+     * file
+     * 
      * @param targetAddress - IP address of the target host
      * @return Router MAC of the switch to send packets to the target address
      */
@@ -364,7 +369,7 @@ public class IcmpHandler {
 
         String routerMac = null;
 
-        for (Switch sw: mutableTopology.getSwitches()) {
+        for (Switch sw : mutableTopology.getSwitches()) {
 
             String subnets = sw.getStringAttribute("subnets");
             try {
@@ -372,7 +377,7 @@ public class IcmpHandler {
                 for (int i = 0; i < arry.length(); i++) {
                     String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
                     if (srManager.netMatch(subnetIp, targetAddress.toString())) {
-                             routerMac = sw.getStringAttribute("routerMac");
+                        routerMac = sw.getStringAttribute("routerMac");
                     }
                 }
             } catch (JSONException e) {
@@ -385,10 +390,10 @@ public class IcmpHandler {
     }
 
     /**
-     * Add a new rule to VLAN table to forward packets from any port to the next table
-     * It is required to forward packets from controller to pipeline
-     *
-     * @param sw  Switch the packet came from
+     * Add a new rule to VLAN table to forward packets from any port to the next
+     * table It is required to forward packets from controller to pipeline
+     * 
+     * @param sw Switch the packet came from
      */
     private void addControlPortInVlanTable(Switch sw) {
 
@@ -401,7 +406,7 @@ public class IcmpHandler {
         OFOxmList oxmList = OFOxmList.of(oxv);
 
         /* Cqpd switch does not seems to support CONTROLLER port as in_port match rule */
-        //OFOxmList oxmList = OFOxmList.of(oxp, oxv);
+        // OFOxmList oxmList = OFOxmList.of(oxp, oxv);
 
         OFMatchV3 match = factory.buildMatchV3()
                 .setOxmList(oxmList)
@@ -420,17 +425,17 @@ public class IcmpHandler {
                 .setBufferId(OFBufferId.NO_BUFFER)
                 .setIdleTimeout(0)
                 .setHardTimeout(0)
-                //.setXid(getNextTransactionId())
+                // .setXid(getNextTransactionId())
                 .build();
 
-        flowPusher.add(sw.getDpid(), flowEntry);;
+        flowPusher.add(sw.getDpid(), flowEntry);
         log.debug("Adding a new vlan-rules in sw {}", sw.getDpid());
 
     }
 
     /**
      * Check if the source IP and destination IP are in the same subnet
-     *
+     * 
      * @param sw Switch
      * @param ipv4 IP address to check
      * @return return true if the IP packet is within the same subnet
@@ -449,7 +454,7 @@ public class IcmpHandler {
 
     /**
      * Get router IP address for the given IP address
-     *
+     * 
      * @param sourceAddress
      * @return
      */
@@ -458,7 +463,7 @@ public class IcmpHandler {
         String gwIp = null;
         IPv4Address srcIp = IPv4Address.of(sourceAddress);
 
-        for (Switch sw: mutableTopology.getSwitches()) {
+        for (Switch sw : mutableTopology.getSwitches()) {
 
             String subnets = sw.getStringAttribute("subnets");
             try {
