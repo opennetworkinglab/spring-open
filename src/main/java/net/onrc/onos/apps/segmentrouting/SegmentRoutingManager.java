@@ -8,10 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -77,7 +76,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ITopologyService topologyService;
     private IPacketService packetService;
     private MutableTopology mutableTopology;
-    private Queue<IPv4> ipPacketQueue;
+    private ConcurrentLinkedQueue<IPv4> ipPacketQueue;
 
     private List<ArpEntry> arpEntries;
     private ArpHandler arpHandler;
@@ -125,7 +124,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         threadPool = context.getServiceImpl(IThreadPoolService.class);
         mutableTopology = topologyService.getTopology();
         topologyService.addListener(this, false);
-        ipPacketQueue = new LinkedList<IPv4>();
+        ipPacketQueue = new ConcurrentLinkedQueue<IPv4>();
 
         this.packetService = context.getServiceImpl(IPacketService.class);
         packetService.registerPacketListener(this);
@@ -238,8 +237,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void topologyEvents(TopologyEvents topologyEvents)
     {
-        if ((topologyEvents.getAddedLinkDataEntries() != null) ||
-                (topologyEvents.getRemovedLinkDataEntries() != null))
+        if (topologyEvents.getAddedLinkDataEntries() != null)
         {
             discoveryTask.reschedule(1, TimeUnit.SECONDS);
         }
@@ -247,28 +245,52 @@ public class SegmentRoutingManager implements IFloodlightModule,
         Collection<PortData> portEntries =
                 topologyEvents.getRemovedPortDataEntries();
         if (!portEntries.isEmpty()) {
-            // report port removal to the driver
-            for (PortData port: portEntries) {
-                Dpid dpid = port.getDpid();
-                int portNo = (int) port.getPortNumber().value();
-                log.debug("Remove port {} from switch {}", portNo, dpid.toString());
-            }
+            processPortRemoval(portEntries);
         }
 
         Collection<LinkData> linkEntries =
                 topologyEvents.getRemovedLinkDataEntries();
         if (!linkEntries.isEmpty()) {
-            for (LinkData link: linkEntries) {
-                Dpid srcSwDpid = link.getSrc().getDpid();
-                Dpid dstSwDpid = link.getDst().getDpid();
+            processLinkRemoval(linkEntries);
+        }
+    }
 
-                Switch srcSwitch = mutableTopology.getSwitch(srcSwDpid);
-                Switch dstSwitch = mutableTopology.getSwitch(dstSwDpid);
+    /**
+     * Check if all links are gone b/w the two switches.
+     * If all links are gone, then we need to recalculate the path.
+     * Otherwise, just report link failure to the driver.
+     *
+     * @param linkEntries
+     */
+    private void processLinkRemoval(Collection<LinkData> linkEntries) {
+        for (LinkData link: linkEntries) {
+            Dpid srcSwDpid = link.getSrc().getDpid();
+            Dpid dstSwDpid = link.getDst().getDpid();
 
-
+            Switch srcSwitch = mutableTopology.getSwitch(srcSwDpid);
+            if (srcSwitch.getLinkToNeighbor(dstSwDpid) == null) {
+                discoveryTask.reschedule(1, TimeUnit.SECONDS);
+                log.debug("All links are gone b/w {} and {}",srcSwDpid,
+                        dstSwDpid);
             }
         }
+    }
 
+    /**
+     * report ports removed to the driver
+     *
+     * @param portEntries
+     */
+    private void processPortRemoval(Collection<PortData> portEntries) {
+        for (PortData port: portEntries) {
+            Dpid dpid = port.getDpid();
+            int portNo = (int) port.getPortNumber().value();
+
+            IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                    getSwId(port.getDpid().toString()));
+            //sw13.removePort(portNo);
+            log.debug("Remove port {} from switch {}", portNo, dpid.toString());
+        }
     }
 
     /**
@@ -742,9 +764,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param ipv4
      */
     public void addPacket(IPv4 ipv4) {
-        synchronized (ipPacketQueue) {
-            ipPacketQueue.add(ipv4);
-        }
+        ipPacketQueue.add(ipv4);
     }
 
     /**
@@ -756,15 +776,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         List<IPv4> bufferedPackets = new ArrayList<IPv4>();
 
-        synchronized (ipPacketQueue) {
-            if (!ipPacketQueue.isEmpty()) {
-                for (IPv4 ip: ipPacketQueue) {
-                    int dest = ip.getDestinationAddress();
-                    IPv4Address ip1 = IPv4Address.of(dest);
-                    IPv4Address ip2 = IPv4Address.of(destIp);
-                    if (ip1.equals(ip2)) {
-                        bufferedPackets.add((IPv4)(ipPacketQueue.poll()).clone());
-                    }
+        if (!ipPacketQueue.isEmpty()) {
+            for (IPv4 ip: ipPacketQueue) {
+                int dest = ip.getDestinationAddress();
+                IPv4Address ip1 = IPv4Address.of(dest);
+                IPv4Address ip2 = IPv4Address.of(destIp);
+                if (ip1.equals(ip2)) {
+                    bufferedPackets.add((IPv4)(ipPacketQueue.poll()).clone());
                 }
             }
         }
