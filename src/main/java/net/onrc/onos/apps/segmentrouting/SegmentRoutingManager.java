@@ -237,9 +237,17 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void topologyEvents(TopologyEvents topologyEvents)
     {
-        if (topologyEvents.getAddedLinkDataEntries() != null)
-        {
-            discoveryTask.reschedule(1, TimeUnit.SECONDS);
+
+        Collection<LinkData> linkEntriesAdded =
+                topologyEvents.getAddedLinkDataEntries();
+        if (!linkEntriesAdded.isEmpty()) {
+            processLinkAdd(linkEntriesAdded);
+        }
+
+        Collection<PortData> PortEntriesAdded =
+                topologyEvents.getAddedPortDataEntries();
+        if (linkEntriesAdded != null) {
+            processPortAdd(PortEntriesAdded);
         }
 
         Collection<PortData> portEntries =
@@ -248,11 +256,54 @@ public class SegmentRoutingManager implements IFloodlightModule,
             processPortRemoval(portEntries);
         }
 
-        Collection<LinkData> linkEntries =
+        Collection<LinkData> linkEntriesRemoved =
                 topologyEvents.getRemovedLinkDataEntries();
-        if (!linkEntries.isEmpty()) {
-            processLinkRemoval(linkEntries);
+        if (!linkEntriesRemoved.isEmpty()) {
+            processLinkRemoval(linkEntriesRemoved);
         }
+    }
+
+    /**
+     * Report ports newly added to driver
+     *
+     * @param portEntries
+     */
+    private void processPortAdd(Collection<PortData> portEntries) {
+        //TODO: do we need to add ports slowly?
+        for (PortData port: portEntries) {
+            Dpid dpid = port.getDpid();
+            int portNo = (int) port.getPortNumber().value();
+
+            IOF13Switch sw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                    getSwId(port.getDpid().toString()));
+            //sw13.addPort(portNo);
+            log.debug("Add port {} to switch {}", portNo, dpid.toString());
+        }
+    }
+
+    /**
+     * Reports ports of new links to driver and recalculate ECMP SPG
+     *
+     * @param linkEntries
+     */
+    private void processLinkAdd(Collection<LinkData> linkEntries) {
+
+        // TODO: How to determine this link was broken before and back now
+        // If so, we need to ad the link slowly...
+        // Or, just add any new or restored link slowly ???
+        for (LinkData link: linkEntries) {
+            SwitchPort srcPort = link.getSrc();
+            SwitchPort dstPort = link.getDst();
+
+            IOF13Switch sw13src = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                    getSwId(srcPort.getDpid().toString()));
+            IOF13Switch sw13dst = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                    getSwId(srcPort.getDpid().toString()));
+            //sw13src.addPort(srcPort);
+            //sw13dst.addPort(dstPort);
+
+        }
+        discoveryTask.reschedule(1, TimeUnit.SECONDS);
     }
 
     /**
@@ -264,20 +315,27 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     private void processLinkRemoval(Collection<LinkData> linkEntries) {
         for (LinkData link: linkEntries) {
-            Dpid srcSwDpid = link.getSrc().getDpid();
-            Dpid dstSwDpid = link.getDst().getDpid();
+            SwitchPort srcPort = link.getSrc();
+            SwitchPort dstPort = link.getDst();
 
-            Switch srcSwitch = mutableTopology.getSwitch(srcSwDpid);
-            if (srcSwitch.getLinkToNeighbor(dstSwDpid) == null) {
+            IOF13Switch sw13src = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                    getSwId(srcPort.getDpid().toString()));
+            IOF13Switch sw13dst = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                    getSwId(srcPort.getDpid().toString()));
+            //sw13src.addPort(srcPort);
+            //sw13dst.addPort(dstPort);
+
+            Switch srcSwitch = mutableTopology.getSwitch(srcPort.getDpid());
+            if (srcSwitch.getLinkToNeighbor(dstPort.getDpid()) == null) {
                 discoveryTask.reschedule(1, TimeUnit.SECONDS);
-                log.debug("All links are gone b/w {} and {}",srcSwDpid,
-                        dstSwDpid);
+                log.debug("All links are gone b/w {} and {}",srcPort.getDpid(),
+                        srcPort.getDpid());
             }
         }
     }
 
     /**
-     * report ports removed to the driver
+     * report ports removed to the driver immediately
      *
      * @param portEntries
      */

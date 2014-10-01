@@ -148,12 +148,13 @@ public class ArpHandler {
             targetMac = MACAddress.valueOf(switchMacAddressStr);
         	log.debug("ArpHandler: Received a ARP query for a sw {} ", sw.getDpid());
     	}
-
-    	Host knownHost = isArpReqForKnownHost(sw, arpRequest);
-    	if (knownHost != null) {
-            targetMac = knownHost.getMacAddress();
-        	log.debug("ArpHandler: Received a ARP query for a known host {} ",
-        						IPv4Address.of(knownHost.getIpAddress()));
+    	else {
+        	Host knownHost = isArpReqForKnownHost(sw, arpRequest);
+        	if (knownHost != null) {
+                targetMac = knownHost.getMacAddress();
+            	log.debug("ArpHandler: Received a ARP query for a known host {} ",
+            						IPv4Address.of(knownHost.getIpAddress()));
+        	}
     	}
 
     	if (targetMac != null) {
@@ -183,9 +184,11 @@ public class ArpHandler {
     		 * that subnets are connected to except the port from which
     		 * ARP request is received
     		 */
+    	    IPv4Address targetAddress =
+    	            IPv4Address.of(arpRequest.getTargetProtocolAddress());
         	log.debug("ArpHandler: Received a ARP query for unknown host {} ",
         			IPv4Address.of(arpRequest.getTargetProtocolAddress()));
-    		for (Integer portNo : getSwitchSubnetPorts(sw)) {
+    		for (Integer portNo : getSwitchSubnetPorts(sw, targetAddress)) {
     			if (portNo.shortValue() == inPort.getPortNumber().shortValue())
     				continue;
             	log.debug("ArpHandler: Sending ARP request on switch {} port {}",
@@ -265,15 +268,18 @@ public class ArpHandler {
         return gatewayIps;
     }
 
-    private HashSet<Integer> getSwitchSubnetPorts(Switch sw) {
+    private HashSet<Integer> getSwitchSubnetPorts(Switch sw, IPv4Address targetAddress) {
         HashSet<Integer> switchSubnetPorts = new HashSet<Integer>();
 
         String subnets = sw.getStringAttribute("subnets");
         try {
             JSONArray arry = new JSONArray(subnets);
             for (int i = 0; i < arry.length(); i++) {
-                Integer subnetPort = (Integer)arry.getJSONObject(i).get("portNo");
-                switchSubnetPorts.add(subnetPort);
+                String subnetIpSlash = (String) arry.getJSONObject(i).get("subnetIp");
+                if (srManager.netMatch(subnetIpSlash, targetAddress.toString())) {
+                    Integer subnetPort = (Integer)arry.getJSONObject(i).get("portNo");
+                    switchSubnetPorts.add(subnetPort);
+                }
             }
         } catch (JSONException e) {
             // TODO Auto-generated catch block
@@ -324,7 +330,7 @@ public class ArpHandler {
 		 * that subnets are connected to except the port from which
 		 * ARP request is received
 		 */
-		for (Integer portNo : getSwitchSubnetPorts(sw)) {
+		for (Integer portNo : getSwitchSubnetPorts(sw, targetAddress)) {
 			if (portNo.shortValue() == inPort.getPortNumber().shortValue())
 				continue;
         	log.debug("ArpHandler: Sending ARP request on switch {} port {}",
