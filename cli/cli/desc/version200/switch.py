@@ -13,7 +13,6 @@
 # implied. See the License for the specific language governing
 # permissions and limitations under the License.
 #
-"""
 SWITCH_SUBMODE_COMMAND_DESCRIPTION = {
     'name'          : 'switch',
     'short-help'    : 'Enter switch submode, configure switch details',
@@ -38,7 +37,6 @@ SWITCH_SUBMODE_COMMAND_DESCRIPTION = {
         }
     )
 }
-"""
 #
 # ------------------------------------------------------------------------------
 # show switch
@@ -483,7 +481,6 @@ SWITCH_SHOW_SWITCH_DPID_INTERFACES_COMMAND_DESCRIPTION = {
     )
 }
 
-"""
 SWITCH_SUBMODE_SHOW_INTERFACE_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'mode'         : 'config-switch*',
@@ -641,7 +638,7 @@ SWITCH_SHOW_TCPDUMP_COMMAND_DESCRIPTION = {
         },
    )
 }
-
+"""
 #
 # ------------------------------------------------------------------------------
 # SWITCH_TUNNEL_SHOW_COMMAND_DESCRIPTION
@@ -777,7 +774,7 @@ SWITCH_TUNNEL_SHOW_WITH_DPID_COMMAND_DESCRIPTION = {
         },
     ),
 }
-
+"""
 #
 # ------------------------------------------------------------------------------
 # SWITCH_CORE_SWITCH_TERMINATION_COMMAND_DESCRIPTION
@@ -805,7 +802,7 @@ SWITCH_CORE_SWITCH_COMMAND_DESCRIPTION = {
         }
     )
 }
-
+"""
 #
 # ------------------------------------------------------------------------------
 # SWITCH_TUNNEL_TERMINATION_COMMAND_DESCRIPTION
@@ -831,7 +828,7 @@ SWITCH_TUNNEL_TERMINATION_COMMAND_DESCRIPTION = {
         }
     )
 }
-
+"""
 #
 # ------------------------------------------------------------------------------
 # SWITCH_ALIAS_COMMAND_DESCRIPTION
@@ -940,7 +937,6 @@ SWITCH_INTERFACE_INTERFACE_ALIAS_COMMAND_DESCRIPTION = {
         }
     )
 }
-"""
 #
 # FORMATS
 #
@@ -1014,7 +1010,6 @@ SWITCH_FORMAT = {
         },
 }
 
-"""
 SWITCH_CONFIG_FORMAT = {
     'switch-config' : {
         'field-orderings' : {
@@ -1068,7 +1063,6 @@ SWITCH_INTERFACE_ALIAS_FORMAT = {
             }
         },
 }
-"""
 
 SWITCH_INTERFACES_FORMAT = {
     'switch-interfaces' : {
