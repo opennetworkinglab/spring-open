@@ -671,7 +671,7 @@ public class Controller implements IFloodlightProviderService {
             /*log.debug("Sw:{} packet-in: {}", sw.getStringId(),
             String.format("0x%x", eth.getEtherType()));*/
             if (eth.getEtherType() != (short) EthType.LLDP.getValue())
-                log.trace("Sw:{} packet-in: {}", sw.getStringId(), pi);
+                log.debug("Sw:{} packet-in: {}", sw.getStringId(), pi);
 
         default:
 
