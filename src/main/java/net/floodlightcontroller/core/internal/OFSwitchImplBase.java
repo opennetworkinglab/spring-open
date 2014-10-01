@@ -750,8 +750,8 @@ public class OFSwitchImplBase implements IOFSwitch {
                 }
 
                 if (log.isDebugEnabled()) {
-                    log.debug("Handling OFPortStatus: {} for {}",
-                            reason, ps);
+                    log.debug("Handling OFPortStatus: {} for {} in sw {}",
+                            reason, ps, getStringId());
                 }
 
                 if (reason == OFPortReason.DELETE)
