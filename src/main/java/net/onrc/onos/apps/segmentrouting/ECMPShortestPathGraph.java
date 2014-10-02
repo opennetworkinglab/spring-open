@@ -34,7 +34,7 @@ public class ECMPShortestPathGraph {
 
     /**
      * Constructor
-     * 
+     *
      * @param rootSwitch root of the BFS tree
      */
     public ECMPShortestPathGraph(Switch rootSwitch) {
@@ -140,9 +140,18 @@ public class ECMPShortestPathGraph {
     }
 
     /**
+     * Return root switch for the graph
+     *
+     * @return root switch
+     */
+    public Switch getRootSwitch() {
+        return rootSwitch;
+    }
+
+    /**
      * Return the computed ECMP paths from the root switch to a given switch in
      * the network
-     * 
+     *
      * @param targetSwitch the target switch
      * @return the list of ECMP Paths from the root switch to the target switch
      */
@@ -162,7 +171,7 @@ public class ECMPShortestPathGraph {
     /**
      * Return the complete info of the computed ECMP paths for each switch
      * learned in multiple iterations from the root switch
-     * 
+     *
      * @return the hash table of Switches learned in multiple Dijkstra
      *         iterations and corresponding ECMP paths to it from the root
      *         switch
@@ -192,7 +201,7 @@ public class ECMPShortestPathGraph {
      * Switch<>} Iteration2, Switch<> via {Switch<>, Switch<>, Switch<>}
      * {Switch<>, Switch<>, Switch<>} Switch<> via {Switch<>, Switch<>,
      * Switch<>} }
-     * 
+     *
      * @return the hash table of Switches learned in multiple Dijkstra
      *         iterations and corresponding ECMP paths in terms of Switches to
      *         be traversed to it from the root switch

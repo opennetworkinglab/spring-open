@@ -96,7 +96,7 @@ public class IcmpHandler {
      * hosts in subnets of the switches, but if the MAC address is not known,
      * then send an ARP request to the subent. If the MAC address is known, then
      * set the routing rule to the switch
-     * 
+     *
      * @param sw
      * @param inPort
      * @param payload
@@ -151,18 +151,18 @@ public class IcmpHandler {
                         byte[] destinationMacAddress = host.getMacAddress().toBytes();
                         srManager.addRouteToHost(sw,
                                 destinationAddress.getInt(), destinationMacAddress);
-
                         byte[] destIp = destinationAddress.getBytes();
                         for (IPv4 ipPacket : srManager.getIpPacketFromQueue(destIp)) {
                             if (ipPacket != null && !inSameSubnet(sw, ipPacket)) {
                                 Ethernet eth = new Ethernet();
-                                eth.setDestinationMACAddress(payload
-                                        .getSourceMACAddress());
+                                eth.setDestinationMACAddress(destinationMacAddress);
                                 eth.setSourceMACAddress(sw
                                         .getStringAttribute("routerMac"));
                                 eth.setEtherType(Ethernet.TYPE_IPV4);
                                 eth.setPayload(ipPacket);
-                                sendPacketOut(sw, eth, inPort.getSwitchPort(), false);
+                                for (Port port: host.getAttachmentPoints())
+                                    sendPacketOut(sw, eth, new SwitchPort(
+                                            port.getDpid(),port.getNumber()), false);
                             }
                         }
 
@@ -180,7 +180,7 @@ public class IcmpHandler {
 
     /**
      * Retrieve Gateway IP address of all subnets defined in net config file
-     * 
+     *
      * @param sw Switch to retrieve subnet GW IPs for
      * @return list of GW IP addresses for all subnets
      */
@@ -209,7 +209,7 @@ public class IcmpHandler {
 
     /**
      * Send ICMP reply back
-     * 
+     *
      * @param sw Switch
      * @param inPort Port the ICMP packet is forwarded from
      * @param icmpRequest the ICMP request to handle
@@ -251,7 +251,7 @@ public class IcmpHandler {
      * action, it sends out packet to TABLE port Otherwise, it sends the packet
      * to the port the packet came from (in this case, MPLS label is added if
      * the packet needs go through transit switches)
-     * 
+     *
      * @param sw Switch the packet came from
      * @param packet Ethernet packet to send
      * @param switchPort port to send the packet
@@ -328,7 +328,7 @@ public class IcmpHandler {
 
     /**
      * Get MPLS label for the target address from the network config file
-     * 
+     *
      * @param targetAddress - IP address of the target host
      * @return MPLS label of the switch to send packets to the target address
      */
@@ -361,7 +361,7 @@ public class IcmpHandler {
     /**
      * Get Router MAC Address for the target address from the network config
      * file
-     * 
+     *
      * @param targetAddress - IP address of the target host
      * @return Router MAC of the switch to send packets to the target address
      */
@@ -392,7 +392,7 @@ public class IcmpHandler {
     /**
      * Add a new rule to VLAN table to forward packets from any port to the next
      * table It is required to forward packets from controller to pipeline
-     * 
+     *
      * @param sw Switch the packet came from
      */
     private void addControlPortInVlanTable(Switch sw) {
@@ -435,7 +435,7 @@ public class IcmpHandler {
 
     /**
      * Check if the source IP and destination IP are in the same subnet
-     * 
+     *
      * @param sw Switch
      * @param ipv4 IP address to check
      * @return return true if the IP packet is within the same subnet
@@ -454,7 +454,7 @@ public class IcmpHandler {
 
     /**
      * Get router IP address for the given IP address
-     * 
+     *
      * @param sourceAddress
      * @return
      */
