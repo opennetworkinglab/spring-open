@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -133,6 +135,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private SegmentRouterConfig srConfig;
     private ConcurrentMap<Dpid, Set<PortNumber>> neighbors;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
+    private HashMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
 
 
 
@@ -202,6 +205,37 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     @Override
     public String getSwitchDriverState() {
         return driverState.toString();
+    }
+
+    public void removePortFromGroups(PortNumber port) {
+        ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
+        for (NeighborSet ns : portNSSet) {
+            /* Delete the first matched bucket */
+            Iterator<BucketInfo> it = ecmpGroups.get(ns).buckets.iterator();
+            while (it.hasNext()) {
+                BucketInfo bucket = it.next();
+                if (bucket.outport.equals(port)) {
+                    it.remove();
+                    /* Assuming port appears under only one bucket for
+                     * a neighbor set
+                     */
+                    break;
+                }
+            }
+        }
+        /* Delete entry from portNeighborSetMap */
+        portNeighborSetMap.remove(port);
+        /* TODO: Update switches using GroupMod */
+    }
+
+    public void addPortToGroups(PortNumber port) {
+        ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
+        if (portNSSet != null) {
+            /* Port is already part of ECMP groups */
+            return;
+        }
+        /* TODO: Not yet finished */
+        return;
     }
 
     // *****************************
@@ -669,6 +703,21 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     buckets.add(b);
                 }
             }
+
+            for (Dpid d : combo) {
+                for (PortNumber sp : neighbors.get(d)) {
+                    ArrayList<NeighborSet> portNeighborSets =
+                            portNeighborSetMap.get(sp);
+                    if (portNeighborSets == null) {
+                        portNeighborSets = new ArrayList<NeighborSet>();
+                        portNeighborSets.add(ns);
+                        portNeighborSetMap.put(sp, portNeighborSets);
+                    }
+                    else
+                        portNeighborSets.add(ns);
+                }
+            }
+
             EcmpInfo ecmpInfo = new EcmpInfo(groupid++, buckets);
             setEcmpGroup(ecmpInfo);
             ecmpGroups.put(ns, ecmpInfo);

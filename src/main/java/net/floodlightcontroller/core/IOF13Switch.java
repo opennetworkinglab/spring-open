@@ -7,6 +7,7 @@ import java.util.Set;
 
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 
 import com.google.common.primitives.Longs;
 
@@ -107,5 +108,8 @@ public interface IOF13Switch extends IOFSwitch {
      */
     public int getEcmpGroupId(NeighborSet ns);
 
+    public void removePortFromGroups(PortNumber port);
+
+    public void addPortToGroups(PortNumber port);
 
 }
