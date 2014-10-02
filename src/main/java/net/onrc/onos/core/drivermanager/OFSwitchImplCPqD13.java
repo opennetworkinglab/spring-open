@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -135,7 +134,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private SegmentRouterConfig srConfig;
     private ConcurrentMap<Dpid, Set<PortNumber>> neighbors;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
-    private HashMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
+    private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
 
 
 
@@ -147,6 +146,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         setSwitchDescription(desc);
         neighbors = new ConcurrentHashMap<Dpid, Set<PortNumber>>();
         ecmpGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
+        portNeighborSetMap =
+                new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
         this.usePipeline13 = usePipeline13;
     }
 
