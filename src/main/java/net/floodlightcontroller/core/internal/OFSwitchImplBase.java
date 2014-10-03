@@ -67,6 +67,8 @@ import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFFlowDelete.Builder;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsEntry;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortConfig;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
@@ -76,8 +78,10 @@ import org.projectfloodlight.openflow.protocol.OFPortState;
 import org.projectfloodlight.openflow.protocol.OFPortStatus;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.OFStatsRequest;
+import org.projectfloodlight.openflow.protocol.OFStatsType;
 import org.projectfloodlight.openflow.protocol.OFType;
 import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.DatapathId;
 import org.projectfloodlight.openflow.types.OFAuxId;
 import org.projectfloodlight.openflow.types.OFGroup;
@@ -1079,6 +1083,29 @@ public class OFSwitchImplBase implements IOFSwitch {
 
         this.channel.write(Collections.singletonList(request));
         return future;
+    }
+
+    @SuppressWarnings("unused")
+    private void analyzeStatsReply(OFMessage reply) {
+        log.info("recieved stats reply (xid = {} type: {}) from sw {} ",
+                reply.getXid(), reply.getType(), getStringId());
+        if (reply.getType() == OFType.STATS_REPLY) {
+            OFStatsReply sr = (OFStatsReply) reply;
+            if (sr.getStatsType() == OFStatsType.FLOW) {
+                OFFlowStatsReply fsr = (OFFlowStatsReply) sr;
+                log.info("received flow stats sw {} --> {}", getStringId(), fsr);
+                // fsr.getEntries().get(0).getMatch().getMatchFields()
+                for (OFFlowStatsEntry e : fsr.getEntries()) {
+                    for (MatchField<?> mf : e.getMatch().getMatchFields()) {
+                        log.info("mf is exact: {} for {}: {}",
+                                e.getMatch().isExact(mf),
+                                mf.id,
+                                e.getMatch().get(mf));
+                    }
+                }
+
+            }
+        }
     }
 
     @Override

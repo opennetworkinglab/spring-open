@@ -2091,7 +2091,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                     + getSwitchInfoString()
                     + "state " + this.state, e.getCause());
             counters.switchDisconnectOtherException.updateCounterWithFlush();
-            ctx.getChannel().close();
+            ctx.getChannel().close(); // NPE's land here.
         }
     }
 
