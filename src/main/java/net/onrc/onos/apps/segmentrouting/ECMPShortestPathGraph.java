@@ -10,7 +10,6 @@ import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.Switch;
 import net.onrc.onos.core.util.Dpid;
 
-import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,12 +102,14 @@ public class ECMPShortestPathGraph {
             }
         }
 
+        /*
         log.debug("ECMPShortestPathGraph:switchSearched for switch {} is {}",
                 HexString.toHexString(rootSwitch.getDpid().value()), switchSearched);
         log.debug("ECMPShortestPathGraph:upstreamLinks for switch {} is {}",
                 HexString.toHexString(rootSwitch.getDpid().value()), upstreamLinks);
         log.debug("ECMPShortestPathGraph:distanceSwitchMap for switch {} is {}",
                 HexString.toHexString(rootSwitch.getDpid().value()), distanceSwitchMap);
+        */
         /*
         for (Integer distance: distanceSwitchMap.keySet()){
                 for (Switch sw: distanceSwitchMap.get(distance)){

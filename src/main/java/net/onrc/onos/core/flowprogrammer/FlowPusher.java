@@ -714,9 +714,9 @@ public final class FlowPusher implements IFlowPusherService, IOFMessageListener 
         case REMOVE:
             fmBuilder = factory.buildFlowDeleteStrict();
             break;
-        // case MODIFY: // TODO
-        // fmBuilder = factory.buildFlowModifyStrict();
-        // break;
+        case MODIFY:
+            fmBuilder = factory.buildFlowModifyStrict();
+            break;
         default:
             log.warn("Unsupported MatchAction Operator: {}", matchActionOp.getOperator());
             return;

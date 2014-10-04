@@ -7,9 +7,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,6 +36,7 @@ import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.matchaction.MatchAction;
 import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.CopyTtlInAction;
 import net.onrc.onos.core.matchaction.action.CopyTtlOutAction;
@@ -56,6 +59,7 @@ import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.PortData;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
@@ -65,7 +69,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
-import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +91,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private IFloodlightProviderService floodlightProvider;
 
     private HashMap<Switch, ECMPShortestPathGraph> graphs;
+    private HashSet<LinkData> topologyLinks;
+    private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -129,6 +134,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         topologyService.addListener(this, false);
         ipPacketQueue = new ConcurrentLinkedQueue<IPv4>();
         graphs = new HashMap<Switch, ECMPShortestPathGraph>();
+        topologyLinks = new HashSet<LinkData>();
+        topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
 
         this.packetService = context.getServiceImpl(IPacketService.class);
         packetService.registerPacketListener(this);
@@ -142,7 +149,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         discoveryTask = new SingletonTask(ses, new Runnable() {
             @Override
             public void run() {
-                populateEcmpRoutingRules();
+                handleTopologyChangeEvents();
             }
         });
     }
@@ -244,30 +251,53 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void topologyEvents(TopologyEvents topologyEvents)
     {
+        topologyEventQueue.add(topologyEvents);
+        discoveryTask.reschedule(500, TimeUnit.MILLISECONDS);
 
-        Collection<LinkData> linkEntriesAdded =
-                topologyEvents.getAddedLinkDataEntries();
-        if (!linkEntriesAdded.isEmpty()) {
-            processLinkAdd(linkEntriesAdded);
-        }
+    }
 
-        Collection<PortData> PortEntriesAdded =
-                topologyEvents.getAddedPortDataEntries();
-        if (linkEntriesAdded != null) {
-            processPortAdd(PortEntriesAdded);
-        }
 
-        Collection<PortData> portEntries =
-                topologyEvents.getRemovedPortDataEntries();
-        if (!portEntries.isEmpty()) {
-            processPortRemoval(portEntries);
-        }
+    private void handleTopologyChangeEvents() {
 
-        Collection<LinkData> linkEntriesRemoved =
-                topologyEvents.getRemovedLinkDataEntries();
-        if (!linkEntriesRemoved.isEmpty()) {
-            processLinkRemoval(linkEntriesRemoved);
+        while (!topologyEventQueue.isEmpty()) {
+            TopologyEvents topologyEvents = topologyEventQueue.poll();
+
+            Collection<LinkData> linkEntriesAdded =
+                    topologyEvents.getAddedLinkDataEntries();
+            if (!linkEntriesAdded.isEmpty()) {
+                processLinkAdd(linkEntriesAdded);
+            }
+
+            Collection<PortData> PortEntriesAdded =
+                    topologyEvents.getAddedPortDataEntries();
+            if (linkEntriesAdded != null) {
+                processPortAdd(PortEntriesAdded);
+            }
+
+            Collection<PortData> portEntries =
+                    topologyEvents.getRemovedPortDataEntries();
+            if (!portEntries.isEmpty()) {
+                processPortRemoval(portEntries);
+            }
+
+            Collection<LinkData> linkEntriesRemoved =
+                    topologyEvents.getRemovedLinkDataEntries();
+            if (!linkEntriesRemoved.isEmpty()) {
+                processLinkRemoval(linkEntriesRemoved);
+            }
+
+            Collection<SwitchData> switchRemoved =
+                    topologyEvents.getRemovedSwitchDataEntries();
+            if (!switchRemoved.isEmpty()) {
+                processSwitchRemoved(switchRemoved);
+            }
+
         }
+    }
+
+    private void processSwitchRemoved(Collection<SwitchData> switchRemoved) {
+        /* TODO: We should remove only the links of the switch removed */
+        topologyLinks.clear();
     }
 
     /**
@@ -295,10 +325,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     private void processLinkAdd(Collection<LinkData> linkEntries) {
 
+        boolean linkRecovered = false;
+
         // TODO: How to determine this link was broken before and back now
         // If so, we need to ad the link slowly...
         // Or, just add any new or restored link slowly ???
         for (LinkData link : linkEntries) {
+
             SwitchPort srcPort = link.getSrc();
             SwitchPort dstPort = link.getDst();
 
@@ -309,8 +342,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             srcSw.addPortToGroups(srcPort.getPortNumber());
             dstSw.addPortToGroups(dstPort.getPortNumber());
+
+
+            if (!topologyLinks.contains(link)) {
+                topologyLinks.add(link);
+            }
+            else {
+                linkRecovered = true;
+            }
         }
-        discoveryTask.reschedule(1, TimeUnit.SECONDS);
+        if (linkRecovered) {
+            populateEcmpRoutingRules(true);
+        }
+        else {
+            populateEcmpRoutingRules(false);
+        }
     }
 
     /**
@@ -338,10 +384,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             Switch srcSwitch = mutableTopology.getSwitch(srcPort.getDpid());
             if (srcSwitch.getLinkToNeighbor(dstPort.getDpid()) == null) {
-                //discoveryTask.reschedule(1, TimeUnit.SECONDS);
-                modifyEcmpRoutingRules(link);
+                //modifyEcmpRoutingRules(link);
+                populateEcmpRoutingRules(true);
                 log.debug("All links are gone b/w {} and {}", srcPort.getDpid(),
-                        srcPort.getDpid());
+                        dstPort.getDpid());
             }
         }
     }
@@ -367,20 +413,23 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * Populate routing rules walking through the ECMP shortest paths
      *
      */
-    private void populateEcmpRoutingRules() {
-
+    private void populateEcmpRoutingRules(boolean modified) {
+        graphs.clear();
         Iterable<Switch> switches = mutableTopology.getSwitches();
         for (Switch sw : switches) {
             ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
             graphs.put(sw, ecmpSPG);
             //log.debug("ECMPShortestPathGraph is computed for switch {}",
             //        HexString.toHexString(sw.getDpid().value()));
-            populateEcmpRoutingRulesForPath(sw, ecmpSPG);
+            populateEcmpRoutingRulesForPath(sw, ecmpSPG, modified);
+            if (modified) {
+                log.debug("Modify the rules for {}" , sw.getDpid());
+            }
         }
     }
 
     private void populateEcmpRoutingRulesForPath(Switch sw,
-            ECMPShortestPathGraph ecmpSPG) {
+            ECMPShortestPathGraph ecmpSPG, boolean modified) {
 
         HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>> switchVia =
                 ecmpSPG.getAllLearnedSwitchesAndVia();
@@ -392,14 +441,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
             HashMap<Switch, ArrayList<ArrayList<Dpid>>> swViaMap =
                     switchVia.get(itrIdx);
             for (Switch targetSw : swViaMap.keySet()) {
-                log.debug("ECMPShortestPathGraph:****switch {} via:",
-                        HexString.toHexString(targetSw.getDpid().value()));
+                //log.debug("ECMPShortestPathGraph:****switch {} via:",
+                //        HexString.toHexString(targetSw.getDpid().value()));
                 String destSw = sw.getDpid().toString();
                 List<String> fwdToSw = new ArrayList<String>();
 
-                int i = 0;
                 for (ArrayList<Dpid> via : swViaMap.get(targetSw)) {
-                    log.debug("ECMPShortestPathGraph:******{}) {}", ++i, via);
+                    //log.debug("ECMPShortestPathGraph:******{}) {}", ++i, via);
                     if (via.isEmpty()) {
                         fwdToSw.add(destSw);
                     }
@@ -407,21 +455,23 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         fwdToSw.add(via.get(0).toString());
                     }
                 }
-                setRoutingRule(targetSw, destSw, fwdToSw);
+                setRoutingRule(targetSw, destSw, fwdToSw, modified);
             }
 
             // Send Barrier Message and make sure all rules are set
             // before we set the rules to next routers
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(sw.getDpid().toString()));
-            try {
-                OFBarrierReplyFuture replyFuture = sw13.sendBarrier();
-                replyFuture.get(10, TimeUnit.SECONDS);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                log.error("Barrier message not received for sw: {}", sw.getDpid());
-                e.printStackTrace();
+            if (sw13 != null) {
+                try {
+                    OFBarrierReplyFuture replyFuture = sw13.sendBarrier();
+                    replyFuture.get(10, TimeUnit.SECONDS);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                    log.error("Barrier message not received for sw: {}", sw.getDpid());
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -456,7 +506,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private void modifyEcmpRoutingRules(LinkData linkRemoved) {
 
         //HashMap<Switch, SwitchPair> linksToRecompute = new HashMap<Switch, SwitchPair>();
-        List<SwitchPair> linksToRecompute = new ArrayList<SwitchPair>();
+        Set<SwitchPair> linksToRecompute = new HashSet<SwitchPair>();
 
         for (ECMPShortestPathGraph ecmpSPG : graphs.values()) {
             Switch rootSw = ecmpSPG.getRootSwitch();
@@ -466,7 +516,16 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 for (Switch destSw: p.keySet()) {
                     ArrayList<Path> path = p.get(destSw);
                     if  (checkPath(path, linkRemoved)) {
-                        linksToRecompute.add(new SwitchPair(rootSw, destSw));
+                        boolean found = false;
+                        for (SwitchPair pair: linksToRecompute) {
+                            if (pair.getSource().getDpid() == rootSw.getDpid() &&
+                                    pair.getSource().getDpid() == destSw.getDpid()) {
+                                found = true;
+                            }
+                        }
+                        if (!found) {
+                            linksToRecompute.add(new SwitchPair(rootSw, destSw));
+                        }
                     }
                 }
             }
@@ -482,7 +541,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             ECMPShortestPathGraph ecmpSPG =
                     new ECMPShortestPathGraph(pair.getSource());
             // TODO: we need to use different function to MODIFY the rules
-            populateEcmpRoutingRulesForPath(pair.getSource(), ecmpSPG);
+            populateEcmpRoutingRulesForPath(pair.getSource(), ecmpSPG, true);
         }
     }
 
@@ -498,8 +557,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
         for (Path ppp: path) {
             // TODO: need to check if this is a bidirectional or
             // unidirectional
-            if (ppp.contains(linkRemoved)) {
-                return true;
+            for (LinkData link: ppp) {
+                //if (link.equals(linkRemoved))
+                if (link.getDst().getDpid().equals(linkRemoved.getDst().getDpid()) &&
+                        link.getSrc().getDpid().equals(linkRemoved.getSrc().getDpid()))
+                    return true;
             }
         }
 
@@ -520,7 +582,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param destSw Final destination switches
      * @param fwdToSw next hop switches
      */
-    private void setRoutingRule(Switch targetSw, String destSw, List<String> fwdToSw) {
+    private void setRoutingRule(Switch targetSw, String destSw, List<String> fwdToSw,
+            boolean modified) {
 
         if (fwdToSw.isEmpty()) {
             fwdToSw.add(destSw);
@@ -534,10 +597,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
             Switch destSwitch = mutableTopology.getSwitch(new Dpid(destSw));
             String subnets = destSwitch.getStringAttribute("subnets");
             setIpTableRouterSubnet(targetSw, subnets, getMplsLabel(destSw)
-                    , fwdToSw);
+                    , fwdToSw, modified);
 
             String routerIp = destSwitch.getStringAttribute("routerIp");
-            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw, null);
+            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw,
+                    null, modified);
         }
         // Only if the target switch is the edge router, then set the IP rules
         else if (IsEdgeRouter(targetSw.getDpid().toString())) {
@@ -545,11 +609,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
             // routers
             Switch destSwitch = mutableTopology.getSwitch(new Dpid(destSw));
             String routerIp = destSwitch.getStringAttribute("routerIp");
-            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw, null);
+            setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw,
+                    null, modified);
         }
         // if it is a transit router, then set rules in the MPLS table
         else {
-            setMplsTable(targetSw, getMplsLabel(destSw), fwdToSw);
+            setMplsTable(targetSw, getMplsLabel(destSw), fwdToSw, modified);
         }
 
     }
@@ -563,7 +628,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param fwdToSw  router to forward packets to
      */
     private void setIpTableRouterSubnet(Switch targetSw, String subnets,
-            String mplsLabel, List<String> fwdToSw) {
+            String mplsLabel, List<String> fwdToSw, boolean modified) {
 
         Collection<MatchActionOperationEntry> entries =
                 new ArrayList<MatchActionOperationEntry>();
@@ -572,7 +637,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             JSONArray arry = new JSONArray(subnets);
             for (int i = 0; i < arry.length(); i++) {
                 String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
-                setIpTableRouter(targetSw, subnetIp, mplsLabel, fwdToSw, entries);
+                setIpTableRouter(targetSw, subnetIp, mplsLabel, fwdToSw, entries,
+                        modified);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -627,7 +693,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param entries
      */
     private void setIpTableRouter(Switch sw, String subnetIp, String mplsLabel,
-            List<String> fwdToSws, Collection<MatchActionOperationEntry> entries) {
+            List<String> fwdToSws, Collection<MatchActionOperationEntry> entries,
+            boolean modified) {
 
         Ipv4Match ipMatch = new Ipv4Match(subnetIp);
         List<Action> actions = new ArrayList<>();
@@ -677,22 +744,29 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MatchAction matchAction = new MatchAction(new MatchActionId(0),
                 new SwitchPort((long) 0, (short) 0), ipMatch, actions);
 
+        Operator operator = null;
+        if (modified)
+            operator =  Operator.MODIFY;
+        else
+            operator = Operator.ADD;
+
         MatchActionOperationEntry maEntry =
-                new MatchActionOperationEntry(
-                        net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
-                        matchAction);
+                new MatchActionOperationEntry(operator, matchAction);
 
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
 
-        try {
-            printMatchActionOperationEntry(sw, maEntry);
-            if (entries != null)
-                entries.add(maEntry);
-            else
-                sw13.pushFlow(maEntry);
-        } catch (IOException e) {
-            e.printStackTrace();
+        /* TODO: we should check the SWICH REMOVED events */
+        if (sw13 != null) {
+            try {
+                printMatchActionOperationEntry(sw, maEntry);
+                if (entries != null)
+                    entries.add(maEntry);
+                else
+                    sw13.pushFlow(maEntry);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }
@@ -724,7 +798,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param mplsLabel destination MPLS label
      * @param fwdSws next hop switches
      */
-    private void setMplsTable(Switch sw, String mplsLabel, List<String> fwdSws) {
+    private void setMplsTable(Switch sw, String mplsLabel, List<String> fwdSws,
+            boolean modified) {
 
         MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel));
 
@@ -759,19 +834,25 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MatchAction matchAction = new MatchAction(new MatchActionId(0),
                 new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
 
+        Operator operator = null;
+        if (modified)
+            operator =  Operator.MODIFY;
+        else
+            operator = Operator.ADD;
+
         MatchActionOperationEntry maEntry =
-                new MatchActionOperationEntry(
-                        net.onrc.onos.core.matchaction.MatchActionOperations.Operator.ADD,
-                        matchAction);
+                new MatchActionOperationEntry(operator, matchAction);
 
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
 
-        try {
-            printMatchActionOperationEntry(sw, maEntry);
-            sw13.pushFlow(maEntry);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (sw13 != null) {
+            try {
+                printMatchActionOperationEntry(sw, maEntry);
+                sw13.pushFlow(maEntry);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }

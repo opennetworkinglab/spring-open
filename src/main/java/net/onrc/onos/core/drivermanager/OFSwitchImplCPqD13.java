@@ -210,6 +210,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
 
     public void removePortFromGroups(PortNumber port) {
         ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
+        if (portNSSet == null)
+            return;
         for (NeighborSet ns : portNSSet) {
             /* Delete the first matched bucket */
             Iterator<BucketInfo> it = ecmpGroups.get(ns).buckets.iterator();
@@ -937,9 +939,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         case REMOVE:
             fmBuilder = factory.buildFlowDeleteStrict();
             break;
-        // case MODIFY: // TODO
-        // fmBuilder = factory.buildFlowModifyStrict();
-        // break;
+        case MODIFY: // TODO
+            fmBuilder = factory.buildFlowModifyStrict();
+            break;
         default:
             log.warn("Unsupported MatchAction Operator: {}", op);
             return null;
@@ -1002,9 +1004,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         case REMOVE:
             fmBuilder = factory.buildFlowDeleteStrict();
             break;
-        // case MODIFY: // TODO
-        // fmBuilder = factory.buildFlowModifyStrict();
-        // break;
+         case MODIFY: // TODO
+            fmBuilder = factory.buildFlowModifyStrict();
+            break;
         default:
             log.warn("Unsupported MatchAction Operator: {}", op);
             return null;
@@ -1105,9 +1107,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         case REMOVE:
             fmBuilder = factory.buildFlowDeleteStrict();
             break;
-        // case MODIFY: // TODO
-        // fmBuilder = factory.buildFlowModifyStrict();
-        // break;
+        case MODIFY: // TODO
+            fmBuilder = factory.buildFlowModifyStrict();
+            break;
         default:
             log.warn("Unsupported MatchAction Operator: {}", op);
             return null;

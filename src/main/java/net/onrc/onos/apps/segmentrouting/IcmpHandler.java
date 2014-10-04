@@ -9,9 +9,7 @@
 package net.onrc.onos.apps.segmentrouting;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
@@ -60,8 +58,6 @@ public class IcmpHandler {
 
     private IFlowPusherService flowPusher;
     private boolean controllerPortAllowed = false;
-
-    private Queue<IPv4> icmpQueue = new LinkedList<IPv4>();
 
     private static final int TABLE_VLAN = 0;
     private static final int TABLE_TMAC = 1;

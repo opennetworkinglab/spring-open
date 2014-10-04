@@ -27,6 +27,11 @@ public class MatchActionOperations
 
         /** Remove an existing match action. */
         REMOVE,
+
+        /*** Modify an existing match action entry strictly matching wildcards
+         * and priority (works as MODIFY StRICT). */
+        MODIFY,
+
     }
 
     /**

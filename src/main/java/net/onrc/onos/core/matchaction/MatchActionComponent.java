@@ -215,6 +215,7 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
                 SwitchPort sw = matchAction.getSwitchPort();
                 switches.put(sw.getDpid(), new SwitchResult(setId, sw.getDpid()));
                 switch(matchActionOp.getOperator()) {
+                case MODIFY:
                 case ADD:
                     matchActionMap.put(matchAction.getId(), matchAction);
                     break;
