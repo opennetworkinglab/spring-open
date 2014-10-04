@@ -211,24 +211,27 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     public void removePortFromGroups(PortNumber port) {
         ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
         if (portNSSet == null)
+            /* No Groups are created with this port yet */
             return;
         for (NeighborSet ns : portNSSet) {
             /* Delete the first matched bucket */
-            Iterator<BucketInfo> it = ecmpGroups.get(ns).buckets.iterator();
+            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+            Iterator<BucketInfo> it = portEcmpInfo.buckets.iterator();
             while (it.hasNext()) {
                 BucketInfo bucket = it.next();
                 if (bucket.outport.equals(port)) {
                     it.remove();
                     /* Assuming port appears under only one bucket for
-                     * a neighbor set
+                     * a neighbor set and hence invoking Group modify command
                      */
+                    modifyEcmpGroup(portEcmpInfo);
                     break;
                 }
             }
         }
         /* Delete entry from portNeighborSetMap */
         portNeighborSetMap.remove(port);
-        /* TODO: Update switches using GroupMod */
+        return;
     }
 
     public void addPortToGroups(PortNumber port) {
@@ -237,7 +240,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             /* Port is already part of ECMP groups */
             return;
         }
-        /* TODO: Not yet finished */
+        /* TODO:
+         * 1) Find the neighbors reached from this port
+         * 2) Compute the Neighbor sets
+         * 3) For the Neighbor set entries that are already there
+         * in the database,
+         * a) Update the ecmpGroups hashmap
+         * b) perform Group Modify on updated groups
+         * 4) For the new Neighbor set entries, add an entry in the database
+         * a) Add entry to the ecmpGroups hashmap
+         * b) perform Group Add on those groups
+         * 5) Update the portNeighborSetMap hashmap
+         * */
         return;
     }
 
@@ -792,6 +806,49 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
 
         OFMessage gm = factory.buildGroupAdd()
+                .setGroup(group)
+                .setBuckets(buckets)
+                .setGroupType(OFGroupType.SELECT)
+                .setXid(getNextTransactionId())
+                .build();
+        msglist.add(gm);
+        try {
+            write(msglist);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void modifyEcmpGroup(EcmpInfo ecmpInfo) {
+        List<OFMessage> msglist = new ArrayList<OFMessage>();
+        OFGroup group = OFGroup.of(ecmpInfo.groupId);
+
+        List<OFBucket> buckets = new ArrayList<OFBucket>();
+        for (BucketInfo b : ecmpInfo.buckets) {
+            OFOxmEthDst dmac = factory.oxms()
+                    .ethDst(b.dstMac);
+            OFAction setDA = factory.actions().buildSetField()
+                    .setField(dmac).build();
+            OFOxmEthSrc smac = factory.oxms()
+                    .ethSrc(b.srcMac);
+            OFAction setSA = factory.actions().buildSetField()
+                    .setField(smac).build();
+            OFAction outp = factory.actions().buildOutput()
+                    .setPort(OFPort.of(b.outport.shortValue()))
+                    .build();
+            List<OFAction> actions = new ArrayList<OFAction>();
+            actions.add(setSA);
+            actions.add(setDA);
+            actions.add(outp);
+            OFBucket ofb = factory.buildBucket()
+                    .setWeight(1)
+                    .setActions(actions)
+                    .build();
+            buckets.add(ofb);
+        }
+
+        OFMessage gm = factory.buildGroupModify()
                 .setGroup(group)
                 .setBuckets(buckets)
                 .setGroupType(OFGroupType.SELECT)
