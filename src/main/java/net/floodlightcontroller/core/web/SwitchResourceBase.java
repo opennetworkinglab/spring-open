@@ -29,6 +29,8 @@ import net.floodlightcontroller.core.annotations.LogMessageDoc;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsEntry;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsReply;
+import org.projectfloodlight.openflow.protocol.OFGroupStatsEntry;
+import org.projectfloodlight.openflow.protocol.OFGroupStatsReply;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.OFPortStatsEntry;
@@ -123,6 +125,20 @@ public class SwitchResourceBase extends ServerResource {
                         + "ports in switch {}", sw.getStringId());
                 req = sw.getFactory().buildGroupStatsRequest().setXid
                         (sw.getNextTransactionId()).build();
+                List<OFGroupStatsEntryMod> groupStats = new ArrayList<OFGroupStatsEntryMod>();
+                try {
+                    future = sw.getStatistics(req);
+                    values = future.get(10, TimeUnit.SECONDS);
+                    for (OFGroupStatsEntry entry : ((OFGroupStatsReply)values.get(0)).getEntries()) {
+                        OFGroupStatsEntryMod entryMod = new OFGroupStatsEntryMod(entry);
+                        groupStats.add(entryMod);
+                    }
+                    log.debug("Switch Group Stats Entries from switch {} are {}",
+                            sw.getStringId(), groupStats);
+                } catch (Exception e) {
+                    log.error("Failure retrieving statistics from switch " + sw, e);
+                }
+                return groupStats;
             }
             else if (statType == OFStatsType.GROUP_DESC){
                 log.debug("Switch Group Desc Stats: req sent for all "

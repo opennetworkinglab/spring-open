@@ -22,15 +22,17 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
     }
 
     @Override
-    public void serialize(OFGroupDescStatsEntryMod GroupDescStatsModEntry, JsonGenerator jGen,
+    public void serialize(OFGroupDescStatsEntryMod groupDescStatsModEntry, JsonGenerator jGen,
             SerializerProvider sp) throws IOException,
             JsonGenerationException {
-        OFGroupDescStatsEntry GroupStatsEntryMod = GroupDescStatsModEntry.getGroupDescStatsEntry();
-        List<OFBucket> Buckets = GroupStatsEntryMod.getBuckets();
+        OFGroupDescStatsEntry groupDescStatsEntryMod = groupDescStatsModEntry.getGroupDescStatsEntry();
+        List<OFBucket> Buckets = groupDescStatsEntryMod.getBuckets();
         jGen.writeStartObject();
-        jGen.writeNumberField("groupId", GroupStatsEntryMod.getGroup().getGroupNumber());
-        jGen.writeStringField("groupType", GroupStatsEntryMod.getGroupType().name());
+        jGen.writeNumberField("groupId", groupDescStatsEntryMod.getGroup().getGroupNumber());
+        jGen.writeStringField("groupType", groupDescStatsEntryMod.getGroupType().name());
+        jGen.writeArrayFieldStart("bucketsActions");
         for (OFBucket bucket : Buckets){
+            jGen.writeStartObject();
             List<OFAction> actions = bucket.getActions();
             for (OFAction action : actions ){
                 if(action.getType().compareTo(OFActionType.SET_FIELD) == 0){
@@ -46,7 +48,9 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
                     jGen.writeNumberField("OUTPPUT", ((OFActionOutput)action).getPort().getPortNumber());
                 }
             }
+            jGen.writeEndObject();
         }
+        jGen.writeEndArray();
         jGen.writeEndObject();
         
     }
