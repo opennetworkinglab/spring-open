@@ -42,7 +42,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         jGen.writeStartObject();
         
         jGen.writeNumberField("byteCount", flowStatsEntry.getByteCount().getValue());
-        jGen.writeNumberField("pktCount", flowStatsEntry.getPacketCount().getValue());
+        jGen.writeNumberField("packetCount", flowStatsEntry.getPacketCount().getValue());
         jGen.writeNumberField("priority", flowStatsEntry.getPriority());
         jGen.writeNumberField("cookie", flowStatsEntry.getCookie().getValue());
         jGen.writeNumberField("durationNsec", flowStatsEntry.getDurationNsec());
