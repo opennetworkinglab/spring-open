@@ -404,6 +404,7 @@ def do_realtimestats(request, stattype, dpid):
     This returns realtime statistics (flows, ports, table, aggregate,
     desc, ...)  for a dpid by calling the localhost sdnplatform
     """
+    #raise RestInvalidMethodException()
     if request.method != 'GET':
         raise RestInvalidMethodException()
     #url = controller_url('core', 'switch', dpid, stattype, 'json')
@@ -412,6 +413,7 @@ def do_realtimestats(request, stattype, dpid):
     if stattype == 'groupdesc':
         stattype = 'groupDesc'
     url = "http://localhost:8080/wm/floodlight/core/switch/%s/%s/json" % (dpid, stattype)
+    #url ="http://localhost:8080/wm/floodlight/core/switch/00:00:00:00:00:00:00:01/flow/json"
     return get_sdnplatform_response(url)
 
 @safe_rest_view

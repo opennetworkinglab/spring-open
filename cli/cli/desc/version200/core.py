@@ -155,7 +155,7 @@ SHOW_TECH_SUPPORT_COMMAND_DESCRIPTION = {
          'tech-support',
     ),
 }
-"""
+
 SHOW_FLOW_ENTRY_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'obj-type'     : 'flow-entry',
@@ -186,7 +186,7 @@ SHOW_FLOW_ENTRY_COMMAND_DESCRIPTION = {
 
     )
 }
-
+"""
 SHOW_FIREWALL_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'obj-type'     : 'firewall-rule',

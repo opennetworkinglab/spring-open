@@ -20,6 +20,7 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
     protected OFGroupDescStatsEntryModSerializer(){
         super(OFGroupDescStatsEntryMod.class);
     }
+//TODO:- Java-doc
 
     @Override
     public void serialize(OFGroupDescStatsEntryMod groupDescStatsModEntry, JsonGenerator jGen,
@@ -36,7 +37,11 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
             List<OFAction> actions = bucket.getActions();
             for (OFAction action : actions ){
                 if(action.getType().compareTo(OFActionType.SET_FIELD) == 0){
-                    //TODO: Need better if condition.
+                    /*
+                     * TODO: 1-Need better if condition.
+                     * TODO: 2-Complete REST response. (Right now we are only sending what 
+                     * SegmentRouter CLI needs).
+                     */
                     if (((OFActionSetField)action).getField().toString().contains("OFOxmEthSrcVer13")){
                         jGen.writeStringField("SET_DL_SRC", ((OFActionSetField)action).getField().getValue().toString());
                     }

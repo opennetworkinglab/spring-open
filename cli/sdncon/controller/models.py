@@ -1027,7 +1027,7 @@ class SwitchInterfaceAlias(models.Model):
         FIELD_INFO = (
             {'name': 'switch_interface', 'rest_name': 'switch-interface'},
         )
-"""
+
 #
 # ------------------------------------------------------------
 
@@ -1207,7 +1207,7 @@ class StaticFlowTableEntry(models.Model):
             {'name': 'tp_dst',          'rest_name': 'dst-port'},
             {'name': 'actions',         'rest_name': 'actions'},
             )
-"""
+
 
 #
 # ------------------------------------------------------------

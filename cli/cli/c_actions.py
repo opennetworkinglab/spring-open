@@ -2019,10 +2019,9 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
     if format:
         #
         detail = command_display_rest_join_entries(table_format, data, entries, detail)
-
-        if 'realtimestats' in data and data['realtimestats'] == 'flow':
-            entries = sdnsh.fix_realtime_flows(entries)
-            check_single_entry = False
+        #if 'realtimestats' in data and data['realtimestats'] == 'flow':
+        #    entries = sdnsh.fix_realtime_flows(entries)
+        #    check_single_entry = False
 
         if 'realtimestats' in data and data['realtimestats'] == 'features':
             for entry in entries:
