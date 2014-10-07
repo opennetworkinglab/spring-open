@@ -1,10 +1,11 @@
 package net.floodlightcontroller.core.web;
 
+import net.floodlightcontroller.core.web.serializers.OFFlowStatsEntryModSerializer;
+
 import org.projectfloodlight.openflow.protocol.OFFlowStatsEntry;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-//@JsonSerialize(using = OFFlowStatsEntryModSerializer.class)
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+@JsonSerialize(using = OFFlowStatsEntryModSerializer.class)
 public class OFFlowStatsEntryMod {
     private OFFlowStatsEntry FlowStatsEntry = null;
 
@@ -15,7 +16,7 @@ public class OFFlowStatsEntryMod {
         this.FlowStatsEntry = FlowStatsEntry;
     }
 
-    public OFFlowStatsEntry getFlowStatsEntr() {
+    public OFFlowStatsEntry getFlowStatsEntry() {
         return this.FlowStatsEntry;
     }
 

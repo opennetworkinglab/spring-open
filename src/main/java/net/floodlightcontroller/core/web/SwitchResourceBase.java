@@ -27,6 +27,7 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.annotations.LogMessageDoc;
 
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsEntry;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsEntry;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFGroupStatsEntry;
@@ -34,6 +35,7 @@ import org.projectfloodlight.openflow.protocol.OFGroupStatsReply;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.OFPortStatsEntry;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsReply;
 import org.projectfloodlight.openflow.protocol.OFPortStatsReply;
 import org.projectfloodlight.openflow.protocol.OFPortStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
@@ -96,6 +98,21 @@ public class SwitchResourceBase extends ServerResource {
                         .setOutPort(OFPort.ANY)
                         .setTableId(TableId.ALL)
                         .setXid(sw.getNextTransactionId()).build();
+                List<OFFlowStatsEntryMod> flowStats = new ArrayList<OFFlowStatsEntryMod>();
+                try {
+                    future = sw.getStatistics(req);
+                    values = future.get(10, TimeUnit.SECONDS);
+                    System.out.println("value\n\n\n"+ values);
+                    for (OFFlowStatsEntry entry : ((OFFlowStatsReply)values.get(0)).getEntries()) {
+                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry);
+                        flowStats.add(entryMod);
+                    }
+                    log.debug("Switch flow Stats Entries from switch {} are {}",
+                            sw.getStringId(), flowStats);
+                } catch (Exception e) {
+                    log.error("Failure retrieving statistics from switch " + sw, e);
+                }
+                return flowStats;
             } 
             else if (statType == OFStatsType.PORT){
                 log.debug("Switch Port Stats: req sent for all "

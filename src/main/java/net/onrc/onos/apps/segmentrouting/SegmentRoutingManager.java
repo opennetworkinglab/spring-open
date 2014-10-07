@@ -312,6 +312,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             IOF13Switch sw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(port.getDpid().toString()));
+            if (sw == null){
+                return;
+            }
             sw.addPortToGroups(port.getPortNumber());
 
             log.debug("Add port {} to switch {}", port, dpid);
