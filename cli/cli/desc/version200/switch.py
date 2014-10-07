@@ -194,6 +194,7 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                                         'table',
                                         'desc',
                                         'queue',
+                                        'group'
                                         ),
                         'action'     : 'display-rest',
                         'url'        : [
