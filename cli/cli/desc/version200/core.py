@@ -1950,6 +1950,50 @@ REALTIME_PORT_FORMAT = {
 }
 
 
+REALTIME_GROUP_FORMAT = {
+    'realtime_group' : {
+        'field-orderings' : {
+            'default' : [ 'Idx', 'grouptype', 'totalpktcnt', 'totalbytecnt',
+                          'bucketpktcnt', 'bucketbytecnt', 
+                          'setsrcmac', 'setdstmac',
+                          'pushmpls', 'popmpls',
+                          'outport' ],
+            'scoped' : [ 'Idx', 'grouptype', 'totalpktcnt', 'totalbytecnt',
+                          'bucketpktcnt', 'bucketbytecnt', 
+                          'setsrcmac', 'setdstmac',
+                          'pushmpls', 'popmpls',
+                          'outport' ],
+            },
+        'fields': {
+            'grouptype'               : { 'verbose-name' : 'Group type',
+                                     },
+            'totalpktcnt'         : { 'verbose-name' : 'Pkts',
+                                       'formatter' : fmtcnv.decode_port_counter
+                                     },
+            'totalbytecnt'       : { 'verbose-name' : 'Bytes',
+                                        'formatter' : fmtcnv.decode_port_counter
+                                      },
+            'bucketpktcnt'        : { 'verbose-name' : 'Bucket Pkts',
+                                       'formatter' : fmtcnv.decode_port_counter
+                                     },
+            'bucketbytecnt'       : { 'verbose-name' : 'Bucket Bytes',
+                                       'formatter' : fmtcnv.decode_port_counter
+                                     },
+            'setsrcmac'           : { 'verbose-name' : 'set_src_mac',
+                                      },
+            'setdstmac'           : { 'verbose-name' : 'set_dst_mac',
+                                      },
+            'pushmpls'            : { 'verbose-name' : 'push_mpls',
+                                     },
+            'popmpls'             : { 'verbose-name' : 'pop_mpls',
+                                     },
+            'outport'             : { 'verbose-name' : 'outport',
+                                     },
+            }
+        },
+}
+
+
 REALTIME_TABLE_FORMAT = {
     'realtime_table' : {
         'field-orderings' : {
