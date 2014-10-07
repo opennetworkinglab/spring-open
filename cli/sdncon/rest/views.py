@@ -409,6 +409,8 @@ def do_realtimestats(request, stattype, dpid):
     #url = controller_url('core', 'switch', dpid, stattype, 'json')
     if stattype == 'group':
         stattype = 'groupStats'
+    if stattype == 'groupdesc':
+        stattype = 'groupDesc'
     url = "http://localhost:8080/wm/floodlight/core/switch/%s/%s/json" % (dpid, stattype)
     return get_sdnplatform_response(url)
 

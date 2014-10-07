@@ -1953,18 +1953,20 @@ REALTIME_PORT_FORMAT = {
 REALTIME_GROUP_FORMAT = {
     'realtime_group' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'grouptype', 'totalpktcnt', 'totalbytecnt',
+            'default' : [ 'Idx', 'groupid', 'grouptype', 'totalpktcnt', 'totalbytecnt',
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
                           'pushmpls', 'popmpls',
                           'outport' ],
-            'scoped' : [ 'Idx', 'grouptype', 'totalpktcnt', 'totalbytecnt',
+            'scoped' : [ 'Idx', 'groupid', 'grouptype', 'totalpktcnt', 'totalbytecnt',
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
                           'pushmpls', 'popmpls',
                           'outport' ],
             },
         'fields': {
+            'groupid'               : { 'verbose-name' : 'Group Id',
+                                     },
             'grouptype'               : { 'verbose-name' : 'Group type',
                                      },
             'totalpktcnt'         : { 'verbose-name' : 'Pkts',

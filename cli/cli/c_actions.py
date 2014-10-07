@@ -1948,6 +1948,16 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
 
     entries = json.loads(result)
 
+    entries2 = None
+    
+    if 'realtimestats' in data and data['realtimestats'] == 'group':
+        url2 = "http://%s/rest/v1/" % sdnsh.controller + ("realtimestats/groupdesc/%(dpid)s/" % data)
+        result2 = sdnsh.store.rest_simple_request(url2)
+        check_rest_result(result2)
+        if sdnsh.description:   # description debugging
+            print "command_display_rest: groupdesc result ", result2
+        entries2 = json.loads(result2)
+        
     # It certainly seems possible to map from url's to the type associated,
     # with the result, but it also makes sense to encode that type information
     # into the description
@@ -1956,6 +1966,55 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                                       rest_type,
                                                       data,
                                                       entries)
+        if 'realtimestats' in data and data['realtimestats'] == 'group':
+            if entries2 is not None:
+                entries2 = command_display_rest_type_converter(table_format,
+                                                      rest_type,
+                                                      data,
+                                                      entries2)
+
+    if 'realtimestats' in data and data['realtimestats'] == 'group':
+        combResult = []
+        for groupStatEntry in entries:
+            groupId = groupStatEntry["groupId"]
+            groupDescEntry = None
+            for entry in entries2:
+                if groupId == entry["groupId"]:
+                    groupDescEntry = entry
+                    break
+            if groupDescEntry is None:
+                print "command_display_rest: missing group desc for group id %s" % (groupId)
+                continue
+            for bucketId in range(len(groupStatEntry['bucketStats'])):
+                setsrcmac = None
+                if 'SET_DL_SRC' in groupDescEntry['bucketsActions'][bucketId]:
+                    setsrcmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_SRC']
+                setdstmac = None
+                if 'SET_DL_DST' in groupDescEntry['bucketsActions'][bucketId]:
+                    setdstmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_DST']
+                pushmpls = None
+                if 'PUSH_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
+                    pushmpls = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS']
+                popmpls = None
+                if 'POP_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
+                    popmpls = groupDescEntry['bucketsActions'][bucketId]['POP_MPLS']
+                outport = None
+                if 'OUTPPUT' in groupDescEntry['bucketsActions'][bucketId]:
+                    outport = groupDescEntry['bucketsActions'][bucketId]['OUTPPUT']
+                combResult.append({
+                       'groupid'       : groupId,
+                       'grouptype'     : groupDescEntry['groupType'],
+                       'totalpktcnt'   : groupStatEntry['packetCount'],
+                       'totalbytecnt'  : groupStatEntry['byteCount'],
+                       'bucketpktcnt'  : groupStatEntry['bucketStats'][bucketId]['pktCount'],
+                       'bucketbytecnt' : groupStatEntry['bucketStats'][bucketId]['byteCount'],
+                       'setsrcmac'     : setsrcmac,
+                       'setdstmac'     : setdstmac,
+                       'pushmpls'     : pushmpls,
+                       'popmpls'     : popmpls,
+                       'outport'     : outport,
+                    })
+        entries = combResult
     #
     if format:
         #
