@@ -50,12 +50,14 @@ public interface IOF13Switch extends IOFSwitch {
     // ****************************
 
     /**
-     * Representation of a set of neighbor switch dpids. Meant to be used as a
-     * lookup-key in a hash-map to retrieve an ECMP-group that hashes packets to
-     * a set of ports connecting to the neighbors in this set.
+     * Representation of a set of neighbor switch dpids along with edge node
+     * label. Meant to be used as a lookup-key in a hash-map to retrieve an
+     * ECMP-group that hashes packets to a set of ports connecting to the
+     * neighbors in this set.
      */
     public class NeighborSet {
         Set<Dpid> dpids;
+        int edgeLabel;
 
         /**
          * Constructor
@@ -64,6 +66,7 @@ public interface IOF13Switch extends IOFSwitch {
          *        switches
          */
         public NeighborSet(Dpid... dpids) {
+            this.edgeLabel = -1;
             this.dpids = new HashSet<Dpid>();
             for (Dpid d : dpids) {
                 this.dpids.add(d);
@@ -74,13 +77,29 @@ public interface IOF13Switch extends IOFSwitch {
             dpids.add(d);
         }
 
+        public void addDpids(Set<Dpid> d) {
+            dpids.addAll(d);
+        }
+
+        public void setEdgeLabel(int edgeLabel) {
+            this.edgeLabel = edgeLabel;
+        }
+
+        public Set<Dpid> getDpids() {
+            return dpids;
+        }
+
+        public int getEdgeLabel() {
+            return edgeLabel;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof NeighborSet)) {
                 return false;
             }
             NeighborSet that = (NeighborSet) o;
-            return this.dpids.equals(that.dpids);
+            return (this.dpids.equals(that.dpids) && (this.edgeLabel == that.edgeLabel));
         }
 
         @Override
@@ -89,12 +108,13 @@ public interface IOF13Switch extends IOFSwitch {
             for (Dpid d : dpids) {
                 result = 31 * result + Longs.hashCode(d.value());
             }
+            result = 31 * result + Longs.hashCode(edgeLabel);
             return result;
         }
 
         @Override
         public String toString() {
-            return " Sw: {} Neighbors: " + dpids;
+            return " Neighborset Sw: " + dpids + " and Label: " + edgeLabel;
         }
     }
 

@@ -24,6 +24,7 @@ import net.onrc.onos.core.configmanager.INetworkConfigService;
 import net.onrc.onos.core.configmanager.INetworkConfigService.NetworkConfigState;
 import net.onrc.onos.core.configmanager.INetworkConfigService.SwitchConfigStatus;
 import net.onrc.onos.core.configmanager.NetworkConfig.LinkConfig;
+import net.onrc.onos.core.configmanager.NetworkConfig.SwitchConfig;
 import net.onrc.onos.core.configmanager.NetworkConfigManager;
 import net.onrc.onos.core.configmanager.PktLinkConfig;
 import net.onrc.onos.core.configmanager.SegmentRouterConfig;
@@ -41,8 +42,6 @@ import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
 import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
-import net.onrc.onos.core.matchaction.action.PushMplsAction;
-import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.MplsMatch;
@@ -90,8 +89,6 @@ import org.projectfloodlight.openflow.types.TransportPort;
 import org.projectfloodlight.openflow.types.U32;
 import org.projectfloodlight.openflow.util.HexString;
 
-import com.google.common.collect.Sets;
-
 /**
  * OFDescriptionStatistics Vendor (Manufacturer Desc.): Stanford University,
  * Ericsson Research and CPqD Research. Make (Hardware Desc.) : OpenFlow 1.3
@@ -133,6 +130,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private final boolean usePipeline13;
     private SegmentRouterConfig srConfig;
     private ConcurrentMap<Dpid, Set<PortNumber>> neighbors;
+    private List<Integer> edgeLabels;
+    private boolean isEdgeRouter;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
 
@@ -148,6 +147,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         ecmpGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
         portNeighborSetMap =
                 new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
+        edgeLabels = new ArrayList<Integer>();
+        isEdgeRouter = false;
         this.usePipeline13 = usePipeline13;
     }
 
@@ -517,12 +518,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         SwitchConfigStatus scs = ncs.checkSwitchConfig(new Dpid(getId()));
         if (scs.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
             srConfig = (SegmentRouterConfig) scs.getSwitchConfig();
+            isEdgeRouter = srConfig.isEdgeRouter();
         } else {
             log.error("Switch not configured as Segment-Router");
         }
 
         List<LinkConfig> linkConfigList = ncs.getConfiguredAllowedLinks();
         setNeighbors(linkConfigList);
+
+        if (isEdgeRouter) {
+            List<SwitchConfig> switchList = ncs.getConfiguredAllowedSwitches();
+            getAllEdgeLabels(switchList);
+        }
     }
 
     private void populateTableVlan() throws IOException {
@@ -633,6 +640,17 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
+    private boolean isEdgeRouter(Dpid ndpid) {
+        INetworkConfigService ncs = floodlightProvider.getNetworkConfigService();
+        SwitchConfigStatus scs = ncs.checkSwitchConfig(ndpid);
+        if (scs.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
+            return ((SegmentRouterConfig) scs.getSwitchConfig()).isEdgeRouter();
+        } else {
+            // TODO: return false if router not allowed
+            return false;
+        }
+    }
+
     private MacAddress getNeighborRouterMacAddress(Dpid ndpid) {
         INetworkConfigService ncs = floodlightProvider.getNetworkConfigService();
         SwitchConfigStatus scs = ncs.checkSwitchConfig(ndpid);
@@ -671,6 +689,46 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
+    private void getAllEdgeLabels(List<SwitchConfig> switchList) {
+        for (SwitchConfig sc : switchList) {
+            /* TODO: Do we need to check if the SwitchConfig is of
+             * type SegmentRouter?
+             */
+            if ((sc.getDpid() == getId()) ||
+                    (((SegmentRouterConfig) sc).isEdgeRouter() != true)) {
+                continue;
+            }
+            edgeLabels.add(((SegmentRouterConfig) sc).getNodeSid());
+        }
+    }
+
+    private Set<Set<Dpid>> getAllNeighborSets(Set<Dpid> neighbors) {
+        List<Dpid> list = new ArrayList<Dpid>(neighbors);
+        Set<Set<Dpid>> sets = new HashSet<Set<Dpid>>();
+        /* get the number of elements in the neighbors */
+        int elements = list.size();
+        /* the number of members of a power set is 2^n
+         * including the empty set
+         */
+        int powerElements = (1 << elements);
+
+        /* run a binary counter for the number of power elements */
+        for (long i = 1; i < powerElements; i++) {
+            Set<Dpid> dpidSubSet = new HashSet<Dpid>();
+            boolean allEdgeRouters = true;
+            for (int j = 0; j < elements; j++) {
+                if ((i >> j) % 2 == 1) {
+                    dpidSubSet.add(list.get(j));
+                    if (!isEdgeRouter(list.get(j)))
+                        allEdgeRouters = false;
+                }
+            }
+            if (!allEdgeRouters)
+                sets.add(dpidSubSet);
+        }
+        return sets;
+    }
+
     /**
      * createGroups creates ECMP groups for all ports on this router connected
      * to other routers (in the OF network). The information for ports is
@@ -697,32 +755,38 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         if (dpids == null || dpids.isEmpty()) {
             return;
         }
-        // temp map of ecmp groupings
-        /*        Map<NeighborSet, List<BucketInfo>> temp =
-                        new HashMap<NeighborSet, List<BucketInfo>>();
-        */
-        // get all combinations of neighbors
-        Set<Set<Dpid>> powerSet = Sets.powerSet(dpids);
-        int groupid = 1;
+        /* Create all possible Neighbor sets from this router
+         * NOTE: Avoid any pairings of edge routers only
+         */
+        Set<Set<Dpid>> powerSet = getAllNeighborSets(dpids);
+        Set<NeighborSet> nsSet = new HashSet<NeighborSet>();
         for (Set<Dpid> combo : powerSet) {
-            if (combo.isEmpty()) {
-                // eliminate the empty set in the power set
-                continue;
+            if (isEdgeRouter && !edgeLabels.isEmpty()) {
+                for (Integer edgeLabel : edgeLabels) {
+                    NeighborSet ns = new NeighborSet();
+                    ns.addDpids(combo);
+                    ns.setEdgeLabel(edgeLabel);
+                    nsSet.add(ns);
+                }
+            } else {
+                NeighborSet ns = new NeighborSet();
+                ns.addDpids(combo);
+                nsSet.add(ns);
             }
+        }
+
+        int groupid = 1;
+        for (NeighborSet ns : nsSet) {
             List<BucketInfo> buckets = new ArrayList<BucketInfo>();
-            NeighborSet ns = new NeighborSet();
-            for (Dpid d : combo) {
-                ns.addDpid(d);
+            for (Dpid d : ns.getDpids()) {
                 for (PortNumber sp : neighbors.get(d)) {
                     BucketInfo b = new BucketInfo(d,
                             MacAddress.of(srConfig.getRouterMac()),
-                            getNeighborRouterMacAddress(d), sp);
+                            getNeighborRouterMacAddress(d), sp,
+                            ns.getEdgeLabel());
                     buckets.add(b);
-                }
-            }
 
-            for (Dpid d : combo) {
-                for (PortNumber sp : neighbors.get(d)) {
+                    /* Update Port Neighborset map */
                     ArrayList<NeighborSet> portNeighborSets =
                             portNeighborSetMap.get(sp);
                     if (portNeighborSets == null) {
@@ -734,12 +798,17 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                         portNeighborSets.add(ns);
                 }
             }
-
             EcmpInfo ecmpInfo = new EcmpInfo(groupid++, buckets);
             setEcmpGroup(ecmpInfo);
             ecmpGroups.put(ns, ecmpInfo);
-            log.debug("Creating ecmp group in sw {}: {}", getStringId(), ecmpInfo);
+            log.debug("Creating ecmp group in sw {} for neighbor set {}: {}",
+                    getStringId(), ns, ecmpInfo);
         }
+
+        // temp map of ecmp groupings
+        /*        Map<NeighborSet, List<BucketInfo>> temp =
+                        new HashMap<NeighborSet, List<BucketInfo>>();
+        */
     }
 
     private class EcmpInfo {
@@ -762,18 +831,22 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         MacAddress srcMac;
         MacAddress dstMac;
         PortNumber outport;
+        int mplsLabel;
 
-        BucketInfo(Dpid nDpid, MacAddress smac, MacAddress dmac, PortNumber p) {
+        BucketInfo(Dpid nDpid, MacAddress smac, MacAddress dmac,
+                PortNumber p, int label) {
             neighborDpid = nDpid;
             srcMac = smac;
             dstMac = dmac;
             outport = p;
+            mplsLabel = label;
         }
 
         @Override
         public String toString() {
             return " {neighborDpid: " + neighborDpid + ", dstMac: " + dstMac +
-                    ", srcMac: " + srcMac + ", outport: " + outport + "}";
+                    ", srcMac: " + srcMac + ", outport: " + outport +
+                    "mplsLabel: " + mplsLabel + "}";
         }
     }
 
@@ -798,6 +871,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             actions.add(setSA);
             actions.add(setDA);
             actions.add(outp);
+            if (b.mplsLabel != -1) {
+                OFAction pushLabel = factory.actions().buildPushMpls()
+                        .setEthertype(EthType.MPLS_UNICAST).build();
+                OFAction setLabel = factory.actions().buildSetMplsLabel()
+                        .setMplsLabel(b.mplsLabel).build();
+                OFAction copyTtl = factory.actions().copyTtlOut();
+                OFAction decrTtl = factory.actions().decMplsTtl();
+                actions.add(pushLabel);
+                actions.add(setLabel);
+                actions.add(copyTtl);
+                actions.add(decrTtl);
+            }
             OFBucket ofb = factory.buildBucket()
                     .setWeight(1)
                     .setActions(actions)
@@ -841,6 +926,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             actions.add(setSA);
             actions.add(setDA);
             actions.add(outp);
+            if (b.mplsLabel != -1) {
+                OFAction pushLabel = factory.actions().buildPushMpls()
+                        .setEthertype(EthType.MPLS_UNICAST).build();
+                OFAction setLabel = factory.actions().buildSetMplsLabel()
+                        .setMplsLabel(b.mplsLabel).build();
+                OFAction copyTtl = factory.actions().copyTtlOut();
+                OFAction decrTtl = factory.actions().decMplsTtl();
+                actions.add(pushLabel);
+                actions.add(setLabel);
+                actions.add(copyTtl);
+                actions.add(decrTtl);
+            }
             OFBucket ofb = factory.buildBucket()
                     .setWeight(1)
                     .setActions(actions)
@@ -902,15 +999,15 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     .ethSrc(MacAddress.of(srcMac));
             ofAction = factory.actions().buildSetField()
                     .setField(smac).build();
-        } else if (action instanceof PushMplsAction) {
-            ofAction = factory.actions().pushMpls(EthType.MPLS_UNICAST);
-        } else if (action instanceof SetMplsIdAction) {
-            int labelid = ((SetMplsIdAction) action).getMplsId();
-            OFOxmMplsLabel lid = factory.oxms()
-                    .mplsLabel(U32.of(labelid));
-            ofAction = factory.actions().buildSetField()
-                    .setField(lid).build();
-        } else if (action instanceof PopMplsAction) {
+            /*} else if (action instanceof PushMplsAction) {
+                ofAction = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+            } else if (action instanceof SetMplsIdAction) {
+                int labelid = ((SetMplsIdAction) action).getMplsId();
+                OFOxmMplsLabel lid = factory.oxms()
+                        .mplsLabel(U32.of(labelid));
+                ofAction = factory.actions().buildSetField()
+                        .setField(lid).build();
+            */} else if (action instanceof PopMplsAction) {
             EthType ethertype = ((PopMplsAction) action).getEthType();
             ofAction = factory.actions().popMpls(ethertype);
         } else if (action instanceof GroupAction) {

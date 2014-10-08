@@ -14,6 +14,10 @@ public class GroupAction implements Action {
         fwdSws.addDpid(d);
     }
 
+    public void setEdgeLabel(int edgeLabel) {
+        fwdSws.setEdgeLabel(edgeLabel);
+    }
+
     public NeighborSet getDpids() {
         return fwdSws;
     }
