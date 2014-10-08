@@ -150,6 +150,8 @@ public class IcmpHandler {
                         byte[] destIp = destinationAddress.getBytes();
                         for (IPv4 ipPacket : srManager.getIpPacketFromQueue(destIp)) {
                             if (ipPacket != null && !inSameSubnet(sw, ipPacket)) {
+                                ipPacket.setTtl((byte)(ipPacket.getTtl()-1));
+                                ipPacket.setChecksum((short)0);
                                 Ethernet eth = new Ethernet();
                                 eth.setDestinationMACAddress(destinationMacAddress);
                                 eth.setSourceMACAddress(sw
