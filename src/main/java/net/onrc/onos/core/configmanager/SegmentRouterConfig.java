@@ -23,6 +23,7 @@ public class SegmentRouterConfig extends SwitchConfig {
     private String routerIp;
     private String routerMac;
     private int nodeSid;
+    private boolean isEdgeRouter;
     private List<AdjacencySid> adjacencySids;
     private List<Subnet> subnets;
 
@@ -31,6 +32,7 @@ public class SegmentRouterConfig extends SwitchConfig {
     public static final String NODE_SID = "nodeSid";
     public static final String ADJACENCY_SIDS = "adjacencySids";
     public static final String SUBNETS = "subnets";
+    public static final String ISEDGE = "isEdgeRouter";
 
     public SegmentRouterConfig(SwitchConfig swc) {
         this.setName(swc.getName());
@@ -73,6 +75,14 @@ public class SegmentRouterConfig extends SwitchConfig {
 
     public void setNodeSid(int nodeSid) {
         this.nodeSid = nodeSid;
+    }
+
+    public boolean isEdgeRouter() {
+        return isEdgeRouter;
+    }
+
+    public void setIsEdgeRouter(boolean isEdge) {
+        this.isEdgeRouter = isEdge;
     }
 
     public static class AdjacencySid {
@@ -162,7 +172,10 @@ public class SegmentRouterConfig extends SwitchConfig {
                 setRouterMac(j.asText());
             } else if (key.equals("nodeSid")) {
                 setNodeSid(j.asInt());
-            } else if (key.equals("adjacencySids") || key.equals("subnets")) {
+            } else if (key.equals("isEdgeRouter")) {
+                setIsEdgeRouter(j.asBoolean());
+            }
+            else if (key.equals("adjacencySids") || key.equals("subnets")) {
                 getInnerParams(j, key);
             } else {
                 throw new UnknownSegmentRouterConfig(key, dpid);
@@ -203,6 +216,12 @@ public class SegmentRouterConfig extends SwitchConfig {
         if (routerIp == null) {
             throw new IpNotSpecified(dpid);
         }
+        if (isEdgeRouter && subnets.isEmpty()) {
+            throw new SubnetNotSpecifiedInEdgeRouter(dpid);
+        }
+        if (!isEdgeRouter && !subnets.isEmpty()) {
+            throw new SubnetSpecifiedInBackboneRouter(dpid);
+        }
 
         // TODO more validations
     }
@@ -216,6 +235,7 @@ public class SegmentRouterConfig extends SwitchConfig {
         publishAttributes.put(ROUTER_IP, routerIp);
         publishAttributes.put(ROUTER_MAC, routerMac);
         publishAttributes.put(NODE_SID, String.valueOf(nodeSid));
+        publishAttributes.put(ISEDGE, String.valueOf(isEdgeRouter));
         ObjectMapper mapper = new ObjectMapper();
         try {
             publishAttributes.put(ADJACENCY_SIDS,
@@ -252,6 +272,27 @@ public class SegmentRouterConfig extends SwitchConfig {
                     HexString.toHexString(dpid));
         }
     }
+
+    public static class SubnetNotSpecifiedInEdgeRouter extends RuntimeException {
+        private static final long serialVersionUID = -5855458472668581268L;
+
+        public SubnetNotSpecifiedInEdgeRouter(long dpid) {
+            super();
+            log.error("Subnet was not specified for edge router in dpid: {}",
+                    HexString.toHexString(dpid));
+        }
+    }
+
+    public static class SubnetSpecifiedInBackboneRouter extends RuntimeException {
+        private static final long serialVersionUID = -5855458472668581268L;
+
+        public SubnetSpecifiedInBackboneRouter(long dpid) {
+            super();
+            log.error("Subnet was specified in backbone router in dpid: {}",
+                    HexString.toHexString(dpid));
+        }
+    }
+
 
 
 }

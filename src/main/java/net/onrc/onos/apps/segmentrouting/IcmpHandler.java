@@ -105,8 +105,8 @@ public class IcmpHandler {
 
             if (ipv4.getProtocol() == IPv4.PROTOCOL_ICMP) {
 
-                log.debug("ICMPHandler: Received a ICMP packet {} from sw {} ",
-                        payload.toString(), sw.getDpid());
+                log.debug("Received an ICMP packet from sw {} ",
+                        sw.getDpid());
                 IPv4Address destinationAddress =
                         IPv4Address.of(ipv4.getDestinationAddress());
 
@@ -120,7 +120,7 @@ public class IcmpHandler {
                     if (((ICMP) ipv4.getPayload()).getIcmpType() == ICMP_TYPE_ECHO &&
                             (destinationAddress.getInt() == switchIpAddress.getInt() ||
                             gatewayIps.contains(destinationAddress.toString()))) {
-                        log.debug("ICMPHandler: ICMP packet for sw {} and "
+                        log.debug("ICMP packet for sw {} and "
                                 + "sending ICMP response ", sw.getDpid());
                         sendICMPResponse(sw, inPort, payload);
                         srManager.getIpPacketFromQueue(destinationAddress.getBytes());
@@ -166,8 +166,8 @@ public class IcmpHandler {
                     }
                 }
                 /* ICMP for an unknown host */
-                log.debug("ICMPHandler: ICMP request for unknown host {}"
-                        + " and sending ARP request", destinationAddress);
+                log.debug("ICMPHandler: ICMP request for unknown host {}",
+                        destinationAddress);
                 srManager.sendArpRequest(sw, destinationAddress.getInt(), inPort);
             }
 
@@ -283,6 +283,9 @@ public class IcmpHandler {
             // and the destination is not the neighbor switch, then add MPLS
             // label
             String targetMac = getRouterMACFromConfig(targetAddress);
+            if (targetMac == null) {
+                return; // targetMac should be always available
+            }
             if (!sameSubnet && !targetMac.equals(destMacAddress)) {
                 int mplsLabel = getMplsLabelFromConfig(targetAddress);
                 if (mplsLabel > 0) {
