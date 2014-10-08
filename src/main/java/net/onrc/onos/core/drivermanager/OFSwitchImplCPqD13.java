@@ -874,8 +874,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             if (b.mplsLabel != -1) {
                 OFAction pushLabel = factory.actions().buildPushMpls()
                         .setEthertype(EthType.MPLS_UNICAST).build();
-                OFAction setLabel = factory.actions().buildSetMplsLabel()
-                        .setMplsLabel(b.mplsLabel).build();
+                OFOxmMplsLabel lid = factory.oxms()
+                        .mplsLabel(U32.of(b.mplsLabel));
+                OFAction setLabel = factory.actions().buildSetField()
+                        .setField(lid).build();
                 OFAction copyTtl = factory.actions().copyTtlOut();
                 OFAction decrTtl = factory.actions().decMplsTtl();
                 actions.add(pushLabel);

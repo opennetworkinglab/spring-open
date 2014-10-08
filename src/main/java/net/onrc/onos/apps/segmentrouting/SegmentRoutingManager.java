@@ -818,9 +818,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
             DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
 
-            actions.add(pushMplsAction);
-            actions.add(copyTtlOutAction);
-            actions.add(decMplsTtlAction);
+            //actions.add(pushMplsAction);
+            //actions.add(copyTtlOutAction);
+            //actions.add(decMplsTtlAction);
             actions.add(setIdAction);
         }
         else {
@@ -836,9 +836,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
                 DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
 
-                actions.add(pushMplsAction);
-                actions.add(copyTtlOutAction);
-                actions.add(decMplsTtlAction);
+                //actions.add(pushMplsAction);
+                //actions.add(copyTtlOutAction);
+                //actions.add(decMplsTtlAction);
                 actions.add(setIdAction);
             }
         }
@@ -848,6 +848,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         for (String fwdSw : fwdToSws) {
             groupAction.addSwitch(new Dpid(fwdSw));
+            groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
 
         }
         actions.add(groupAction);
