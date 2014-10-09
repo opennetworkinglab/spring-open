@@ -715,14 +715,23 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         /* run a binary counter for the number of power elements */
         for (long i = 1; i < powerElements; i++) {
             Set<Dpid> dpidSubSet = new HashSet<Dpid>();
-            boolean allEdgeRouters = true;
             for (int j = 0; j < elements; j++) {
                 if ((i >> j) % 2 == 1) {
                     dpidSubSet.add(list.get(j));
-                    if (!isEdgeRouter(list.get(j)))
-                        allEdgeRouters = false;
                 }
             }
+            boolean allEdgeRouters = true;
+            if (dpidSubSet.size() > 1) {
+                for (Dpid dpid : dpidSubSet) {
+                    if (!isEdgeRouter(dpid)) {
+                        allEdgeRouters = false;
+                        break;
+                    }
+                }
+            }
+            else
+                allEdgeRouters = false;
+
             if (!allEdgeRouters)
                 sets.add(dpidSubSet);
         }

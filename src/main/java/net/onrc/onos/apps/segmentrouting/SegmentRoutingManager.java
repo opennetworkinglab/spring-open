@@ -848,8 +848,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         for (String fwdSw : fwdToSws) {
             groupAction.addSwitch(new Dpid(fwdSw));
-            groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
-
         }
         actions.add(groupAction);
 
@@ -938,7 +936,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
         GroupAction groupAction = new GroupAction();
-        groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
         for (String fwdSw : fwdSws)
             groupAction.addSwitch(new Dpid(fwdSw));
         actions.add(groupAction);
