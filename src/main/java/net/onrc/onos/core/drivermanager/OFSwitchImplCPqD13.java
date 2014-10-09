@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -213,60 +212,62 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     }
 
     public void removePortFromGroups(PortNumber port) {
-        ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
-        if (portNSSet == null)
-        {
-            /* No Groups are created with this port yet */
-            log.warn("removePortFromGroups: No groups exist with Switch {} port {}",
-                    getStringId(), port);
-            return;
-        }
-        for (NeighborSet ns : portNSSet) {
-            /* Delete the first matched bucket */
-            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
-            Iterator<BucketInfo> it = portEcmpInfo.buckets.iterator();
-            while (it.hasNext()) {
-                BucketInfo bucket = it.next();
-                if (bucket.outport.equals(port)) {
-                    it.remove();
+        /* FIX: removePortFromGroups is not working */
+
+        /*        ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
+                if (portNSSet == null)
+                {
+        *//* No Groups are created with this port yet */
+        /*            log.warn("removePortFromGroups: No groups exist with Switch {} port {}",
+                            getStringId(), port);
+                    return;
                 }
-            }
-            modifyEcmpGroup(portEcmpInfo);
-        }
-        /* Don't delete the entry from portNeighborSetMap because
-         * when the port is up again this info is needed
-         */
+                for (NeighborSet ns : portNSSet) {
+        *//* Delete the first matched bucket */
+        /*            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+                    Iterator<BucketInfo> it = portEcmpInfo.buckets.iterator();
+                    while (it.hasNext()) {
+                        BucketInfo bucket = it.next();
+                        if (bucket.outport.equals(port)) {
+                            it.remove();
+                        }
+                    }
+                    modifyEcmpGroup(portEcmpInfo);
+                }
+        *//* Don't delete the entry from portNeighborSetMap because
+          * when the port is up again this info is needed
+          */
         return;
     }
 
     public void addPortToGroups(PortNumber port) {
-        ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
-        if (portNSSet == null) {
-            /* Unknown Port  */
-            log.warn("addPortToGroups: Switch {} port {} is unknown",
-                    getStringId(), port);
-            return;
-        }
-        Dpid neighborDpid = portToNeighbors.get(port);
-        for (NeighborSet ns : portNSSet) {
-            /* Delete the first matched bucket */
-            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
-            BucketInfo b = new BucketInfo(neighborDpid,
-                    MacAddress.of(srConfig.getRouterMac()),
-                    getNeighborRouterMacAddress(neighborDpid),
-                    port,
-                    ns.getEdgeLabel());
-            List<BucketInfo> buckets = portEcmpInfo.buckets;
-            if (buckets == null) {
-                buckets = new ArrayList<BucketInfo>();
-                buckets.add(b);
-                portEcmpInfo.buckets = buckets;
-            } else {
-                buckets.add(b);
-            }
-            modifyEcmpGroup(portEcmpInfo);
-        }
-        return;
+        /*        ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
+                if (portNSSet == null) {
+        *//* Unknown Port  */
+        /*            log.warn("addPortToGroups: Switch {} port {} is unknown",
+                            getStringId(), port);
+                    return;
+                }
+                Dpid neighborDpid = portToNeighbors.get(port);
+                for (NeighborSet ns : portNSSet) {
+        *//* Delete the first matched bucket */
+        /*            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+                    BucketInfo b = new BucketInfo(neighborDpid,
+                            MacAddress.of(srConfig.getRouterMac()),
+                            getNeighborRouterMacAddress(neighborDpid),
+                            port,
+                            ns.getEdgeLabel());
+                    List<BucketInfo> buckets = portEcmpInfo.buckets;
+                    if (buckets == null) {
+                        buckets = new ArrayList<BucketInfo>();
+                        buckets.add(b);
+                        portEcmpInfo.buckets = buckets;
+                    } else {
+                        buckets.add(b);
+                    }
+                    modifyEcmpGroup(portEcmpInfo);
+                }
+        */return;
     }
 
     // *****************************
