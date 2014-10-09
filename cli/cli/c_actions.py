@@ -2062,19 +2062,19 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 print "command_display_rest: missing group desc for group id %s" % (groupId)
                 continue
             for bucketId in range(len(groupStatEntry['bucketStats'])):
-                setsrcmac = None
+                setsrcmac = '*'
                 if 'SET_DL_SRC' in groupDescEntry['bucketsActions'][bucketId]:
                     setsrcmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_SRC']
-                setdstmac = None
+                setdstmac = '*'
                 if 'SET_DL_DST' in groupDescEntry['bucketsActions'][bucketId]:
                     setdstmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_DST']
-                pushmpls = None
+                pushmpls = '*'
                 if 'PUSH_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
                     pushmpls = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS']
-                popmpls = None
+                popmpls = '*'
                 if 'POP_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
                     popmpls = groupDescEntry['bucketsActions'][bucketId]['POP_MPLS']
-                outport = None
+                outport = '*'
                 if 'OUTPPUT' in groupDescEntry['bucketsActions'][bucketId]:
                     outport = groupDescEntry['bucketsActions'][bucketId]['OUTPPUT']
                 combResult.append({
