@@ -130,8 +130,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private final boolean usePipeline13;
     private SegmentRouterConfig srConfig;
     private ConcurrentMap<Dpid, Set<PortNumber>> neighbors;
+    private ConcurrentMap<PortNumber, Dpid> portToNeighbors;
     private List<Integer> edgeLabels;
     private boolean isEdgeRouter;
+    private int sid;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
 
@@ -144,6 +146,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         driverHandshakeComplete = new AtomicBoolean(false);
         setSwitchDescription(desc);
         neighbors = new ConcurrentHashMap<Dpid, Set<PortNumber>>();
+        portToNeighbors = new ConcurrentHashMap<PortNumber, Dpid>();
         ecmpGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
         portNeighborSetMap =
                 new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
@@ -212,8 +215,12 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     public void removePortFromGroups(PortNumber port) {
         ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
         if (portNSSet == null)
+        {
             /* No Groups are created with this port yet */
+            log.warn("removePortFromGroups: No groups exist with Switch {} port {}",
+                    getStringId(), port);
             return;
+        }
         for (NeighborSet ns : portNSSet) {
             /* Delete the first matched bucket */
             EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
@@ -222,37 +229,43 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 BucketInfo bucket = it.next();
                 if (bucket.outport.equals(port)) {
                     it.remove();
-                    /* Assuming port appears under only one bucket for
-                     * a neighbor set and hence invoking Group modify command
-                     */
-                    modifyEcmpGroup(portEcmpInfo);
-                    break;
                 }
             }
+            modifyEcmpGroup(portEcmpInfo);
         }
-        /* Delete entry from portNeighborSetMap */
-        portNeighborSetMap.remove(port);
+        /* Don't delete the entry from portNeighborSetMap because
+         * when the port is up again this info is needed
+         */
         return;
     }
 
     public void addPortToGroups(PortNumber port) {
         ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
-        if (portNSSet != null) {
-            /* Port is already part of ECMP groups */
+        if (portNSSet == null) {
+            /* Unknown Port  */
+            log.warn("addPortToGroups: Switch {} port {} is unknown",
+                    getStringId(), port);
             return;
         }
-        /* TODO:
-         * 1) Find the neighbors reached from this port
-         * 2) Compute the Neighbor sets
-         * 3) For the Neighbor set entries that are already there
-         * in the database,
-         * a) Update the ecmpGroups hashmap
-         * b) perform Group Modify on updated groups
-         * 4) For the new Neighbor set entries, add an entry in the database
-         * a) Add entry to the ecmpGroups hashmap
-         * b) perform Group Add on those groups
-         * 5) Update the portNeighborSetMap hashmap
-         * */
+        Dpid neighborDpid = portToNeighbors.get(port);
+        for (NeighborSet ns : portNSSet) {
+            /* Delete the first matched bucket */
+            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+            BucketInfo b = new BucketInfo(neighborDpid,
+                    MacAddress.of(srConfig.getRouterMac()),
+                    getNeighborRouterMacAddress(neighborDpid),
+                    port,
+                    ns.getEdgeLabel());
+            List<BucketInfo> buckets = portEcmpInfo.buckets;
+            if (buckets == null) {
+                buckets = new ArrayList<BucketInfo>();
+                buckets.add(b);
+                portEcmpInfo.buckets = buckets;
+            } else {
+                buckets.add(b);
+            }
+            modifyEcmpGroup(portEcmpInfo);
+        }
         return;
     }
 
@@ -519,6 +532,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         if (scs.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
             srConfig = (SegmentRouterConfig) scs.getSwitchConfig();
             isEdgeRouter = srConfig.isEdgeRouter();
+            sid = srConfig.getNodeSid();
         } else {
             log.error("Switch not configured as Segment-Router");
         }
@@ -680,6 +694,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     }
 
     private void addNeighborAtPort(Dpid neighborDpid, PortNumber portToNeighbor) {
+        /* Update NeighborToPort database */
         if (neighbors.get(neighborDpid) != null) {
             neighbors.get(neighborDpid).add(portToNeighbor);
         } else {
@@ -687,6 +702,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             ports.add(portToNeighbor);
             neighbors.put(neighborDpid, ports);
         }
+
+        /* Update portToNeighbors database */
+        if (portToNeighbors.get(portToNeighbor) == null)
+            portToNeighbors.put(portToNeighbor, neighborDpid);
     }
 
     private void getAllEdgeLabels(List<SwitchConfig> switchList) {
@@ -699,6 +718,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 continue;
             }
             edgeLabels.add(((SegmentRouterConfig) sc).getNodeSid());
+        }
+    }
+
+    private boolean isNodeLabelAndEdgeLabelSame(Dpid dpid, int edgeLabel) {
+        INetworkConfigService ncs = floodlightProvider.getNetworkConfigService();
+        SwitchConfigStatus scs = ncs.checkSwitchConfig(dpid);
+        if (scs.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
+            return (((SegmentRouterConfig) scs.getSwitchConfig()).
+                    getNodeSid() == edgeLabel);
+        } else {
+            // TODO: return false if router not allowed
+            return false;
         }
     }
 
@@ -720,19 +751,21 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     dpidSubSet.add(list.get(j));
                 }
             }
-            boolean allEdgeRouters = true;
-            if (dpidSubSet.size() > 1) {
+            /* NOTE: Avoid any pairings of edge routers only
+             * at a backbone router */
+            boolean avoidEdgeRouterPairing = true;
+            if ((!isEdgeRouter) && (dpidSubSet.size() > 1)) {
                 for (Dpid dpid : dpidSubSet) {
                     if (!isEdgeRouter(dpid)) {
-                        allEdgeRouters = false;
+                        avoidEdgeRouterPairing = false;
                         break;
                     }
                 }
             }
             else
-                allEdgeRouters = false;
+                avoidEdgeRouterPairing = false;
 
-            if (!allEdgeRouters)
+            if (!avoidEdgeRouterPairing)
                 sets.add(dpidSubSet);
         }
         return sets;
@@ -770,11 +803,23 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         Set<Set<Dpid>> powerSet = getAllNeighborSets(dpids);
         Set<NeighborSet> nsSet = new HashSet<NeighborSet>();
         for (Set<Dpid> combo : powerSet) {
+            if (combo.isEmpty())
+                continue;
             if (isEdgeRouter && !edgeLabels.isEmpty()) {
                 for (Integer edgeLabel : edgeLabels) {
+                    /* If it is local node's edge label, continue */
+                    if (edgeLabel == sid)
+                        continue;
                     NeighborSet ns = new NeighborSet();
                     ns.addDpids(combo);
-                    ns.setEdgeLabel(edgeLabel);
+                    /* Check if the edge label being set is of the
+                     * same node in the Neighbor set
+                     */
+                    if ((combo.size() != 1) ||
+                        (!isNodeLabelAndEdgeLabelSame(
+                                combo.iterator().next(), edgeLabel))){
+                        ns.setEdgeLabel(edgeLabel);
+                    }
                     nsSet.add(ns);
                 }
             } else {
@@ -940,8 +985,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             if (b.mplsLabel != -1) {
                 OFAction pushLabel = factory.actions().buildPushMpls()
                         .setEthertype(EthType.MPLS_UNICAST).build();
-                OFAction setLabel = factory.actions().buildSetMplsLabel()
-                        .setMplsLabel(b.mplsLabel).build();
+                OFOxmMplsLabel lid = factory.oxms()
+                        .mplsLabel(U32.of(b.mplsLabel));
+                OFAction setLabel = factory.actions().buildSetField()
+                        .setField(lid).build();
                 OFAction copyTtl = factory.actions().copyTtlOut();
                 OFAction decrTtl = factory.actions().decMplsTtl();
                 actions.add(pushLabel);
