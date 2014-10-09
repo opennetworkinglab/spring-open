@@ -61,9 +61,11 @@ urlpatterns = patterns('',
     (r'^rest/v1/realtimestats/counter/categories/(?P<dpid>[A-Za-z0-9_:.\-]+)/(?P<stattype>[A-Za-z0-9_:.\-]+)/(?P<layer>[0-9])/?$', 'sdncon.rest.views.do_sdnplatform_counter_categories'),
     (r'^rest/v1/realtimestats/counter/(?P<stattype>[A-Za-z0-9_:.\-]+)/?$', 'sdncon.rest.views.do_sdnplatform_realtimestats'),
     (r'^rest/v1/realtimestats/counter/(?P<dpid>[A-Za-z0-9_:.\-]+)/(?P<stattype>[A-Za-z]+)/?$', 'sdncon.rest.views.do_sdnplatform_realtimestats'),
+    (r'^rest/v1/realtimestats/table/(?P<tabletype>[A-Za-z]+)/flow/(?P<dpid>[A-Za-z0-9_:./\-]+)/?$', 'sdncon.rest.views.do_tablerealtimestats'),
     (r'^rest/v1/realtimestats/(?P<stattype>[A-Za-z]+)/(?P<dpid>[A-Za-z0-9_:./\-]+)/?$', 'sdncon.rest.views.do_realtimestats'),
     (r'^rest/v1/controller/stats/(?P<stattype>[A-Za-z]+)/?$', 'sdncon.rest.views.do_controller_stats'),
     (r'^rest/v1/controller/storage/tables/?$', 'sdncon.rest.views.do_controller_storage_table_list'),
+    
 
     # REST API VNS/device information
     (r'^rest/v1/device', 'sdncon.rest.views.do_device'),

@@ -1427,4 +1427,22 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         log.info("Sw: {} Group Features {}", getStringId(), gfsr);
     }
 
+    @Override
+    public TableId getTableId(String tableType) {
+        tableType = tableType.toLowerCase();
+        if(tableType.contentEquals("ip")){
+            return TableId.of(OFSwitchImplCPqD13.TABLE_IPv4_UNICAST);
+        }
+        else if (tableType.contentEquals("mpls")){
+            return TableId.of(OFSwitchImplCPqD13.TABLE_MPLS);
+        }
+        else if (tableType.contentEquals("acl")){
+            return TableId.of(OFSwitchImplCPqD13.TABLE_ACL);
+        }
+        else{
+            log.warn("Invalid tableType: {}", tableType);
+            return null;
+        }
+    }
+
 }

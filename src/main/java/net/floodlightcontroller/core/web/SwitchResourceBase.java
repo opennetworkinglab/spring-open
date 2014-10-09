@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.annotations.LogMessageDoc;
+import net.onrc.onos.core.drivermanager.OFSwitchImplCPqD13;
 
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFFlowStatsEntry;
@@ -102,7 +103,6 @@ public class SwitchResourceBase extends ServerResource {
                 try {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
-                    System.out.println("value\n\n\n"+ values);
                     for (OFFlowStatsEntry entry : ((OFFlowStatsReply)values.get(0)).getEntries()) {
                         OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry);
                         flowStats.add(entryMod);
@@ -211,6 +211,54 @@ public class SwitchResourceBase extends ServerResource {
 
     protected Object getSwitchStatistics(String switchId, OFStatsType statType) {
         return getSwitchStatistics(HexString.toLong(switchId), statType);
+    }
+    //TODO: Java doc
+    protected List<?> getSwitchStatisticsForTable(long switchId,
+            OFStatsType statType, String tableType) {
+        IFloodlightProviderService floodlightProvider =
+                (IFloodlightProviderService) getContext().getAttributes().
+                get(IFloodlightProviderService.class.getCanonicalName());
+        IOFSwitch sw = floodlightProvider.getSwitches().get(switchId);
+        Future<List<OFStatsReply>> future;
+        List<OFStatsReply> values = null;
+        //getting tableId from CPqD driver
+        TableId tableId;
+        if (sw != null) {
+            if((tableId = ((OFSwitchImplCPqD13) sw).getTableId(tableType)) == null){
+                log.error("Invalid tableType {} " + tableType);
+                return null;
+            }
+            OFStatsRequest<?> req = null;
+            if (statType == OFStatsType.FLOW) {
+                log.debug("Switch Flow Stats req for table {} sent to switch {}",
+                        tableType,sw.getStringId());
+                OFMatchV3 match = sw.getFactory().buildMatchV3()
+                        .setOxmList(OFOxmList.EMPTY).build();
+                req = sw.getFactory()
+                        .buildFlowStatsRequest()
+                        .setMatch(match)
+                        .setOutPort(OFPort.ANY)
+                        .setTableId(tableId)
+                        .setXid(sw.getNextTransactionId()).build();
+                List<OFFlowStatsEntryMod> flowStats = new ArrayList<OFFlowStatsEntryMod>();
+                try {
+                    future = sw.getStatistics(req);
+                    values = future.get(10, TimeUnit.SECONDS);
+                    for (OFFlowStatsEntry entry : ((OFFlowStatsReply)values.get(0)).getEntries()) {
+                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry);
+                        flowStats.add(entryMod);
+                    }
+                    log.debug("Switch flow Stats Entries for table {} from switch {} are {}",
+                            tableType, sw.getStringId(), flowStats);
+                } catch (Exception e) {
+                    log.error("Failure retrieving per table statistics from switch " + sw, e);
+                }
+                return flowStats;
+            } 
+        }
+        //should never get to this point
+        log.error("Failure retrieving  {} table statistics from switch {}",tableType, sw);
+        return null;
     }
 
     protected OFFeaturesReply getSwitchFeaturesReply(long switchId) {

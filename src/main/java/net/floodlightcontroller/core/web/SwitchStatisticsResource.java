@@ -20,6 +20,7 @@ package net.floodlightcontroller.core.web;
 import java.util.HashMap;
 
 import org.projectfloodlight.openflow.protocol.OFStatsType;
+import org.projectfloodlight.openflow.util.HexString;
 import org.restlet.resource.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,14 +42,24 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
 
         String switchId = (String) getRequestAttributes().get("switchId");
         String statType = (String) getRequestAttributes().get("statType");
+        String tableType = null;
+        if(getRequestAttributes().containsKey("tableType")){
+            tableType = (String) getRequestAttributes().get("tableType");
+        }
 
         if (statType.equals("port")) {
             values = getSwitchStatistics(switchId, OFStatsType.PORT);
         } else if (statType.equals("queue")) {
             values = getSwitchStatistics(switchId, OFStatsType.QUEUE);
         } else if (statType.equals("flow")) {
-            values = getSwitchStatistics(switchId, OFStatsType.FLOW);
-        } else if (statType.equals("aggregate")) {
+            if (tableType != null){
+                values = getSwitchStatisticsForTable(HexString.toLong(switchId), OFStatsType.FLOW, tableType);
+            }
+            else{
+                values = getSwitchStatistics(switchId, OFStatsType.FLOW);
+            }
+        }
+        else if (statType.equals("aggregate")) {
             values = getSwitchStatistics(switchId, OFStatsType.AGGREGATE);
         } else if (statType.equals("desc")) {
             values = getSwitchStatistics(switchId, OFStatsType.DESC);

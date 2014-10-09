@@ -37,6 +37,7 @@ import url_cache
 
 from midw import *
 from vnsw import *
+from html5lib.constants import DataLossWarning
 
 onos=1
 #
@@ -1948,8 +1949,9 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
 
     entries = json.loads(result)
 
+    #if 'realtimestats' in data and data['realtimestats'] == 'group':
+
     entries2 = None
-    
     if 'realtimestats' in data and data['realtimestats'] == 'group':
         url2 = "http://%s/rest/v1/" % sdnsh.controller + ("realtimestats/groupdesc/%(dpid)s/" % data)
         result2 = sdnsh.store.rest_simple_request(url2)
@@ -1972,6 +1974,80 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                                       rest_type,
                                                       data,
                                                       entries2)
+
+    if 'realtimestats' in data and 'tabletype' in data and data['realtimestats'] == 'table':
+        combResult = []
+        if data['tabletype'] == 'ip':
+            for ipTableEntry in entries:
+                match = ipTableEntry['match']
+                if match :
+                    networkDestination = match[0].get('networkDestination') if match[0].get('networkDestination') else '*'
+                    #raise error.ArgumentValidationError('\n\n\n %s' %match)
+                #else:
+                #     networkSource = None
+                #     networkDestination = None
+                combResult.append({
+                       'switch'        : ipTableEntry['switch'],
+                       'byteCount'     : ipTableEntry['byteCount'],
+                       'packetCount'   : ipTableEntry['packetCount'],
+                       'cookie'        : ipTableEntry['cookie'],
+                       'durationSeconds'         : ipTableEntry['durationSec'],
+                       'networkDestination'      : networkDestination,
+                    })
+        elif data['tabletype'] == 'mpls':
+            for ipTableEntry in entries:
+                match = ipTableEntry['match']
+                if match :
+                    mplsTc = match[0].get('mplsTc')
+                    mplsLabel = match[0].get('mplsLabel')
+                    #raise error.ArgumentValidationError('\n\n\n %s' %match)
+                #else:
+                #     networkSource = None
+                #     networkDestination = None
+                combResult.append({
+                       'switch'        : ipTableEntry['switch'],
+                       'byteCount'     : ipTableEntry['byteCount'],
+                       'packetCount'   : ipTableEntry['packetCount'],
+                       'cookie'        : ipTableEntry['cookie'],
+                       'mplsTc'         : mplsTc,
+                       'mplsLabel'      : mplsLabel,
+                       'durationSeconds'        : ipTableEntry['durationSec']
+                    })
+        elif data['tabletype'] == 'acl':
+            for ipTableEntry in entries:
+                match = ipTableEntry['match']
+                if match :
+                    networkDestination = match[0].get('networkDestination')\
+                    if match[0].get('networkDestination') else '*'
+                    networkProtocol = match[0].get('networkProtocol') if match[0].get('networkProtocol') else '*'
+                    networkSource = match[0].get('networkSource') if match[0].get('networkSource') else '*'
+                    mplsTc = match[0].get('mplsTc') if match[0].get('mplsTc') else '*'
+                    mplsLabel = match[0].get('mplsLabel')if match[0].get('mplsLabel') else '*'
+                    transportDestination = match[0].get('transportDestination') if match[0].get('transportDestination') else '*'
+                    transportSource = match[0].get('transportSource') if match[0].get('transportSource') else '*'
+                    inputPort = match[0].get('inputPort') if match[0].get('inputPort') else '*'
+                    dataLayerSource = match[0].get('dataLayerSource') if match[0].get('dataLayerSource') else '*'
+                    dataLayerDestination = match[0].get('dataLayerDestination') if match[0].get('dataLayerDestination') else '*'
+                    dataLayerType= match[0].get('dataLayerType') if match[0].get('dataLayerType') else '*'
+                combResult.append({
+                       'switch'        : ipTableEntry['switch'],
+                       'byteCount'     : ipTableEntry['byteCount'],
+                       'packetCount'   : ipTableEntry['packetCount'],
+                       'cookie'        : ipTableEntry['cookie'],
+                       'inputPort'               : inputPort,
+                       'durationSeconds'         : ipTableEntry['durationSec'],
+                       'networkSource'           : networkSource,
+                       'networkDestination'      : networkDestination,
+                       'networkProtocol'         : networkProtocol,
+                       'dataLayerType'           : dataLayerType,
+                       'dataLayerSource'         : dataLayerSource,
+                       'dataLayerDestination'    : dataLayerDestination,
+                       'mplsTc'                  : mplsTc,
+                       'mplsLabel'               : mplsLabel,
+                       'transportDestination'    : transportDestination,
+                       'transportSource'         : transportSource
+                    })
+        entries = combResult
 
     if 'realtimestats' in data and data['realtimestats'] == 'group':
         combResult = []

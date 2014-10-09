@@ -1700,7 +1700,7 @@ REALTIME_FLOW_FORMAT = {
                           'Idx', 'switch', 'cookie', 
                           'byteCount', 'packetCount',
                           'actions', 'dataLayerSource', 'dataLayerDestination',
-                                                                                                                  'flow-brief',
+                          'flow-brief',
                         ],
             'scoped'  : [
                           'Idx', 'cookie', 
@@ -1812,6 +1812,386 @@ REALTIME_FLOW_FORMAT = {
             'vnsFlowCnt'       : { 'verbose-name' : 'Flows'
                                  },
             'flowEntryCnt'     : { 'verbose-name' : 'Flow-Entries'
+                                 },
+            }
+        },
+}
+
+REALTIME_TABLE_IP_FLOW_FORMAT = {
+    'realtime_table_ip_flow' : {
+        'field-orderings' : {
+            'default' : [
+                          'Idx', 'switch', 'cookie', 
+                          'byteCount', 'packetCount',
+                          'actions', 'networkDestination',
+                          'flow-brief',
+                        ],
+            'scoped'  : [
+                          'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'networkDestination', 
+                        ],
+            'brief'   : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'networkDestination'
+                          ],
+            'default' : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'networkDestination'
+                          ],
+            'scoped'  : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'networkDestination'
+                          ],
+            'details' : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'networkDestination'
+                          ],
+            #'vns_flow': [ 'Idx', 'dataLayerSource', 'dataLayerDestination', 'dataLayerVirtualLan', 'dataLayerType'],
+            #'summary' : [ 'Idx', 'vnsName', 'vnsFlowCnt', 'flowEntryCnt'],
+            },
+        'fields': {
+            'switch'           : { 'verbose-name' : 'Switch',
+                                   'formatter' : fmtcnv.replace_switch_with_alias
+                                 },
+            'flow-brief'       : {
+                                    'verbose-name' : 'Match',
+                                    'formatter' : fmtcnv.realtime_flow_brief,
+                                 },
+            'flow-timeout'     : {
+                                    'verbose-name' : 'H/I',
+                                    'formatter' : realtime_flow_timeout,
+                                 },
+            'byteCount'        : { 'verbose-name': 'Bytes',
+                                   'primary_key':True
+                                 },
+            'packetCount'      : { 'verbose-name' : 'Packets'
+                                 },
+            'cookie'           : { 'verbose-name' : 'Cookie'#,
+                                   #'formatter' : fmtcnv.decode_flow_cookie,
+                                 },
+            'durationSeconds'  : { 'verbose-name' : 'Dur(s)'
+                                 },
+            'durationNanoseconds' : { 'verbose-name' : 'Dur(ns)'
+                                 },
+            'hardTimeout'      : { 'verbose-name' : 'Hard Timeout',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'idleTimeout'      : { 'verbose-name' : 'Idle Timeout',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'length'           : { 'verbose-name' : 'Length'
+                                 },
+            'priority'         : { 'verbose-name' : 'Priority',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'tableId'          : { 'verbose-name' : 'Table' },
+            'wildcards'        : { 'verbose-name' : 'Wildcards',
+                                    'formatter' : fmtcnv.convert_integer_to_bitmask
+                                 },
+            'dataLayerSource'  : { 'verbose-name' : 'Src MAC',
+                                   'formatter' : fmtcnv.replace_host_with_alias
+                                 },
+            'dataLayerDestination' : { 'verbose-name' : 'Dst MAC',
+                                       'formatter' : fmtcnv.replace_host_with_alias
+                                 },
+            'dataLayerType'    : { 'verbose-name' : 'Ether Type',
+                                   'formatter' : fmtcnv.decode_ether_type
+                                 },
+            'dataLayerVirtualLan' : { 'verbose-name' : 'VLAN ID',
+                                      'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'dataLayerVirtualLanPriorityCodePoint' : { 'verbose-name' : 'VLAN PCP'
+                                 },
+            'inputPort'        : { 'verbose-name' : 'In Port',
+                                    'formatter' : fmtcnv.decode_openflow_port
+                                 },
+            'networkSource'    : { 'verbose-name' : 'Src IP'
+                                 },
+            'networkDestination' : { 'verbose-name' : 'Dst IP'
+                                 },
+            'networkSourceMaskLen' : { 'verbose-name' : 'Src IP Bits'
+                                 },
+            'networkDestinationMaskLen' : { 'verbose-name' : 'Dst IP Bits'
+                                 },
+            'networkProtocol'  : { 'verbose-name' : 'Protocol',
+                                    'formatter' : fmtcnv.decode_network_protocol
+                                 },
+            'networkTypeOfService' : { 'verbose-name' : 'TOS Bits'
+                                 },
+            'transportSource'  : { 'verbose-name' : 'Src Port',
+                                   'formatter' : fmtcnv.decode_src_port
+                                 },
+            'transportDestination' : { 'verbose-name' : 'Dst Port',
+                                       'formatter' : fmtcnv.decode_dst_port
+                                 },
+            'actions'          : { 'verbose-name' : 'Actions',
+                                    'formatter' : fmtcnv.decode_actions
+                                 },
+            'vnsName'          : { 'verbose-name' : 'VNS'
+                                 },
+            'vnsFlowCnt'       : { 'verbose-name' : 'Flows'
+                                 },
+            'flowEntryCnt'     : { 'verbose-name' : 'Flow-Entries'
+                                 },
+            }
+        },
+}
+
+
+
+REALTIME_TABLE_MPLS_FLOW_FORMAT = {
+    'realtime_table_mpls_flow' : {
+        'field-orderings' : {
+            'default' : [
+                          'Idx', 'switch', 'cookie', 
+                          'byteCount', 'packetCount',
+                          'actions', 'mplsTc', 'mplsLabel',
+                          'flow-brief',
+                        ],
+            'scoped'  : [
+                          'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'mplsTc', 'mplsLabel'
+                        ],
+            'brief'   : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'mplsTc', 'mplsLabel'
+                          ],
+            'default' : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'mplsTc', 'mplsLabel'
+                          ],
+            'scoped'  : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'mplsTc', 'mplsLabel'
+                          ],
+            'details' : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie',
+                          'mplsTc', 'mplsLabel'
+                          ],
+            #'vns_flow': [ 'Idx', 'dataLayerSource', 'dataLayerDestination', 'dataLayerVirtualLan', 'dataLayerType'],
+            #'summary' : [ 'Idx', 'vnsName', 'vnsFlowCnt', 'flowEntryCnt'],
+            },
+        'fields': {
+            'switch'           : { 'verbose-name' : 'Switch',
+                                   'formatter' : fmtcnv.replace_switch_with_alias
+                                 },
+            'flow-brief'       : {
+                                    'verbose-name' : 'Match',
+                                    'formatter' : fmtcnv.realtime_flow_brief,
+                                 },
+            'flow-timeout'     : {
+                                    'verbose-name' : 'H/I',
+                                    'formatter' : realtime_flow_timeout,
+                                 },
+            'byteCount'        : { 'verbose-name': 'Bytes',
+                                   'primary_key':True
+                                 },
+            'packetCount'      : { 'verbose-name' : 'Packets'
+                                 },
+            'cookie'           : { 'verbose-name' : 'Cookie',
+                                   #'formatter' : fmtcnv.decode_flow_cookie,
+                                 },
+            'durationSeconds'  : { 'verbose-name' : 'Dur(s)'
+                                 },
+            'durationNanoseconds' : { 'verbose-name' : 'Dur(ns)'
+                                 },
+            'hardTimeout'      : { 'verbose-name' : 'Hard Timeout',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'idleTimeout'      : { 'verbose-name' : 'Idle Timeout',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'length'           : { 'verbose-name' : 'Length'
+                                 },
+            'priority'         : { 'verbose-name' : 'Priority',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'tableId'          : { 'verbose-name' : 'Table' },
+            'wildcards'        : { 'verbose-name' : 'Wildcards',
+                                    'formatter' : fmtcnv.convert_integer_to_bitmask
+                                 },
+            'dataLayerSource'  : { 'verbose-name' : 'Src MAC',
+                                   'formatter' : fmtcnv.replace_host_with_alias
+                                 },
+            'dataLayerDestination' : { 'verbose-name' : 'Dst MAC',
+                                       'formatter' : fmtcnv.replace_host_with_alias
+                                 },
+            'dataLayerType'    : { 'verbose-name' : 'Ether Type',
+                                   'formatter' : fmtcnv.decode_ether_type
+                                 },
+            'dataLayerVirtualLan' : { 'verbose-name' : 'VLAN ID',
+                                      'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'dataLayerVirtualLanPriorityCodePoint' : { 'verbose-name' : 'VLAN PCP'
+                                 },
+            'inputPort'        : { 'verbose-name' : 'In Port',
+                                    'formatter' : fmtcnv.decode_openflow_port
+                                 },
+            'networkSource'    : { 'verbose-name' : 'Src IP'
+                                 },
+            'networkDestination' : { 'verbose-name' : 'Dst IP'
+                                 },
+            'networkSourceMaskLen' : { 'verbose-name' : 'Src IP Bits'
+                                 },
+            'networkDestinationMaskLen' : { 'verbose-name' : 'Dst IP Bits'
+                                 },
+            'networkProtocol'  : { 'verbose-name' : 'Protocol',
+                                    'formatter' : fmtcnv.decode_network_protocol
+                                 },
+            'networkTypeOfService' : { 'verbose-name' : 'TOS Bits'
+                                 },
+            'transportSource'  : { 'verbose-name' : 'Src Port',
+                                   'formatter' : fmtcnv.decode_src_port
+                                 },
+            'transportDestination' : { 'verbose-name' : 'Dst Port',
+                                       'formatter' : fmtcnv.decode_dst_port
+                                 },
+            'actions'          : { 'verbose-name' : 'Actions',
+                                    'formatter' : fmtcnv.decode_actions
+                                 },
+            'vnsName'          : { 'verbose-name' : 'VNS'
+                                 },
+            'vnsFlowCnt'       : { 'verbose-name' : 'Flows'
+                                 },
+            'flowEntryCnt'     : { 'verbose-name' : 'Flow-Entries'
+                                 },
+            'mplsTc'           : { 'verbose-name' : 'MPLS_TC'
+                                 },
+            'mplsLabel'        : { 'verbose-name' : 'MPLS_Label'
+                                 },
+                   
+            }
+        },
+}
+
+
+
+
+REALTIME_TABLE_ACL_FLOW_FORMAT = {
+    'realtime_table_acl_flow' : {
+        'field-orderings' : {
+            'default' : [
+                          'Idx', 'switch', 'cookie', 
+                          'byteCount', 'packetCount',
+                          'actions', 'dataLayerSource', 'dataLayerDestination',
+                          'flow-brief','mplsTc','mplsLabel'
+                        ],
+            'scoped'  : [
+                          'Idx', 'cookie', 
+                          'byteCount', 'packetCount',
+                          'actions', 'dataLayerSource', 'dataLayerDestination','mplsTc','mplsLabel',
+                          'flow-brief',
+
+                        ],
+            'brief'   : [ 'Idx', 'switch', 'cookie', 'dataLayerSource', 'dataLayerDestination',
+                          'networkSource', 'networkDestination', 'networkProtocol',
+                          'transportSource', 'transportDestination','mplsTc','mplsLabel'],
+            'default' : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie', 'inputPort', 'dataLayerSource', 'dataLayerDestination',
+                          'dataLayerType', 'networkSource', 'networkDestination', 'networkProtocol',
+                          'transportSource', 'transportDestination','mplsTc','mplsLabel'],
+            'scoped'  : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie', 'inputPort', 'dataLayerSource', 'dataLayerDestination',
+                          'dataLayerType', 'networkSource', 'networkDestination', 'networkProtocol',
+                          'transportSource', 'transportDestination','mplsTc','mplsLabel'],
+            'details' : [ 'Idx', 'switch', 'byteCount', 'packetCount', 'durationSeconds',
+                          'cookie', 'hardTimeout', 'idleTimeout', 'priority', 'tableId', 'inputPort',
+                          'dataLayerSource', 'dataLayerDestination', 'dataLayerType', 'dataLayerVirtualLan',
+                          'dataLayerVirtualLanPriorityCodePoint', 'networkSource', 'networkDestination',
+                          'networkProtocol', 'transportSource', 'transportDestination',
+                          'networkTypeOfService', 'actions','mplsTc','mplsLabel'],
+            #'vns_flow': [ 'Idx', 'dataLayerSource', 'dataLayerDestination', 'dataLayerVirtualLan', 'dataLayerType'],
+            #'summary' : [ 'Idx', 'vnsName', 'vnsFlowCnt', 'flowEntryCnt'],
+            },
+        'fields': {
+            'switch'           : { 'verbose-name' : 'Switch',
+                                   'formatter' : fmtcnv.replace_switch_with_alias
+                                 },
+            'flow-brief'       : {
+                                    'verbose-name' : 'Match',
+                                    'formatter' : fmtcnv.realtime_flow_brief,
+                                 },
+            'flow-timeout'     : {
+                                    'verbose-name' : 'H/I',
+                                    'formatter' : realtime_flow_timeout,
+                                 },
+            'byteCount'        : { 'verbose-name': 'Bytes',
+                                   'primary_key':True
+                                 },
+            'packetCount'      : { 'verbose-name' : 'Packets'
+                                 },
+            'cookie'           : { 'verbose-name' : 'Cookie',
+                                   #'formatter' : fmtcnv.decode_flow_cookie,
+                                 },
+            'durationSeconds'  : { 'verbose-name' : 'Dur(s)'
+                                 },
+            'durationNanoseconds' : { 'verbose-name' : 'Dur(ns)'
+                                 },
+            'hardTimeout'      : { 'verbose-name' : 'Hard Timeout',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'idleTimeout'      : { 'verbose-name' : 'Idle Timeout',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'length'           : { 'verbose-name' : 'Length'
+             },
+            'priority'         : { 'verbose-name' : 'Priority',
+                                   'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'tableId'          : { 'verbose-name' : 'Table' },
+            'wildcards'        : { 'verbose-name' : 'Wildcards',
+                                    'formatter' : fmtcnv.convert_integer_to_bitmask
+                                 },
+            'dataLayerSource'  : { 'verbose-name' : 'Src MAC',
+                                   'formatter' : fmtcnv.replace_host_with_alias
+                                 },
+            'dataLayerDestination' : { 'verbose-name' : 'Dst MAC',
+                                       'formatter' : fmtcnv.replace_host_with_alias
+                                 },
+            'dataLayerType'    : { 'verbose-name' : 'Ether Type',
+                                   'formatter' : fmtcnv.decode_ether_type
+                                 },
+            'dataLayerVirtualLan' : { 'verbose-name' : 'VLAN ID',
+                                      'formatter' : fmtcnv.convert_signed_short_to_unsigned
+                                 },
+            'dataLayerVirtualLanPriorityCodePoint' : { 'verbose-name' : 'VLAN PCP'
+                                 },
+            'inputPort'        : { 'verbose-name' : 'In Port',
+                                    'formatter' : fmtcnv.decode_openflow_port
+                                 },
+            'networkSource'    : { 'verbose-name' : 'Src IP'
+                                 },
+            'networkDestination' : { 'verbose-name' : 'Dst IP'
+                                 },
+            'networkSourceMaskLen' : { 'verbose-name' : 'Src IP Bits'
+                                 },
+            'networkDestinationMaskLen' : { 'verbose-name' : 'Dst IP Bits'
+                                 },
+            'networkProtocol'  : { 'verbose-name' : 'Protocol',
+                                    'formatter' : fmtcnv.decode_network_protocol
+                                 },
+            'networkTypeOfService' : { 'verbose-name' : 'TOS Bits'
+                                 },
+            'transportSource'  : { 'verbose-name' : 'Src Port',
+                                   'formatter' : fmtcnv.decode_src_port
+                                 },
+            'transportDestination' : { 'verbose-name' : 'Dst Port',
+                                       'formatter' : fmtcnv.decode_dst_port
+                                 },
+            'actions'          : { 'verbose-name' : 'Actions',
+                                    'formatter' : fmtcnv.decode_actions
+                                 },
+            'vnsName'          : { 'verbose-name' : 'VNS'
+                                 },
+            'vnsFlowCnt'       : { 'verbose-name' : 'Flows'
+                                 },
+            'flowEntryCnt'     : { 'verbose-name' : 'Flow-Entries'
+                                 },
+            'mplsTc'           : { 'verbose-name' : 'MPLS_TC'
+                                 },
+            'mplsLabel'        : { 'verbose-name' : 'MPLS_LABEL'
                                  },
             }
         },

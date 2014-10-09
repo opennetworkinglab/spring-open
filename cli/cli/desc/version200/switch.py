@@ -189,9 +189,7 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                         'field'      : 'realtimestats',
                         'type'       : 'enum',
                         'values'     : ('aggregate',
-                                        'flow',
                                         'port',
-                                        'table',
                                         'desc',
                                         'queue',
                                         'group'
@@ -234,6 +232,44 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                         'type'     : 'enum',
                         'values'   : ('details','brief'),
                         'doc'      : 'format|+',
+                    },
+                ),
+                (
+                    {
+                        'field'      : 'realtimestats',
+                        'type'       : 'enum',
+                        'values'     : 'table',
+                        #'args':(
+                        #        {
+                        #         'field'      : 'tabletype',
+                        #             'type'       : 'enum',
+                        #             'values'     : ('ip',
+                        #                             'acl',
+                        #                             'mpls'
+                        #                             ),
+                        #         },
+                        #        )
+                    },
+                    {
+                        'field'    : 'tabletype',
+                        'type'     : 'enum',
+                        'values'     : ('ip',
+                                        'acl',
+                                        'mpls'
+                                        ),
+                        'doc'      : 'format|+',
+                    },
+                  {
+                        'field'    : 'tableflow',
+                        'type'     : 'enum',
+                        'values'     : ('flow',
+                                        ),
+                        'action'     : 'display-rest',
+                        'url'        : 'realtimestats/%(realtimestats)s/%(tabletype)s/%(tableflow)s/%(dpid)s/',
+                        'rest-type'  : 'dict-of-list-of-switch',
+                        'format'     : 'realtime_%(realtimestats)s_%(tabletype)s_flow',
+                        'short-help' : 'Show requested item by querying switch',
+                        'doc'        : 'switch|realtime-+',
                     },
                 ),
             )

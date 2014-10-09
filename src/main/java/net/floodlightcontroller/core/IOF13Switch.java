@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.projectfloodlight.openflow.types.TableId;
+
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
@@ -131,5 +133,12 @@ public interface IOF13Switch extends IOFSwitch {
     public void removePortFromGroups(PortNumber port);
 
     public void addPortToGroups(PortNumber port);
+    /**
+     * give string tableType (ip, mpls, acl)
+     * @param tableType  String equal to only one of (ip, mpls, acl)
+     * @return TableId 
+     */
+    
+    public TableId getTableId(String tableType);
 
 }

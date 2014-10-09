@@ -8,6 +8,7 @@ import java.util.Set;
 import net.floodlightcontroller.core.web.OFFlowStatsEntryMod;
 
 import org.projectfloodlight.openflow.protocol.action.*;
+import org.apache.commons.codec.binary.Hex;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -73,7 +74,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                 jGen.writeStringField("dataLayerSource", matchGeneric.getValue().toString());
             }
             else if (matchGeneric.getMatchField().id == MatchFields.ETH_TYPE){
-                jGen.writeStringField("dataLayerType", "0x"+matchGeneric.getValue().toString());
+                jGen.writeNumberField("dataLayerType", Integer.decode("0x"+matchGeneric.getValue().toString()));
             }
             else if (matchGeneric.getMatchField().id == MatchFields.IN_PORT){
                 jGen.writeNumberField("inputPort", Integer.parseInt(matchGeneric.getValue().toString()));
