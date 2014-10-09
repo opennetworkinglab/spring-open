@@ -719,6 +719,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             }
             edgeLabels.add(((SegmentRouterConfig) sc).getNodeSid());
         }
+        log.debug("getAllEdgeLabels: Node Labels found {}", edgeLabels);
     }
 
     private boolean isNodeLabelAndEdgeLabelSame(Dpid dpid, int edgeLabel) {
@@ -801,6 +802,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
          * NOTE: Avoid any pairings of edge routers only
          */
         Set<Set<Dpid>> powerSet = getAllNeighborSets(dpids);
+        log.debug("The size of neighbor powerset for sw {} is ",
+                getStringId(), powerSet.size());
         Set<NeighborSet> nsSet = new HashSet<NeighborSet>();
         for (Set<Dpid> combo : powerSet) {
             if (combo.isEmpty())
@@ -828,6 +831,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 nsSet.add(ns);
             }
         }
+        log.debug("The neighborset with label for sw {} is ",
+                getStringId(), nsSet);
 
         int groupid = 1;
         for (NeighborSet ns : nsSet) {
