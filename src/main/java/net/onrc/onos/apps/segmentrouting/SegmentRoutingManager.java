@@ -389,7 +389,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             IOF13Switch sw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(port.getDpid().toString()));
-            sw.addPortToGroups(port.getPortNumber());
+            if (sw != null)
+                sw.addPortToGroups(port.getPortNumber());
 
             log.debug("Add port {} to switch {}", port, dpid);
         }
@@ -704,6 +705,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             String routerIp = destSwitch.getStringAttribute("routerIp");
             setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw,
                     null, modified);
+            // Edge router can be a transit router
+            setMplsTable(targetSw, getMplsLabel(destSw), fwdToSw, modified);
         }
         // Only if the target switch is the edge router, then set the IP rules
         else if (IsEdgeRouter(targetSw.getDpid().toString())) {
@@ -713,6 +716,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             String routerIp = destSwitch.getStringAttribute("routerIp");
             setIpTableRouter(targetSw, routerIp, getMplsLabel(destSw), fwdToSw,
                     null, modified);
+            // Edge router can be a transit router
+            setMplsTable(targetSw, getMplsLabel(destSw), fwdToSw, modified);
         }
         // if it is a transit router, then set rules in the MPLS table
         else {
@@ -750,10 +755,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(targetSw.getDpid().toString()));
 
-            try {
-                sw13.pushFlows(entries);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (sw13 != null) {
+                try {
+                    sw13.pushFlows(entries);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -808,6 +815,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         Ipv4Match ipMatch = new Ipv4Match(subnetIp);
         List<Action> actions = new ArrayList<>();
+        GroupAction groupAction = new GroupAction();
 
         // If destination SW is the same as the fwd SW, then do not push MPLS
         // label
@@ -822,6 +830,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             //actions.add(copyTtlOutAction);
             //actions.add(decMplsTtlAction);
             actions.add(setIdAction);
+            groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
+
         }
         else {
             String fwdToSw = fwdToSws.get(0);
@@ -840,11 +850,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 //actions.add(copyTtlOutAction);
                 //actions.add(decMplsTtlAction);
                 actions.add(setIdAction);
+                groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
             }
         }
-
-        GroupAction groupAction = new GroupAction();
-        groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
 
         for (String fwdSw : fwdToSws) {
             groupAction.addSwitch(new Dpid(fwdSw));
