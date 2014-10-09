@@ -37,7 +37,7 @@ import url_cache
 
 from midw import *
 from vnsw import *
-from html5lib.constants import DataLossWarning
+#from html5lib.constants import DataLossWarning
 
 onos=1
 #

@@ -348,7 +348,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                         getSwId(dstPort.getDpid().toString()));
                 // TODO: please enable it when driver feature is implemented
-                dstSw.removePortFromGroups(dstPort.getNumber());
+                //dstSw.removePortFromGroups(dstPort.getNumber());
                 log.debug("MasterSwitch {} is gone: remove port {}", sw.getDpid(), dstPort);
 
             }
@@ -370,7 +370,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                         getSwId(dstPort.getDpid().toString()));
                 if (dstSw != null) {
-                    dstSw.removePortFromGroups(dstPort.getNumber());
+                    //dstSw.removePortFromGroups(dstPort.getNumber());
                     log.debug("Switch {} is gone: remove port {}", sw.getDpid(), dstPort);
                 }
             }
@@ -459,11 +459,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     getSwId(srcPort.getDpid().toString()));
             IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(srcPort.getDpid().toString()));
-
+            /*
             if (srcSw != null)
                 srcSw.removePortFromGroups(srcPort.getPortNumber());
             if (dstSw != null)
                 dstSw.removePortFromGroups(dstPort.getPortNumber());
+            */
 
             Switch srcSwitch = mutableTopology.getSwitch(srcPort.getDpid());
             if (srcSwitch.getLinkToNeighbor(dstPort.getDpid()) == null) {
@@ -485,6 +486,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param portEntries
      */
     private void processPortRemoval(Collection<PortData> portEntries) {
+        /*
         for (PortData port : portEntries) {
             Dpid dpid = port.getDpid();
 
@@ -494,6 +496,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 sw.removePortFromGroups(port.getPortNumber());
             log.debug("Remove port {} from switch {}", port, dpid);
         }
+        */
     }
 
     /**
