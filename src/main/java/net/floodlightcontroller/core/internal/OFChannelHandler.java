@@ -2077,12 +2077,15 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             counters.switchDisconnectSwitchStateException.updateCounterWithFlush();
             ctx.getChannel().close();
         } else if (e.getCause() instanceof OFParseError) {
-            log.error("Disconnecting switch "
+            log.error("Parse failure in switch "
                     + getSwitchInfoString() +
                     " due to message parse failure",
                     e.getCause());
             counters.switchDisconnectParseError.updateCounterWithFlush();
-            ctx.getChannel().close();
+            // OFParse errors should now be handled in the OFMessageDecoder
+            // So it should never get here. Nevertheless we should not close
+            // channels for parse errors.
+            // ctx.getChannel().close();
         } else if (e.getCause() instanceof RejectedExecutionException) {
             log.warn("Could not process message: queue full");
             counters.rejectedExecutionException.updateCounterWithFlush();
@@ -2385,6 +2388,10 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     ChannelState getStateForTesting() {
         return state;
+    }
+
+    public String getChannelSwitchInfo() {
+        return sw.getStringId();
     }
 
     void useRoleChangerWithOtherTimeoutForTesting(long roleTimeoutMs) {

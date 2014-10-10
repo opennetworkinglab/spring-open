@@ -17,21 +17,22 @@
 
 package net.floodlightcontroller.core.internal;
 
-import java.util.List;
-
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import org.projectfloodlight.openflow.exceptions.OFParseError;
 import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFMessageReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Decode an openflow message from a Channel, for use in a netty pipeline
  */
 public class OFMessageDecoder extends FrameDecoder {
-
+    private static final Logger log = LoggerFactory.getLogger(OFMessageDecoder.class);
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel,
                             ChannelBuffer buffer) throws Exception {
@@ -49,9 +50,23 @@ public class OFMessageDecoder extends FrameDecoder {
         // a list of the parsed messages to the controller.
         // The performance *may or may not* not be as good as before.
         OFMessageReader<OFMessage> reader = OFFactories.getGenericReader();
-		OFMessage message = reader.readFrom(buffer);
+        OFMessage message = null;
+        try {
+            message = reader.readFrom(buffer);
+        } catch (OFParseError e) {
+            OFChannelHandler ofch = (OFChannelHandler) ctx.getPipeline().getLast();
+            log.error("Parse failure of incoming message from switch "
+                    + ofch.getChannelSwitchInfo() + " Index:Byte ==> {}:{}  {}",
+                    buffer.readerIndex(),
+                    buffer.getByte(buffer.readerIndex()),
+                    buffer.array());
 
-		return message;
+            buffer.clear(); // MUST CLEAR BUFFER or next message will be read
+                            // incorrectly
+            return null;
+        }
+
+        return message;
     }
 
 }

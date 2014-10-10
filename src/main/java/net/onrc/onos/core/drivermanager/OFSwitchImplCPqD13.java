@@ -77,12 +77,14 @@ import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmInPort;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
+import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsBos;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.IpProtocol;
 import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.types.OFBooleanValue;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFGroup;
 import org.projectfloodlight.openflow.types.OFPort;
@@ -1260,7 +1262,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 .ethType(EthType.MPLS_UNICAST);
         OFOxmMplsLabel labelid = factory.oxms()
                 .mplsLabel(U32.of(mplsm.getMplsLabel()));
-        OFOxmList oxmList = OFOxmList.of(ethTypeMpls, labelid);
+        // OFOxmMplsBos bos = factory.oxms()
+        // .mplsBos(OFBooleanValue.of(mplsm.isBos()));
+        OFOxmList oxmList = OFOxmList.of(ethTypeMpls, labelid); // XXX add bos
         OFMatchV3 matchlabel = factory.buildMatchV3()
                 .setOxmList(oxmList).build();
 
@@ -1369,21 +1373,21 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
 
         // set actions
-        List<OFAction> applyActions = new ArrayList<OFAction>();
+        List<OFAction> writeActions = new ArrayList<OFAction>();
         for (Action action : ma.getActions()) {
             OFAction ofAction = getOFAction(action);
             if (ofAction != null) {
-                applyActions.add(ofAction);
+                writeActions.add(ofAction);
             }
         }
 
         // set instructions
         OFInstruction clearInstr = factory.instructions().clearActions();
-        OFInstruction applyInstr = factory.instructions().buildApplyActions()
-                .setActions(applyActions).build();
+        OFInstruction writeInstr = factory.instructions().buildWriteActions()
+                .setActions(writeActions).build();
         List<OFInstruction> instructions = new ArrayList<OFInstruction>();
         instructions.add(clearInstr);
-        instructions.add(applyInstr);
+        instructions.add(writeInstr);
 
         // set flow-mod
         OFFlowMod.Builder fmBuilder = null;
@@ -1464,6 +1468,24 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             return -1;
         } else {
             return ei.groupId;
+        }
+    }
+
+    @Override
+    public TableId getTableId(String tableType) {
+        tableType = tableType.toLowerCase();
+        if (tableType.contentEquals("ip")) {
+            return TableId.of(OFSwitchImplCPqD13.TABLE_IPv4_UNICAST);
+        }
+        else if (tableType.contentEquals("mpls")) {
+            return TableId.of(OFSwitchImplCPqD13.TABLE_MPLS);
+        }
+        else if (tableType.contentEquals("acl")) {
+            return TableId.of(OFSwitchImplCPqD13.TABLE_ACL);
+        }
+        else {
+            log.warn("Invalid tableType: {}", tableType);
+            return null;
         }
     }
 
@@ -1549,21 +1571,185 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         log.info("Sw: {} Group Features {}", getStringId(), gfsr);
     }
 
-    @Override
-    public TableId getTableId(String tableType) {
-        tableType = tableType.toLowerCase();
-        if(tableType.contentEquals("ip")){
-            return TableId.of(OFSwitchImplCPqD13.TABLE_IPv4_UNICAST);
-        }
-        else if (tableType.contentEquals("mpls")){
-            return TableId.of(OFSwitchImplCPqD13.TABLE_MPLS);
-        }
-        else if (tableType.contentEquals("acl")){
-            return TableId.of(OFSwitchImplCPqD13.TABLE_ACL);
-        }
-        else{
-            log.warn("Invalid tableType: {}", tableType);
-            return null;
+    @SuppressWarnings("unused")
+    private void testMultipleLabels() {
+        if (getId() == 1) {
+            List<OFMessage> msglist = new ArrayList<OFMessage>();
+
+            // first all the indirect groups
+
+            // the group to switch 2 with outer label
+            OFGroup g1 = OFGroup.of(201);
+            OFOxmEthDst dmac1 = factory.oxms().ethDst(MacAddress.of("00:00:02:02:02:80"));
+            OFAction push1 = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+            OFOxmMplsLabel lid1 = factory.oxms()
+                    .mplsLabel(U32.of(105)); // outer label
+            OFAction setMpls1 = factory.actions().buildSetField()
+                    .setField(lid1).build();
+            OFOxmMplsBos bos1 = factory.oxms()
+                    .mplsBos(OFBooleanValue.FALSE);
+            OFAction setB1 = factory.actions().buildSetField()
+                    .setField(bos1).build();
+            OFAction setDA1 = factory.actions().buildSetField()
+                    .setField(dmac1).build();
+            OFAction outp1 = factory.actions().buildOutput()
+                    .setPort(OFPort.of(2))
+                    .build();
+            List<OFAction> a1 = new ArrayList<OFAction>();
+            a1.add(push1);
+            a1.add(setMpls1);
+            a1.add(setB1);
+            a1.add(setDA1);
+            a1.add(outp1);
+            OFBucket b1 = factory.buildBucket()
+                    .setActions(a1)
+                    .build();
+            OFMessage gm1 = factory.buildGroupAdd()
+                    .setGroup(g1)
+                    .setBuckets(Collections.singletonList(b1))
+                    .setGroupType(OFGroupType.INDIRECT)
+                    .setXid(getNextTransactionId())
+                    .build();
+            msglist.add(gm1);
+
+            // the group to switch 3 with outer label
+            OFGroup g2 = OFGroup.of(301);
+            OFOxmEthDst dmac2 = factory.oxms().ethDst(MacAddress.of("00:00:03:03:03:80"));
+            OFAction push2 = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+            OFOxmMplsLabel lid2 = factory.oxms()
+                    .mplsLabel(U32.of(104)); // outer label
+            OFAction setMpls2 = factory.actions().buildSetField()
+                    .setField(lid2).build();
+            OFOxmMplsBos bos2 = factory.oxms()
+                    .mplsBos(OFBooleanValue.FALSE);
+            OFAction setB2 = factory.actions().buildSetField()
+                    .setField(bos2).build();
+            OFAction setDA2 = factory.actions().buildSetField()
+                    .setField(dmac2).build();
+            OFAction outp2 = factory.actions().buildOutput()
+                    .setPort(OFPort.of(3))
+                    .build();
+            List<OFAction> a2 = new ArrayList<OFAction>();
+            a2.add(push2);
+            a2.add(setMpls2);
+            a2.add(setB2);
+            a2.add(setDA2);
+            a2.add(outp2);
+            OFBucket b2 = factory.buildBucket()
+                    .setActions(a2)
+                    .build();
+            OFMessage gm2 = factory.buildGroupAdd()
+                    .setGroup(g2)
+                    .setBuckets(Collections.singletonList(b2))
+                    .setGroupType(OFGroupType.INDIRECT)
+                    .setXid(getNextTransactionId())
+                    .build();
+            msglist.add(gm2);
+
+            // now add main ECMP group with inner labels
+            OFGroup group = OFGroup.of(786);
+            List<OFBucket> buckets = new ArrayList<OFBucket>();
+            for (int i = 0; i < 2; i++) { // 2 buckets
+
+                List<OFAction> actions = new ArrayList<OFAction>();
+                OFOxmEthSrc smac = factory.oxms()
+                        .ethSrc(MacAddress.of("00:00:01:01:01:80"));
+                OFAction setSA = factory.actions().buildSetField()
+                        .setField(smac).build();
+                actions.add(setSA);
+
+                if (i == 0) {
+                    // send to switch 2
+                    OFAction pushX = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+                    OFOxmMplsLabel lidX = factory.oxms()
+                            .mplsLabel(U32.of(106)); // inner label
+                    OFAction setX = factory.actions().buildSetField()
+                            .setField(lidX).build();
+                    OFOxmMplsBos bosX = factory.oxms()
+                            .mplsBos(OFBooleanValue.TRUE);
+                    OFAction setBX = factory.actions().buildSetField()
+                            .setField(bosX).build();
+                    OFAction ogX = factory.actions().buildGroup()
+                            .setGroup(g1).build();
+                    actions.add(pushX);
+                    actions.add(setX);
+                    actions.add(setBX);
+                    actions.add(ogX);
+
+                } else {
+                    // send to switch 3
+                    OFAction pushY = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+                    OFOxmMplsLabel lidY = factory.oxms()
+                            .mplsLabel(U32.of(106)); // inner label
+                    OFAction setY = factory.actions().buildSetField()
+                            .setField(lidY).build();
+                    OFOxmMplsBos bosY = factory.oxms()
+                            .mplsBos(OFBooleanValue.TRUE);
+                    OFAction setBY = factory.actions().buildSetField()
+                            .setField(bosY).build();
+                    OFAction ogY = factory.actions().buildGroup()
+                            .setGroup(g2).build();
+                    actions.add(pushY);
+                    actions.add(setY);
+                    actions.add(setBY);
+                    actions.add(ogY);
+                }
+
+                OFBucket ofb = factory.buildBucket()
+                        .setWeight(1)
+                        .setActions(actions)
+                        .build();
+                buckets.add(ofb);
+            }
+
+            OFMessage gm = factory.buildGroupAdd()
+                    .setGroup(group)
+                    .setBuckets(buckets)
+                    .setGroupType(OFGroupType.SELECT)
+                    .setXid(getNextTransactionId())
+                    .build();
+            msglist.add(gm);
+
+            // create an ACL entry to use this ecmp group
+            Builder matchBuilder = factory.buildMatch();
+            matchBuilder.setExact(MatchField.ETH_TYPE, EthType.of(0x800));
+            matchBuilder.setMasked(MatchField.IPV4_DST,
+                    IPv4Address.of("7.7.7.0")
+                            .withMaskOfLength(24));
+
+            OFAction grp = factory.actions().buildGroup()
+                    .setGroup(OFGroup.of(786))
+                    .build();
+            List<OFAction> writeActions = Collections.singletonList(grp);
+
+            OFInstruction clearInstr = factory.instructions().clearActions();
+            OFInstruction writeInstr = factory.instructions().buildWriteActions()
+                    .setActions(writeActions).build();
+            List<OFInstruction> instructions = new ArrayList<OFInstruction>();
+            instructions.add(clearInstr);
+            instructions.add(writeInstr);
+
+            OFFlowMod.Builder fmBuilder = factory.buildFlowAdd();
+
+            OFMessage aclFlow = fmBuilder
+                    .setTableId(TableId.of(TABLE_ACL))
+                    .setMatch(matchBuilder.build())
+                    .setInstructions(instructions)
+                    .setPriority(10) // TODO: wrong - should be MA
+                                     // priority
+                    .setBufferId(OFBufferId.NO_BUFFER)
+                    .setIdleTimeout(0)
+                    .setHardTimeout(0)
+                    .setXid(getNextTransactionId())
+                    .build();
+            msglist.add(aclFlow);
+
+            try {
+                write(msglist);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
 
