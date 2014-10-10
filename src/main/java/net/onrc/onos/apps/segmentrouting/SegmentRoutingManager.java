@@ -389,10 +389,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             IOF13Switch sw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(port.getDpid().toString()));
-            if (sw != null)
+            if (sw != null) {
                 sw.addPortToGroups(port.getPortNumber());
-
-            log.debug("Add port {} to switch {}", port, dpid);
+                log.debug("Add port {} to switch {}", port, dpid);
+            }
         }
     }
 
@@ -418,12 +418,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
             IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(dstPort.getDpid().toString()));
 
-            if ((srcSw != null) && (dstSw != null))
+            if ((srcSw == null) || (dstSw == null))
                 /* If this link is not between two switches, ignore it */
                 continue;
 
             srcSw.addPortToGroups(srcPort.getPortNumber());
             dstSw.addPortToGroups(dstPort.getPortNumber());
+
+            log.debug("Add port {} to switch {}", srcPort, srcSw);
+            log.debug("Add port {} to switch {}", dstPort, dstSw);
 
             /*
             if (!topologyLinks.contains(link)) {
@@ -461,11 +464,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     getSwId(srcPort.getDpid().toString()));
             IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(dstPort.getDpid().toString()));
-            if ((srcSw != null) && (dstSw != null))
+            if ((srcSw == null) || (dstSw == null))
                 /* If this link is not between two switches, ignore it */
                 continue;
             srcSw.removePortFromGroups(srcPort.getPortNumber());
             dstSw.removePortFromGroups(dstPort.getPortNumber());
+
+            log.debug("Remove port {} from switch {}", srcPort, srcSw);
+            log.debug("Remove port {} from switch {}", dstPort, dstSw);
 
             Switch srcSwitch = mutableTopology.getSwitch(srcPort.getDpid());
             if (srcSwitch.getLinkToNeighbor(dstPort.getDpid()) == null) {
@@ -492,9 +498,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             IOF13Switch sw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(port.getDpid().toString()));
-            if (sw != null)
+            if (sw != null) {
                 sw.removePortFromGroups(port.getPortNumber());
-            log.debug("Remove port {} from switch {}", port, dpid);
+                log.debug("Remove port {} from switch {}", port, dpid);
+            }
         }
     }
 
