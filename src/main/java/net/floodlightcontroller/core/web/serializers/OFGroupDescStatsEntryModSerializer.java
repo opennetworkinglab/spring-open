@@ -36,8 +36,6 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
             jGen.writeStartObject();
             List<OFAction> actions = bucket.getActions();
             for (OFAction action : actions ){
-                System.out.println("OFMessage: " + groupDescStatsEntryMod);
-                System.out.println("\naction.getType()\n"+ action.getType()+"\n"+ action.getClass());
                 if(action.getType().compareTo(OFActionType.SET_FIELD) == 0){
                     /*
                      * TODO: 1-Need better if condition.
@@ -63,7 +61,6 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
                 //}
                 else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0){
                     jGen.writeStringField("POP_MPLS", "True");
-                    System.out.println("\n\n\nPOP:" + Integer.decode("0x"+((OFActionPopMpls)action).getEthertype().toString()));
                 }
                 
             }

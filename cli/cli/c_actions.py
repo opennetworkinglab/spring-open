@@ -42,7 +42,33 @@ from vnsw import *
 onos=1
 #
 # ACTION PROCS
-#
+#Format actions for stats per table
+def format_actions(actions):
+    if actions == '':
+        newActions = '*'
+    else:
+        #TODO: Check:- Why I have to remove last two character from string
+        #instead of 1 character to get rid of comma from last aciton
+        actions = actions[:-2]
+        a=''
+        b=''
+        newActions=''
+        isRemoved_u = False
+        for ch in actions:
+            if ch =='u':
+                a= 'u'
+            if ch =='\'':
+                b= '\''
+                if isRemoved_u:
+                    isRemoved_u=False
+                    continue
+                if (a+b) == 'u\'':
+                    newActions = newActions[:-1]
+                    a= ''
+                    isRemoved_u = True
+            else:
+                newActions += ch
+    return newActions
 
 def check_rest_result(result, message=None):
     if isinstance(result, collections.Mapping):
@@ -1982,36 +2008,47 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 match = ipTableEntry['match']
                 if match :
                     networkDestination = match[0].get('networkDestination') if match[0].get('networkDestination') else '*'
-                    #raise error.ArgumentValidationError('\n\n\n %s' %match)
-                #else:
-                #     networkSource = None
-                #     networkDestination = None
+                    #raise error.ArgumentValidationError('\n\n\n %s' % json.tool(entries))
+                instructions = ipTableEntry['instructions']
+                actions = ''
+                for instruction in instructions:
+                    actions +=  str(instruction)
+                    actions += ", "
+                actions = format_actions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
                        'packetCount'   : ipTableEntry['packetCount'],
+                       'priority'      : ipTableEntry['priority'],
                        'cookie'        : ipTableEntry['cookie'],
                        'durationSeconds'         : ipTableEntry['durationSec'],
                        'networkDestination'      : networkDestination,
+                       'actions'                 : actions,
                     })
         elif data['tabletype'] == 'mpls':
+            import unicodedata
             for ipTableEntry in entries:
                 match = ipTableEntry['match']
                 if match :
-                    mplsTc = match[0].get('mplsTc')
-                    mplsLabel = match[0].get('mplsLabel')
-                    #raise error.ArgumentValidationError('\n\n\n %s' %match)
-                #else:
-                #     networkSource = None
-                #     networkDestination = None
+                    mplsTc = match[0].get('mplsTc') if match[0].get('mplsTc') else '*'
+                    mplsLabel = match[0].get('mplsLabel') if match[0].get('mplsLabel') else '*'
+                instructions = ipTableEntry['instructions']
+                actions = ''
+                #raise error.ArgumentValidationError('\n\n\n %s' %len(actions))
+                for instruction in instructions:
+                    actions +=  str(instruction).encode('ascii', 'ignore')
+                    actions += ", "
+                actions = format_actions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
                        'packetCount'   : ipTableEntry['packetCount'],
                        'cookie'        : ipTableEntry['cookie'],
+                       'priority'      : ipTableEntry['priority'],
                        'mplsTc'         : mplsTc,
                        'mplsLabel'      : mplsLabel,
-                       'durationSeconds'        : ipTableEntry['durationSec']
+                       'durationSeconds'        : ipTableEntry['durationSec'],
+                       'actions'        : actions
                     })
         elif data['tabletype'] == 'acl':
             for ipTableEntry in entries:
@@ -2029,11 +2066,19 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                     dataLayerSource = match[0].get('dataLayerSource') if match[0].get('dataLayerSource') else '*'
                     dataLayerDestination = match[0].get('dataLayerDestination') if match[0].get('dataLayerDestination') else '*'
                     dataLayerType= match[0].get('dataLayerType') if match[0].get('dataLayerType') else '*'
+                instructions = ipTableEntry['instructions']
+                actions = ''
+                #raise error.ArgumentValidationError('\n\n\n %s' %len(actions))
+                for instruction in instructions:
+                    actions +=  str(instruction).encode('ascii', 'ignore')
+                    actions += ", "
+                actions = format_actions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
                        'packetCount'   : ipTableEntry['packetCount'],
                        'cookie'        : ipTableEntry['cookie'],
+                       'priority'      : ipTableEntry['priority'],
                        'inputPort'               : inputPort,
                        'durationSeconds'         : ipTableEntry['durationSec'],
                        'networkSource'           : networkSource,
@@ -2045,7 +2090,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'mplsTc'                  : mplsTc,
                        'mplsLabel'               : mplsLabel,
                        'transportDestination'    : transportDestination,
-                       'transportSource'         : transportSource
+                       'transportSource'         : transportSource,
+                       'actions'                 : actions
                     })
         entries = combResult
 
