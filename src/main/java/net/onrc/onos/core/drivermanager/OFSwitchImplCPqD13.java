@@ -1147,16 +1147,16 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         } else if (action instanceof GroupAction) {
             NeighborSet ns = ((GroupAction) action).getDpids();
             EcmpInfo ei = ecmpGroups.get(ns);
-            if (ei != null) {
-                int gid = ei.groupId;
-                ofAction = factory.actions().buildGroup()
-                        .setGroup(OFGroup.of(gid))
-                        .build();
-            } else {
+            if (ei == null) {
                 log.debug("Unable to find ecmp group for neighbors {} at "
                         + "switch {} and hence creating it", ns, getStringId());
                 createGroupForANeighborSet(ns, groupid.incrementAndGet());
+                ei = ecmpGroups.get(ns);
             }
+            int gid = ei.groupId;
+            ofAction = factory.actions().buildGroup()
+                    .setGroup(OFGroup.of(gid))
+                    .build();
         } else if (action instanceof DecNwTtlAction) {
             ofAction = factory.actions().decNwTtl();
         } else if (action instanceof DecMplsTtlAction) {
