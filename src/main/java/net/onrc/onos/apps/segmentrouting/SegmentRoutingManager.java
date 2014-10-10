@@ -290,17 +290,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         // TODO: We handle multiple events with one path re-computation
-        if (!linkEntriesAdded.isEmpty()) {
-            processLinkAdd(linkEntriesAdded);
-        }
 
-        if (!portEntriesAdded.isEmpty()) {
-            processPortAdd(portEntriesAdded);
-        }
-
-        if (!switchAdded.isEmpty()) {
-            processSwitchAdd(switchAdded);
-        }
 
         if (!portEntriesRemoved.isEmpty()) {
             processPortRemoval(portEntriesRemoved);
@@ -317,6 +307,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
         if (!mastershipRemoved.isEmpty()) {
             processMastershipRemoved(mastershipRemoved);
         }
+
+        if (!linkEntriesAdded.isEmpty()) {
+            processLinkAdd(linkEntriesAdded);
+        }
+
+        if (!portEntriesAdded.isEmpty()) {
+            processPortAdd(portEntriesAdded);
+        }
+
+        if (!switchAdded.isEmpty()) {
+            processSwitchAdd(switchAdded);
+        }
+
 
         log.debug("num events {}, num of process {}, "
                 + "num of Population {}", numOfEvents, numOfEventProcess,
