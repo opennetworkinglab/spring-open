@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.core.IOF13Switch;
@@ -20,6 +21,7 @@ import net.floodlightcontroller.core.SwitchDriverSubHandshakeCompleted;
 import net.floodlightcontroller.core.SwitchDriverSubHandshakeNotStarted;
 import net.floodlightcontroller.core.internal.OFSwitchImplBase;
 import net.floodlightcontroller.util.MACAddress;
+import net.floodlightcontroller.util.OrderedCollection;
 import net.onrc.onos.core.configmanager.INetworkConfigService;
 import net.onrc.onos.core.configmanager.INetworkConfigService.NetworkConfigState;
 import net.onrc.onos.core.configmanager.INetworkConfigService.SwitchConfigStatus;
@@ -64,6 +66,7 @@ import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFPortStatus;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
@@ -136,6 +139,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private int sid;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
+    private AtomicInteger groupid;
 
 
 
@@ -152,6 +156,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
         segmentIds = new ArrayList<Integer>();
         isEdgeRouter = false;
+        groupid = new AtomicInteger(0);
         this.usePipeline13 = usePipeline13;
     }
 
@@ -311,6 +316,28 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             modifyEcmpGroup(portEcmpInfo);
         }
         return;
+    }
+
+    @Override
+    public OrderedCollection<PortChangeEvent> processOFPortStatus(OFPortStatus ps) {
+        OrderedCollection<PortChangeEvent> events = super.processOFPortStatus(ps);
+        for (PortChangeEvent e : events) {
+            switch (e.type) {
+            case DELETE:
+            case DOWN:
+                log.debug("processOFPortStatus: sw {} Port {} DOWN",
+                        getStringId(), e.port.getPortNo().getPortNumber());
+                removePortFromGroups(PortNumber.uint32(
+                        e.port.getPortNo().getPortNumber()));
+                break;
+            case UP:
+                log.debug("processOFPortStatus: sw {} Port {} UP",
+                        getStringId(), e.port.getPortNo().getPortNumber());
+                addPortToGroups(PortNumber.uint32(
+                        e.port.getPortNo().getPortNumber()));
+            }
+        }
+        return events;
     }
 
     // *****************************
@@ -816,6 +843,38 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         return sets;
     }
 
+    private void createGroupForANeighborSet(NeighborSet ns, int groupId) {
+        List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+        for (Dpid d : ns.getDpids()) {
+            for (PortNumber sp : neighbors.get(d)) {
+                BucketInfo b = new BucketInfo(d,
+                        MacAddress.of(srConfig.getRouterMac()),
+                        getNeighborRouterMacAddress(d), sp,
+                        ns.getEdgeLabel());
+                buckets.add(b);
+
+                /* Update Port Neighborset map */
+                ArrayList<NeighborSet> portNeighborSets =
+                        portNeighborSetMap.get(sp);
+                if (portNeighborSets == null) {
+                    portNeighborSets = new ArrayList<NeighborSet>();
+                    portNeighborSets.add(ns);
+                    portNeighborSetMap.put(sp, portNeighborSets);
+                }
+                else
+                    portNeighborSets.add(ns);
+            }
+        }
+        EcmpInfo ecmpInfo = new EcmpInfo(groupId, buckets);
+        setEcmpGroup(ecmpInfo);
+        ecmpGroups.put(ns, ecmpInfo);
+        log.debug(
+                "createGroupForANeighborSet: Creating ecmp group {} in sw {} "
+                        + "for neighbor set {} with: {}",
+                groupId, getStringId(), ns, ecmpInfo);
+        return;
+    }
+
     /**
      * createGroups creates ECMP groups for all ports on this router connected
      * to other routers (in the OF network). The information for ports is
@@ -875,41 +934,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         log.debug("createGroups: The neighborset with label for sw {} is {}",
                 getStringId(), nsSet);
 
-        int groupid = 1;
         for (NeighborSet ns : nsSet) {
-            List<BucketInfo> buckets = new ArrayList<BucketInfo>();
-            for (Dpid d : ns.getDpids()) {
-                for (PortNumber sp : neighbors.get(d)) {
-                    BucketInfo b = new BucketInfo(d,
-                            MacAddress.of(srConfig.getRouterMac()),
-                            getNeighborRouterMacAddress(d), sp,
-                            ns.getEdgeLabel());
-                    buckets.add(b);
-
-                    /* Update Port Neighborset map */
-                    ArrayList<NeighborSet> portNeighborSets =
-                            portNeighborSetMap.get(sp);
-                    if (portNeighborSets == null) {
-                        portNeighborSets = new ArrayList<NeighborSet>();
-                        portNeighborSets.add(ns);
-                        portNeighborSetMap.put(sp, portNeighborSets);
-                    }
-                    else
-                        portNeighborSets.add(ns);
-                }
-            }
-            EcmpInfo ecmpInfo = new EcmpInfo(groupid++, buckets);
-            setEcmpGroup(ecmpInfo);
-            ecmpGroups.put(ns, ecmpInfo);
-            log.debug(
-                    "createGroups: Creating ecmp group in sw {} for neighbor set {}: {}",
-                    getStringId(), ns, ecmpInfo);
+            createGroupForANeighborSet(ns, groupid.incrementAndGet());
         }
-
-        // temp map of ecmp groupings
-        /*        Map<NeighborSet, List<BucketInfo>> temp =
-                        new HashMap<NeighborSet, List<BucketInfo>>();
-        */
     }
 
     private class EcmpInfo {
@@ -1124,8 +1151,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                         .setGroup(OFGroup.of(gid))
                         .build();
             } else {
-                log.error("Unable to find ecmp group for neighbors {} at "
-                        + "switch {}", ns, getStringId());
+                log.debug("Unable to find ecmp group for neighbors {} at "
+                        + "switch {} and hence creating it", ns, getStringId());
+                createGroupForANeighborSet(ns, groupid.incrementAndGet());
             }
         } else if (action instanceof DecNwTtlAction) {
             ofAction = factory.actions().decNwTtl();
