@@ -1925,7 +1925,7 @@ REALTIME_TABLE_IP_FLOW_FORMAT = {
             'transportDestination' : { 'verbose-name' : 'Dst Port',
                                        'formatter' : fmtcnv.decode_dst_port
                                  },
-            'actions'          : { 'verbose-name' : 'Actions',
+            'actions'          : { 'verbose-name' : 'Instructions',
                                  },
             'vnsName'          : { 'verbose-name' : 'VNS'
                                  },
@@ -1945,29 +1945,29 @@ REALTIME_TABLE_MPLS_FLOW_FORMAT = {
             'default' : [
                           'Idx', 'cookie', 'priority',
                           'byteCount', 'packetCount',
-                          'mplsTc', 'mplsLabel',
+                          'mplsLabel','mplsBoS','mplsTc',
                           'flow-brief', 'actions'
                         ],
             'scoped'  : [
                           'Idx', 'byteCount', 'packetCount', 'durationSeconds',
                           'cookie', 'priority',
-                          'mplsTc', 'mplsLabel','actions'
+                           'mplsLabel','mplsBoS','mplsTc','actions'
                         ],
             'brief'   : [ 'Idx', 'byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority',
-                          'mplsTc', 'mplsLabel','actions'
+                          'mplsLabel','mplsBoS','mplsTc','actions'
                           ],
             'default' : [ 'Idx',  'byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority',
-                          'mplsTc', 'mplsLabel','actions'
+                           'mplsLabel','mplsBoS','mplsTc','actions'
                           ],
             'scoped'  : [ 'Idx',  'byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority',
-                          'mplsTc', 'mplsLabel','actions'
+                           'mplsLabel','mplsBoS','mplsTc','actions'
                           ],
             'details' : [ 'Idx', 'byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority',
-                          'mplsTc', 'mplsLabel','actions'
+                         'mplsLabel','mplsBoS','mplsTc','actions'
                           ],
             #'vns_flow': [ 'Idx', 'dataLayerSource', 'dataLayerDestination', 'dataLayerVirtualLan', 'dataLayerType'],
             #'summary' : [ 'Idx', 'vnsName', 'vnsFlowCnt', 'flowEntryCnt'],
@@ -2047,7 +2047,7 @@ REALTIME_TABLE_MPLS_FLOW_FORMAT = {
             'transportDestination' : { 'verbose-name' : 'Dst Port',
                                        'formatter' : fmtcnv.decode_dst_port
                                  },
-            'actions'          : { 'verbose-name' : 'Actions'
+            'actions'          : { 'verbose-name' : 'Instructions'
                                  },
             'vnsName'          : { 'verbose-name' : 'VNS'
                                  },
@@ -2074,32 +2074,32 @@ REALTIME_TABLE_ACL_FLOW_FORMAT = {
                           'Idx',  'cookie', 'priority'
                           'byteCount', 'packetCount',
                          'dataLayerSource', 'dataLayerDestination',
-                          'flow-brief','mplsTc','mplsLabel','actions'
+                          'flow-brief','mplsLabel','mplsBoS','mplsTc','actions'
                         ],
             'scoped'  : [
                           'Idx', 'cookie', 'priority',
                           'byteCount', 'packetCount',
-                          'dataLayerSource', 'dataLayerDestination','mplsTc','mplsLabel',
+                          'dataLayerSource', 'dataLayerDestination','mplsLabel','mplsBoS','mplsTc'
                           'flow-brief','actions'
 
                         ],
             'brief'   : [ 'Idx', 'cookie','priority', 'dataLayerSource', 'dataLayerDestination',
                           'networkSource', 'networkDestination', 'networkProtocol',
-                          'transportSource', 'transportDestination','mplsTc','mplsLabel','actions'],
+                          'transportSource', 'transportDestination','mplsLabel','mplsBoS','mplsTc','actions'],
             'default' : [ 'Idx','byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority', 'inputPort', 'dataLayerSource', 'dataLayerDestination',
                           'dataLayerType', 'networkSource', 'networkDestination', 'networkProtocol',
-                          'transportSource', 'transportDestination','mplsTc','mplsLabel', 'actions'],
+                          'transportSource', 'transportDestination''mplsLabel','mplsBoS','mplsTc', 'actions'],
             'scoped'  : [ 'Idx','byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority', 'inputPort', 'dataLayerSource', 'dataLayerDestination',
                           'dataLayerType', 'networkSource', 'networkDestination', 'networkProtocol',
-                          'transportSource', 'transportDestination','mplsTc','mplsLabel','actions'],
+                          'transportSource', 'transportDestination','mplsLabel','mplsBoS','mplsTc','actions'],
             'details' : [ 'Idx','byteCount', 'packetCount', 'durationSeconds',
                           'cookie', 'priority','hardTimeout', 'idleTimeout', 'priority', 'tableId', 'inputPort',
                           'dataLayerSource', 'dataLayerDestination', 'dataLayerType', 'dataLayerVirtualLan',
                           'dataLayerVirtualLanPriorityCodePoint', 'networkSource', 'networkDestination',
                           'networkProtocol', 'transportSource', 'transportDestination',
-                          'networkTypeOfService','mplsTc','mplsLabel', 'actions'],
+                          'networkTypeOfService','mplsLabel','mplsBoS','mplsTc', 'actions'],
             #'vns_flow': [ 'Idx', 'dataLayerSource', 'dataLayerDestination', 'dataLayerVirtualLan', 'dataLayerType'],
             #'summary' : [ 'Idx', 'vnsName', 'vnsFlowCnt', 'flowEntryCnt'],
             },
@@ -2178,7 +2178,7 @@ REALTIME_TABLE_ACL_FLOW_FORMAT = {
             'transportDestination' : { 'verbose-name' : 'Dst Port',
                                        'formatter' : fmtcnv.decode_dst_port
                                  },
-            'actions'          : { 'verbose-name' : 'Actions'
+            'actions'          : { 'verbose-name' : 'Instructions'
                                  },
             'vnsName'          : { 'verbose-name' : 'VNS'
                                  },

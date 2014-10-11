@@ -49,16 +49,13 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
                         jGen.writeStringField("SET_DL_DST", ((OFActionSetField)action).getField().getValue().toString());
                     }
                     else if (((OFActionSetField)action).getField().toString().contains("OFOxmMplsLabelVer13")){
-                        jGen.writeStringField("PUSH_MPLS", ((OFActionSetField)action).getField().getValue().toString());
+                        jGen.writeNumberField("PUSH_MPLS", 
+                                Integer.decode(((OFActionSetField)action).getField().getValue().toString()));
                     }
                 }
                 else if(action.getType().compareTo(OFActionType.OUTPUT) == 0){
                     jGen.writeNumberField("OUTPPUT", ((OFActionOutput)action).getPort().getPortNumber());
                 }
-                //else if(action.getType().compareTo(OFActionType.PUSH_MPLS) == 0){
-                //    jGen.writeNumberField("POP_MPLS", Integer.parseInt(((OFActionSetField)action).getField().getValue().toString()));
-                //    System.out.println("\n\n\nPOP:" + Integer.decode("0x"+((OFActionPopMpls)action).getEthertype().toString()));
-                //}
                 else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0){
                     jGen.writeStringField("POP_MPLS", "True");
                 }

@@ -38,7 +38,6 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         OFOxmList matches = ((OFMatchV3)flowStatsEntry.getMatch()).getOxmList();
         
         List<OFInstruction> instructions = flowStatsEntry.getInstructions();
-        Set<OFFlowModFlags> flags = flowStatsEntry.getFlags();
         jGen.writeStartObject();
         //System.out.println("flowstats:\n\n\n"+ flowStatsEntry);
         jGen.writeNumberField("byteCount", flowStatsEntry.getByteCount().getValue());
@@ -61,7 +60,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                         +(matchGeneric.isMasked() ?
                                 OFFlowStatsEntryModSerializer.covertToMask(
                                         IPv4.toIPv4Address(
-                                                matchGeneric.getMask().toString())):"0"));
+                                                matchGeneric.getMask().toString())):"32"));
             }
             else if (matchGeneric.getMatchField().id == MatchFields.IPV4_SRC){
                 jGen.writeStringField("networkSource", matchGeneric.getValue().toString()
@@ -69,7 +68,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                         +(matchGeneric.isMasked() ?
                                 OFFlowStatsEntryModSerializer.covertToMask(
                                         IPv4.toIPv4Address(
-                                                matchGeneric.getMask().toString())):"0"));
+                                                matchGeneric.getMask().toString())):"32"));
             }
             else if (matchGeneric.getMatchField().id == MatchFields.ETH_DST){
                 jGen.writeStringField("dataLayerDestination", matchGeneric.getValue().toString());
@@ -108,11 +107,20 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         jGen.writeStartArray();
         List<OFAction> actions = null;
         for (OFInstruction instruction: instructions){
+            
             if(instruction.getType().equals(OFInstructionType.APPLY_ACTIONS)){
                 actions = ((OFInstructionApplyActions)instruction).getActions();
             }
             else if(instruction.getType().equals(OFInstructionType.WRITE_ACTIONS)){
                 actions = ((OFInstructionWriteActions)instruction).getActions();
+            }
+            else if(instruction.getType().equals(OFInstructionType.GOTO_TABLE)){
+                jGen.writeFieldName(instruction.getType().name());
+                jGen.writeStartObject();
+                jGen.writeNumberField("tableId"
+                        , ((OFInstructionGotoTable)instruction).getTableId().getValue());
+                jGen.writeEndObject();
+                continue;
             }
             else{
                 continue;
@@ -125,7 +133,13 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                     jGen.writeNumberField("group", ((OFActionGroup)action).getGroup().getGroupNumber());
                 }
                 else if (action.getType().equals(OFActionType.OUTPUT)){
-                    jGen.writeNumberField("group", ((OFActionOutput)action).getPort().getPortNumber());
+                    if (((OFActionOutput)action).getPort().getPortNumber() == -3){
+                        //Controller port
+                        jGen.writeStringField("output", "CONTROLLER");
+                    }
+                    else{
+                        jGen.writeNumberField("output", ((OFActionOutput)action).getPort().getPortNumber());
+                    }
                 }
                 else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0
                         || action.getType().compareTo(OFActionType.COPY_TTL_IN) == 0
@@ -164,13 +178,23 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         jGen.writeEndArray();
         jGen.writeEndObject();
     }
+    /**
+     * Get the number of 1's in the 32bit integer
+     * Use full to convert wildcard mask(x.x.x.x) to \x notation
+     * for example
+     * ("0.0.0.255") to int to "/8" or
+     * ("0.0.255.255") to int to "/16"
+     * @param x
+     * @return
+     */
+    
     public static int covertToMask(int x) {
-        x = x - ((x >>> 1) & 0x55555555); 
-        x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); 
-        x = (x + (x >>> 4)) & 0x0F0F0F0F; 
-        x = x + (x >>> 8); 
-        x = x + (x >>> 16); 
-        return x & 0x0000003F; 
+        x = x - ((x >>> 1) & 0x55555555);
+        x = (x & 0x33333333) + ((x >>> 2) & 0x33333333);
+        x = (x + (x >>> 4)) & 0x0F0F0F0F;
+        x = x + (x >>> 8);
+        x = x + (x >>> 16);
+        return 32 - (x & 0x0000003F);
     } 
 
 }
