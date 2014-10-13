@@ -85,6 +85,9 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
             else if (matchGeneric.getMatchField().id == MatchFields.MPLS_TC){
                 jGen.writeNumberField("mplsTc", Integer.decode(matchGeneric.getValue().toString()));
             }
+            else if (matchGeneric.getMatchField().id == MatchFields.MPLS_BOS){
+                jGen.writeStringField("mplsBos", "True");
+            }
             else if (matchGeneric.getMatchField().id == MatchFields.MPLS_LABEL){
                 jGen.writeNumberField("mplsLabel", Integer.decode(matchGeneric.getValue().toString()));
             }

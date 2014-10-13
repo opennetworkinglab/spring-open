@@ -2029,9 +2029,11 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 match = ipTableEntry['match']
                 mplsTc =  '*'
                 mplsLabel = '*'
+                mplsBos = '*'
                 if match :
                     mplsTc = match.get('mplsTc') if match.get('mplsTc') else '*'
                     mplsLabel = match.get('mplsLabel') if match.get('mplsLabel') else '*'
+                    mplsBos = match.get('mplsBos') if match.get('mplsBos') else '*'
                 instructions = ipTableEntry['instructions']
                 #raise error.ArgumentValidationError('\n\n\n %s' %len(actions))
                 actions = str(instructions[0])if instructions[0] else None
@@ -2044,6 +2046,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'priority'      : ipTableEntry['priority'],
                        'mplsTc'         : mplsTc,
                        'mplsLabel'      : mplsLabel,
+                       'mplsBos'        : mplsBos,
                        'durationSeconds'        : ipTableEntry['durationSec'],
                        'actions'        : actions
                     })
@@ -2055,6 +2058,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 networkSource = '*'
                 mplsTc = '*'
                 mplsLabel = '*'
+                mplsBos = '*'
                 transportDestination = '*'
                 inputPort = '*'
                 transportSource = '*'
@@ -2073,6 +2077,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                     dataLayerSource = match.get('dataLayerSource') if match.get('dataLayerSource') else '*'
                     dataLayerDestination = match.get('dataLayerDestination') if match.get('dataLayerDestination') else '*'
                     dataLayerType= match.get('dataLayerType') if match.get('dataLayerType') else '*'
+                    mplsBos = match.get('mplsBos') if match.get('mplsBos') else '*'
                 instructions = ipTableEntry['instructions']
                 actions = str(instructions[0])if instructions[0] else None
                 actions = format_actions(actions)
@@ -2092,6 +2097,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'dataLayerDestination'    : dataLayerDestination,
                        'mplsTc'                  : mplsTc,
                        'mplsLabel'               : mplsLabel,
+                       'mplsBos'                 : mplsBos,
                        'transportDestination'    : transportDestination,
                        'transportSource'         : transportSource,
                        'actions'                 : actions
