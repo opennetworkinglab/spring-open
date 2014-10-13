@@ -241,8 +241,9 @@ public class HostManagerTest extends FloodlightTestCase {
     public void testGetSourceHostFromPacket() {
         byte[] address = new byte[] {0x00, 0x44, 0x33, 0x22, 0x11, 0x01};
         MACAddress srcMac = new MACAddress(address);
+        int ipAddr = IPv4.toIPv4Address("192.168.1.1");
         Host host1 = new Host(srcMac,
-                0,
+                ipAddr,
                 null,
                 sw1Dpid,
                 sw1DevPort,

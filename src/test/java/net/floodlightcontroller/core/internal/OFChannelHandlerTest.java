@@ -1390,7 +1390,7 @@ public class OFChannelHandlerTest {
         .andReturn(xid).anyTimes();
 
         // prepare mocks and inject the role reply message
-        swImplBase.setRole(Role.SLAVE);
+        swImplBase.setRole(Role.EQUAL);
         expectLastCall().once();
         expect(swImplBase.getId())
         .andReturn(1000L).once();

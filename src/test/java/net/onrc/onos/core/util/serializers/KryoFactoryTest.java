@@ -1,6 +1,9 @@
 package net.onrc.onos.core.util.serializers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
@@ -14,10 +17,10 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.topology.HostData;
 import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.PortData;
+import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyBatchOperation;
 import net.onrc.onos.core.topology.TopologyElement;
 import net.onrc.onos.core.topology.TopologyEvent;
-import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.OnosInstanceId;
 import net.onrc.onos.core.util.PortNumber;
@@ -285,7 +288,7 @@ public class KryoFactoryTest {
             Result result = benchType(obj, EqualityCheck.EQUALS);
             results.add(result);
             // update me if serialized form is expected to change
-            assertEquals(43, result.size);
+            assertEquals(44, result.size);
         }
 
         { // CHECKSTYLE IGNORE THIS LINE

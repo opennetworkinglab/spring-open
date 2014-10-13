@@ -192,7 +192,7 @@ public class Host implements Serializable {
         StringBuilder builder = new StringBuilder();
         builder.append("Host [macAddress=");
         builder.append(macAddress.toString());
-        builder.append(", ipAddressn=");
+        builder.append(", ipAddress=");
         builder.append(ipAddress);
         builder.append(", vlan=");
         builder.append(vlan);
