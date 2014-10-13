@@ -960,7 +960,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             maEntries.add(maEntry);
 
             // One rule for Bos = 0
-            MplsMatch mplsMatchBos = new MplsMatch(Integer.parseInt(mplsLabel), false);
+            MplsMatch mplsMatchBos = new MplsMatch(Integer.parseInt(mplsLabel), true);
             List<Action> actionsBos = new ArrayList<Action>();
             actionsBos.add(popAction);
             actionsBos.add(groupAction);
@@ -990,6 +990,25 @@ public class SegmentRoutingManager implements IFloodlightModule,
             MatchActionOperationEntry maEntry =
                     new MatchActionOperationEntry(operator, matchAction);
             maEntries.add(maEntry);
+
+            // BoS = 1
+            MplsMatch mplsMatchBoS = new MplsMatch(Integer.parseInt(mplsLabel), true);
+            List<Action> actionsBoS = new ArrayList<Action>();
+
+            DecMplsTtlAction decMplsTtlActionBoS = new DecMplsTtlAction(1);
+            actionsBoS.add(decMplsTtlActionBoS);
+
+            GroupAction groupActionBoS = new GroupAction();
+            for (String fwdSw : fwdSws)
+                groupActionBoS.addSwitch(new Dpid(fwdSw));
+            actionsBoS.add(groupActionBoS);
+
+            MatchAction matchActionBos = new MatchAction(new MatchActionId(
+                    matchActionId++),
+                    new SwitchPort((long) 0, (short) 0), mplsMatchBoS, actionsBoS);
+            MatchActionOperationEntry maEntryBoS =
+                    new MatchActionOperationEntry(operator, matchActionBos);
+            maEntries.add(maEntryBoS);
         }
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
