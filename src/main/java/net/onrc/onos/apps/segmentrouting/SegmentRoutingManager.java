@@ -79,7 +79,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     private static final Logger log = LoggerFactory
             .getLogger(SegmentRoutingManager.class);
-    private ITopologyService topologyService;
+
+        private ITopologyService topologyService;
     private IPacketService packetService;
     private MutableTopology mutableTopology;
     private ConcurrentLinkedQueue<IPv4> ipPacketQueue;
@@ -90,16 +91,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private IcmpHandler icmpHandler;
     private IThreadPoolService threadPool;
     private SingletonTask discoveryTask;
+    private SingletonTask linkAddTask;
     private IFloodlightProviderService floodlightProvider;
 
     private HashMap<Switch, ECMPShortestPathGraph> graphs;
-    //private HashSet<LinkData> topologyLinks;
+    private HashMap<String, LinkData> linksDown;
+    private HashMap<String, LinkData> linksToAdd;
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
 
     private int numOfEvents = 0;
     private int numOfEventProcess = 0;
     private int numOfPopulation = 0;
     private long matchActionId = 0L;
+    private final int DELAY_TO_ADD_LINK = 10;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -141,7 +145,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         topologyService.addListener(this, false);
         ipPacketQueue = new ConcurrentLinkedQueue<IPv4>();
         graphs = new HashMap<Switch, ECMPShortestPathGraph>();
-        //topologyLinks = new HashSet<LinkData>();
+        linksDown = new HashMap<String, LinkData>();
+        linksToAdd = new HashMap<String, LinkData>();
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
 
         this.packetService = context.getServiceImpl(IPacketService.class);
@@ -160,6 +165,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 handleTopologyChangeEvents();
             }
         });
+
+        linkAddTask = new SingletonTask(ses, new Runnable() {
+            @Override
+            public void run() {
+                delayedAddLink();
+            }
+        });
+
     }
 
     @Override
@@ -263,7 +276,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
         discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
     }
 
-
+    /**
+     * Process the multiple topology events with some delay (100MS at most for now)
+     *
+     */
     private void handleTopologyChangeEvents() {
 
         numOfEventProcess ++;
@@ -306,11 +322,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
 
             if (!mastershipRemoved.isEmpty()) {
-                processMastershipRemoved(mastershipRemoved);
+                log.debug("Mastership is removed. Check if ports are down also.");
             }
 
             if (!linkEntriesAdded.isEmpty()) {
-                processLinkAdd(linkEntriesAdded);
+                processLinkAdd(linkEntriesAdded, false);
             }
 
             if (!portEntriesAdded.isEmpty()) {
@@ -322,9 +338,42 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
 
+        // TODO: 100ms is enough to check both mastership removed events
+        // and the port removed events? What if the PORT_STATUS packets comes late?
+        if (!mastershipRemoved.isEmpty()) {
+            if (portEntriesRemoved.isEmpty()) {
+                log.debug("Just mastership is removed. Do not anthing.");
+            }
+            else {
+                HashMap<String, MastershipData> mastershipToRemove =
+                        new HashMap<String, MastershipData>();
+                for (MastershipData ms: mastershipRemoved) {
+                    for (PortData port: portEntriesRemoved) {
+                        // TODO: check ALL ports of the switch are dead ..
+                        if (port.getDpid().equals(ms.getDpid())) {
+                            mastershipToRemove.put(ms.getDpid().toString(), ms);
+                        }
+                    }
+                    log.debug("Swtich {} is really down.", ms.getDpid());
+                }
+                processMastershipRemoved(mastershipToRemove.values());
+            }
+        }
+
         log.debug("num events {}, num of process {}, "
                 + "num of Population {}", numOfEvents, numOfEventProcess,
                 numOfPopulation);
+    }
+
+    /**
+     * Add the link immediately
+     * The function is scheduled when link add event happens and called
+     * DELAY_TO_ADD_LINK seconds after the event to avoid link flip-flop.
+     */
+    private void delayedAddLink() {
+
+        processLinkAdd(linksToAdd.values(), true);
+
     }
 
     /**
@@ -357,6 +406,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 }
             }
         }
+
+        linksToAdd.clear();
+        linksDown.clear();
     }
 
     /**
@@ -365,20 +417,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param switchRemoved Switch removed
      */
     private void processSwitchRemoved(Collection<SwitchData> switchRemoved) {
-        //topologyLinks.clear();
-
-        for (SwitchData switchData: switchRemoved) {
-            Switch sw = mutableTopology.getSwitch(switchData.getDpid());
-            for (Link link: sw.getOutgoingLinks()) {
-                Port dstPort = link.getDstPort();
-                IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                        getSwId(dstPort.getDpid().toString()));
-                if (dstSw != null) {
-                    dstSw.removePortFromGroups(dstPort.getNumber());
-                    log.debug("Switch {} is gone: remove port {}", sw.getDpid(), dstPort);
-                }
-            }
-        }
+        log.debug("SwitchRemoved event occurred !!!");
     }
 
     /**
@@ -402,20 +441,39 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     /**
      * Reports ports of new links to driver and recalculate ECMP SPG
+     * If the link to add was removed before, then we just schedule the add link
+     * event and do not recompute the path now.
      *
      * @param linkEntries
      */
-    private void processLinkAdd(Collection<LinkData> linkEntries) {
+    private void processLinkAdd(Collection<LinkData> linkEntries, boolean delayed) {
 
-        //boolean linkRecovered = false;
-
-        // TODO: How to determine this link was broken before and back now?
-        // We should go stateless as possible.
-        // If the link broken is up, we need to add the link with delay.
         for (LinkData link : linkEntries) {
 
             SwitchPort srcPort = link.getSrc();
             SwitchPort dstPort = link.getDst();
+
+            String key = srcPort.getDpid().toString() +
+                    dstPort.getDpid().toString();
+            if (!delayed) {
+                if (linksDown.containsKey(key)) {
+                    linksToAdd.put(key, link);
+                    linksDown.remove(key);
+                    linkAddTask.reschedule(DELAY_TO_ADD_LINK, TimeUnit.SECONDS);
+                    log.debug("Add link {} with 5 sec delay", link);
+                    // TODO: What if we have multiple events of add link:
+                    // one is new link add, the other one is link up for
+                    // broken link? ECMPSPG function cannot deal with it for now
+                    return;
+                }
+            }
+            else {
+                if (linksDown.containsKey(key)) {
+                    linksToAdd.remove(key);
+                    log.debug("Do not add the link {}: it is down again!", link);
+                    return;
+                }
+            }
 
             IOF13Switch srcSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(srcPort.getDpid().toString()));
@@ -423,31 +481,18 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     getSwId(dstPort.getDpid().toString()));
 
             if ((srcSw == null) || (dstSw == null))
-                /* If this link is not between two switches, ignore it */
                 continue;
 
             srcSw.addPortToGroups(srcPort.getPortNumber());
             dstSw.addPortToGroups(dstPort.getPortNumber());
 
-            log.debug("Add port {} to switch {}", srcPort, srcSw);
-            log.debug("Add port {} to switch {}", dstPort, dstSw);
+            log.debug("Add a link port {} to switch {} to add link {}", srcPort, srcSw,
+                    link);
+            log.debug("Add a link port {} to switch {} to add link {}", dstPort, dstSw,
+                    link);
 
-            /*
-            if (!topologyLinks.contains(link)) {
-                topologyLinks.add(link);
-            }
-            else {
-                linkRecovered = true;
-            }
-            */
         }
-
-        //if (linkRecovered) {
-        //    populateEcmpRoutingRules(false);
-        //}
-        //else {
         populateEcmpRoutingRules(false);
-        //}
     }
 
     /**
@@ -471,6 +516,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             if ((srcSw == null) || (dstSw == null))
                 /* If this link is not between two switches, ignore it */
                 continue;
+
             srcSw.removePortFromGroups(srcPort.getPortNumber());
             dstSw.removePortFromGroups(dstPort.getPortNumber());
             log.debug("Remove port {} from switch {}", srcPort, srcSw);
@@ -483,6 +529,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 recomputationRequired = true;
                 log.debug("All links are gone b/w {} and {}", srcPort.getDpid(),
                         dstPort.getDpid());
+            }
+
+            String key = link.getSrc().getDpid().toString()+
+                    link.getDst().getDpid().toString();
+            if (!linksDown.containsKey(key)) {
+                linksDown.put(key, link);
             }
         }
 
@@ -960,7 +1012,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             maEntries.add(maEntry);
 
             // One rule for Bos = 0
-            MplsMatch mplsMatchBos = new MplsMatch(Integer.parseInt(mplsLabel), true);
+            MplsMatch mplsMatchBos = new MplsMatch(Integer.parseInt(mplsLabel), false);
             List<Action> actionsBos = new ArrayList<Action>();
             actionsBos.add(popAction);
             actionsBos.add(groupAction);
