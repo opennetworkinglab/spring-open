@@ -44,12 +44,10 @@ onos=1
 # ACTION PROCS
 #Format actions for stats per table
 def format_actions(actions):
-    if actions == '':
-        newActions = '*'
-    else:
+   
+    if actions:
         #TODO: Check:- Why I have to remove last two character from string
         #instead of 1 character to get rid of comma from last aciton
-        actions = actions[:-2]
         a=''
         b=''
         newActions=''
@@ -68,7 +66,9 @@ def format_actions(actions):
                     isRemoved_u = True
             else:
                 newActions += ch
-    return newActions
+        return newActions
+    else:
+        actions
 
 def check_rest_result(result, message=None):
     if isinstance(result, collections.Mapping):
@@ -2006,14 +2006,12 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
         if data['tabletype'] == 'ip':
             for ipTableEntry in entries:
                 match = ipTableEntry['match']
+                networkDestination = '*'
                 if match :
-                    networkDestination = match[0].get('networkDestination') if match[0].get('networkDestination') else '*'
+                    networkDestination = match.get('networkDestination') if match.get('networkDestination') else '*'
                     #raise error.ArgumentValidationError('\n\n\n %s' % json.tool(entries))
                 instructions = ipTableEntry['instructions']
-                actions = ''
-                for instruction in instructions:
-                    actions +=  str(instruction)
-                    actions += ", "
+                actions = str(instructions[0]) if instructions[0] else None
                 actions = format_actions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
@@ -2029,15 +2027,14 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             import unicodedata
             for ipTableEntry in entries:
                 match = ipTableEntry['match']
+                mplsTc =  '*'
+                mplsLabel = '*'
                 if match :
-                    mplsTc = match[0].get('mplsTc') if match[0].get('mplsTc') else '*'
-                    mplsLabel = match[0].get('mplsLabel') if match[0].get('mplsLabel') else '*'
+                    mplsTc = match.get('mplsTc') if match.get('mplsTc') else '*'
+                    mplsLabel = match.get('mplsLabel') if match.get('mplsLabel') else '*'
                 instructions = ipTableEntry['instructions']
-                actions = ''
                 #raise error.ArgumentValidationError('\n\n\n %s' %len(actions))
-                for instruction in instructions:
-                    actions +=  str(instruction).encode('ascii', 'ignore')
-                    actions += ", "
+                actions = str(instructions[0])if instructions[0] else None
                 actions = format_actions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
@@ -2053,25 +2050,31 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
         elif data['tabletype'] == 'acl':
             for ipTableEntry in entries:
                 match = ipTableEntry['match']
+                networkDestination ='*'
+                networkProtocol = '*'
+                networkSource = '*'
+                mplsTc = '*'
+                mplsLabel = '*'
+                transportDestination = '*'
+                inputPort = '*'
+                transportSource = '*'
+                dataLayerSource = '*'
+                dataLayerDestination = '*'
+                dataLayerType = '*'
                 if match :
-                    networkDestination = match[0].get('networkDestination')\
-                    if match[0].get('networkDestination') else '*'
-                    networkProtocol = match[0].get('networkProtocol') if match[0].get('networkProtocol') else '*'
-                    networkSource = match[0].get('networkSource') if match[0].get('networkSource') else '*'
-                    mplsTc = match[0].get('mplsTc') if match[0].get('mplsTc') else '*'
-                    mplsLabel = match[0].get('mplsLabel')if match[0].get('mplsLabel') else '*'
-                    transportDestination = match[0].get('transportDestination') if match[0].get('transportDestination') else '*'
-                    transportSource = match[0].get('transportSource') if match[0].get('transportSource') else '*'
-                    inputPort = match[0].get('inputPort') if match[0].get('inputPort') else '*'
-                    dataLayerSource = match[0].get('dataLayerSource') if match[0].get('dataLayerSource') else '*'
-                    dataLayerDestination = match[0].get('dataLayerDestination') if match[0].get('dataLayerDestination') else '*'
-                    dataLayerType= match[0].get('dataLayerType') if match[0].get('dataLayerType') else '*'
+                    networkDestination = match.get('networkDestination') if match.get('networkDestination') else '*'
+                    networkProtocol = match.get('networkProtocol') if match.get('networkProtocol') else '*'
+                    networkSource = match.get('networkSource') if match.get('networkSource') else '*'
+                    mplsTc = match.get('mplsTc') if match.get('mplsTc') else '*'
+                    mplsLabel = match.get('mplsLabel')if match.get('mplsLabel') else '*'
+                    transportDestination = match.get('transportDestination') if match.get('transportDestination') else '*'
+                    transportSource = match.get('transportSource') if match.get('transportSource') else '*'
+                    inputPort = match.get('inputPort') if match.get('inputPort') else '*'
+                    dataLayerSource = match.get('dataLayerSource') if match.get('dataLayerSource') else '*'
+                    dataLayerDestination = match.get('dataLayerDestination') if match.get('dataLayerDestination') else '*'
+                    dataLayerType= match.get('dataLayerType') if match.get('dataLayerType') else '*'
                 instructions = ipTableEntry['instructions']
-                actions = ''
-                #raise error.ArgumentValidationError('\n\n\n %s' %len(actions))
-                for instruction in instructions:
-                    actions +=  str(instruction).encode('ascii', 'ignore')
-                    actions += ", "
+                actions = str(instructions[0])if instructions[0] else None
                 actions = format_actions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],

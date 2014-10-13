@@ -49,7 +49,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         jGen.writeObjectField("flags", flowStatsEntry.getFlags());
         jGen.writeNumberField("hardTimeout", flowStatsEntry.getHardTimeout());
         jGen.writeNumberField("idleTimeout", flowStatsEntry.getIdleTimeout());
-        jGen.writeArrayFieldStart("match");
+        jGen.writeFieldName("match");
         jGen.writeStartObject();
         Iterator<OFOxm<?>> match= matches.iterator();
         while(match.hasNext()){
@@ -102,9 +102,10 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
             }
         }
         jGen.writeEndObject();
-        jGen.writeEndArray();
+        
         jGen.writeFieldName("instructions");
         jGen.writeStartArray();
+        jGen.writeStartObject();
         List<OFAction> actions = null;
         for (OFInstruction instruction: instructions){
             
@@ -115,19 +116,18 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                 actions = ((OFInstructionWriteActions)instruction).getActions();
             }
             else if(instruction.getType().equals(OFInstructionType.GOTO_TABLE)){
+                
                 jGen.writeFieldName(instruction.getType().name());
                 jGen.writeStartObject();
                 jGen.writeNumberField("tableId"
                         , ((OFInstructionGotoTable)instruction).getTableId().getValue());
                 jGen.writeEndObject();
                 continue;
-            }
+            }//*/
             else{
                 continue;
             }
-            jGen.writeStartObject();
-            jGen.writeFieldName(instruction.getType().name());
-            jGen.writeStartObject();
+            jGen.writeObjectFieldStart(instruction.getType().name());
             for (OFAction action : actions){
                 if (action.getType().equals(OFActionType.GROUP)){
                     jGen.writeNumberField("group", ((OFActionGroup)action).getGroup().getGroupNumber());
