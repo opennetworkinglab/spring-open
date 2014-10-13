@@ -277,6 +277,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
         Collection<MastershipData> mastershipRemoved = new ArrayList<MastershipData>();
 
         while (!topologyEventQueue.isEmpty()) {
+            // We should handle the events in the order of when they happen
+            // TODO: We need to simulate the final results of multiple events
+            // and shoot only the final state.
+            // Ex: link s1-s2 down, link s1-s2 up --> Do nothing
+            // Ex: ink s1-s2 up, s1-p1,p2 down --> link s1-s2 down
             TopologyEvents topologyEvents = topologyEventQueue.poll();
 
             linkEntriesAdded.addAll(topologyEvents.getAddedLinkDataEntries());
@@ -287,39 +292,35 @@ public class SegmentRoutingManager implements IFloodlightModule,
             switchRemoved.addAll(topologyEvents.getRemovedSwitchDataEntries());
             mastershipRemoved.addAll(topologyEvents.getRemovedMastershipDataEntries());
             numOfEvents++;
+
+            if (!portEntriesRemoved.isEmpty()) {
+                processPortRemoval(portEntriesRemoved);
+            }
+
+            if (!linkEntriesRemoved.isEmpty()) {
+                processLinkRemoval(linkEntriesRemoved);
+            }
+
+            if (!switchRemoved.isEmpty()) {
+                processSwitchRemoved(switchRemoved);
+            }
+
+            if (!mastershipRemoved.isEmpty()) {
+                processMastershipRemoved(mastershipRemoved);
+            }
+
+            if (!linkEntriesAdded.isEmpty()) {
+                processLinkAdd(linkEntriesAdded);
+            }
+
+            if (!portEntriesAdded.isEmpty()) {
+                processPortAdd(portEntriesAdded);
+            }
+
+            if (!switchAdded.isEmpty()) {
+                processSwitchAdd(switchAdded);
+            }
         }
-
-        // TODO: We handle multiple events with one path re-computation
-
-
-        if (!portEntriesRemoved.isEmpty()) {
-            processPortRemoval(portEntriesRemoved);
-        }
-
-        if (!linkEntriesRemoved.isEmpty()) {
-            processLinkRemoval(linkEntriesRemoved);
-        }
-
-        if (!switchRemoved.isEmpty()) {
-            processSwitchRemoved(switchRemoved);
-        }
-
-        if (!mastershipRemoved.isEmpty()) {
-            processMastershipRemoved(mastershipRemoved);
-        }
-
-        if (!linkEntriesAdded.isEmpty()) {
-            processLinkAdd(linkEntriesAdded);
-        }
-
-        if (!portEntriesAdded.isEmpty()) {
-            processPortAdd(portEntriesAdded);
-        }
-
-        if (!switchAdded.isEmpty()) {
-            processSwitchAdd(switchAdded);
-        }
-
 
         log.debug("num events {}, num of process {}, "
                 + "num of Population {}", numOfEvents, numOfEventProcess,
@@ -350,10 +351,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 Port dstPort = link.getDstPort();
                 IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                         getSwId(dstPort.getDpid().toString()));
-                // TODO: please enable it when driver feature is implemented
-                //dstSw.removePortFromGroups(dstPort.getNumber());
-                log.debug("MasterSwitch {} is gone: remove port {}", sw.getDpid(), dstPort);
-
+                if (dstSw != null) {
+                    dstSw.removePortFromGroups(dstPort.getNumber());
+                    log.debug("MasterSwitch {} is gone: remove port {}", sw.getDpid(), dstPort);
+                }
             }
         }
     }
@@ -472,7 +473,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 continue;
             srcSw.removePortFromGroups(srcPort.getPortNumber());
             dstSw.removePortFromGroups(dstPort.getPortNumber());
-
             log.debug("Remove port {} from switch {}", srcPort, srcSw);
             log.debug("Remove port {} from switch {}", dstPort, dstSw);
 
@@ -522,9 +522,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             //log.debug("ECMPShortestPathGraph is computed for switch {}",
             //        HexString.toHexString(sw.getDpid().value()));
             populateEcmpRoutingRulesForPath(sw, ecmpSPG, modified);
-            if (modified) {
-                log.debug("Modify the rules for {}" , sw.getDpid());
-            }
         }
         numOfPopulation++;
     }
@@ -915,73 +912,98 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
-     * Set MPLS forwarding rules to MPLS table - If the destination is the same
-     * as the next hop to forward packets then, pop the MPLS label according to
-     * PHP rule - Otherwise, just forward packets to next hops using Group
-     * action
+     * Set MPLS forwarding rules to MPLS table
+     * </p>
+     * If the destination is the same as the next hop to forward packets then,
+     * pop the MPLS label according to PHP rule. Here, if BoS is set, then
+     * copy TTL In and decrement NW TTL. Otherwise, it just decrement the MPLS
+     * TTL of the another MPLS header.
+     * If the next hop is not the destination, just forward packets to next
+     * hops using Group action.
      *
      * @param sw Switch to set the rules
      * @param mplsLabel destination MPLS label
      * @param fwdSws next hop switches
-     */
+     * */
     private void setMplsTable(Switch sw, String mplsLabel, List<String> fwdSws,
             boolean modified) {
 
-        MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel));
+        if (fwdSws.isEmpty())
+            return;
 
-        List<Action> actions = new ArrayList<Action>();
+        Collection<MatchActionOperationEntry> maEntries =
+                new ArrayList<MatchActionOperationEntry>();
+        String fwdSw1 = fwdSws.get(0);
 
-        // If the destination is the same as the next hop, then pop MPLS
-        // Otherwise, just decrease the MPLS TTL.
-        if (fwdSws.size() == 1) {
-            String fwdMplsId = getMplsLabel(fwdSws.get(0));
-            if (fwdMplsId.equals(mplsLabel)) {
-                String fwdSw = fwdSws.get(0);
-                if (mplsLabel.equals(getMplsLabel(fwdSw))) {
-                    PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
-                    CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
-                    DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
+        if (fwdSws.size() == 1 && mplsLabel.equals(getMplsLabel(fwdSw1))) {
+            // One rule for Bos = 1
+            MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), true);
+            List<Action> actions = new ArrayList<Action>();
 
-                    actions.add(copyTtlInAction);
-                    actions.add(popAction);
-                    actions.add(decNwTtlAction);
-                }
-            }
-            else {
-                DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
-                actions.add(decMplsTtlAction);
-            }
+            PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
+            CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
+            DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
+
+            actions.add(copyTtlInAction);
+            actions.add(popAction);
+            actions.add(decNwTtlAction);
+
+            GroupAction groupAction = new GroupAction();
+            groupAction.addSwitch(new Dpid(fwdSw1));
+            actions.add(groupAction);
+
+            MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
+                    new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
+            Operator operator = Operator.ADD;
+            MatchActionOperationEntry maEntry =
+                    new MatchActionOperationEntry(operator, matchAction);
+            maEntries.add(maEntry);
+
+            // One rule for Bos = 0
+            MplsMatch mplsMatchBos = new MplsMatch(Integer.parseInt(mplsLabel), false);
+            List<Action> actionsBos = new ArrayList<Action>();
+            actionsBos.add(popAction);
+            actionsBos.add(groupAction);
+
+            MatchAction matchActionBos = new MatchAction(new MatchActionId(matchActionId++),
+                    new SwitchPort((long) 0, (short) 0), mplsMatchBos, actionsBos);
+            MatchActionOperationEntry maEntryBos =
+                    new MatchActionOperationEntry(operator, matchActionBos);
+            maEntries.add(maEntryBos);
         }
-        GroupAction groupAction = new GroupAction();
-        for (String fwdSw : fwdSws)
-            groupAction.addSwitch(new Dpid(fwdSw));
-        actions.add(groupAction);
+        else {
+            MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), false);
+            List<Action> actions = new ArrayList<Action>();
 
-        MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
-                new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
+            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
+            actions.add(decMplsTtlAction);
 
-        Operator operator = null;
-        if (modified)
-            operator =  Operator.MODIFY;
-        else
-            operator = Operator.ADD;
+            GroupAction groupAction = new GroupAction();
+            for (String fwdSw : fwdSws)
+                groupAction.addSwitch(new Dpid(fwdSw));
+            actions.add(groupAction);
 
-        MatchActionOperationEntry maEntry =
-                new MatchActionOperationEntry(operator, matchAction);
-
+            MatchAction matchAction = new MatchAction(new MatchActionId(
+                    matchActionId++),
+                    new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
+            Operator operator = Operator.ADD;
+            MatchActionOperationEntry maEntry =
+                    new MatchActionOperationEntry(operator, matchAction);
+            maEntries.add(maEntry);
+        }
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
 
         if (sw13 != null) {
             try {
                 //printMatchActionOperationEntry(sw, maEntry);
-                sw13.pushFlow(maEntry);
+                sw13.pushFlows(maEntries);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
     }
+
 
     /**
      * Debugging function to print out the Match Action Entry

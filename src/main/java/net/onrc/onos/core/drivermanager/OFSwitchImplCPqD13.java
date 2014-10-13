@@ -1262,9 +1262,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 .ethType(EthType.MPLS_UNICAST);
         OFOxmMplsLabel labelid = factory.oxms()
                 .mplsLabel(U32.of(mplsm.getMplsLabel()));
-        // OFOxmMplsBos bos = factory.oxms()
-        // .mplsBos(OFBooleanValue.of(mplsm.isBos()));
-        OFOxmList oxmList = OFOxmList.of(ethTypeMpls, labelid); // XXX add bos
+        OFOxmMplsBos bos = factory.oxms()
+                .mplsBos(OFBooleanValue.of(mplsm.isBos()));
+        OFOxmList oxmList = OFOxmList.of(ethTypeMpls, labelid, bos);
         OFMatchV3 matchlabel = factory.buildMatchV3()
                 .setOxmList(oxmList).build();
 
