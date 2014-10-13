@@ -1004,6 +1004,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             if (b.mplsLabel != -1) {
                 OFAction pushLabel = factory.actions().buildPushMpls()
                         .setEthertype(EthType.MPLS_UNICAST).build();
+                OFOxmMplsBos bosX = factory.oxms()
+                        .mplsBos(OFBooleanValue.TRUE);
+                OFAction setBX = factory.actions().buildSetField()
+                        .setField(bosX).build();
                 OFOxmMplsLabel lid = factory.oxms()
                         .mplsLabel(U32.of(b.mplsLabel));
                 OFAction setLabel = factory.actions().buildSetField()
@@ -1012,6 +1016,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 OFAction decrTtl = factory.actions().decMplsTtl();
                 actions.add(pushLabel);
                 actions.add(setLabel);
+                actions.add(setBX);
                 actions.add(copyTtl);
                 actions.add(decrTtl);
             }
@@ -1061,6 +1066,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             if (b.mplsLabel != -1) {
                 OFAction pushLabel = factory.actions().buildPushMpls()
                         .setEthertype(EthType.MPLS_UNICAST).build();
+                OFOxmMplsBos bosX = factory.oxms()
+                        .mplsBos(OFBooleanValue.TRUE);
+                OFAction setBX = factory.actions().buildSetField()
+                        .setField(bosX).build();
                 OFOxmMplsLabel lid = factory.oxms()
                         .mplsLabel(U32.of(b.mplsLabel));
                 OFAction setLabel = factory.actions().buildSetField()
@@ -1069,6 +1078,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 OFAction decrTtl = factory.actions().decMplsTtl();
                 actions.add(pushLabel);
                 actions.add(setLabel);
+                actions.add(setBX);
                 actions.add(copyTtl);
                 actions.add(decrTtl);
             }
