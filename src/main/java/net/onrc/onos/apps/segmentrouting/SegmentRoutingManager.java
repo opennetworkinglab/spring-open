@@ -27,9 +27,11 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
+import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
+import net.onrc.onos.apps.segmentrouting.web.SegmentRoutingWebRoutable;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
@@ -80,7 +82,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private static final Logger log = LoggerFactory
             .getLogger(SegmentRoutingManager.class);
 
-        private ITopologyService topologyService;
+    private ITopologyService topologyService;
+    private IRestApiService restApi;
     private IPacketService packetService;
     private MutableTopology mutableTopology;
     private ConcurrentLinkedQueue<IPv4> ipPacketQueue;
@@ -127,6 +130,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         l.add(IPacketService.class);
         l.add(IFlowPusherService.class);
         l.add(ITopologyService.class);
+        l.add(IRestApiService.class);
 
         return l;
 
@@ -147,6 +151,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         graphs = new HashMap<Switch, ECMPShortestPathGraph>();
         linksDown = new HashMap<String, LinkData>();
         linksToAdd = new HashMap<String, LinkData>();
+        //topologyLinks = new HashSet<LinkData>();
+        restApi = context.getServiceImpl(IRestApiService.class);
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
 
         this.packetService = context.getServiceImpl(IPacketService.class);
@@ -158,6 +164,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         ScheduledExecutorService ses = threadPool.getScheduledExecutor();
+        restApi.addRestletRoutable(new SegmentRoutingWebRoutable());
 
         discoveryTask = new SingletonTask(ses, new Runnable() {
             @Override

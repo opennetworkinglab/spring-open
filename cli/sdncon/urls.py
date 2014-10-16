@@ -70,6 +70,7 @@ urlpatterns = patterns('',
     # REST API VNS/device information
     (r'^rest/v1/device', 'sdncon.rest.views.do_device'),
     (r'^rest/v1/switches', 'sdncon.rest.views.do_switches'),
+    (r'^rest/v1/routers', 'sdncon.rest.views.do_routers'),
     (r'^rest/v1/links', 'sdncon.rest.views.do_links'),
     (r'^rest/v1/mastership', 'sdncon.rest.views.do_mastership'),
     (r'^rest/v1/vns/device-interface', 'sdncon.rest.views.do_vns_device_interface'),

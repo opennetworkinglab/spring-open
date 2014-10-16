@@ -2494,6 +2494,37 @@ REALTIME_QUEUE_FORMAT = {
     },
 }
 
+
+
+
+ROUTER_FORMAT = {
+    'router'     : {
+        'field-orderings' : {
+            'default' : ['dpid','name', 'routerIP','routerMac','isEdgeRouter','nodeSId'
+                         ],
+            },
+        'fields': {
+            'dpid'               : { 'verbose-name' : 'RouterDPID',
+                                        #'formatter' : fmtcnv.replace_switch_with_alias
+                                        },
+            'name'                 : { 'verbose-name' : 'RouterName',
+                                       #'formatter' : fmtcnv.decode_port_counter
+                                       },
+            'routerIP'                   : { 'verbose-name' : 'RouterIP',
+                                      },
+            'routerMac'                  : { 'verbose-name' : 'RouterMac',
+                                       #'formatter' : fmtcnv.decode_port_counter
+                                     },
+            'isEdgeRouter'                  : { 'verbose-name' : 'isEdgeRouter',
+                                       #'formatter' : fmtcnv.decode_port_counter
+                                     },
+            'nodeSId'                     : { 'verbose-name' : 'nodeSId',
+                                       #'formatter' : fmtcnv.decode_port_counter
+                                     },
+            }
+        },
+}
+
 """
 SWITCH_CLUSTER_FORMAT = {
     'switch-cluster' : {

@@ -722,6 +722,16 @@ def do_switches(request):
     return get_sdnplatform_response(url)        
 
 @safe_rest_view
+def do_routers(request):
+    if onos == 0:
+        url = controller_url("core", "controller", "switches", "json")
+    else:
+        url = controller_url("onos","segmentrouting", "routers")
+    if request.META['QUERY_STRING']:
+        url += '?' + request.META['QUERY_STRING']
+    return get_sdnplatform_response(url)        
+
+@safe_rest_view
 def do_mastership(request):
     url = controller_url("onos", "registry", "switches" ,"json")
     #url = "http://127.0.0.1:8080/wm/onos/registry/switches/json"

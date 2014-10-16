@@ -39,7 +39,6 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         
         List<OFInstruction> instructions = flowStatsEntry.getInstructions();
         jGen.writeStartObject();
-        //System.out.println("flowstats:\n\n\n"+ flowStatsEntry);
         jGen.writeNumberField("byteCount", flowStatsEntry.getByteCount().getValue());
         jGen.writeNumberField("packetCount", flowStatsEntry.getPacketCount().getValue());
         jGen.writeNumberField("priority", flowStatsEntry.getPriority());

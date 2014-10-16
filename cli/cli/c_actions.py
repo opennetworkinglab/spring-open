@@ -1974,10 +1974,26 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
         print "command_display_rest: result ", result
 
     entries = json.loads(result)
-
+    if 'router' in data  and data['router'] == 'router':
+        combResult = []
+        for entry in entries:
+            attributes = entry.get('stringAttributes')
+            #raise error.ArgumentValidationError('\n\n\n %s' % (attributes))
+            combResult.append({
+                       'dpid'           : entry.get('dpid'),
+                       'routerIP'       : attributes['routerIp'],
+                       'name'           : attributes['name'],
+                       'isEdgeRouter'   : attributes['isEdgeRouter'],
+                       'routerMac'      : attributes['routerMac'],
+                       'nodeSId'        : attributes['nodeSid'],
+                       })
+        entries = combResult
+        #raise error.ArgumentValidationError('\n\n\n %s' % (attributes))
     #if 'realtimestats' in data and data['realtimestats'] == 'group':
 
     entries2 = None
+    
+         
     if 'realtimestats' in data and data['realtimestats'] == 'group':
         url2 = "http://%s/rest/v1/" % sdnsh.controller + ("realtimestats/groupdesc/%(dpid)s/" % data)
         result2 = sdnsh.store.rest_simple_request(url2)
@@ -2024,7 +2040,6 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'actions'                 : actions,
                     })
         elif data['tabletype'] == 'mpls':
-            import unicodedata
             for ipTableEntry in entries:
                 match = ipTableEntry['match']
                 mplsTc =  '*'
