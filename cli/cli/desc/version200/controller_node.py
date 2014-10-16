@@ -16,7 +16,7 @@
 
 import command
 import fmtcnv
-#"""
+"""
 CONTROLLER_NODE_FORMAT = {
     'controller-node' : {
         'field-orderings' : {
@@ -170,7 +170,6 @@ CONTROLLER_NODE_SHOW_COMMAND_DESCRIPTION = {
          }
     ),
 }
-#"""
 CONTROLLER_NODE_INTERFACE_FORMAT = {
     'controller-interface' : {
         'field-orderings': {
@@ -311,7 +310,6 @@ command.add_completion('controller-add-localhost', controller_completion_add_loc
                       {'kwargs': { 'completions' : '$completions',
                                    'prefix'      : '$text',
                       }})
-
 
 CONTROLLER_NODE_SHOW_ID_COMMAND_DESCRIPTION = {
     'name'         : 'show',
@@ -1077,4 +1075,4 @@ CLOCK_SET_COMMAND_DESCRIPTION = {
         },
     )
 }
-#"""
+"""

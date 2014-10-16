@@ -13,6 +13,102 @@
 # implied. See the License for the specific language governing
 # permissions and limitations under the License.
 #
+import command
+import json
+
+TUNNEL_SUBMODE_COMMAND_DESCRIPTION = {
+    'name'          : 'tunnel',
+    'short-help'    : 'Enter tunnel submode, configure tunnel details',
+    'mode'          : 'config*',
+    'command-type'  : 'config-submode',
+    'obj-type'      : 'tunnel-config',
+    'parent-field'  : None,
+    'submode-name'  : 'config-tunnel',
+    'doc'           : 'tunnel|tunnel',
+    'doc-example'   : 'tunnel|tunnel-example',
+    'args' : (
+        {
+            'field'        : 'tunnel-id',
+            'type'         : 'identifier',
+            'completion'   : 'complete-object-field',
+            'syntax-help'  : 'Enter a tunnel name',
+            'doc'          : 'tunnel|tunnel',
+            'doc-include'  : [ 'type-doc' ],
+            'action'       : (
+                                {
+                                    'proc' : 'create-tunnel',
+                                },
+                                {
+                                    'proc' : 'push-mode-stack',
+                                },
+                              ),
+        }
+    )
+}
+
+def tunnel_node_completion(prefix, completions):
+    print "tunnel_node_completion:",prefix,completions
+    query_url = "http://127.0.0.1:8000/rest/v1/switches"
+    #print query_url
+    result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = json.loads(result)
+    for entry in entries:
+        if entry['dpid'].startswith(prefix):
+            completions[entry['dpid']+' '] = entry['dpid']
+    return
+
+command.add_completion('tunnel-node-completion', tunnel_node_completion,
+                       {'kwargs': { 'prefix'       : '$text',
+                                    'completions'  : '$completions',
+                                    }})
+
+# obj_type flow-entry field hard-timeout
+TUNNEL_NODE_ENTRY_COMMAND_DESCRIPTION = {
+    'name'                : 'node',
+    'mode'                : 'config-tunnel',
+    'short-help'          : 'Set node for this tunnel',
+    'doc'                 : 'tunnel|node',
+    'doc-example'         : 'tunnel|node',
+    'command-type'        : 'config',
+    'args'                : (
+         {
+             'field'      : 'node-value',
+             'completion'   : 'tunnel-node-completion',
+             'type'         : 'dpid',
+             'other'        : 'switches|dpid',
+#             'data-handler' : 'alias-to-value',
+             'help-name'    : 'switch dpid or switch alias',
+             'action'       : (
+                                {
+                                    'proc' : 'create-tunnel',
+                                },
+                              ),
+         }
+    )
+}
+
+TUNNEL_ADJACENCY_ENTRY_COMMAND_DESCRIPTION = {
+    'name'                : 'adjacency',
+    'mode'                : 'config-tunnel',
+    'short-help'          : 'Set adjacency for this tunnel',
+    'doc'                 : 'tunnel|path',
+    'doc-example'         : 'tunnel|path',
+    'command-type'        : 'config',
+    'args'                : (
+         {
+             'field'      : 'adjacency-value',
+             'type'       : 'string',
+             'help-name'  : 'switch port',
+             'action'       : (
+                                {
+                                    'proc' : 'create-tunnel',
+                                },
+                              ),
+         }
+    )
+}
+
+"""
 SWITCH_SUBMODE_COMMAND_DESCRIPTION = {
     'name'          : 'switch',
     'short-help'    : 'Enter switch submode, configure switch details',
@@ -37,6 +133,7 @@ SWITCH_SUBMODE_COMMAND_DESCRIPTION = {
         }
     )
 }
+"""
 #
 # ------------------------------------------------------------------------------
 # show switch
@@ -517,7 +614,7 @@ SWITCH_SHOW_SWITCH_DPID_INTERFACES_COMMAND_DESCRIPTION = {
         }
     )
 }
-
+"""
 SWITCH_SUBMODE_SHOW_INTERFACE_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'mode'         : 'config-switch*',
@@ -675,7 +772,7 @@ SWITCH_SHOW_TCPDUMP_COMMAND_DESCRIPTION = {
         },
    )
 }
-"""
+
 #
 # ------------------------------------------------------------------------------
 # SWITCH_TUNNEL_SHOW_COMMAND_DESCRIPTION
@@ -811,7 +908,6 @@ SWITCH_TUNNEL_SHOW_WITH_DPID_COMMAND_DESCRIPTION = {
         },
     ),
 }
-"""
 #
 # ------------------------------------------------------------------------------
 # SWITCH_CORE_SWITCH_TERMINATION_COMMAND_DESCRIPTION
@@ -839,7 +935,6 @@ SWITCH_CORE_SWITCH_COMMAND_DESCRIPTION = {
         }
     )
 }
-"""
 #
 # ------------------------------------------------------------------------------
 # SWITCH_TUNNEL_TERMINATION_COMMAND_DESCRIPTION
@@ -865,7 +960,6 @@ SWITCH_TUNNEL_TERMINATION_COMMAND_DESCRIPTION = {
         }
     )
 }
-"""
 #
 # ------------------------------------------------------------------------------
 # SWITCH_ALIAS_COMMAND_DESCRIPTION
@@ -974,6 +1068,7 @@ SWITCH_INTERFACE_INTERFACE_ALIAS_COMMAND_DESCRIPTION = {
         }
     )
 }
+"""
 #
 # FORMATS
 #
@@ -1046,7 +1141,7 @@ SWITCH_FORMAT = {
             }
         },
 }
-
+"""
 SWITCH_CONFIG_FORMAT = {
     'switch-config' : {
         'field-orderings' : {
@@ -1164,7 +1259,7 @@ SWITCH_INTERFACES_FORMAT = {
             },
         },
 }
-"""
+
 TUNNEL_DETAILS_FORMAT = {
     'tunnel-details' : {
         'field-orderings' : {

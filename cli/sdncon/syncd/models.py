@@ -15,7 +15,7 @@
 #
 
 from django.db import models
-
+"""
 class SyncdConfig(models.Model):
     
     # id is set to the local cluster id.
@@ -117,3 +117,4 @@ class SyncdProgressInfo(models.Model):
             {'name': 'data_start_time', 'rest_name': 'data-start-time'},
             {'name': 'last_sync_time', 'rest_name': 'last-sync-time'},
         )
+"""

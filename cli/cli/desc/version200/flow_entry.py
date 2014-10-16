@@ -16,6 +16,7 @@
 
 import fmtcnv
 
+"""
 FLOW_ENTRY_SUBMODE_COMMAND_DESCRIPTION = {
     'name'            : 'flow-entry',
     'mode'            : 'config-switch*',
@@ -444,7 +445,6 @@ FLOW_ENTRY_EDIT_DST_PORT_COMMAND_DESCRIPTION = {
         )
     },
 }
-
 #
 # FORMATS
 #
@@ -489,4 +489,5 @@ FLOW_ENTRY_FORMAT = {
             },
         },
 }
+"""
 

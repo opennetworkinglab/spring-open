@@ -64,6 +64,62 @@ def get_timestamp():
     """
     return int(time.time()*1000000)
 
+class TunnelPathSeqId(models.Model):
+
+    pathid_seq = models.IntegerField(
+        primary_key=True,
+        verbose_name = 'Path Id Seq',
+        help_text='ID of this Tunnel Path Entry')
+
+    def __unicode__ (self):
+        return self.pathid_seq
+
+    class Rest:
+        NAME = 'tunnel-pathid-seq'
+        FIELD_INFO = (
+        )
+            
+class Tunnel(models.Model):
+
+    id_max_length = 64
+    #
+    # fields ----------------------------------------
+
+    #
+    # Unique name of the Tunnel
+    #
+    tunnel_id = models.CharField(
+        primary_key  = True,
+        verbose_name = 'Tunnel Id',
+        help_text    = 'A unique Id for a Tunnel',
+        validators   = [ TenantNameValidator() ],
+        max_length   = id_max_length)
+    
+    path_seq = models.CharField(
+        verbose_name = 'Path Sequence',
+        help_text    = 'List of path identifiers: nodes or adjacencies',
+        blank        = True,
+        null         = True,
+        max_length   = 500)
+
+    #
+    # end fields ----------------------------------------
+
+    def __unicode__ (self):
+        return self.tunnel_id
+    
+    class CassandraSettings:
+        COMPOUND_KEY_FIELDS = ('tunnel_id')
+
+    def delete(self):
+        super(Tunnel, self).delete()
+    class Rest:
+        NAME = 'tunnel-config'
+        FIELD_INFO = (
+            {'name': 'tunnel_id',    'rest_name': 'tunnel-id'},
+            {'name': 'path_seq',     'rest_name': 'path-seq'},
+            )
+
 #
 # ------------------------------------------------------------
 
@@ -113,8 +169,8 @@ class Feature(models.Model):
             {'name': 'static_flow_pusher_feature', 'rest_name': 'static-flow-pusher-feature'},
             {'name': 'performance_monitor_feature','rest_name': 'performance-monitor-feature'},
             )
-'''
 
+"""
 #
 # ------------------------------------------------------------
 
@@ -237,10 +293,8 @@ class ForwardingConfig(models.Model):
             {'name': 'core_priority',      'rest_name': 'core-priority'},
         )
 
-'''
 #
 # ------------------------------------------------------------
-
 class Controller(models.Model):
     #
     # fields ----------------------------------------
@@ -409,7 +463,6 @@ class ControllerAlias(models.Model):
 
     class Rest:
         NAME = 'controller-alias'
-'''
 #
 # ------------------------------------------------------------
 
@@ -611,7 +664,6 @@ class ControllerDomainNameServer(models.Model):
         NAME = 'controller-domain-name-server'
         FIELD_INFO = (
             )
-'''
 
 #
 # ------------------------------------------------------------
@@ -735,7 +787,6 @@ class Switch(models.Model):
             {'name': 'serial_num',        'rest_name': 'serial-num'},
             {'name': 'tunneling_supported', 'rest_name': 'tunnel-supported'},
             )
-
 #
 # ------------------------------------------------------------
 # SwitchConfig
@@ -786,7 +837,6 @@ class SwitchConfig(models.Model):
             {'name': 'tunnel_termination', 'rest_name': 'tunnel-termination'},
             {'name': 'core_switch',       'rest_name': 'core-switch'},
             )
-
 
 #
 # ------------------------------------------------------------
@@ -1027,7 +1077,6 @@ class SwitchInterfaceAlias(models.Model):
         FIELD_INFO = (
             {'name': 'switch_interface', 'rest_name': 'switch-interface'},
         )
-
 #
 # ------------------------------------------------------------
 
@@ -1208,7 +1257,6 @@ class StaticFlowTableEntry(models.Model):
             {'name': 'actions',         'rest_name': 'actions'},
             )
 
-
 #
 # ------------------------------------------------------------
 
@@ -1289,6 +1337,7 @@ class Link(models.Model):
             {'name': 'link_type',       'rest_name': 'link-type'}
             )
             
+"""
 """
 #
 # ------------------------------------------------------------
@@ -1497,7 +1546,6 @@ class AddressSpaceIdentifierRule (models.Model):
             {'name': 'vlans',           'rest_name': 'vlans'},
             {'name': 'tag',             'rest_name': 'tag'},
             )
-"""
 #
 # ------------------------------------------------------------
 
@@ -1646,7 +1694,6 @@ class HostAlias(models.Model):
     class Rest:
         NAME = 'host-alias'
 
-"""
 class VlanConfig(models.Model):
     #
     # fields ----------------------------------------    
@@ -2853,7 +2900,6 @@ class VirtualRoutingRule (models.Model):
                       {'name': 'dst_vns',                  'rest_name': 'dst-vns'},
                       {'name': 'gateway_pool',             'rest_name': 'gateway-pool'},
             )
-"""
 #
 # ------------------------------------------------------------
 
@@ -2967,7 +3013,6 @@ class TagMapping(models.Model):
 
 #
 # ------------------------------------------------------------
-"""
 class TechSupportConf(models.Model):
 
     #

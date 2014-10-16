@@ -15,7 +15,7 @@
 #
 
 from django.db import models
-
+"""
 class StatdConfig(models.Model):
     stat_type = models.CharField(
         primary_key=True,
@@ -37,3 +37,4 @@ class StatdConfig(models.Model):
             {'name': 'sampling_period', 'rest_name': 'sampling-period'},
             {'name': 'reporting_period', 'rest_name': 'reporting-period'},
             )
+"""

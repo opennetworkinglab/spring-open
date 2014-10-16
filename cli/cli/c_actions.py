@@ -76,7 +76,34 @@ def check_rest_result(result, message=None):
         if error_type:
             raise error.CommandRestError(result, message)
 
-  
+tunnel_id=None
+tunnel_dict={}
+def tunnel_create(data=None):
+    global tunnel_id,tunnel_dict
+    if sdnsh.description:   # description debugging
+        print "tunnel_create:" , data
+    if not tunnel_dict:
+        tunnel_id=data['tunnel-id']
+        tunnel_dict[tunnel_id]=[]
+    if sdnsh.description:   # description debugging
+        print "tunnel_create:" , tunnel_id, tunnel_dict
+    if data.has_key('node-value'):    
+        tunnel_dict[tunnel_id].append(data['node-value'])
+
+def tunnel_config_exit():
+    global tunnel_id,tunnel_dict
+    if sdnsh.description:   # description debugging
+        print "tunnel_config_exit entered", tunnel_dict
+    if tunnel_dict:
+        url_str = ""
+        entries = tunnel_dict[tunnel_id]
+        for entry in entries:
+            url_str = url_str + "/node/" + entry
+        print url_str
+    else:
+        print "empty command"
+            
+      
 def write_fields(obj_type, obj_id, data):
     """
     Typical action to update fields of a row in the model
@@ -715,7 +742,10 @@ def push_mode_stack(mode_name, obj_type, data, parent_field = None, parent_id = 
     
     if sdnsh.description:   # description debugging
         print "push_mode: ", mode_name, obj_type, pk_name, key
-    sdnsh.push_mode(mode_name, obj_type, key)
+    exitCallback = None
+    if (mode_name == 'config-tunnel'):
+        exitCallback = tunnel_config_exit
+    sdnsh.push_mode(mode_name, obj_type, key, exitCallback)
 
     
 def pop_mode_stack():
@@ -3547,6 +3577,10 @@ def init_actions(bs, modi):
     sdnsh = bs
     mi = modi
 
+    command.add_action('create-tunnel',
+                       tunnel_create,
+                       {'kwargs': {'data' : '$data',}})
+    
     command.add_action('write-fields', write_fields,
                        {'kwargs': {'obj_type': '$current-mode-obj-type',
                                    'obj_id': '$current-mode-obj-id',

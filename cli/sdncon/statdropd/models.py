@@ -15,7 +15,7 @@
 #
 
 from django.db import models
-
+"""
 # Create your models here.
 class StatdropdConfig(models.Model):
     
@@ -76,3 +76,4 @@ class StatdropdProgressInfo(models.Model):
         FIELD_INFO = (
             {'name': 'last_drop_point', 'rest_name': 'last-drop-point'},
         )
+"""

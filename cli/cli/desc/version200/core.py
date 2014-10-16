@@ -17,6 +17,7 @@
 import command
 import run_config
 
+"""
 SHOW_RUNNING_CONFIG_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'mode'         : 'login',
@@ -186,7 +187,7 @@ SHOW_FLOW_ENTRY_COMMAND_DESCRIPTION = {
 
     )
 }
-"""
+
 SHOW_FIREWALL_COMMAND_DESCRIPTION = {
     'name'         : 'show',
     'obj-type'     : 'firewall-rule',
@@ -720,7 +721,7 @@ CONFIGURE_SUBMODE_COMMAND_DESCRIPTION = {
         'optional'        : 'true',
     },
 }
-
+"""
 DEBUG_CLI_COMMAND_DESCRIPTION = {
     'name'                : 'debug',
     'mode'                : ['login', 'enable', 'config*'],
@@ -829,7 +830,7 @@ DEBUG_CLI_COMMAND_DESCRIPTION = {
     }
 }
 
-"""
+
 HA_CONFIG_CLI_COMMAND_DESCRIPTION = {
     'name'                : 'ha',
     'short-help'          : 'Configure high availability',
@@ -1246,7 +1247,7 @@ SET_CLI_COMMAND_DESCRIPTION = {
         },
     ),
 }
-"""
+#"""
 #
 # FORMATS 
 #
@@ -1308,7 +1309,6 @@ FEATURE_FORMAT = {
     },
 }
 
-"""
 LINK_FORMAT = {
     'link' : {
         'field-orderings' : {
@@ -1328,7 +1328,6 @@ LINK_FORMAT = {
         },
 }
 
-"""
 CONFIG_FORMAT = {
     'config' : {
         'field-orderings' : {
@@ -1702,7 +1701,7 @@ REALTIME_FLOW_FORMAT = {
                           'actions', 'dataLayerSource', 'dataLayerDestination',
                           'flow-brief',
                         ],
-            'scoped'  : [
+           'scoped'  : [
                           'Idx', 'cookie', 
                           'byteCount', 'packetCount',
                           'actions', 'dataLayerSource', 'dataLayerDestination',

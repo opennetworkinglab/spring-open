@@ -3864,6 +3864,10 @@ def init_command(bs, modi):
         'no-action': 'delete-objects',
     })
 
+    add_command_type('create-tunnel', {
+        'action': 'create-tunnel'
+    })
+    
     add_command_type('display-table', {
         'action': 'display-table'
     })
