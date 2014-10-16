@@ -2177,6 +2177,9 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 outport = '*'
                 if 'OUTPPUT' in groupDescEntry['bucketsActions'][bucketId]:
                     outport = groupDescEntry['bucketsActions'][bucketId]['OUTPPUT']
+                goToGroup = '*'
+                if 'goToGroup' in groupDescEntry['bucketsActions'][bucketId]:
+                    goToGroup = groupDescEntry['bucketsActions'][bucketId]['goToGroup']
                 combResult.append({
                        'groupid'       : groupId,
                        'grouptype'     : groupDescEntry['groupType'],
@@ -2189,6 +2192,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'pushmpls'     : pushmpls,
                        'popmpls'     : popmpls,
                        'outport'     : outport,
+                       'goToGroup'     : goToGroup,
                     })
         entries = combResult
     #

@@ -2336,12 +2336,12 @@ REALTIME_GROUP_FORMAT = {
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
                           'pushmpls', 'popmpls',
-                          'outport' ],
+                          'outport','goToGroup'],
             'scoped' : [ 'Idx', 'groupid', 'grouptype', 'totalpktcnt', 'totalbytecnt',
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
                           'pushmpls', 'popmpls',
-                          'outport' ],
+                          'outport','goToGroup' ],
             },
         'fields': {
             'groupid'               : { 'verbose-name' : 'Group Id',
@@ -2370,6 +2370,8 @@ REALTIME_GROUP_FORMAT = {
                                      },
             'outport'             : { 'verbose-name' : 'outport',
                                      },
+            'goToGroup'           : { 'verbose-name' : 'goToGroup',
+                                    },
             }
         },
 }

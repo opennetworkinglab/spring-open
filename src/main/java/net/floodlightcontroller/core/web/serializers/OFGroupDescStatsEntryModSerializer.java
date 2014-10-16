@@ -59,7 +59,9 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
                 else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0){
                     jGen.writeStringField("POP_MPLS", "True");
                 }
-                
+                else if(action.getType().compareTo(OFActionType.GROUP) == 0){
+                    jGen.writeNumberField("goToGroup", ((OFActionGroup)action).getGroup().getGroupNumber());
+                }
             }
             jGen.writeEndObject();
         }
