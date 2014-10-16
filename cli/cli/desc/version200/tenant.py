@@ -18,12 +18,9 @@
 #
 
 import command
-"""
 def tenant_origin_external(data):
-    """
-    Return origin-name when the tenant wasn't created by the cli,
-    return None otherwise.
-    """
+    #Return origin-name when the tenant wasn't created by the cli,
+    #return None otherwise.
     pk = command.mi.pk('tenant')
     if not pk in data:
         return None;
@@ -88,6 +85,7 @@ def tenant_show_preprocess(obj_type, data,scoped=None):
         if (obj_type!='virtualrouter-gwpool'):
             data['virtual-router-gwpool']=data['tenant'] +'|'+data['vrname'] +'|' + data['vrgwname']
 
+"""
 command.add_action('tenant-show-preprocess', tenant_show_preprocess,
                     {'kwargs': {'obj_type': '$obj-type',
                                 'data'    : '$data',
