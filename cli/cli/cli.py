@@ -281,11 +281,11 @@ def same_subnet(ip1, ip2, netmask):
 
 class SDNSh():
 
-    debug = True               # general cli debugging
-    debug_backtrace = True     # backtrace on failures
-    description = True         # help debug command descriptions
-    display_rest = True        # display rest call details
-    display_reply_rest = True  # display rest call replies details
+    debug = False               # general cli debugging
+    debug_backtrace = False     # backtrace on failures
+    description = False         # help debug command descriptions
+    display_rest = False        # display rest call details
+    display_reply_rest = False  # display rest call replies details
 
     command_dict = {}
     mode_stack = []
