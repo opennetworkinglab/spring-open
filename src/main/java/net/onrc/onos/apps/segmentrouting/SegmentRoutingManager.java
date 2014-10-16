@@ -288,7 +288,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      */
     private void handleTopologyChangeEvents() {
-
         numOfEventProcess ++;
 
         Collection<LinkData> linkEntriesAdded = new ArrayList<LinkData>();
@@ -306,7 +305,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             // Ex: link s1-s2 down, link s1-s2 up --> Do nothing
             // Ex: ink s1-s2 up, s1-p1,p2 down --> link s1-s2 down
             TopologyEvents topologyEvents = topologyEventQueue.poll();
-
             linkEntriesAdded.addAll(topologyEvents.getAddedLinkDataEntries());
             portEntriesAdded.addAll(topologyEvents.getAddedPortDataEntries());
             portEntriesRemoved.addAll(topologyEvents.getRemovedPortDataEntries());
@@ -343,13 +341,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
             if (!switchAdded.isEmpty()) {
                 processSwitchAdd(switchAdded);
             }
+            linkEntriesAdded.clear();
+            portEntriesAdded.clear();
+            portEntriesRemoved.clear();
+            linkEntriesRemoved.clear();
+            switchAdded.clear();
+            switchRemoved.clear();
+            mastershipRemoved.clear();
+
         }
 
         // TODO: 100ms is enough to check both mastership removed events
         // and the port removed events? What if the PORT_STATUS packets comes late?
         if (!mastershipRemoved.isEmpty()) {
             if (portEntriesRemoved.isEmpty()) {
-                log.debug("Just mastership is removed. Do not anthing.");
+                log.debug("Just mastership is removed. Do not do anthing.");
             }
             else {
                 HashMap<String, MastershipData> mastershipToRemove =
@@ -894,7 +900,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             //actions.add(pushMplsAction);
             //actions.add(copyTtlOutAction);
             //actions.add(decMplsTtlAction);
-            actions.add(setIdAction);
+            // actions.add(setIdAction);
             groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
 
         }
@@ -914,7 +920,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 //actions.add(pushMplsAction);
                 //actions.add(copyTtlOutAction);
                 //actions.add(decMplsTtlAction);
-                actions.add(setIdAction);
+                // actions.add(setIdAction);
                 groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
             }
         }
