@@ -111,11 +111,11 @@ class CliModelInfo():
         return obj_type_info['fields'].get(field_name, None)
 
     # LOOK! Refactor - Should we merge this with model_info_list?
-    if (onos == 1):
-        # do nothing
-        additional_model_info_dict = {}
-    elif (onos==2):
     #if (onos == 1):
+        # do nothing
+    #    additional_model_info_dict = {}
+    #elif (onos==2):
+    if (onos == 1):
         additional_model_info_dict = {
         'switches' : {
             # switches are now directly fetched via rest api.

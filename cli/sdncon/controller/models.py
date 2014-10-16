@@ -292,7 +292,7 @@ class ForwardingConfig(models.Model):
             {'name': 'access_priority',    'rest_name': 'access-priority'},
             {'name': 'core_priority',      'rest_name': 'core-priority'},
         )
-
+"""
 #
 # ------------------------------------------------------------
 class Controller(models.Model):
@@ -438,7 +438,7 @@ class Controller(models.Model):
             {'name': 'logging_level',           'rest_name': 'logging-level'},
             )
 
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -664,7 +664,7 @@ class ControllerDomainNameServer(models.Model):
         NAME = 'controller-domain-name-server'
         FIELD_INFO = (
             )
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -863,7 +863,7 @@ class SwitchAlias(models.Model):
     class Rest:
         NAME = 'switch-alias'
 
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -1548,7 +1548,7 @@ class AddressSpaceIdentifierRule (models.Model):
             )
 #
 # ------------------------------------------------------------
-
+"""
 class HostConfig(models.Model):
     host_id_length = 17
     #
@@ -1595,7 +1595,7 @@ class HostConfig(models.Model):
         FIELD_INFO = (
             #{'name': 'address_space', 'rest_name': 'address-space'},
             )
-
+"""
 #
 # ------------------------------------------------------------
 
@@ -2902,7 +2902,7 @@ class VirtualRoutingRule (models.Model):
             )
 #
 # ------------------------------------------------------------
-
+"""
 class Tag(models.Model):
     namespace_length = 64
     name_length = 64
@@ -3010,7 +3010,7 @@ class TagMapping(models.Model):
 
     class Rest:
         NAME = 'tag-mapping'
-
+"""
 #
 # ------------------------------------------------------------
 class TechSupportConf(models.Model):

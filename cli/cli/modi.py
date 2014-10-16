@@ -107,6 +107,7 @@ class Modi():
         for (k, d) in self.obj_type_info_dict.items():
             if not 'fields' in d:
                 print '%s: Missing "fields"' % k
+                continue
             candidate_keys = [f for f in d['fields'].keys()
                               if d['fields'][f].get('primary_key', False)]
             if len(candidate_keys) > 0:
@@ -135,6 +136,9 @@ class Modi():
 
         self.foreign_key_xref = {}
         for (obj_type, obj_type_dict) in self.obj_type_info_dict.items():
+            if not 'fields' in obj_type_dict:
+                print '%s: Missing "fields"' % obj_type
+                continue
             for (fn, fd) in obj_type_dict['fields'].items():
                 if 'type' in fd:
                     if fd['type'] == 'ForeignKey':
@@ -163,6 +167,9 @@ class Modi():
         self.alias_obj_type_xref = {}
         self.alias_obj_types = []
         for (obj_type, obj_type_dict) in self.obj_type_info_dict.items():
+            if not 'fields' in obj_type_dict:
+                print '%s: Missing "fields"' % obj_type
+                continue
             foreign_key_obj_type = None
             foreign_key_count = 0
             other_types = False
