@@ -167,6 +167,9 @@ urlpatterns = patterns('',
 
     # REST APIs for controller summary statistics 
     (r'^rest/v1/controller/summary$', 'sdncon.rest.views.do_sdnplatform_controller_summary'),
+    
+    # REST APIs for tunnel 
+    (r'^rest/v1/tunnel/?$', 'sdncon.rest.views.do_sdnplatform_tunnel_config'),
 
 )
 

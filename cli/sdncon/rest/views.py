@@ -2133,4 +2133,19 @@ def do_execute_upgrade_step(request):
         jsondict['description'] = str(result['out']).strip()
 
     return HttpResponse(simplejson.dumps(jsondict), JSON_CONTENT_TYPE)
+
+@safe_rest_view
+def do_sdnplatform_tunnel_config(request):    
+    if request.method != 'PUT':
+        raise RestInvalidMethodException()
+
+    url = controller_url('onos', 'segmentrouting', 'tunnel')
+    post_data = request.raw_post_data
+    put_request = urllib2.Request(url, post_data)
+    put_request.get_method = lambda: 'POST'
+    put_request.add_header('Content-Type', 'application/json')
+    response = urllib2.urlopen(put_request)
+    response_text = response.read()
+    response = HttpResponse(response_text, JSON_CONTENT_TYPE)
     
+    return response

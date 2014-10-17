@@ -97,11 +97,19 @@ def tunnel_config_exit():
     if tunnel_dict:
         url_str = ""
         entries = tunnel_dict[tunnel_id]
-        for entry in entries:
-            url_str = url_str + "/node/" + entry
-        print url_str
+        url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
+        obj_data = {}
+        obj_data['tunnel-id']=tunnel_id
+        obj_data['tunnel-path']=entries
+        data = sdnsh.store.rest_post_request(url_str,obj_data)
+        # LOOK! successful stuff should be returned in json too.
+        if data != "saved":
+            result = json.loads(data)
+            return result
     else:
         print "empty command"
+    #Clear the transit information    
+    tunnel_dict = {}
             
       
 def write_fields(obj_type, obj_id, data):
