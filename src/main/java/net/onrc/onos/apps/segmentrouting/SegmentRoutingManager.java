@@ -364,15 +364,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 processSwitchAdd(switchAdded);
             }
 
-            /*
-            linkEntriesAdded.clear();
-            portEntriesAdded.clear();
-            portEntriesRemoved.clear();
-            linkEntriesRemoved.clear();
-            switchAdded.clear();
-            switchRemoved.clear();
-            mastershipRemoved.clear();
-            */
         }
 
         // TODO: 100ms is enough to check both mastership removed events
