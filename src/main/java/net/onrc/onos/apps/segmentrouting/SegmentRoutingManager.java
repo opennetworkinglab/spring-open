@@ -72,6 +72,7 @@ import net.onrc.onos.core.util.SwitchPort;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.slf4j.Logger;
@@ -646,18 +647,28 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             // Send Barrier Message and make sure all rules are set
             // before we set the rules to next routers
+            // TODO: barriers to all switches in this update stage
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(sw.getDpid().toString()));
             if (sw13 != null) {
+                OFBarrierReplyFuture replyFuture = null;
                 try {
-                    OFBarrierReplyFuture replyFuture = sw13.sendBarrier();
-                    replyFuture.get(10, TimeUnit.SECONDS);
+                    replyFuture = sw13.sendBarrier();
                 } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                    log.error("Barrier message not received for sw: {}", sw.getDpid());
-                    e.printStackTrace();
+                    log.error("Error sending barrier request to switch {}",
+                            sw13.getId(), e.getCause());
                 }
+                OFBarrierReply br = null;
+                try {
+                    br = replyFuture.get(2, TimeUnit.SECONDS);
+                } catch (TimeoutException | InterruptedException | ExecutionException e) {
+                    // XXX for some reason these exceptions are not being thrown
+                }
+                if (br == null) {
+                    log.warn("Did not receive barrier-reply from {}", sw13.getId());
+                    // XXX take corrective action
+                }
+
             }
         }
 

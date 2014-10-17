@@ -1332,10 +1332,10 @@ public class OFSwitchImplBase implements IOFSwitch {
                 .buildBarrierRequest()
                 .setXid(xid)
                 .build();
-        write(Collections.singletonList(br));
         OFBarrierReplyFuture future = new OFBarrierReplyFuture(threadPool, this,
                 (int) xid);
         barrierFutureMap.put(xid, future);
+        write(Collections.singletonList(br));
         return future;
     }
 
@@ -1344,6 +1344,10 @@ public class OFSwitchImplBase implements IOFSwitch {
         if (f != null) {
             f.deliverFuture(this, br);
             barrierFutureMap.remove(br.getXid());
+        } else {
+            log.warn("Rcvd unknown barrier reply xid: {} from sw: {}",
+                    br.getXid(), getStringId());
+
         }
     }
 }

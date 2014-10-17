@@ -44,6 +44,9 @@ import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
 import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
+import net.onrc.onos.core.matchaction.action.PushMplsAction;
+import net.onrc.onos.core.matchaction.action.SetMplsBosAction;
+import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.MplsMatch;
@@ -1254,15 +1257,21 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     .ethSrc(MacAddress.of(srcMac));
             ofAction = factory.actions().buildSetField()
                     .setField(smac).build();
-            /*} else if (action instanceof PushMplsAction) {
-                ofAction = factory.actions().pushMpls(EthType.MPLS_UNICAST);
-            } else if (action instanceof SetMplsIdAction) {
-                int labelid = ((SetMplsIdAction) action).getMplsId();
-                OFOxmMplsLabel lid = factory.oxms()
-                        .mplsLabel(U32.of(labelid));
-                ofAction = factory.actions().buildSetField()
-                        .setField(lid).build();
-            */} else if (action instanceof PopMplsAction) {
+        } else if (action instanceof PushMplsAction) {
+            ofAction = factory.actions().pushMpls(EthType.MPLS_UNICAST);
+        } else if (action instanceof SetMplsIdAction) {
+            int labelid = ((SetMplsIdAction) action).getMplsId();
+            OFOxmMplsLabel lid = factory.oxms()
+                    .mplsLabel(U32.of(labelid));
+            ofAction = factory.actions().buildSetField()
+                    .setField(lid).build();
+        } else if (action instanceof SetMplsBosAction) {
+            OFBooleanValue val = OFBooleanValue.of(
+                    ((SetMplsBosAction) action).isSet());
+            OFOxmMplsBos bos = factory.oxms().mplsBos(val);
+            OFAction setBos = factory.actions().buildSetField()
+                    .setField(bos).build();
+        } else if (action instanceof PopMplsAction) {
             EthType ethertype = ((PopMplsAction) action).getEthType();
             ofAction = factory.actions().popMpls(ethertype);
         } else if (action instanceof GroupAction) {
@@ -1298,10 +1307,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             log.warn("Unsupported Action type: {}", action.getClass().getName());
             return null;
         }
-
-        // not supported by loxigen
-        // OFAction setBos =
-        // factory.actions().buildSetField().setField(bos).build();
 
         return ofAction;
     }

@@ -134,12 +134,12 @@ public interface IOF13Switch extends IOFSwitch {
     public void removePortFromGroups(PortNumber port);
 
     public void addPortToGroups(PortNumber port);
+
     /**
      * give string tableType (ip, mpls, acl)
      * @param tableType  String equal to only one of (ip, mpls, acl)
      * @return TableId
      */
-
     public TableId getTableId(String tableType);
 
     public int createTunnel(int tunnelId, List<String> route, NeighborSet ns);
