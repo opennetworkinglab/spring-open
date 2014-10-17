@@ -5,6 +5,7 @@ import net.onrc.onos.core.util.Dpid;
 
 public class GroupAction implements Action {
     NeighborSet fwdSws;
+    int groupId;
 
     public GroupAction() {
         fwdSws = new NeighborSet();
@@ -20,5 +21,13 @@ public class GroupAction implements Action {
 
     public NeighborSet getDpids() {
         return fwdSws;
+    }
+
+    public void setGroupId(int id) {
+        this.groupId = id;
+    }
+
+    public int getGroupId() {
+        return this.groupId;
     }
 }

@@ -3,13 +3,14 @@ package net.floodlightcontroller.core;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
-import org.projectfloodlight.openflow.types.TableId;
 
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
+
+import org.projectfloodlight.openflow.types.TableId;
 
 import com.google.common.primitives.Longs;
 
@@ -136,9 +137,11 @@ public interface IOF13Switch extends IOFSwitch {
     /**
      * give string tableType (ip, mpls, acl)
      * @param tableType  String equal to only one of (ip, mpls, acl)
-     * @return TableId 
+     * @return TableId
      */
-    
+
     public TableId getTableId(String tableType);
+
+    public int createTunnel(int tunnelId, List<String> route, NeighborSet ns);
 
 }

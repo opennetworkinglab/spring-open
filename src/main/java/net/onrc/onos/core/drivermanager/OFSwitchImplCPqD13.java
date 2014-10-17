@@ -877,6 +877,23 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         return;
     }
 
+
+    private void createGroupForMplsLabel(int groupId, String nodeId,
+            int nextGroupId, boolean bos) {
+        List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+        BucketInfo bucket = new BucketInfo(nextGroupId,
+                Integer.parseInt(nodeId), bos);
+        buckets.add(bucket);
+        EcmpInfo ecmpInfo = new EcmpInfo(groupId, buckets);
+        setPolicyEcmpGroup(ecmpInfo);
+//        ecmpGroups.put(ns, ecmpInfo);
+        log.debug(
+                "createGroupForANeighborSet: Creating ecmp group {} in sw {} "
+                        + "for pushing label {} and group to {}",
+                groupId, getStringId(), nodeId, nextGroupId);
+        return;
+    }
+
     /**
      * createGroups creates ECMP groups for all ports on this router connected
      * to other routers (in the OF network). The information for ports is
@@ -899,6 +916,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
      * <li>7) all ports to R1, R2, and R3
      */
     private void createGroups() {
+
         Set<Dpid> dpids = neighbors.keySet();
         if (dpids == null || dpids.isEmpty()) {
             return;
@@ -961,7 +979,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         MacAddress srcMac;
         MacAddress dstMac;
         PortNumber outport;
+        int groupNo;
         int mplsLabel;
+        boolean bos;
 
         BucketInfo(Dpid nDpid, MacAddress smac, MacAddress dmac,
                 PortNumber p, int label) {
@@ -970,13 +990,26 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             dstMac = dmac;
             outport = p;
             mplsLabel = label;
+            groupNo = -1;
         }
+
+        BucketInfo(int no, int label, boolean b) {
+            neighborDpid = null;
+            srcMac = null;
+            dstMac = null;
+            outport = null;
+            groupNo = no;
+            mplsLabel = label;
+            bos = b;
+        }
+
 
         @Override
         public String toString() {
             return " {neighborDpid: " + neighborDpid + ", dstMac: " + dstMac +
                     ", srcMac: " + srcMac + ", outport: " + outport +
-                    "mplsLabel: " + mplsLabel + "}";
+                    ", groupNo: " + groupNo +
+                    ", mplsLabel: " + mplsLabel + "}";
         }
     }
 
@@ -1019,6 +1052,84 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 actions.add(setBX);
                 actions.add(copyTtl);
                 actions.add(decrTtl);
+            }
+            OFBucket ofb = factory.buildBucket()
+                    .setWeight(1)
+                    .setActions(actions)
+                    .build();
+            buckets.add(ofb);
+        }
+
+        OFMessage gm = factory.buildGroupAdd()
+                .setGroup(group)
+                .setBuckets(buckets)
+                .setGroupType(OFGroupType.SELECT)
+                .setXid(getNextTransactionId())
+                .build();
+        msglist.add(gm);
+        try {
+            write(msglist);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void setPolicyEcmpGroup(EcmpInfo ecmpInfo) {
+        List<OFMessage> msglist = new ArrayList<OFMessage>();
+        OFGroup group = OFGroup.of(ecmpInfo.groupId);
+
+        List<OFBucket> buckets = new ArrayList<OFBucket>();
+        List<OFAction> actions = new ArrayList<OFAction>();
+        for (BucketInfo b : ecmpInfo.buckets) {
+            if (b.dstMac != null && b.srcMac != null && b.outport != null) {
+                OFOxmEthDst dmac = factory.oxms()
+                        .ethDst(b.dstMac);
+                OFAction setDA = factory.actions().buildSetField()
+                        .setField(dmac).build();
+                OFOxmEthSrc smac = factory.oxms()
+                        .ethSrc(b.srcMac);
+                OFAction setSA = factory.actions().buildSetField()
+                        .setField(smac).build();
+                OFAction outp = factory.actions().buildOutput()
+                        .setPort(OFPort.of(b.outport.shortValue()))
+                        .build();
+                actions.add(setSA);
+                actions.add(setDA);
+                actions.add(outp);
+            }
+            if (b.groupNo > 0) {
+                OFAction groupTo = factory.actions().buildGroup()
+                        .setGroup(OFGroup.of(b.groupNo))
+                        .build();
+                actions.add(groupTo);
+            }
+            if (b.mplsLabel != -1) {
+                OFAction pushLabel = factory.actions().buildPushMpls()
+                        .setEthertype(EthType.MPLS_UNICAST).build();
+
+                OFBooleanValue bosValue = null;
+                if (b.bos)
+                    bosValue = OFBooleanValue.TRUE;
+                else
+                    bosValue = OFBooleanValue.FALSE;
+                OFOxmMplsBos bosX = factory.oxms()
+                        .mplsBos(bosValue);
+                OFAction setBX = factory.actions().buildSetField()
+                        .setField(bosX).build();
+                OFOxmMplsLabel lid = factory.oxms()
+                        .mplsLabel(U32.of(b.mplsLabel));
+                OFAction setLabel = factory.actions().buildSetField()
+                        .setField(lid).build();
+                OFAction copyTtl = factory.actions().copyTtlOut();
+                OFAction decrTtl = factory.actions().decMplsTtl();
+                actions.add(pushLabel);
+                actions.add(setLabel);
+                actions.add(setBX);
+                actions.add(copyTtl);
+                // decrement TTL only when the first MPLS label is pushed
+                if (b.bos)
+                    actions.add(decrTtl);
             }
             OFBucket ofb = factory.buildBucket()
                     .setWeight(1)
@@ -1155,15 +1266,23 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             EthType ethertype = ((PopMplsAction) action).getEthType();
             ofAction = factory.actions().popMpls(ethertype);
         } else if (action instanceof GroupAction) {
-            NeighborSet ns = ((GroupAction) action).getDpids();
-            EcmpInfo ei = ecmpGroups.get(ns);
-            if (ei == null) {
-                log.debug("Unable to find ecmp group for neighbors {} at "
-                        + "switch {} and hence creating it", ns, getStringId());
-                createGroupForANeighborSet(ns, groupid.incrementAndGet());
-                ei = ecmpGroups.get(ns);
+            // If group Id can be specified explicitly in case of policy routing.
+            int gid = -1;
+            GroupAction ga = (GroupAction)action;
+            if (ga.getGroupId() > 0) {
+                gid = ga.getGroupId();
             }
-            int gid = ei.groupId;
+            else {
+                NeighborSet ns = ((GroupAction) action).getDpids();
+                EcmpInfo ei = ecmpGroups.get(ns);
+                if (ei == null) {
+                    log.debug("Unable to find ecmp group for neighbors {} at "
+                            + "switch {} and hence creating it", ns, getStringId());
+                    createGroupForANeighborSet(ns, groupid.incrementAndGet());
+                    ei = ecmpGroups.get(ns);
+                }
+                gid = ei.groupId;
+            }
             ofAction = factory.actions().buildGroup()
                     .setGroup(OFGroup.of(gid))
                     .build();
@@ -1420,13 +1539,13 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 .setTableId(TableId.of(TABLE_ACL))
                 .setMatch(matchBuilder.build())
                 .setInstructions(instructions)
-                .setPriority(MAX_PRIORITY / 2) // TODO: wrong - should be MA
-                                               // priority
+                .setPriority(MAX_PRIORITY) // exact match and exclusive
                 .setBufferId(OFBufferId.NO_BUFFER)
                 .setIdleTimeout(0)
                 .setHardTimeout(0)
                 .setXid(getNextTransactionId())
                 .build();
+
         return aclFlow;
     }
 
@@ -1499,9 +1618,34 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
+    public int createTunnel(int tunnelId, List<String> route, NeighborSet ns) {
+
+        // create a last group of the group chaining
+        int finalGroupId = groupid.incrementAndGet();
+        createGroupForANeighborSet(ns, finalGroupId);
+
+        int groupId = 0;
+        int nextGroupId = finalGroupId;
+        boolean bos = false;
+
+        // process the node ID in reverse order
+        for (int i = 0; i < route.size(); i++) {
+            String nodeId = route.get(i);
+            groupId = groupid.incrementAndGet();
+            if (i == route.size()-1)
+                bos = true;
+            createGroupForMplsLabel(groupId, nodeId, nextGroupId, bos);
+            nextGroupId = groupId;
+        }
+
+        return groupId;
+    }
+
+
     // *****************************
     // Unused
     // *****************************
+
 
     @SuppressWarnings("unused")
     private void setAsyncConfig() throws IOException {

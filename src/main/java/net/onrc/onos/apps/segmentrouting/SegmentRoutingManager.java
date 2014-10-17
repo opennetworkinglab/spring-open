@@ -27,11 +27,10 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
-import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
+import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
-import net.onrc.onos.apps.segmentrouting.web.SegmentRoutingWebRoutable;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
@@ -51,6 +50,8 @@ import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.MplsMatch;
+import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.matchaction.match.PacketMatchBuilder;
 import net.onrc.onos.core.packet.ARP;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
@@ -83,7 +84,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             .getLogger(SegmentRoutingManager.class);
 
     private ITopologyService topologyService;
-    private IRestApiService restApi;
     private IPacketService packetService;
     private MutableTopology mutableTopology;
     private ConcurrentLinkedQueue<IPv4> ipPacketQueue;
@@ -95,18 +95,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private IThreadPoolService threadPool;
     private SingletonTask discoveryTask;
     private SingletonTask linkAddTask;
+    private SingletonTask testTask;
     private IFloodlightProviderService floodlightProvider;
 
     private HashMap<Switch, ECMPShortestPathGraph> graphs;
     private HashMap<String, LinkData> linksDown;
     private HashMap<String, LinkData> linksToAdd;
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
+    private HashMap<Integer, HashMap<String, PolicyRouteInfo>> stitchInfo;
+    private HashMap<Integer, HashMap<String, Integer>> tunnelGroupMap;
 
     private int numOfEvents = 0;
     private int numOfEventProcess = 0;
     private int numOfPopulation = 0;
     private long matchActionId = 0L;
     private final int DELAY_TO_ADD_LINK = 10;
+    private final int MAX_NUM_LABELS = 3;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -130,7 +134,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         l.add(IPacketService.class);
         l.add(IFlowPusherService.class);
         l.add(ITopologyService.class);
-        l.add(IRestApiService.class);
 
         return l;
 
@@ -146,17 +149,17 @@ public class SegmentRoutingManager implements IFloodlightModule,
         topologyService = context.getServiceImpl(ITopologyService.class);
         threadPool = context.getServiceImpl(IThreadPoolService.class);
         mutableTopology = topologyService.getTopology();
-        topologyService.addListener(this, false);
         ipPacketQueue = new ConcurrentLinkedQueue<IPv4>();
         graphs = new HashMap<Switch, ECMPShortestPathGraph>();
         linksDown = new HashMap<String, LinkData>();
         linksToAdd = new HashMap<String, LinkData>();
-        //topologyLinks = new HashSet<LinkData>();
-        restApi = context.getServiceImpl(IRestApiService.class);
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
+        stitchInfo = new HashMap<Integer, HashMap<String, PolicyRouteInfo>>();
+        packetService = context.getServiceImpl(IPacketService.class);
+        tunnelGroupMap = new HashMap<Integer, HashMap<String, Integer>>();
 
-        this.packetService = context.getServiceImpl(IPacketService.class);
         packetService.registerPacketListener(this);
+        topologyService.addListener(this, false);
 
 
     }
@@ -164,7 +167,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         ScheduledExecutorService ses = threadPool.getScheduledExecutor();
-        restApi.addRestletRoutable(new SegmentRoutingWebRoutable());
 
         discoveryTask = new SingletonTask(ses, new Runnable() {
             @Override
@@ -180,7 +182,17 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         });
 
+        testTask = new SingletonTask(ses, new Runnable() {
+            @Override
+            public void run() {
+                runTest();
+            }
+        });
+
+        // policy routing test task
+        //testTask.reschedule(20, TimeUnit.SECONDS);
     }
+
 
     @Override
     public void receive(Switch sw, Port inPort, Ethernet payload) {
@@ -447,7 +459,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     getSwId(port.getDpid().toString()));
             if (sw != null) {
                 sw.addPortToGroups(port.getPortNumber());
-                log.debug("Add port {} to switch {}", port, dpid);
+                //log.debug("Add port {} to switch {}", port, dpid);
             }
         }
     }
@@ -499,10 +511,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
             srcSw.addPortToGroups(srcPort.getPortNumber());
             dstSw.addPortToGroups(dstPort.getPortNumber());
 
-            log.debug("Add a link port {} to switch {} to add link {}", srcPort, srcSw,
-                    link);
-            log.debug("Add a link port {} to switch {} to add link {}", dstPort, dstSw,
-                    link);
+            //log.debug("Add a link port {} to switch {} to add link {}", srcPort, srcSw,
+            //        link);
+            //log.debug("Add a link port {} to switch {} to add link {}", dstPort, dstSw,
+            //        link);
 
         }
         populateEcmpRoutingRules(false);
@@ -890,7 +902,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         // If destination SW is the same as the fwd SW, then do not push MPLS
         // label
-
         if (fwdToSws.size() > 1) {
             PushMplsAction pushMplsAction = new PushMplsAction();
             SetMplsIdAction setIdAction = new SetMplsIdAction(Integer.parseInt(mplsLabel));
@@ -902,7 +913,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             //actions.add(decMplsTtlAction);
             // actions.add(setIdAction);
             groupAction.setEdgeLabel(Integer.parseInt(mplsLabel));
-
         }
         else {
             String fwdToSw = fwdToSws.get(0);
@@ -911,7 +921,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 actions.add(decTtlAction);
             }
             else {
-                PushMplsAction pushMplsAction = new PushMplsAction();
                 SetMplsIdAction setIdAction = new SetMplsIdAction(
                         Integer.parseInt(mplsLabel));
                 CopyTtlOutAction copyTtlOutAction = new CopyTtlOutAction();
@@ -957,23 +966,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
 
-    }
-
-    /**
-     * Convert a string DPID to its Switch Id (integer)
-     *
-     * @param dpid
-     * @return
-     */
-    private long getSwId(String dpid) {
-
-        long swId = 0;
-
-        String swIdHexStr = "0x"+dpid.substring(dpid.lastIndexOf(":") + 1);
-        if (swIdHexStr != null)
-            swId = Integer.decode(swIdHexStr);
-
-        return swId;
     }
 
     /**
@@ -1027,7 +1019,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
             // One rule for Bos = 0
             MplsMatch mplsMatchBos = new MplsMatch(Integer.parseInt(mplsLabel), false);
             List<Action> actionsBos = new ArrayList<Action>();
-            actionsBos.add(popAction);
+            PopMplsAction popActionBos = new PopMplsAction(EthType.MPLS_UNICAST);
+            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
+
+            actionsBos.add(copyTtlInAction);
+            actionsBos.add(popActionBos);
+            actionsBos.add(decMplsTtlAction);
             actionsBos.add(groupAction);
 
             MatchAction matchActionBos = new MatchAction(new MatchActionId(matchActionId++),
@@ -1088,16 +1085,464 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
 
+    /**
+     * Create a tunnel for policy routing
+     * It delivers the node IDs of tunnels to driver.
+     * Split the node IDs if number of IDs exceeds the limit for stitching.
+     *
+     * @param tunnelId  Node IDs for the tunnel
+     * @param Ids tunnel ID
+     */
+    public boolean createTunnel(int tunnelId, List<String> Ids) {
+
+        if (tunnelId < 0) {
+            log.debug("Tunnel ID should be posivtive integer.");
+            return false;
+        }
+
+        if (Ids.isEmpty() || Ids.size() < 2) {
+            log.debug("Wrong tunnel information");
+            return false;
+        }
+
+        HashMap<String, PolicyRouteInfo> stitchingRule = getStitchingRule(Ids);
+        stitchInfo.put(Integer.valueOf(tunnelId), stitchingRule);
+        if (stitchingRule == null) {
+            log.debug("Failed to get the policy rule.");
+            return false;
+        }
+        HashMap<String, Integer> switchGroupPair = new HashMap<String, Integer>();
+        for (String targetDpid: stitchingRule.keySet()) {
+            PolicyRouteInfo route = stitchingRule.get(targetDpid);
+
+            IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                    getSwId(targetDpid.toString()));
+
+            if (targetSw == null) {
+                log.debug("Switch {} is gone.", targetDpid);
+                return false;
+            }
+
+            NeighborSet ns = new NeighborSet();
+            for (Dpid dpid: route.getFwdSwDpid())
+                ns.addDpid(dpid);
+
+            printTunnelInfo(targetSw, tunnelId, route.getRoute(), ns);
+            int groupId = targetSw.createTunnel(tunnelId, route.getRoute(), ns);
+            switchGroupPair.put(targetDpid.toString(), groupId);
+
+        }
+
+        tunnelGroupMap.put(Integer.valueOf(tunnelId), switchGroupPair);
+
+        return true;
+    }
+
+    /**
+     * Set policy table for policy routing
+     *
+     * @param sw
+     * @param mplsLabel
+     */
+    private void setPolicyTable(MACAddress srcMac, MACAddress dstMac,
+            Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
+            Short srcTcpPort, Short dstTcpPort, int tid) {
+
+        HashMap<String, PolicyRouteInfo> routeInfo = stitchInfo.get(Integer.valueOf(tid));
+        HashMap<String, Integer> switchGroupPair = tunnelGroupMap.get(Integer.valueOf(tid));
+        for (String srcDpid: routeInfo.keySet()) {
+
+            PacketMatchBuilder packetBuilder = new PacketMatchBuilder();
+
+            if (srcMac != null)
+                packetBuilder.setSrcMac(srcMac);
+            if (dstMac != null)
+                packetBuilder.setDstMac(dstMac);
+            if (etherType != null) {
+                packetBuilder.setEtherType(etherType);
+            }
+            if (srcIp != null) {
+                packetBuilder.setSrcIp(srcIp.address(), srcIp.prefixLen());
+            }
+            if (dstIp != null) {
+                packetBuilder.setDstIp(dstIp.address(), dstIp.prefixLen());
+            }
+            if (ipProto != null) {
+                packetBuilder.setIpProto(ipProto);
+            }
+            if (srcTcpPort > 0) {
+                packetBuilder.setSrcTcpPort(srcTcpPort);
+            }
+            if (dstTcpPort > 0) {
+                packetBuilder.setDstTcpPort(dstTcpPort);
+            }
+            PacketMatch policyMatch = packetBuilder.build();
+
+            List<Action> actions = new ArrayList<>();
+            GroupAction groupAction = new GroupAction();
+            int gropuId = switchGroupPair.get(srcDpid);
+            groupAction.setGroupId(gropuId);
+            actions.add(groupAction);
+
+            MatchAction matchAction = new MatchAction(new MatchActionId(
+                    matchActionId++),
+                    new SwitchPort((long) 0, (short) 0), policyMatch, actions);
+            MatchActionOperationEntry maEntry =
+                    new MatchActionOperationEntry(Operator.ADD, matchAction);
+
+            IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                    getSwId(srcDpid));
+
+            if (sw13 != null) {
+                printMatchActionOperationEntry(sw13, maEntry);
+                try {
+                    sw13.pushFlow(maEntry);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the forwarding Switch DPIDs to send packets to a node
+     *
+     * @param srcSw source switch
+     * @param nodeId destination node Id
+     * @return list of switch DPID to forward packets to
+     */
+
+    private List<Dpid> getForwardingSwitchForNodeId(Switch srcSw, String nodeId) {
+
+        List<Dpid> fwdSws = new ArrayList<Dpid>();
+        Switch destSw = null;
+
+        destSw = getSwitchFromNodeId(nodeId);
+
+        if (destSw == null) {
+            log.debug("Cannot find the switch with ID {}", nodeId);
+            return null;
+        }
+
+        ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(srcSw);
+
+        HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>> switchVia =
+                ecmpSPG.getAllLearnedSwitchesAndVia();
+        for (Integer itrIdx : switchVia.keySet()) {
+            HashMap<Switch, ArrayList<ArrayList<Dpid>>> swViaMap =
+                    switchVia.get(itrIdx);
+            for (Switch targetSw : swViaMap.keySet()) {
+                String destSwDpid = destSw.getDpid().toString();
+                if (targetSw.getDpid().toString().equals(destSwDpid)) {
+                    for (ArrayList<Dpid> via : swViaMap.get(targetSw)) {
+                        if (via.isEmpty()) {
+                            fwdSws.add(destSw.getDpid());
+                        }
+                        else {
+                            fwdSws.add(via.get(0));
+                        }
+                    }
+                }
+            }
+        }
+
+        return fwdSws;
+    }
+
+    /**
+     * Get switch for the node Id specified
+     *
+     * @param nodeId node ID for switch
+     * @return Switch
+     */
+    private Switch getSwitchFromNodeId(String nodeId) {
+
+        for (Switch sw : mutableTopology.getSwitches()) {
+            String id = sw.getStringAttribute("nodeSid");
+            if (id.equals(nodeId)) {
+                return sw;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Convert a string DPID to its Switch Id (integer)
+     *
+     * @param dpid
+     * @return
+     */
+    private long getSwId(String dpid) {
+
+        long swId = 0;
+
+        String swIdHexStr = "0x"+dpid.substring(dpid.lastIndexOf(":") + 1);
+        if (swIdHexStr != null)
+            swId = Integer.decode(swIdHexStr);
+
+        return swId;
+    }
+
+    private void runTest() {
+
+        String[] routeArray = {"101", "102", "103", "104", "105", "108", "110"};
+        List<String> routeList = new ArrayList<String>();
+        for (int i = 0; i < routeArray.length; i++)
+            routeList.add(routeArray[i]);
+
+        if (createTunnel(1, routeList)) {
+            IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
+            IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
+
+            this.setPolicyTable(null, null, Ethernet.TYPE_IPV4, srcIp, dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 1);
+        }
+        else {
+            testTask.reschedule(5, TimeUnit.SECONDS);
+        }
+    }
+
+    private void runTest1() {
+
+        String dpid1 = "00:00:00:00:00:00:00:01";
+        String dpid2 = "00:00:00:00:00:00:00:0a";
+        Switch srcSw = mutableTopology.getSwitch(new Dpid(dpid1));
+        Switch dstSw = mutableTopology.getSwitch(new Dpid(dpid2));
+
+        if (srcSw == null || dstSw == null) {
+            testTask.reschedule(1, TimeUnit.SECONDS);
+            log.debug("Switch is gone. Reschedule the test");
+            return;
+        }
+
+        String[] routeArray = {"101", "102", "105", "108", "110"};
+        List<String> routeList = new ArrayList<String>();
+        for (int i = 0; i < routeArray.length; i++)
+            routeList.add(routeArray[i]);
+
+        List<String> optimizedRoute = this.getOptimizedPath(srcSw, dstSw, routeList);
+
+        log.debug("Test set is {}", routeList.toString());
+        log.debug("Result set is {}", optimizedRoute.toString());
+
+
+    }
+
+    /**
+     * Optimize the mpls label
+     * The feature will be used only for policy of "avoid a specific switch".
+     * Check route to each router in route backward.
+     * If there is only one route to the router and the routers are included in
+     * the route, remove the id from the path.
+     * A-B-C-D-E  => A-B-C-D-E -> A-E
+     *   |   |    => A-B-H-I   -> A-I
+     *   F-G-H-I  => A-D-I     -> A-D-I
+     */
+    private List<String> getOptimizedPath(Switch srcSw, Switch dstSw, List<String> route) {
+
+        List<String> optimizedPath = new ArrayList<String>();
+        optimizedPath.addAll(route);
+        ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(srcSw);
+
+        HashMap<Integer, HashMap<Switch, ArrayList<Path>>> paths =
+                ecmpSPG.getCompleteLearnedSwitchesAndPaths();
+        for (HashMap<Switch, ArrayList<Path>> p: paths.values()) {
+            for (Switch s: p.keySet()) {
+                if (s.getDpid().toString().equals(dstSw.getDpid().toString())) {
+                    ArrayList<Path> ecmpPaths = p.get(s);
+                    if (ecmpPaths!= null && ecmpPaths.size() == 1) {
+                        for (Path path: ecmpPaths) {
+                            for (LinkData link: path) {
+                                String srcId = getMplsLabel(link.getSrc().getDpid().toString());
+                                String dstId = getMplsLabel(link.getSrc().getDpid().toString());
+                                if (optimizedPath.contains(srcId)) {
+                                    optimizedPath.remove(srcId);
+                                }
+                                if (optimizedPath.contains(dstId)) {
+                                    optimizedPath.remove(dstId);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return optimizedPath;
+
+    }
+
+
+    class PolicyRouteInfo {
+
+        String srcSwDpid;
+        List<Dpid> fwdSwDpids;
+        List<String> route;
+
+        PolicyRouteInfo() {
+            fwdSwDpids = new ArrayList<Dpid>();
+            route = new ArrayList<String>();
+        }
+
+        void setSrcDpid(String dpid) {
+            this.srcSwDpid = dpid;
+        }
+
+        void setFwdSwDpid(List<Dpid> dpid) {
+            this.fwdSwDpids = dpid;
+        }
+
+        void addRoute(String id) {
+            route.add(id);
+        }
+
+        void setRoute(List<String> r) {
+            this.route = r;
+        }
+
+        String getSrcSwDpid() {
+            return this.srcSwDpid;
+        }
+
+        List<Dpid> getFwdSwDpid() {
+            return this.fwdSwDpids;
+        }
+
+        List<String> getRoute() {
+            return this.route;
+        }
+    }
+
+
+    /**
+     *
+     *
+     * @param srcSw
+     * @param dstSw
+     * @param route
+     * @return
+     */
+    private HashMap<String, PolicyRouteInfo> getStitchingRule(List<String> route) {
+
+        if (route.isEmpty() || route.size() < 2)
+            return null;
+
+        HashMap<String, PolicyRouteInfo> rules = new HashMap<String, PolicyRouteInfo>();
+
+        Switch srcSw = this.getSwitchFromNodeId(route.get(0));
+        String srcDpid = srcSw.getDpid().toString();
+
+        if (route.size() <= MAX_NUM_LABELS+1) {
+            PolicyRouteInfo info = new PolicyRouteInfo();
+            info.setSrcDpid(srcSw.getDpid().toString());
+            List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, route.get(1));
+            info.setFwdSwDpid(fwdSwDpids);
+            route.remove(0);
+            info.setRoute(route);
+            rules.put(srcDpid, info);
+            return rules;
+        }
+
+        int i = 0;
+        PolicyRouteInfo routeInfo = new PolicyRouteInfo();
+        String prevNodeId = null;
+        boolean checkNeighbor = true;
+
+        for (String nodeId: route) {
+            if (i == 0) {
+                routeInfo.setSrcDpid(srcDpid);
+                srcSw = getSwitchFromNodeId(nodeId);
+                i++;
+            }
+            else if (i == 1) {
+                if (checkNeighbor) {
+                    // Check if next node is the neighbor SW of the source SW
+                    List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, nodeId);
+                    if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
+                        log.debug("There is no route from node {} to node {}", srcSw.getDpid(), nodeId);
+                        return null;
+                    }
+                    // If first Id is one of the neighbors, do not include it to route, but set it as a fwd SW.
+                    boolean match = false;
+                    for (Dpid dpid: fwdSwDpids) {
+                        if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
+                            List<Dpid> fwdSws = new ArrayList<Dpid>();
+                            fwdSws.add(dpid);
+                            routeInfo.setFwdSwDpid(fwdSws);
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        routeInfo.addRoute(nodeId);
+                        routeInfo.setFwdSwDpid(fwdSwDpids);
+                        i++;
+                    }
+
+                    checkNeighbor = false;
+                }
+                else {
+                    routeInfo.addRoute(nodeId);
+                    i++;
+                }
+            }
+            else {
+                routeInfo.addRoute(nodeId);
+                i++;
+            }
+
+            if (i == MAX_NUM_LABELS+1) {
+                rules.put(srcDpid, routeInfo);
+                routeInfo = new PolicyRouteInfo();
+                srcSw = getSwitchFromNodeId(nodeId);
+                srcDpid = getSwitchFromNodeId(nodeId).getDpid().toString();
+                routeInfo.setSrcDpid(srcDpid);
+                i = 1;
+                checkNeighbor = true;
+            }
+        }
+
+        if (i < MAX_NUM_LABELS+1) {
+            rules.put(srcDpid, routeInfo);
+        }
+
+        return rules;
+    }
+
+    /**
+     * print tunnel info - used only for debugging.
+     * @param targetSw
+     *
+     * @param fwdSwDpids
+     * @param ids
+     * @param tunnelId
+     */
+    private void printTunnelInfo(IOF13Switch targetSw, int tunnelId,
+            List<String> ids, NeighborSet ns) {
+        StringBuilder logStr = new StringBuilder("In switch " +
+            targetSw.getId() + ", create a tunnel " + tunnelId + " " + " of push ");
+        for (String id: ids)
+            logStr.append(id + "-");
+        logStr.append(" output to ");
+        for (Dpid dpid: ns.getDpids())
+            logStr.append(dpid + " - ");
+
+        log.debug(logStr.toString());
+
+    }
+
+
 
     /**
      * Debugging function to print out the Match Action Entry
+     * @param sw13
      *
      * @param maEntry
      */
-    private void printMatchActionOperationEntry(Switch sw,
-            MatchActionOperationEntry maEntry) {
+    private void printMatchActionOperationEntry(
+            IOF13Switch sw13, MatchActionOperationEntry maEntry) {
 
-        StringBuilder logStr = new StringBuilder("In switch " + sw.getDpid() + ", ");
+        StringBuilder logStr = new StringBuilder("In switch " + sw13.getId() + ", ");
 
         MatchAction ma = maEntry.getTarget();
         Match m = ma.getMatch();
@@ -1114,6 +1559,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
             int mplsLabel = ((MplsMatch) m).getMplsLabel();
             logStr.append(mplsLabel);
             logStr.append(" then ");
+        }
+        else if (m instanceof PacketMatch) {
+            GroupAction ga = (GroupAction)actions.get(0);
+            logStr.append("if the policy match is XXX then go to group " +
+                    ga.getGroupId());
+            log.debug(logStr.toString());
+            return;
         }
 
         logStr.append(" do { ");
@@ -1142,7 +1594,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             else if (action instanceof SetMplsIdAction) {
                 int id = ((SetMplsIdAction) action).getMplsId();
                 logStr.append("Set MPLS ID as " + id + ", ");
-
             }
         }
 
@@ -1268,5 +1719,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         return bufferedPackets;
     }
+
+
 
 }
