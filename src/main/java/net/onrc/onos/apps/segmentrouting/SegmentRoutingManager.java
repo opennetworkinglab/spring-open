@@ -302,13 +302,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private void handleTopologyChangeEvents() {
         numOfEventProcess ++;
 
-        Collection<LinkData> linkEntriesAdded = new ArrayList<LinkData>();
-        Collection<PortData> portEntriesAdded = new ArrayList<PortData>();
-        Collection<PortData> portEntriesRemoved = new ArrayList<PortData>();
-        Collection<LinkData> linkEntriesRemoved = new ArrayList<LinkData>();
-        Collection<SwitchData> switchAdded = new ArrayList<SwitchData>();
-        Collection<SwitchData> switchRemoved = new ArrayList<SwitchData>();
-        Collection<MastershipData> mastershipRemoved = new ArrayList<MastershipData>();
+        Collection<LinkData> linkEntriesAddedAll = new ArrayList<LinkData>();
+        Collection<PortData> portEntriesAddedAll = new ArrayList<PortData>();
+        Collection<PortData> portEntriesRemovedAll = new ArrayList<PortData>();
+        Collection<LinkData> linkEntriesRemovedAll = new ArrayList<LinkData>();
+        Collection<SwitchData> switchAddedAll = new ArrayList<SwitchData>();
+        Collection<SwitchData> switchRemovedAll = new ArrayList<SwitchData>();
+        Collection<MastershipData> mastershipRemovedAll = new ArrayList<MastershipData>();
 
         while (!topologyEventQueue.isEmpty()) {
             // We should handle the events in the order of when they happen
@@ -316,14 +316,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
             // and shoot only the final state.
             // Ex: link s1-s2 down, link s1-s2 up --> Do nothing
             // Ex: ink s1-s2 up, s1-p1,p2 down --> link s1-s2 down
+
             TopologyEvents topologyEvents = topologyEventQueue.poll();
-            linkEntriesAdded.addAll(topologyEvents.getAddedLinkDataEntries());
-            portEntriesAdded.addAll(topologyEvents.getAddedPortDataEntries());
-            portEntriesRemoved.addAll(topologyEvents.getRemovedPortDataEntries());
-            linkEntriesRemoved.addAll(topologyEvents.getRemovedLinkDataEntries());
-            switchAdded.addAll(topologyEvents.getAddedSwitchDataEntries());
-            switchRemoved.addAll(topologyEvents.getRemovedSwitchDataEntries());
-            mastershipRemoved.addAll(topologyEvents.getRemovedMastershipDataEntries());
+
+            Collection<LinkData> linkEntriesAdded = topologyEvents.getAddedLinkDataEntries();
+            Collection<PortData> portEntriesAdded = topologyEvents.getAddedPortDataEntries();
+            Collection<PortData> portEntriesRemoved = topologyEvents.getRemovedPortDataEntries();
+            Collection<LinkData> linkEntriesRemoved = topologyEvents.getRemovedLinkDataEntries();
+            Collection<SwitchData> switchAdded = topologyEvents.getAddedSwitchDataEntries();
+            Collection<SwitchData> switchRemoved = topologyEvents.getRemovedSwitchDataEntries();
+            Collection<MastershipData> mastershipRemoved = topologyEvents.getRemovedMastershipDataEntries();
+
+            linkEntriesAddedAll.addAll(linkEntriesAdded);
+            portEntriesAddedAll.addAll(portEntriesAdded);
+            portEntriesRemovedAll.addAll(portEntriesRemoved);
+            linkEntriesRemovedAll.addAll(linkEntriesRemoved);
+            switchAddedAll.addAll(switchAdded);
+            switchRemovedAll.addAll(switchRemoved);
+            mastershipRemovedAll.addAll(mastershipRemoved);
             numOfEvents++;
 
             if (!portEntriesRemoved.isEmpty()) {
@@ -353,6 +363,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             if (!switchAdded.isEmpty()) {
                 processSwitchAdd(switchAdded);
             }
+
+            /*
             linkEntriesAdded.clear();
             portEntriesAdded.clear();
             portEntriesRemoved.clear();
@@ -360,20 +372,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
             switchAdded.clear();
             switchRemoved.clear();
             mastershipRemoved.clear();
-
+            */
         }
 
         // TODO: 100ms is enough to check both mastership removed events
         // and the port removed events? What if the PORT_STATUS packets comes late?
-        if (!mastershipRemoved.isEmpty()) {
-            if (portEntriesRemoved.isEmpty()) {
+        if (!mastershipRemovedAll.isEmpty()) {
+            if (portEntriesRemovedAll.isEmpty()) {
                 log.debug("Just mastership is removed. Do not do anthing.");
             }
             else {
                 HashMap<String, MastershipData> mastershipToRemove =
                         new HashMap<String, MastershipData>();
-                for (MastershipData ms: mastershipRemoved) {
-                    for (PortData port: portEntriesRemoved) {
+                for (MastershipData ms: mastershipRemovedAll) {
+                    for (PortData port: portEntriesRemovedAll) {
                         // TODO: check ALL ports of the switch are dead ..
                         if (port.getDpid().equals(ms.getDpid())) {
                             mastershipToRemove.put(ms.getDpid().toString(), ms);
@@ -1144,7 +1156,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param sw
      * @param mplsLabel
      */
-    private void setPolicyTable(MACAddress srcMac, MACAddress dstMac,
+    public void setPolicyTable(MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
             Short srcTcpPort, Short dstTcpPort, int tid) {
 
