@@ -15,6 +15,7 @@ public final class MatchAction implements BatchOperationTarget {
     private final SwitchPort port;
     private final Match match;
     private final List<Action> actions;
+    private final int priority;
 
     /**
      * Constructor.
@@ -29,6 +30,24 @@ public final class MatchAction implements BatchOperationTarget {
         this.port = port;
         this.match = match;
         this.actions = actions;
+        this.priority = 0;
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param id ID for this MatchAction object
+     * @param port switch port to apply changes to
+     * @param match the Match object as match condition on the port
+     * @param actions the list of Action objects as actions on the switch
+     * @param priority the priority of the MatchAction
+     */
+    public MatchAction(MatchActionId id, SwitchPort port, Match match, int priority, List<Action> actions) {
+        this.id = id;
+        this.port = port;
+        this.match = match;
+        this.actions = actions;
+        this.priority = priority;
     }
 
     /**
@@ -39,6 +58,7 @@ public final class MatchAction implements BatchOperationTarget {
         port = null;
         match = null;
         actions = null;
+        priority = 0;
     }
 
     /**
@@ -77,6 +97,15 @@ public final class MatchAction implements BatchOperationTarget {
         return actions;
     }
 
+    /**
+     * Get the priority of the match action
+     *
+     * @return priority
+     */
+    public int getPriority() {
+        return priority;
+    }
+
     @Override
     public int hashCode() {
         return id.hashCode();
@@ -90,4 +119,6 @@ public final class MatchAction implements BatchOperationTarget {
         }
         return false;
     }
+
+
 }

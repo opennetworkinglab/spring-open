@@ -1544,7 +1544,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 .setTableId(TableId.of(TABLE_ACL))
                 .setMatch(matchBuilder.build())
                 .setInstructions(instructions)
-                .setPriority(MAX_PRIORITY) // exact match and exclusive
+                .setPriority(ma.getPriority()) // exact match and exclusive
                 .setBufferId(OFBufferId.NO_BUFFER)
                 .setIdleTimeout(0)
                 .setHardTimeout(0)

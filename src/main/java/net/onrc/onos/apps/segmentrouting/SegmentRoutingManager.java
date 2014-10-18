@@ -105,7 +105,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
     private HashMap<Integer, HashMap<String, PolicyRouteInfo>> stitchInfo;
     private HashMap<Integer, HashMap<String, Integer>> tunnelGroupMap;
-    private HashMap<Integer, HashMap<PacketMatch, Integer>> policyMap;
+    private HashMap<Integer, PolicyInfo> policyTable;
 
     private int testMode = 0;
 
@@ -116,8 +116,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private final int DELAY_TO_ADD_LINK = 10;
     private final int MAX_NUM_LABELS = 3;
 
-    private final int POLICY_ADD = 1;
-    private final int POLICY_REMOVE = 2;
+    private final int POLICY_ADD1 = 1;
+    private final int POLICY_ADD2 = 2;
+    private final int POLICY_REMOVE1 = 3;
+    private final int POLICY_REMOVE2 = 4;
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -164,7 +166,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         stitchInfo = new HashMap<Integer, HashMap<String, PolicyRouteInfo>>();
         packetService = context.getServiceImpl(IPacketService.class);
         tunnelGroupMap = new HashMap<Integer, HashMap<String, Integer>>();
-        policyMap = new HashMap<Integer, HashMap<PacketMatch, Integer>>();
+        policyTable = new HashMap<Integer, PolicyInfo>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -198,7 +200,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         });
 
         //policy routing test task
-        testMode = POLICY_ADD;
+        testMode = POLICY_ADD1;
         testTask.reschedule(20, TimeUnit.SECONDS);
     }
 
@@ -1162,6 +1164,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     }
 
+
+    class PolicyInfo {
+
+        int policyId;
+        PacketMatch match;
+        int priority;
+        int tunnelId;
+
+        PolicyInfo(int pid, PacketMatch match, int priority, int tid) {
+            this.policyId = pid;
+            this.match = match;
+            this.priority = priority;
+            this.tunnelId = tid;
+        }
+    }
+
     /**
      * Set policy table for policy routing
      *
@@ -1170,11 +1188,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void setPolicyTable(int pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
-            Short srcTcpPort, Short dstTcpPort, int tid) {
+            Short srcTcpPort, Short dstTcpPort, int priority, int tid) {
 
         HashMap<String, PolicyRouteInfo> routeInfo = stitchInfo.get(Integer.valueOf(tid));
         HashMap<String, Integer> switchGroupPair = tunnelGroupMap.get(Integer.valueOf(tid));
-        HashMap<PacketMatch, Integer> policyInfo = new HashMap<PacketMatch, Integer>();
 
         PacketMatchBuilder packetBuilder = new PacketMatchBuilder();
 
@@ -1205,7 +1222,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             MatchAction matchAction = new MatchAction(new MatchActionId(
                     matchActionId++),
-                    new SwitchPort((long) 0, (short) 0), packetMatch, actions);
+                    new SwitchPort((long) 0, (short) 0), packetMatch, priority,
+                    actions);
             MatchActionOperationEntry maEntry =
                     new MatchActionOperationEntry(Operator.ADD, matchAction);
 
@@ -1222,8 +1240,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 }
             }
         }
-        policyInfo.put(packetMatch, Integer.valueOf(tid));
-        policyMap.put(Integer.valueOf(pid), policyInfo);
+
+        PolicyInfo policyInfo = new PolicyInfo(pid, packetMatch, priority, tid);
+        policyTable.put(Integer.valueOf(pid), policyInfo);
     }
 
     /**
@@ -1241,9 +1260,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void removePolicy(int pid) {
 
-        HashMap<PacketMatch, Integer> policyInfo =  policyMap.get(Integer.valueOf(pid));
-        PacketMatch policyMatch = (PacketMatch) policyInfo.keySet().toArray()[0];
-        int tid = policyInfo.get(policyMatch).intValue();
+        PolicyInfo policyInfo =  policyTable.get(Integer.valueOf(pid));
+        PacketMatch policyMatch = policyInfo.match;
+        int tid = policyInfo.tunnelId;
+        int priority = policyInfo.priority;
 
         List<Action> actions = new ArrayList<>();
         int gropuId = 0; // dummy group ID
@@ -1253,7 +1273,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         MatchAction matchAction = new MatchAction(new MatchActionId(
                 matchActionId++),
-                new SwitchPort((long) 0, (short) 0), policyMatch, actions);
+                new SwitchPort((long) 0, (short) 0), policyMatch, priority,
+                actions);
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(Operator.REMOVE, matchAction);
 
@@ -1361,9 +1382,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     private void runTest() {
 
-        if (testMode == POLICY_ADD) {
-            String[] routeArray = {"101", "102", "103", "104", "105", "108",
-                    "110"};
+        if (testMode == POLICY_ADD1) {
+            String[] routeArray = {"101", "105", "110"};
             List<String> routeList = new ArrayList<String>();
             for (int i = 0; i < routeArray.length; i++)
                 routeList.add(routeArray[i]);
@@ -1372,17 +1392,49 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
                 IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
 
+                log.debug("Set the policy 1");
                 this.setPolicyTable(1, null, null, Ethernet.TYPE_IPV4, srcIp,
-                        dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 1);
-
-                testMode = POLICY_REMOVE;
+                        dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 10000,
+                        1);
+                testMode = POLICY_ADD2;
                 testTask.reschedule(10, TimeUnit.SECONDS);
             }
             else {
+                // retry it
                 testTask.reschedule(5, TimeUnit.SECONDS);
             }
         }
-        else if (testMode == POLICY_REMOVE) {
+        else if (testMode == POLICY_ADD2) {
+            String[] routeArray = {"101", "102", "103", "104", "105", "108",
+                    "110"};
+            List<String> routeList = new ArrayList<String>();
+            for (int i = 0; i < routeArray.length; i++)
+                routeList.add(routeArray[i]);
+
+            if (createTunnel(2, routeList)) {
+                IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
+                IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
+
+                log.debug("Set the policy 2");
+                this.setPolicyTable(2, null, null, Ethernet.TYPE_IPV4, srcIp,
+                        dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 20000,
+                        2);
+                testMode = POLICY_REMOVE1;
+                testTask.reschedule(10, TimeUnit.SECONDS);
+            }
+            else {
+                log.debug("Retry it");
+                testTask.reschedule(5, TimeUnit.SECONDS);
+            }
+        }
+        else if (testMode == POLICY_REMOVE1){
+            log.debug("Remove the policy 1");
+            this.removePolicy(2);
+            testMode = POLICY_REMOVE2;
+            testTask.reschedule(10, TimeUnit.SECONDS);
+        }
+        else if (testMode == POLICY_REMOVE2) {
+            log.debug("Remove the policy 2");
             this.removePolicy(1);
         }
     }
