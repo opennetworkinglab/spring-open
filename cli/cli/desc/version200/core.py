@@ -2526,6 +2526,21 @@ ROUTER_FORMAT = {
         },
 }
 
+
+ROUTER_PORT_FORMAT = {
+    'router_port' : {
+        'field-orderings' : {
+            'default' : [ 'Idx', 'name', 'portNo', 'subnetIp','adjacencySid'],
+            'scoped' : [ 'Idx', 'name', 'portNo', 'subnetIp','adjacencySid'],
+            },
+        #'fields': {
+        #    'switch'               : { 'verbose-name' : 'Switch',
+        #                                'formatter' : fmtcnv.replace_switch_with_alias
+        #                             },
+
+        },
+}
+
 """
 SWITCH_CLUSTER_FORMAT = {
     'switch-cluster' : {

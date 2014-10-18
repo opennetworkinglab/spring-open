@@ -36,3 +36,66 @@ SWITCH_ROUTER_COMMAND_DESCRIPTION = {
         },
     )
 }
+
+
+
+ROUTER_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
+    'name'                : 'show',
+    'mode'                : 'login',
+    'short-help'          : 'Show router stats via direct query to switch',
+    'no-supported'        : False,
+    'short-help'          : 'Show realtime stats for router',
+    'parent-field'        : None,
+    'obj-type'            : 'switches',
+    'args'                : (
+        {
+            'token'        : 'router',
+            'obj-type'     : 'switches',
+            'command-type' : 'display-table',
+            # 'command-type' : 'display-rest',
+        },
+        {
+            'choices' : (
+                {
+                    'field'        : 'dpid',
+                    'completion'   : 'complete-alias-choice',
+                    'type'         : 'dpid',
+                    'help-name'    : 'switch dpid or alias',
+                    'data-handler' : 'alias-to-value',
+                    'data'         : { 'detail' : 'scoped' },
+                },
+                {
+                    'token'        : 'all',
+                    'doc'          : 'reserved|all',
+                },
+            ),
+        },
+        {
+            'choices' : (
+                (
+                    {
+                        'field'      : 'routerrealtimestats',
+                        'type'       : 'enum',
+                        'values'     : (
+                                        'port',
+                                        ),
+                        'action'     : 'display-rest',
+                        'url'        : 'router/%(dpid)s/%(routerrealtimestats)s',
+                        'rest-type'  : 'dict-of-list-of-switch',
+                        'format'     : 'router_port',
+                        'short-help' : 'Show requested item by querying router/switch',
+                        'doc'        : 'switch|realtime-+',
+                    },
+                    {
+                        'field'    : 'detail',
+                        'optional' : True,
+                        'type'     : 'enum',
+                        'values'   : ('details','brief'),
+                        'doc'      : 'format|+',
+                    },
+                ),
+                
+            )
+        }
+    )
+}

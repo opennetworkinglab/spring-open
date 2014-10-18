@@ -732,6 +732,21 @@ def do_routers(request):
     return get_sdnplatform_response(url)        
 
 @safe_rest_view
+def do_router_stats(request, stattype, dpid):
+    """
+    This returns the subnets info about the specifed
+    router dpid. statetype should be 'port'.
+    """
+    #raise RestInvalidMethodException()
+    if request.method != 'GET':
+        raise RestInvalidMethodException()
+    #url = controller_url('core', 'switch', dpid, stattype, 'json')
+    url = "http://localhost:8080/wm/onos/segmentrouting/router/%s/%s" % (dpid, stattype)
+    #raise RestInvalidMethodException(url)
+    #url = "http://localhost:8080/wm/onos/segementrouting/router/00:00:00:00:00:00:00:01/port"
+    return get_sdnplatform_response(url)
+
+@safe_rest_view
 def do_mastership(request):
     url = controller_url("onos", "registry", "switches" ,"json")
     #url = "http://127.0.0.1:8080/wm/onos/registry/switches/json"
