@@ -13,12 +13,10 @@ import net.onrc.onos.core.topology.Port;
 public class SegmentRouterPortInfo {
     //TODO set attributes to private and provide setter and getter.
     public String subnetIp= null;
-    //private int portNo;
     public Port  port = null;
     
     public SegmentRouterPortInfo(String ssubnets, Port pport){
         this.port = pport;
-        //this.portNo = portNo;
         this.subnetIp = ssubnets;
     }
 
