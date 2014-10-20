@@ -64,8 +64,8 @@ public class RouterStatisticsResource extends ServerResource {
                     JSONArray subnetArray = JSONArray.fromObject(subnets);
                     Iterator<Port> pI = portList.iterator();
                     while(pI.hasNext()){
-                        Port p = (Port) pI.next();
-                        Iterator sI = subnetArray.iterator();
+                        Port p = pI.next();
+                        Iterator<?> sI = subnetArray.iterator();
                         String subnet = null;
                         while(sI.hasNext()){
                             JSONObject portSubnetIp = (JSONObject) sI.next();
@@ -83,7 +83,7 @@ public class RouterStatisticsResource extends ServerResource {
                 else{
                     Iterator<Port> pI = portList.iterator();
                     while(pI.hasNext()){
-                        Port p = (Port) pI.next();
+                        Port p = pI.next();
                         String subnet = null;
                         listPortInfo.add( new SegmentRouterPortInfo(subnet,p));
                     }
