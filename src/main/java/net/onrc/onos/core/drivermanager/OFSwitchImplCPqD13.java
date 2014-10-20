@@ -1671,6 +1671,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     @Override
     public void removeTunnel(String tunnelId) {
         List<Integer> groups = tunnelGroupIdTable.get(tunnelId);
+        if (groups == null)
+            return;
+
         // we need to delete groups in reverse order
         for (int i = groups.size() - 1; i >= 0; i--) {
             int groupId = groups.get(i);
@@ -1679,10 +1682,19 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         tunnelGroupIdTable.remove(tunnelId);
     }
 
+    @Override
+    public int getTunnelGroupId(String tunnelId) {
+        List<Integer> groups = tunnelGroupIdTable.get(tunnelId);
+        if (groups == null)
+            return -1;
+
+        return groups.get(0);
+    }
+
+
     // *****************************
     // Unused
     // *****************************
-
 
     @SuppressWarnings("unused")
     private void setAsyncConfig() throws IOException {

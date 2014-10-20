@@ -158,4 +158,13 @@ public interface IOF13Switch extends IOFSwitch {
      */
     public void removeTunnel(String tunnelId);
 
+    /**
+     * Return the first group ID for the tunnel.
+     * If the router is not the source of the tunnel, it returns -1
+     *
+     * @param tunnelID tunnel ID for the tunnel
+     * @param srcDpid source router DPID
+     * @return first Group ID for the tunnel or -1 if not found
+     */
+    public int getTunnelGroupId(String tunnelID);
 }

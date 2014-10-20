@@ -105,8 +105,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<String, LinkData> linksDown;
     private HashMap<String, LinkData> linksToAdd;
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
-    //private HashMap<String, HashMap<String, TunnelRouteInfo>> stitchInfo;
-    //private HashMap<String, HashMap<String, Integer>> tunnelGroupMap;
     private HashMap<String, PolicyInfo> policyTable;
     private HashMap<String, TunnelInfo> tunnelTable;
 
@@ -178,9 +176,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         linksDown = new HashMap<String, LinkData>();
         linksToAdd = new HashMap<String, LinkData>();
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
-        //stitchInfo = new HashMap<String, HashMap<String, TunnelRouteInfo>>();
         packetService = context.getServiceImpl(IPacketService.class);
-        //tunnelGroupMap = new HashMap<String, HashMap<String, Integer>>();
         restApi = context.getServiceImpl(IRestApiService.class);
         policyTable = new HashMap<String, PolicyInfo>();
         tunnelTable = new HashMap<String, TunnelInfo>();
@@ -1152,12 +1148,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
+     * Split the nodes IDs into multiple tunnel if Segment Stitching is required.
+     * We assume that the first node ID is the one of source router, and the last
+     * node ID is that of the destination router.
      *
-     *
-     * @param srcSw
-     * @param dstSw
-     * @param route
-     * @return
+     * @param route list of node IDs
+     * @return List of the TunnelRoutInfo
      */
     private List<TunnelRouteInfo> getStitchingRule(List<String> route) {
 
@@ -1182,10 +1178,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         int i = 0;
         TunnelRouteInfo routeInfo = new TunnelRouteInfo();
-        String prevNodeId = null;
         boolean checkNeighbor = true;
 
         for (String nodeId: route) {
+            // First node ID is always the source router
             if (i == 0) {
                 routeInfo.setSrcDpid(srcDpid);
                 srcSw = getSwitchFromNodeId(nodeId);
@@ -1215,7 +1211,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         routeInfo.setFwdSwDpid(fwdSwDpids);
                         i++;
                     }
-
+                    // we check only the next node ID of the source router
                     checkNeighbor = false;
                 }
                 else {
@@ -1228,6 +1224,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 i++;
             }
 
+            // If the number of labels reaches the limit, start over the procedure
             if (i == MAX_NUM_LABELS+1) {
                 rules.add(routeInfo);
                 routeInfo = new TunnelRouteInfo();
@@ -1279,9 +1276,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(Operator.REMOVE, matchAction);
 
-        //HashMap<String, Integer> groupInfo = tunnelGroupMap.get(tid);
-
-
         TunnelInfo tunnelInfo = tunnelTable.get(tid);
         List<TunnelRouteInfo> routes = tunnelInfo.routes;
 
@@ -1304,6 +1298,27 @@ public class SegmentRoutingManager implements IFloodlightModule,
         policyTable.remove(pid);
         log.debug("Policy {} is removed.", pid);
         return true;
+    }
+
+    /**
+     * Get the first group ID for the tunnel for specific source router
+     * If Segment Stitching was required to create the tunnel, there are
+     * mutiple source routers.
+     *
+     * @param tunnelId ID for the tunnel
+     * @param dpid source router DPID
+     * @return the first group ID of the tunnel
+     */
+    public int getTunnelGroupId(String tunnelId, String dpid) {
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(dpid));
+
+        if (sw13 == null) {
+            return -1;
+        }
+        else {
+            return sw13.getTunnelGroupId(tunnelId);
+        }
     }
 
     /**
@@ -1621,68 +1636,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // ************************************
     // Test functions
     // ************************************
-
-    /*
-    private void runTest() {
-
-        if (testMode == POLICY_ADD1) {
-            String[] routeArray = {"101", "105", "110"};
-            List<String> routeList = new ArrayList<String>();
-            for (int i = 0; i < routeArray.length; i++)
-                routeList.add(routeArray[i]);
-
-            if (createTunnel(1, routeList)) {
-                IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
-                IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
-
-                log.debug("Set the policy 1");
-                this.setPolicyTable(1, null, null, Ethernet.TYPE_IPV4, srcIp,
-                        dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 10000,
-                        1);
-                testMode = POLICY_ADD2;
-                testTask.reschedule(10, TimeUnit.SECONDS);
-            }
-            else {
-                // retry it
-                testTask.reschedule(5, TimeUnit.SECONDS);
-            }
-        }
-        else if (testMode == POLICY_ADD2) {
-            String[] routeArray = {"101", "102", "103", "104", "105", "108",
-                    "110"};
-            List<String> routeList = new ArrayList<String>();
-            for (int i = 0; i < routeArray.length; i++)
-                routeList.add(routeArray[i]);
-
-            if (createTunnel(2, routeList)) {
-                IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
-                IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
-
-                log.debug("Set the policy 2");
-                this.setPolicyTable(2, null, null, Ethernet.TYPE_IPV4, srcIp,
-                        dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 20000,
-                        2);
-                testMode = POLICY_REMOVE2;
-                testTask.reschedule(10, TimeUnit.SECONDS);
-            }
-            else {
-                log.debug("Retry it");
-                testTask.reschedule(5, TimeUnit.SECONDS);
-            }
-        }
-        else if (testMode == POLICY_REMOVE2){
-            log.debug("Remove the policy 2");
-            this.removePolicy(2);
-            testMode = POLICY_REMOVE1;
-            testTask.reschedule(10, TimeUnit.SECONDS);
-        }
-        else if (testMode == POLICY_REMOVE1){
-            log.debug("Remove the policy 1");
-            this.removePolicy(1);
-        }
-
-    }
-    */
 
     private void runTest() {
 
