@@ -139,7 +139,8 @@ def policy_create(data=None):
     if data.has_key('tunnel-id'):
         policy_obj_data['tunnel_id'] = data['tunnel-id']
     
-    print policy_obj_data
+    if sdnsh.description:   # description debugging
+        print policy_obj_data
       
 def policy_config_exit():
     global policy_obj_data
