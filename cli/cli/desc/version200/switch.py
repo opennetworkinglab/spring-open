@@ -155,43 +155,14 @@ SRC_IP_MATCH = {
     'choices' : (
         (
             {
-                'field' : 'src-ip',
-                'type'  : 'ip-address-not-mask',
-                'doc'   : 'vns|vns-access-list-ip-and-mask-ip',
-            },
-            {
-                'field'        : 'src-ip-mask',
-                'type'         : 'inverse-netmask',
-                'data'         : {
-                                  'dst-ip'      : '0.0.0.0',
-                                  'dst-ip-mask' : '255.255.255.255',
-                                 },
-                'doc'          : 'vns|vns-access-list-ip-and-mask-mask',
-            },
-        ),
-        (
-            {
-                'field'    : 'src-ip',
-                'type'     : 'ip-address-not-mask',
-                'data'     : {
-                               'src-ip-mask' : '0.0.0.0',
-                               'dst-ip'      : '0.0.0.0',
-                               'dst-ip-mask' : '255.255.255.255',
-                             },
-                'doc'      : 'vns|vns-access-list-ip-only',
-            },
-        ),
-        (
-            {
                 'field'        : 'src-ip',
                 'type'         : 'cidr-range',
                 'help-name'    : 'src-cidr',
-                'data-handler' : 'split-cidr-data-inverse',
-                'dest-ip'      : 'src-ip',
-                'dest-netmask' : 'src-ip-mask',
+                #'data-handler' : 'split-cidr-data-inverse',
+                #'dest-ip'      : 'src-ip',
+                #'dest-netmask' : 'src-ip-mask',
                 'data'         : {
-                                  'dst-ip'      : '0.0.0.0',
-                                  'dst-ip-mask' : '255.255.255.255',
+                                  'dst-ip'      : '0.0.0.0/32',
                                  },
                 'doc'          : 'vns|vns-access-list-cidr-range',
             }
@@ -200,10 +171,8 @@ SRC_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'src-ip'      : '0.0.0.0',
-                              'src-ip-mask' : '255.255.255.255',
-                              'dst-ip'      : '0.0.0.0',
-                              'dst-ip-mask' : '255.255.255.255',
+                              'src-ip'      : '0.0.0.0/32',
+                              'dst-ip'      : '0.0.0.0/32',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }
@@ -244,34 +213,12 @@ DST_IP_MATCH = {
     'choices' : (
         (
             {
-                'field' : 'dst-ip',
-                'type'  : 'ip-address-not-mask',
-                'doc'   : 'vns|vns-access-list-ip-and-mask-ip',
-            },
-            {
-                'field' : 'dst-ip-mask',
-                'type'  : 'inverse-netmask',
-                'doc'   : 'vns|vns-access-list-ip-and-mask-mask',
-            },
-        ),
-        (
-            {
-                'field'    : 'dst-ip',
-                'type'     : 'ip-address-not-mask',
-                'data'     : {
-                                'dst-ip-mask' : '0.0.0.0',
-                             },
-                'doc'      : 'vns|vns-access-list-ip-only',
-            },
-        ),
-        (
-            {
                 'field'        : 'dst-ip',
                 'type'         : 'cidr-range',
                 'help-name'    : 'dst-cidr',
-                'data-handler' : 'split-cidr-data-inverse',
-                'dest-ip'      : 'dst-ip',
-                'dest-netmask' : 'dst-ip-mask',
+                #'data-handler' : 'split-cidr-data-inverse',
+                #'dest-ip'      : 'dst-ip',
+                #'dest-netmask' : 'dst-ip-mask',
                 'doc'          : 'vns|vns-access-list-cidr-range',
             },
         ),
@@ -279,8 +226,7 @@ DST_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'dst-ip'      : '0.0.0.0',
-                              'dst-ip-mask' : '255.255.255.255',
+                              'dst-ip'      : '0.0.0.0/32',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }
