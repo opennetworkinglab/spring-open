@@ -935,11 +935,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Policy routing classes and functions
     // ************************************
 
-    public void removeTunnel(int tunnelId) {
-
-        }
-
-
     class PolicyInfo {
 
         int policyId;
@@ -1003,16 +998,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param tunnelId  Node IDs for the tunnel
      * @param Ids tunnel ID
      */
-    public boolean createTunnel(int tunnelId, List<String> Ids) {
+    public boolean createTunnel(String tid, List<Dpid> dpids) {
 
+        int tunnelId = Integer.parseInt(tid);
         if (tunnelId < 0) {
             log.debug("Tunnel ID should be posivtive integer.");
             return false;
         }
 
-        if (Ids.isEmpty() || Ids.size() < 2) {
+        if (dpids.isEmpty() || dpids.size() < 2) {
             log.debug("Wrong tunnel information");
             return false;
+        }
+
+        List<String> Ids = new ArrayList<String>();
+        for (Dpid dpid: dpids) {
+            Ids.add(getMplsLabel(dpid.toString()));
         }
 
         HashMap<String, PolicyRouteInfo> stitchingRule = getStitchingRule(Ids);
@@ -1261,6 +1262,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
         log.debug("Policy {} is removed.", pid);
          }
 
+
+    public void removeTunnel(int tunnelId) {
+
+
+
+
+    }
 
     // ************************************
     // Utility functions
@@ -1542,8 +1550,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Test functions
     // ************************************
 
+    /*
     private void runTest() {
-
 
         if (testMode == POLICY_ADD1) {
             String[] routeArray = {"101", "105", "110"};
@@ -1575,6 +1583,71 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 routeList.add(routeArray[i]);
 
             if (createTunnel(2, routeList)) {
+                IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
+                IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
+
+                log.debug("Set the policy 2");
+                this.setPolicyTable(2, null, null, Ethernet.TYPE_IPV4, srcIp,
+                        dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 20000,
+                        2);
+                testMode = POLICY_REMOVE2;
+                testTask.reschedule(10, TimeUnit.SECONDS);
+            }
+            else {
+                log.debug("Retry it");
+                testTask.reschedule(5, TimeUnit.SECONDS);
+            }
+        }
+        else if (testMode == POLICY_REMOVE2){
+            log.debug("Remove the policy 2");
+            this.removePolicy(2);
+            testMode = POLICY_REMOVE1;
+            testTask.reschedule(10, TimeUnit.SECONDS);
+        }
+        else if (testMode == POLICY_REMOVE1){
+            log.debug("Remove the policy 1");
+            this.removePolicy(1);
+        }
+
+    }
+    */
+
+    private void runTest() {
+
+        if (testMode == POLICY_ADD1) {
+            String[] routeArray = {"101", "105", "110"};
+            List<Dpid> routeList = new ArrayList<Dpid>();
+            for (int i = 0; i < routeArray.length; i++) {
+                Dpid dpid = getSwitchFromNodeId(routeArray[i]).getDpid();
+                routeList.add(dpid);
+            }
+
+            if (createTunnel("1", routeList)) {
+                IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
+                IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
+
+                log.debug("Set the policy 1");
+                this.setPolicyTable(1, null, null, Ethernet.TYPE_IPV4, srcIp,
+                        dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 10000,
+                        1);
+                testMode = POLICY_ADD2;
+                testTask.reschedule(10, TimeUnit.SECONDS);
+            }
+            else {
+                // retry it
+                testTask.reschedule(5, TimeUnit.SECONDS);
+            }
+        }
+        else if (testMode == POLICY_ADD2) {
+            String[] routeArray = {"101", "102", "103", "104", "105", "108",
+                    "110"};
+            List<Dpid> routeList = new ArrayList<Dpid>();
+            for (int i = 0; i < routeArray.length; i++) {
+                Dpid dpid = getSwitchFromNodeId(routeArray[i]).getDpid();
+                routeList.add(dpid);
+            }
+
+            if (createTunnel("2", routeList)) {
                 IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
                 IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
 

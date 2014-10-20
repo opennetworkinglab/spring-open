@@ -880,7 +880,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         return;
     }
 
-
     private void createGroupForMplsLabel(int groupId, String nodeId,
             int nextGroupId, boolean bos) {
         List<BucketInfo> buckets = new ArrayList<BucketInfo>();
@@ -1144,6 +1143,25 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         OFMessage gm = factory.buildGroupAdd()
                 .setGroup(group)
                 .setBuckets(buckets)
+                .setGroupType(OFGroupType.SELECT)
+                .setXid(getNextTransactionId())
+                .build();
+        msglist.add(gm);
+        try {
+            write(msglist);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteGroup(int groupId) {
+
+        List<OFMessage> msglist = new ArrayList<OFMessage>();
+        OFGroup group = OFGroup.of(groupId);
+
+        OFMessage gm = factory.buildGroupDelete()
+                .setGroup(group)
                 .setGroupType(OFGroupType.SELECT)
                 .setXid(getNextTransactionId())
                 .build();
