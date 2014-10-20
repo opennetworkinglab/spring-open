@@ -2,6 +2,8 @@ package net.onrc.onos.apps.segmentrouting.web;
 
 
 
+import static net.onrc.onos.core.topology.web.TopologyResource.eval;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,11 +20,9 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.projectfloodlight.openflow.util.HexString;
-import org.restlet.resource.ServerResource;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-
-import static net.onrc.onos.core.topology.web.TopologyResource.eval;
+import org.restlet.resource.ServerResource;
 /**
  * Base class for return router statistics
  *
@@ -62,7 +62,7 @@ public class RouterStatisticsResource extends ServerResource {
                 if (sw.getAllStringAttributes().containsKey("subnets")){
                     subnets = sw.getAllStringAttributes().get("subnets");
                     JSONArray subnetArray = JSONArray.fromObject(subnets);
-                    Iterator pI = portList.iterator();
+                    Iterator<Port> pI = portList.iterator();
                     while(pI.hasNext()){
                         Port p = (Port) pI.next();
                         Iterator sI = subnetArray.iterator();
@@ -81,7 +81,7 @@ public class RouterStatisticsResource extends ServerResource {
                     return eval(toRepresentation(result,null));
                 }
                 else{
-                    Iterator pI = portList.iterator();
+                    Iterator<Port> pI = portList.iterator();
                     while(pI.hasNext()){
                         Port p = (Port) pI.next();
                         String subnet = null;
