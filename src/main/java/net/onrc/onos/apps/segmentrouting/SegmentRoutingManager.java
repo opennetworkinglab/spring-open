@@ -1085,8 +1085,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      * @param sw
      * @param mplsLabel
+     * @return
      */
-    public void createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
+    public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
             Short srcTcpPort, Short dstTcpPort, int priority, String tid) {
 
@@ -1137,12 +1138,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     sw13.pushFlow(maEntry);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    return false;
                 }
             }
         }
 
         PolicyInfo policyInfo = new PolicyInfo(pid, policyMatch, priority, tid);
         policyTable.put(pid, policyInfo);
+
+        return true;
     }
 
     /**
@@ -1252,8 +1256,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param srcTcpPort
      * @param dstTcpPort
      * @param tid
+     * @return
      */
-    public void removePolicy(String pid) {
+    public boolean removePolicy(String pid) {
         PolicyInfo policyInfo =  policyTable.get(pid);
         PacketMatch policyMatch = policyInfo.match;
         String tid = policyInfo.tunnelId;
@@ -1289,18 +1294,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 } catch (IOException e) {
                     e.printStackTrace();
                     log.debug("policy remove failed due to pushFlow() exception");
-                    return;
+                    return false;
                 }
             }
         }
 
         log.debug("Policy {} is removed.", pid);
+        return true;
     }
 
 
-    public void removeTunnel(String tunnelId) {
+    public boolean removeTunnel(String tunnelId) {
 
-
+        return true;
     }
 
     // ************************************
