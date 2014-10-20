@@ -142,6 +142,20 @@ public interface IOF13Switch extends IOFSwitch {
      */
     public TableId getTableId(String tableType);
 
-    public int createTunnel(String tunnelId, List<String> route, NeighborSet ns);
+    /**
+     * Create a tunnel for policy routing
+     *
+     * @param tunnelId tunnel ID for the tunnel
+     * @param route list of router DPIDs for the tunnel
+     * @param ns NeighborSet to get to the first router of the tunnel
+     */
+    public void createTunnel(String tunnelId, List<String> route, NeighborSet ns);
+
+    /**
+     * Remove all groups for the tunnel
+     *
+     * @param tunnelId tunnel ID to remove
+     */
+    public void removeTunnel(String tunnelId);
 
 }

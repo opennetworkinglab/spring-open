@@ -105,7 +105,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<String, LinkData> linksDown;
     private HashMap<String, LinkData> linksToAdd;
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
-    private HashMap<String, HashMap<String, TunnelRouteInfo>> stitchInfo;
+    //private HashMap<String, HashMap<String, TunnelRouteInfo>> stitchInfo;
     //private HashMap<String, HashMap<String, Integer>> tunnelGroupMap;
     private HashMap<String, PolicyInfo> policyTable;
     private HashMap<String, TunnelInfo> tunnelTable;
@@ -125,6 +125,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private final int POLICY_ADD2 = 2;
     private final int POLICY_REMOVE1 = 3;
     private final int POLICY_REMOVE2 = 4;
+    private final int TUNNEL_REMOVE1 = 5;
+    private final int TUNNEL_REMOVE2 = 6;
 
 
     // ************************************
@@ -176,7 +178,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         linksDown = new HashMap<String, LinkData>();
         linksToAdd = new HashMap<String, LinkData>();
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
-        stitchInfo = new HashMap<String, HashMap<String, TunnelRouteInfo>>();
+        //stitchInfo = new HashMap<String, HashMap<String, TunnelRouteInfo>>();
         packetService = context.getServiceImpl(IPacketService.class);
         //tunnelGroupMap = new HashMap<String, HashMap<String, Integer>>();
         restApi = context.getServiceImpl(IRestApiService.class);
@@ -1040,7 +1042,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             log.debug("Failed to get the policy rule.");
             return false;
         }
-        HashMap<String, Integer> switchGroupPair = new HashMap<String, Integer>();
+        //HashMap<String, Integer> switchGroupPair = new HashMap<String, Integer>();
         for (TunnelRouteInfo route: stitchingRule) {
 
             IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
@@ -1056,8 +1058,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 ns.addDpid(dpid);
 
             printTunnelInfo(targetSw, tunnelId, route.getRoute(), ns);
-            int groupId = targetSw.createTunnel(tunnelId, route.getRoute(), ns);
-            switchGroupPair.put(route.srcSwDpid.toString(), groupId);
+            targetSw.createTunnel(tunnelId, route.getRoute(), ns);
+            //switchGroupPair.put(route.srcSwDpid.toString(), groupId);
 
         }
 
@@ -1299,12 +1301,43 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
 
+        policyTable.remove(pid);
         log.debug("Policy {} is removed.", pid);
         return true;
     }
 
-
+    /**
+     * Remove a tunnel
+     * It removes all groups for the tunnel if the tunnel is not used for any
+     * policy.
+     *
+     * @param tunnelId tunnel ID to remove
+     */
     public boolean removeTunnel(String tunnelId) {
+
+        // Check if the tunnel is used for any policy
+        for (PolicyInfo policyInfo: policyTable.values()) {
+            if (policyInfo.tunnelId == tunnelId) {
+                log.debug("Tunnel {} is still used for the policy {}.",
+                        policyInfo.policyId, tunnelId);
+                return false;
+            }
+        }
+
+        TunnelInfo tunnelInfo = tunnelTable.get(tunnelId);
+
+        List<TunnelRouteInfo> routes = tunnelInfo.routes;
+        for (TunnelRouteInfo route: routes) {
+            IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                    getSwId(route.srcSwDpid));
+
+            if (sw13 != null) {
+                sw13.removeTunnel(tunnelId);
+            }
+        }
+
+        tunnelTable.remove(tunnelId);
+        log.debug("Tunnel {} was removed ", tunnelId);
 
         return true;
     }
@@ -1670,7 +1703,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 10000,
                         "1");
                 testMode = POLICY_ADD2;
-                testTask.reschedule(10, TimeUnit.SECONDS);
+                testTask.reschedule(5, TimeUnit.SECONDS);
             }
             else {
                 // retry it
@@ -1695,7 +1728,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 20000,
                         "2");
                 testMode = POLICY_REMOVE2;
-                testTask.reschedule(10, TimeUnit.SECONDS);
+                testTask.reschedule(5, TimeUnit.SECONDS);
             }
             else {
                 log.debug("Retry it");
@@ -1706,13 +1739,27 @@ public class SegmentRoutingManager implements IFloodlightModule,
             log.debug("Remove the policy 2");
             this.removePolicy("2");
             testMode = POLICY_REMOVE1;
-            testTask.reschedule(10, TimeUnit.SECONDS);
+            testTask.reschedule(5, TimeUnit.SECONDS);
         }
         else if (testMode == POLICY_REMOVE1){
             log.debug("Remove the policy 1");
             this.removePolicy("1");
-        }
 
+            testMode = TUNNEL_REMOVE1;
+            testTask.reschedule(5, TimeUnit.SECONDS);
+        }
+        else if (testMode == TUNNEL_REMOVE1) {
+            log.debug("Remove the tunnel 1");
+            this.removeTunnel("1");
+
+            testMode = TUNNEL_REMOVE2;
+            testTask.reschedule(5, TimeUnit.SECONDS);
+        }
+        else if (testMode == TUNNEL_REMOVE2) {
+            log.debug("Remove the tunnel 2");
+            this.removeTunnel("2");
+            log.debug("The end of test");
+        }
     }
 
     private void runTest1() {

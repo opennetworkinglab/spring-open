@@ -143,11 +143,9 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private boolean isEdgeRouter;
     private int sid;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
-    private ConcurrentMap<String, List<Integer>> tunnelGroups;
+    private ConcurrentMap<String, List<Integer>> tunnelGroupIdTable;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
     private AtomicInteger groupid;
-
-
 
     public OFSwitchImplCPqD13(OFDescStatsReply desc, boolean usePipeline13) {
         super();
@@ -160,7 +158,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         ecmpGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
         portNeighborSetMap =
                 new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
-        tunnelGroups = new ConcurrentHashMap<String, List<Integer>>();
+        tunnelGroupIdTable = new ConcurrentHashMap<String, List<Integer>>();
         segmentIds = new ArrayList<Integer>();
         isEdgeRouter = false;
         groupid = new AtomicInteger(0);
@@ -1298,7 +1296,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             int gid = -1;
             GroupAction ga = (GroupAction)action;
             if (ga.getTunnelId() != null) {
-                List<Integer> groupIds = tunnelGroups.get(ga.getTunnelId());
+                List<Integer> groupIds = tunnelGroupIdTable.get(ga.getTunnelId());
                 gid = groupIds.get(groupIds.size()-1);
             }
             else {
@@ -1643,16 +1641,19 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
-    public int createTunnel(String tunnelId, List<String> route, NeighborSet ns) {
+    @Override
+    public void createTunnel(String tunnelId, List<String> route, NeighborSet ns) {
+
+        List<Integer> groups = new ArrayList<Integer>();
 
         // create a last group of the group chaining
         int finalGroupId = groupid.incrementAndGet();
         createGroupForANeighborSet(ns, finalGroupId);
+        groups.add(Integer.valueOf(finalGroupId));
 
         int groupId = 0;
         int nextGroupId = finalGroupId;
         boolean bos = false;
-        List<Integer> groups = new ArrayList<Integer>();
 
         // process the node ID in order
         for (int i = 0; i < route.size(); i++) {
@@ -1664,11 +1665,19 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             createGroupForMplsLabel(groupId, nodeId, nextGroupId, bos);
             nextGroupId = groupId;
         }
-
-        tunnelGroups.putIfAbsent(tunnelId, groups);
-        return groupId;
+        tunnelGroupIdTable.putIfAbsent(tunnelId, groups);
     }
 
+    @Override
+    public void removeTunnel(String tunnelId) {
+        List<Integer> groups = tunnelGroupIdTable.get(tunnelId);
+        // we need to delete groups in reverse order
+        for (int i = groups.size() - 1; i >= 0; i--) {
+            int groupId = groups.get(i);
+            deleteGroup(groupId);
+        }
+        tunnelGroupIdTable.remove(tunnelId);
+    }
 
     // *****************************
     // Unused
