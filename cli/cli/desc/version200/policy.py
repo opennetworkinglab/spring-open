@@ -1,4 +1,4 @@
-import fmtcnv
+#import fmtcnv
 SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
     'name'                : 'show',
     'mode'                : 'login',
@@ -10,14 +10,14 @@ SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
     'doc-example'         : 'switch|show-example',
     'args' : (
         {
-            'token'  : 'tunnel',
-            'field'  : 'showtunnel',
+            'token'  : 'policy',
+            'field'  : 'showpolicy',
             'action' : 'display-rest',
             'doc'    : 'switch|show',
             'url'    : [
-                        'showtunnel',
+                        'showpolicy',
                        ],
-            'format' : 'show_tunnel',
+            'format' : 'show_policy',
         },
     )
 }

@@ -2171,3 +2171,23 @@ def do_sdnplatform_policy_config(request):
     response = HttpResponse(response_text, JSON_CONTENT_TYPE)
     
     return response
+
+@safe_rest_view
+def do_show_tunnel(request):    
+    #if request.method != 'GET':
+    #    raise RestInvalidMethodException()
+
+    url = controller_url('onos', 'segmentrouting','tunnel')
+    if request.META['QUERY_STRING']:
+        url += '?' + request.META['QUERY_STRING']
+    return get_sdnplatform_response(url)
+
+@safe_rest_view
+def do_show_policy(request):    
+    #if request.method != 'GET':
+    #    raise RestInvalidMethodException()
+
+    url = controller_url('onos', 'segmentrouting','policy')
+    if request.META['QUERY_STRING']:
+        url += '?' + request.META['QUERY_STRING']
+    return get_sdnplatform_response(url)

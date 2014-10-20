@@ -2070,7 +2070,6 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
     check_rest_result(result)
     if sdnsh.description:   # description debugging
         print "command_display_rest: result ", result
-
     entries = json.loads(result)
         #rest_type = None
         #raise error.ArgumentValidationError('\n\n\n %s' % (attributes))
@@ -2133,6 +2132,38 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                })
         entries = combResult
 
+
+    if 'showtunnel' in data  and data['showtunnel'] == 'tunnel':
+        #raise error.ArgumentValidationError('\n\n\n %s' % (data))
+        combResult = []
+        '''portList = entries
+        for port in portList:
+            portData = port.get("port")
+            name = portData.get("stringAttributes").get('name')
+            portNo = portData.get("portNumber")
+            subnetIp = port.get("subnetIp")
+            combResult.append({
+                               'name'            :name,
+                               'portNo'           : portNo,
+                               'subnetIp'         : subnetIp,
+                               })
+        entries = combResult'''
+
+    if 'showpolicy' in data  and data['showpolicy'] == 'policy':
+        #raise error.ArgumentValidationError('\n\n\n %s' % (data))
+        combResult = []
+        '''portList = entries
+        for port in portList:
+            portData = port.get("port")
+            name = portData.get("stringAttributes").get('name')
+            portNo = portData.get("portNumber")
+            subnetIp = port.get("subnetIp")
+            combResult.append({
+                               'name'            :name,
+                               'portNo'           : portNo,
+                               'subnetIp'         : subnetIp,
+                               })
+        entries = combResult'''
 
     if 'realtimestats' in data and 'tabletype' in data and data['realtimestats'] == 'table':
         combResult = []

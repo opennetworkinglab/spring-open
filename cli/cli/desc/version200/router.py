@@ -20,7 +20,7 @@ SWITCH_ROUTER_COMMAND_DESCRIPTION = {
     'command-type'        : 'display-table',
     'all-help'            : 'Show switch information',
     'short-help'          : 'Show switch summary',
-    'obj-type'            : 'switches',
+    #'obj-type'            : 'switches',
     'doc'                 : 'switch|show',
     'doc-example'         : 'switch|show-example',
     'args' : (

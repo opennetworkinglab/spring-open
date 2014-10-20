@@ -2411,6 +2411,23 @@ REALTIME_TABLE_FORMAT = {
         },
 }
 
+SHOW_TUNNEL_FORMAT = {
+    'show_tunnel' : {
+        'field-orderings' : {
+            'default' : [ 'Idx', 'tunnelId', 'nodes', 'LabelStack', 'Group//DIPD',]
+            },
+        },
+}
+
+SHOW_TUNNEL_FORMAT = {
+    'show_policy' : {
+        'field-orderings' : {
+            'default' : [ 'Idx', 'policyId', 'tunnelId', 'flowEntries']
+            },
+        },
+}
+
+
 
 REALTIME_FEATURES_FORMAT = {
     'realtime_features' : {
