@@ -2256,8 +2256,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if 'SET_DL_DST' in groupDescEntry['bucketsActions'][bucketId]:
                     setdstmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_DST']
                 pushmpls = '*'
-                if 'PUSH_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
-                    pushmpls = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS']
+                if 'PUSH_MPLS_LABEL' in groupDescEntry['bucketsActions'][bucketId]:
+                    pushmpls = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_LABEL']
                 popmpls = '*'
                 if 'POP_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
                     popmpls = groupDescEntry['bucketsActions'][bucketId]['POP_MPLS']
@@ -2267,6 +2267,9 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 goToGroup = '*'
                 if 'goToGroup' in groupDescEntry['bucketsActions'][bucketId]:
                     goToGroup = groupDescEntry['bucketsActions'][bucketId]['goToGroup']
+                setBos= None
+                if 'PUSH_MPLS_BOS' in groupDescEntry['bucketsActions'][bucketId]:
+                    setBos = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_BOS']
                 combResult.append({
                        'groupid'       : groupId,
                        'grouptype'     : groupDescEntry['groupType'],
@@ -2276,10 +2279,11 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'bucketbytecnt' : groupStatEntry['bucketStats'][bucketId]['byteCount'],
                        'setsrcmac'     : setsrcmac,
                        'setdstmac'     : setdstmac,
-                       'pushmpls'     : pushmpls,
+                       'pushMplsLabel'     : pushmpls,
                        'popmpls'     : popmpls,
                        'outport'     : outport,
                        'goToGroup'     : goToGroup,
+                       'setBos'     : setBos,
                     })
         entries = combResult
     #

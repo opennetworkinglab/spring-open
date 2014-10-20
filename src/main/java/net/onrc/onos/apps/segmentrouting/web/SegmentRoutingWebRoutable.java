@@ -15,7 +15,7 @@ public class SegmentRoutingWebRoutable implements RestletRoutable {
     @Override
     public Restlet getRestlet(Context context) {
         Router router = new Router(context);
-        //TODO: rewrite SwitchesResource for router specific info.
+        //TODO: rewrite Router/SwitchesResource for router specific info.
         router.attach("/routers",  RouterStatisticsResource.class);
         router.attach("/router/{routerId}/{statsType}",  RouterStatisticsResource.class);
         router.attach("/tunnel", SegmentRouterTunnelResource.class);

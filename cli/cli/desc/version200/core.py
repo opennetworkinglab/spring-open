@@ -2335,12 +2335,12 @@ REALTIME_GROUP_FORMAT = {
             'default' : [ 'Idx', 'groupid', 'grouptype', 'totalpktcnt', 'totalbytecnt',
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
-                          'pushmpls', 'popmpls',
+                          'pushMplslabel', 'setBos',
                           'outport','goToGroup'],
             'scoped' : [ 'Idx', 'groupid', 'grouptype', 'totalpktcnt', 'totalbytecnt',
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
-                          'pushmpls', 'popmpls',
+                          'pushMplsLabel','setBos',
                           'outport','goToGroup' ],
             },
         'fields': {
@@ -2364,9 +2364,9 @@ REALTIME_GROUP_FORMAT = {
                                       },
             'setdstmac'           : { 'verbose-name' : 'set_dst_mac',
                                       },
-            'pushmpls'            : { 'verbose-name' : 'push_mpls',
+            'pushMplsLabel'            : { 'verbose-name' : 'push_mpls',
                                      },
-            'popmpls'             : { 'verbose-name' : 'pop_mpls',
+            'setBos'              : { 'verbose-name' : 'setBos',
                                      },
             'outport'             : { 'verbose-name' : 'outport',
                                      },
@@ -2501,7 +2501,7 @@ REALTIME_QUEUE_FORMAT = {
 ROUTER_FORMAT = {
     'router'     : {
         'field-orderings' : {
-            'default' : ['dpid','name', 'routerIP','routerMac','isEdgeRouter','nodeSId'
+            'default' : ['Idx','dpid','name', 'routerIP','routerMac','isEdgeRouter','nodeSId'
                          ],
             },
         'fields': {
