@@ -142,6 +142,6 @@ public interface IOF13Switch extends IOFSwitch {
      */
     public TableId getTableId(String tableType);
 
-    public int createTunnel(int tunnelId, List<String> route, NeighborSet ns);
+    public int createTunnel(String tunnelId, List<String> route, NeighborSet ns);
 
 }

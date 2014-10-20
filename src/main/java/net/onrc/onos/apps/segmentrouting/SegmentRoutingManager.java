@@ -105,9 +105,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<String, LinkData> linksDown;
     private HashMap<String, LinkData> linksToAdd;
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
-    private HashMap<Integer, HashMap<String, PolicyRouteInfo>> stitchInfo;
-    private HashMap<Integer, HashMap<String, Integer>> tunnelGroupMap;
-    private HashMap<Integer, PolicyInfo> policyTable;
+    private HashMap<String, HashMap<String, TunnelRouteInfo>> stitchInfo;
+    private HashMap<String, HashMap<String, Integer>> tunnelGroupMap;
+    private HashMap<String, PolicyInfo> policyTable;
+    private HashMap<String, List<Dpid>> tunnelTable;
 
     private int testMode = 0;
 
@@ -173,11 +174,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
         linksDown = new HashMap<String, LinkData>();
         linksToAdd = new HashMap<String, LinkData>();
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
-        stitchInfo = new HashMap<Integer, HashMap<String, PolicyRouteInfo>>();
+        stitchInfo = new HashMap<String, HashMap<String, TunnelRouteInfo>>();
         packetService = context.getServiceImpl(IPacketService.class);
-        tunnelGroupMap = new HashMap<Integer, HashMap<String, Integer>>();
+        tunnelGroupMap = new HashMap<String, HashMap<String, Integer>>();
         restApi = context.getServiceImpl(IRestApiService.class);
-        policyTable = new HashMap<Integer, PolicyInfo>();
+        policyTable = new HashMap<String, PolicyInfo>();
+        tunnelTable = new HashMap<String, List<Dpid>>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -937,12 +939,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     class PolicyInfo {
 
-        int policyId;
+        String policyId;
         PacketMatch match;
         int priority;
-        int tunnelId;
+        String tunnelId;
 
-        PolicyInfo(int pid, PacketMatch match, int priority, int tid) {
+        PolicyInfo(String pid, PacketMatch match, int priority, String tid) {
             this.policyId = pid;
             this.match = match;
             this.priority = priority;
@@ -950,13 +952,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
 
-    class PolicyRouteInfo {
+    class TunnelRouteInfo {
 
         String srcSwDpid;
         List<Dpid> fwdSwDpids;
         List<String> route;
 
-        PolicyRouteInfo() {
+        TunnelRouteInfo() {
             fwdSwDpids = new ArrayList<Dpid>();
             route = new ArrayList<String>();
         }
@@ -998,13 +1000,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param tunnelId  Node IDs for the tunnel
      * @param Ids tunnel ID
      */
-    public boolean createTunnel(String tid, List<Dpid> dpids) {
-
-        int tunnelId = Integer.parseInt(tid);
-        if (tunnelId < 0) {
-            log.debug("Tunnel ID should be posivtive integer.");
-            return false;
-        }
+    public boolean createTunnel(String tunnelId, List<Dpid> dpids) {
 
         if (dpids.isEmpty() || dpids.size() < 2) {
             log.debug("Wrong tunnel information");
@@ -1016,15 +1012,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
             Ids.add(getMplsLabel(dpid.toString()));
         }
 
-        HashMap<String, PolicyRouteInfo> stitchingRule = getStitchingRule(Ids);
-        stitchInfo.put(Integer.valueOf(tunnelId), stitchingRule);
+        HashMap<String, TunnelRouteInfo> stitchingRule = getStitchingRule(Ids);
+        stitchInfo.put(tunnelId, stitchingRule);
         if (stitchingRule == null) {
             log.debug("Failed to get the policy rule.");
             return false;
         }
         HashMap<String, Integer> switchGroupPair = new HashMap<String, Integer>();
         for (String targetDpid: stitchingRule.keySet()) {
-            PolicyRouteInfo route = stitchingRule.get(targetDpid);
+            TunnelRouteInfo route = stitchingRule.get(targetDpid);
 
             IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(targetDpid.toString()));
@@ -1044,9 +1040,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         }
 
-        tunnelGroupMap.put(Integer.valueOf(tunnelId), switchGroupPair);
+        tunnelGroupMap.put(tunnelId, switchGroupPair);
+        tunnelTable.put(tunnelId, dpids);
 
         return true;
+    }
+
+    /**
+     * Return router DPIDs for the tunnel
+     *
+     * @param tid tunnel ID
+     * @return List of DPID
+     */
+    public List<Dpid> getTunnelInfo(String tid) {
+        return tunnelTable.get(tid);
     }
 
     /**
@@ -1055,12 +1062,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param sw
      * @param mplsLabel
      */
-    public void setPolicyTable(int pid, MACAddress srcMac, MACAddress dstMac,
+    public void createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
-            Short srcTcpPort, Short dstTcpPort, int priority, int tid) {
+            Short srcTcpPort, Short dstTcpPort, int priority, String tid) {
 
-        HashMap<String, PolicyRouteInfo> routeInfo = stitchInfo.get(Integer.valueOf(tid));
-        HashMap<String, Integer> switchGroupPair = tunnelGroupMap.get(Integer.valueOf(tid));
+        HashMap<String, TunnelRouteInfo> routeInfo = stitchInfo.get(tid);
+        HashMap<String, Integer> switchGroupPair = tunnelGroupMap.get(tid);
 
         PacketMatchBuilder packetBuilder = new PacketMatchBuilder();
 
@@ -1110,7 +1117,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         PolicyInfo policyInfo = new PolicyInfo(pid, policyMatch, priority, tid);
-        policyTable.put(Integer.valueOf(pid), policyInfo);
+        policyTable.put(pid, policyInfo);
     }
 
     /**
@@ -1121,18 +1128,18 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param route
      * @return
      */
-    private HashMap<String, PolicyRouteInfo> getStitchingRule(List<String> route) {
+    private HashMap<String, TunnelRouteInfo> getStitchingRule(List<String> route) {
 
         if (route.isEmpty() || route.size() < 2)
             return null;
 
-        HashMap<String, PolicyRouteInfo> rules = new HashMap<String, PolicyRouteInfo>();
+        HashMap<String, TunnelRouteInfo> rules = new HashMap<String, TunnelRouteInfo>();
 
         Switch srcSw = this.getSwitchFromNodeId(route.get(0));
         String srcDpid = srcSw.getDpid().toString();
 
         if (route.size() <= MAX_NUM_LABELS+1) {
-            PolicyRouteInfo info = new PolicyRouteInfo();
+            TunnelRouteInfo info = new TunnelRouteInfo();
             info.setSrcDpid(srcSw.getDpid().toString());
             List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, route.get(1));
             info.setFwdSwDpid(fwdSwDpids);
@@ -1143,7 +1150,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         int i = 0;
-        PolicyRouteInfo routeInfo = new PolicyRouteInfo();
+        TunnelRouteInfo routeInfo = new TunnelRouteInfo();
         String prevNodeId = null;
         boolean checkNeighbor = true;
 
@@ -1192,7 +1199,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             if (i == MAX_NUM_LABELS+1) {
                 rules.put(srcDpid, routeInfo);
-                routeInfo = new PolicyRouteInfo();
+                routeInfo = new TunnelRouteInfo();
                 srcSw = getSwitchFromNodeId(nodeId);
                 srcDpid = getSwitchFromNodeId(nodeId).getDpid().toString();
                 routeInfo.setSrcDpid(srcDpid);
@@ -1221,10 +1228,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param dstTcpPort
      * @param tid
      */
-    public void removePolicy(int pid) {
-        PolicyInfo policyInfo =  policyTable.get(Integer.valueOf(pid));
+    public void removePolicy(String pid) {
+        PolicyInfo policyInfo =  policyTable.get(pid);
         PacketMatch policyMatch = policyInfo.match;
-        int tid = policyInfo.tunnelId;
+        String tid = policyInfo.tunnelId;
         int priority = policyInfo.priority;
 
         List<Action> actions = new ArrayList<>();
@@ -1240,8 +1247,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(Operator.REMOVE, matchAction);
 
-        HashMap<String, Integer> groupInfo = tunnelGroupMap.get(
-                Integer.valueOf(tid));
+        HashMap<String, Integer> groupInfo = tunnelGroupMap.get(tid);
 
         for (String dpid: groupInfo.keySet()) {
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
@@ -1260,12 +1266,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         log.debug("Policy {} is removed.", pid);
-         }
+    }
 
 
-    public void removeTunnel(int tunnelId) {
-
-
+    public void removeTunnel(String tunnelId) {
 
 
     }
@@ -1627,9 +1631,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
 
                 log.debug("Set the policy 1");
-                this.setPolicyTable(1, null, null, Ethernet.TYPE_IPV4, srcIp,
+                this.createPolicy("1", null, null, Ethernet.TYPE_IPV4, srcIp,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 10000,
-                        1);
+                        "1");
                 testMode = POLICY_ADD2;
                 testTask.reschedule(10, TimeUnit.SECONDS);
             }
@@ -1652,9 +1656,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
 
                 log.debug("Set the policy 2");
-                this.setPolicyTable(2, null, null, Ethernet.TYPE_IPV4, srcIp,
+                this.createPolicy("2", null, null, Ethernet.TYPE_IPV4, srcIp,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 20000,
-                        2);
+                        "2");
                 testMode = POLICY_REMOVE2;
                 testTask.reschedule(10, TimeUnit.SECONDS);
             }
@@ -1665,13 +1669,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
         else if (testMode == POLICY_REMOVE2){
             log.debug("Remove the policy 2");
-            this.removePolicy(2);
+            this.removePolicy("2");
             testMode = POLICY_REMOVE1;
             testTask.reschedule(10, TimeUnit.SECONDS);
         }
         else if (testMode == POLICY_REMOVE1){
             log.debug("Remove the policy 1");
-            this.removePolicy(1);
+            this.removePolicy("1");
         }
 
     }
@@ -1710,7 +1714,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param ids
      * @param tunnelId
      */
-    private void printTunnelInfo(IOF13Switch targetSw, int tunnelId,
+    private void printTunnelInfo(IOF13Switch targetSw, String tunnelId,
             List<String> ids, NeighborSet ns) {
         StringBuilder logStr = new StringBuilder("In switch " +
             targetSw.getId() + ", create a tunnel " + tunnelId + " " + " of push ");

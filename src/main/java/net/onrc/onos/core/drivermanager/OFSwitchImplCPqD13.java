@@ -143,6 +143,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private boolean isEdgeRouter;
     private int sid;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
+    private ConcurrentMap<String, List<Integer>> tunnelGroups;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
     private AtomicInteger groupid;
 
@@ -159,6 +160,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         ecmpGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
         portNeighborSetMap =
                 new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
+        tunnelGroups = new ConcurrentHashMap<String, List<Integer>>();
         segmentIds = new ArrayList<Integer>();
         isEdgeRouter = false;
         groupid = new AtomicInteger(0);
@@ -1641,7 +1643,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
-    public int createTunnel(int tunnelId, List<String> route, NeighborSet ns) {
+    public int createTunnel(String tunnelId, List<String> route, NeighborSet ns) {
 
         // create a last group of the group chaining
         int finalGroupId = groupid.incrementAndGet();
@@ -1650,17 +1652,20 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         int groupId = 0;
         int nextGroupId = finalGroupId;
         boolean bos = false;
+        List<Integer> groups = new ArrayList<Integer>();
 
-        // process the node ID in reverse order
+        // process the node ID in order
         for (int i = 0; i < route.size(); i++) {
             String nodeId = route.get(i);
             groupId = groupid.incrementAndGet();
+            groups.add(Integer.valueOf(groupId));
             if (i == route.size()-1)
                 bos = true;
             createGroupForMplsLabel(groupId, nodeId, nextGroupId, bos);
             nextGroupId = groupId;
         }
 
+        tunnelGroups.putIfAbsent(tunnelId, groups);
         return groupId;
     }
 
