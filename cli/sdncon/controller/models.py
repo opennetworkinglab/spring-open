@@ -120,6 +120,39 @@ class Tunnel(models.Model):
             {'name': 'path_seq',     'rest_name': 'path-seq'},
             )
 
+class SRPolicy(models.Model):
+
+    id_max_length = 64
+    #
+    # fields ----------------------------------------
+
+    #
+    # Unique name of the Tunnel
+    #
+    sr_policy_id = models.CharField(
+        primary_key  = True,
+        verbose_name = 'SR Policy Id',
+        help_text    = 'A unique Id for a SR Policy',
+        validators   = [ TenantNameValidator() ],
+        max_length   = id_max_length)
+    
+    #
+    # end fields ----------------------------------------
+
+    def __unicode__ (self):
+        return self.tunnel_id
+    
+    class CassandraSettings:
+        COMPOUND_KEY_FIELDS = ('sr_policy_id')
+
+    def delete(self):
+        super(Tunnel, self).delete()
+    class Rest:
+        NAME = 'policy-config'
+        FIELD_INFO = (
+            {'name': 'sr_policy_id',    'rest_name': 'policy-id'},
+            )
+
 #
 # ------------------------------------------------------------
 

@@ -103,7 +103,7 @@ def tunnel_config_exit():
         obj_data['tunnel-path']=entries
         data = sdnsh.store.rest_post_request(url_str,obj_data)
         # LOOK! successful stuff should be returned in json too.
-        if data != "saved":
+        if data != "success":
             result = json.loads(data)
             return result
     else:
@@ -111,7 +111,64 @@ def tunnel_config_exit():
     #Clear the transit information    
     tunnel_dict = {}
             
+def tunnel_remove(data=None):
+    if sdnsh.description:   # description debugging
+        print "tunnel_remove:" , data
+    tunnel_id=data['tunnel-id']
+    url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
+    obj_data = {}
+    obj_data['tunnel-id']=data['tunnel_id']
+    data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
+    if data != "deleted":
+        result = json.loads(data)
+        return result
+
+policy_obj_data = {}
+flow = {}
+def policy_create(data=None):
+    global policy_obj_data
+    if sdnsh.description:   # description debugging
+        print "policy_create:" , data
+    if data.has_key('policy-id'):
+        policy_obj_data['policy_id'] = data['policy-id']
+    if data.has_key('src-ip'):
+        for key in data:
+            policy_obj_data[key] = data[key]
+    if data.has_key('priority'):
+        policy_obj_data['priority'] = data['priority']
+    if data.has_key('tunnel-id'):
+        policy_obj_data['tunnel_id'] = data['tunnel-id']
+    
+    print policy_obj_data
       
+def policy_config_exit():
+    global policy_obj_data
+    if sdnsh.description:   # description debugging
+        print "policy_config_exit entered", policy_obj_data
+    if policy_obj_data:
+        url_str = "http://%s/rest/v1/policy/" % (sdnsh.controller)
+        data = sdnsh.store.rest_post_request(url_str,policy_obj_data)
+        # LOOK! successful stuff should be returned in json too.
+        if data != "success":
+            result = json.loads(data)
+            return result
+    else:
+        print "empty command"
+    #Clear the transit information    
+    policy_obj_data = {}
+            
+def policy_remove(data=None):
+    if sdnsh.description:   # description debugging
+        print "policy_remove:" , data
+    policy_id=data['policy-id']
+    url_str = "http://%s/rest/v1/policy/" % (sdnsh.controller)
+    obj_data = {}
+    obj_data['policy-id']=data['policy-id']
+    data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
+    if data != "deleted":
+        result = json.loads(data)
+        return result
+
 def write_fields(obj_type, obj_id, data):
     """
     Typical action to update fields of a row in the model
@@ -753,6 +810,8 @@ def push_mode_stack(mode_name, obj_type, data, parent_field = None, parent_id = 
     exitCallback = None
     if (mode_name == 'config-tunnel'):
         exitCallback = tunnel_config_exit
+    if (mode_name == 'config-policy'):
+        exitCallback = policy_config_exit
     sdnsh.push_mode(mode_name, obj_type, key, exitCallback)
 
     
@@ -3610,6 +3669,18 @@ def init_actions(bs, modi):
 
     command.add_action('create-tunnel',
                        tunnel_create,
+                       {'kwargs': {'data' : '$data',}})
+
+    command.add_action('remove-tunnel',
+                       tunnel_remove,
+                       {'kwargs': {'data' : '$data',}})
+
+    command.add_action('create-policy',
+                       policy_create,
+                       {'kwargs': {'data' : '$data',}})
+    
+    command.add_action('remove-policy',
+                       policy_remove,
                        {'kwargs': {'data' : '$data',}})
     
     command.add_action('write-fields', write_fields,

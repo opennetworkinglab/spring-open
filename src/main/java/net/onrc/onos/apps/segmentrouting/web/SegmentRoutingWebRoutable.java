@@ -19,7 +19,7 @@ public class SegmentRoutingWebRoutable implements RestletRoutable {
         router.attach("/routers",  RouterStatisticsResource.class);
         router.attach("/router/{routerId}/{statsType}",  RouterStatisticsResource.class);
         router.attach("/tunnel", SegmentRouterTunnelResource.class);
-        // router.attach("/tunnel/{tunnelparams}",
+        router.attach("/policy", SegmentRouterPolicyResource.class);
         // SegmentRouterTunnelResource.class);
         return router;
     }

@@ -3782,10 +3782,11 @@ def _match_current_modes(command, current_mode, modes):
     for mode in modes:
         if mode.endswith('*') and current_mode.startswith(mode[:-1]):
             return True
-    if command.get('command-type') == 'config-submode':
-        for mode in modes:
-            if current_mode.startswith(mode):
-                return True
+    #if command.get('command-type') == 'config-submode':
+    #    for mode in modes:
+    #        if current_mode.startswith(mode):
+    #            print "_match_current_modes: current command type is config-submode",current_mode,mode
+    #            return True
         
     return False
     
@@ -3866,6 +3867,18 @@ def init_command(bs, modi):
 
     add_command_type('create-tunnel', {
         'action': 'create-tunnel'
+    })
+    
+    add_command_type('remove-tunnel', {
+        'action': 'remove-tunnel'
+    })
+    
+    add_command_type('create-policy', {
+        'action': 'create-policy'
+    })
+    
+    add_command_type('remove-policy', {
+        'action': 'remove-policy'
     })
     
     add_command_type('display-table', {

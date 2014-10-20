@@ -15,14 +15,15 @@
 #
 import command
 import json
+import fmtcnv
 
 TUNNEL_SUBMODE_COMMAND_DESCRIPTION = {
     'name'          : 'tunnel',
     'short-help'    : 'Enter tunnel submode, configure tunnel details',
-    'mode'          : 'config*',
+    'mode'          : 'config',
+    'parent-field'  : None,
     'command-type'  : 'config-submode',
     'obj-type'      : 'tunnel-config',
-    'parent-field'  : None,
     'submode-name'  : 'config-tunnel',
     'doc'           : 'tunnel|tunnel',
     'doc-example'   : 'tunnel|tunnel-example',
@@ -42,6 +43,11 @@ TUNNEL_SUBMODE_COMMAND_DESCRIPTION = {
                                     'proc' : 'push-mode-stack',
                                 },
                               ),
+            'no-action': (
+                {
+                    'proc' : 'remove-tunnel',
+                }
+            ),
         }
     )
 }
@@ -69,6 +75,7 @@ TUNNEL_NODE_ENTRY_COMMAND_DESCRIPTION = {
     'short-help'          : 'Set node for this tunnel',
     'doc'                 : 'tunnel|node',
     'doc-example'         : 'tunnel|node',
+    'parent-field'        : 'tunnel',
     'command-type'        : 'config',
     'args'                : (
          {
@@ -86,7 +93,7 @@ TUNNEL_NODE_ENTRY_COMMAND_DESCRIPTION = {
          }
     )
 }
-
+"""
 TUNNEL_ADJACENCY_ENTRY_COMMAND_DESCRIPTION = {
     'name'                : 'adjacency',
     'mode'                : 'config-tunnel',
@@ -106,6 +113,312 @@ TUNNEL_ADJACENCY_ENTRY_COMMAND_DESCRIPTION = {
                               ),
          }
     )
+}
+"""
+
+POLICY_SUBMODE_COMMAND_DESCRIPTION = {
+    'name'          : 'policy',
+    'short-help'    : 'Enter policy submode, configure SR policy details',
+    'mode'          : 'config',
+    'command-type'  : 'config-submode',
+    'obj-type'      : 'policy-config',
+    'submode-name'  : 'config-policy',
+    'parent-field'  : None,
+    'doc'           : 'policy|policy',
+    'doc-example'   : 'policy|policy-example',
+    'args' : (
+        {
+            'field'        : 'policy-id',
+            'type'         : 'identifier',
+            'completion'   : 'complete-object-field',
+            'syntax-help'  : 'Enter a policy name',
+            'doc'          : 'policy|policy',
+            'doc-include'  : [ 'type-doc' ],
+            'action'       : (
+                                {
+                                    'proc' : 'create-policy',
+                                },
+                                {
+                                    'proc' : 'push-mode-stack',
+                                },
+                              ),
+            'no-action': (
+                {
+                    'proc' : 'remove-policy',
+                },
+            )
+        }
+    )
+}
+
+SRC_IP_MATCH = {
+    'choices' : (
+        (
+            {
+                'field' : 'src-ip',
+                'type'  : 'ip-address-not-mask',
+                'doc'   : 'vns|vns-access-list-ip-and-mask-ip',
+            },
+            {
+                'field'        : 'src-ip-mask',
+                'type'         : 'inverse-netmask',
+                'data'         : {
+                                  'dst-ip'      : '0.0.0.0',
+                                  'dst-ip-mask' : '255.255.255.255',
+                                 },
+                'doc'          : 'vns|vns-access-list-ip-and-mask-mask',
+            },
+        ),
+        (
+            {
+                'field'    : 'src-ip',
+                'type'     : 'ip-address-not-mask',
+                'data'     : {
+                               'src-ip-mask' : '0.0.0.0',
+                               'dst-ip'      : '0.0.0.0',
+                               'dst-ip-mask' : '255.255.255.255',
+                             },
+                'doc'      : 'vns|vns-access-list-ip-only',
+            },
+        ),
+        (
+            {
+                'field'        : 'src-ip',
+                'type'         : 'cidr-range',
+                'help-name'    : 'src-cidr',
+                'data-handler' : 'split-cidr-data-inverse',
+                'dest-ip'      : 'src-ip',
+                'dest-netmask' : 'src-ip-mask',
+                'data'         : {
+                                  'dst-ip'      : '0.0.0.0',
+                                  'dst-ip-mask' : '255.255.255.255',
+                                 },
+                'doc'          : 'vns|vns-access-list-cidr-range',
+            }
+        ),
+        (
+            {
+                'token'  : 'any',
+                'data'   : {
+                              'src-ip'      : '0.0.0.0',
+                              'src-ip-mask' : '255.255.255.255',
+                              'dst-ip'      : '0.0.0.0',
+                              'dst-ip-mask' : '255.255.255.255',
+                           },
+                'doc'    : 'vns|vns-access-list-ip-any',
+            }
+        ),
+    )
+}
+
+SRC_PORT_MATCH = (
+    {
+        'field'  : 'src-tp-port-op',
+        'type'   : 'enum',
+        'values' : ('eq', 'neq'),
+        'doc'    : 'vns|vns-access-list-port-op-+',
+    },
+    {
+        'choices' : (
+            {
+                'field'        : 'src-tp-port',
+                'base-type'    : 'hex-or-decimal-integer',
+                'range'        : (0,65535),
+                'data-handler' : 'hex-to-integer',
+                'doc'          : 'vns|vns-access-list-port-hex',
+                'doc-include'  : [ 'range' ],
+            },
+            {
+                'field'   : 'src-tp-port',
+                'type'    : 'enum',
+                'values'  : fmtcnv.tcp_name_to_number_dict,
+                'permute' : 'skip',
+                'doc'     : 'vns|vns-access-list-port-type',
+            },
+        ),
+    },
+)
+
+
+DST_IP_MATCH = {
+    'choices' : (
+        (
+            {
+                'field' : 'dst-ip',
+                'type'  : 'ip-address-not-mask',
+                'doc'   : 'vns|vns-access-list-ip-and-mask-ip',
+            },
+            {
+                'field' : 'dst-ip-mask',
+                'type'  : 'inverse-netmask',
+                'doc'   : 'vns|vns-access-list-ip-and-mask-mask',
+            },
+        ),
+        (
+            {
+                'field'    : 'dst-ip',
+                'type'     : 'ip-address-not-mask',
+                'data'     : {
+                                'dst-ip-mask' : '0.0.0.0',
+                             },
+                'doc'      : 'vns|vns-access-list-ip-only',
+            },
+        ),
+        (
+            {
+                'field'        : 'dst-ip',
+                'type'         : 'cidr-range',
+                'help-name'    : 'dst-cidr',
+                'data-handler' : 'split-cidr-data-inverse',
+                'dest-ip'      : 'dst-ip',
+                'dest-netmask' : 'dst-ip-mask',
+                'doc'          : 'vns|vns-access-list-cidr-range',
+            },
+        ),
+        (
+            {
+                'token'  : 'any',
+                'data'   : {
+                              'dst-ip'      : '0.0.0.0',
+                              'dst-ip-mask' : '255.255.255.255',
+                           },
+                'doc'    : 'vns|vns-access-list-ip-any',
+            }
+        ),
+    )
+}
+
+
+DST_PORT_MATCH = (
+    {
+        'field' : 'dst-tp-port-op',
+        'type'  : 'enum',
+        'values' : ('eq', 'neq'),
+        'doc'          : 'vns|vns-access-list-port-op+',
+    },
+    {
+        'choices' : (
+            {
+                'field'        : 'dst-tp-port',
+                'base-type'    : 'hex-or-decimal-integer',
+                'range'        : (0,65535),
+                'data-handler' : 'hex-to-integer',
+                'doc'          : 'vns|vns-access-list-port-hex',
+            },
+            {
+                'field'   : 'dst-tp-port',
+                'type'    : 'enum',
+                'values'  : fmtcnv.tcp_name_to_number_dict,
+                'permute' : 'skip'
+            },
+        ),
+    }
+)
+
+POLICY_FLOW_ENTRY_COMMAND_DESCRIPTION = {
+    'name'            : 'flow-entry',
+    'mode'            : 'config-policy',
+    'command-type'    : 'config',
+    'short-help'      : 'Configure flow entry',
+    'doc'             : 'flow-entry|flow-entry',
+    'doc-example'     : 'flow-entry|flow-entry-example',
+    'parent-field'    : 'policy',
+    'args' : {
+        'action'       : (
+                            {
+                                'proc' : 'create-policy',
+                            },
+                         ),
+        'choices' : (
+            (
+                {
+                    'choices' : (
+                        {
+                            'field'  : 'type',
+                            'type'   : 'enum',
+                            'values' : ('ip','tcp','udp'),
+                            'doc'    : 'vns|vns-access-list-entry-type-+',
+                        },
+                        {
+                            'field'        : 'type',
+                            'base-type'    : 'hex-or-decimal-integer',
+                            'range'        : (0,255),
+                            'help-name'    : 'ip protocol',
+                            'data-handler' : 'hex-to-integer',
+                            'doc'          : 'vns|vns-access-entry-type-ip-protocol',
+                            'doc-include'  : [ 'range' ],
+                        },
+                    )
+                },
+                # Complexity arises from the SRC_IP match part 
+                # being, required, while the port match
+                # is optional, as is the DST_IP match, but the
+                # DST_PORT_MATCH is only possible to describe when
+                # the DST_IP part is included
+                SRC_IP_MATCH,
+                {
+                    'optional' : True,
+                    'optional-for-no' : True,
+                    'args' : SRC_PORT_MATCH,
+                },
+                {
+                    'optional' : True,
+                    'optional-for-no' : True,
+                    'args' : (
+                        DST_IP_MATCH,
+                        {
+                            'optional' : True,
+                            'optional-for-no' : True,
+                            'args' : DST_PORT_MATCH,
+                        },
+                    ),
+                },
+            ),
+        ),
+    },
+}
+
+POLICY_TUNNEL_ID_COMMAND_DESCRIPTION = {
+    'name'            : 'tunnel',
+    'mode'            : 'config-policy',
+    #'obj-type'        : 'policy-config',
+    'command-type'    : 'config',
+    'short-help'      : 'Configure tunnel id',
+    #'doc'             : 'policy|tunnel',
+    #'doc-example'     : 'policy|policy-tunnel-example',
+    'parent-field'    : 'policy',
+    'args' : {
+        'action'       : (
+                            {
+                                'proc' : 'create-policy',
+                            },
+                         ),
+        'field'        : 'tunnel-id',
+        'type'         : 'identifier',
+        'syntax-help'  : 'Enter tunnel id',
+        'doc'          : 'policy|tunnel-id',
+        'doc-include'  : [ 'type-doc' ],
+    }
+}
+
+POLICY_PRIORITY_COMMAND_DESCRIPTION = {
+    'name'            : 'priority',
+    'mode'            : 'config-policy',
+    'command-type'    : 'config',
+    'short-help'      : 'Configure policy priority',
+    'doc'             : 'policy|priority',
+    'doc-example'     : 'policy|policy-priority-example',
+    'parent-field'    : 'policy',
+    'args' : {
+        'action'       : (
+                            {
+                                'proc' : 'create-policy',
+                            },
+                         ),
+        'field'     : 'priority',
+        'base-type' : 'integer',
+        'range'     : (0, 65535),
+    }
 }
 
 """
