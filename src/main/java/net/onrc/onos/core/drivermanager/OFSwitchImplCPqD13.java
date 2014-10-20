@@ -1295,11 +1295,11 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             EthType ethertype = ((PopMplsAction) action).getEthType();
             ofAction = factory.actions().popMpls(ethertype);
         } else if (action instanceof GroupAction) {
-            // If group Id can be specified explicitly in case of policy routing.
             int gid = -1;
             GroupAction ga = (GroupAction)action;
-            if (ga.getGroupId() > 0) {
-                gid = ga.getGroupId();
+            if (ga.getTunnelId() != null) {
+                List<Integer> groupIds = tunnelGroups.get(ga.getTunnelId());
+                gid = groupIds.get(groupIds.size()-1);
             }
             else {
                 NeighborSet ns = ((GroupAction) action).getDpids();

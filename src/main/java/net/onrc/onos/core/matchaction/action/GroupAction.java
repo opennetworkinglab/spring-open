@@ -6,6 +6,7 @@ import net.onrc.onos.core.util.Dpid;
 public class GroupAction implements Action {
     NeighborSet fwdSws;
     int groupId;
+    String tunnelId;
 
     public GroupAction() {
         fwdSws = new NeighborSet();
@@ -29,5 +30,13 @@ public class GroupAction implements Action {
 
     public int getGroupId() {
         return this.groupId;
+    }
+
+    public void setTunnelId(String tid) {
+        this.tunnelId = tid;
+    }
+
+    public String getTunnelId() {
+        return tunnelId;
     }
 }
