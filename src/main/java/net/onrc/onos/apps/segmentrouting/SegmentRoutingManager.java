@@ -81,7 +81,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SegmentRoutingManager implements IFloodlightModule,
-        ITopologyListener, IPacketListener {
+        ITopologyListener, IPacketListener, ISegmentRoutingService {
 
     private static final Logger log = LoggerFactory
             .getLogger(SegmentRoutingManager.class);
@@ -133,14 +133,16 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
-        // TODO Auto-generated method stub
-        return null;
+        Collection<Class<? extends IFloodlightService>> l = new ArrayList<>();
+        l.add(ISegmentRoutingService.class);
+        return l;
     }
 
     @Override
     public Map<Class<? extends IFloodlightService>, IFloodlightService> getServiceImpls() {
-        // TODO Auto-generated method stub
-        return null;
+        Map<Class<? extends IFloodlightService>, IFloodlightService> m = new HashMap<>();
+        m.put(ISegmentRoutingService.class, this);
+        return m;
     }
 
     @Override
