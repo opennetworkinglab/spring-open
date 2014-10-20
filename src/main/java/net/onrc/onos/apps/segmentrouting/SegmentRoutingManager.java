@@ -27,6 +27,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.core.util.SingletonTask;
+import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
@@ -70,7 +71,6 @@ import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.SwitchPort;
-import net.floodlightcontroller.restserver.IRestApiService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -114,6 +114,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private long matchActionId = 0L;
     private final int DELAY_TO_ADD_LINK = 10;
     private final int MAX_NUM_LABELS = 3;
+
+    // ************************************
+    // IFloodlightModule implementation
+    // ************************************
 
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -199,13 +203,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
         //testTask.reschedule(20, TimeUnit.SECONDS);
     }
 
-
     @Override
     public void receive(Switch sw, Port inPort, Ethernet payload) {
         if (payload.getEtherType() == Ethernet.TYPE_ARP)
             arpHandler.processPacketIn(sw, inPort, payload);
         if (payload.getEtherType() == Ethernet.TYPE_IPV4) {
-            addPacket((IPv4) payload.getPayload());
+            addPacketToPacketBuffer((IPv4) payload.getPayload());
             if (((IPv4) payload.getPayload()).getProtocol() == IPv4.PROTOCOL_ICMP)
                 icmpHandler.processPacketIn(sw, inPort, payload);
             else
@@ -216,78 +219,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
 
-    /**
-     * Update ARP Cache using ARP packets It is used to set destination MAC
-     * address to forward packets to known hosts. But, it will be replace with
-     * Host information of Topology service later.
-     *
-     * @param arp APR packets to use for updating ARP entries
-     */
-    public void updateArpCache(ARP arp) {
 
-        ArpEntry arpEntry = new ArpEntry(arp.getSenderHardwareAddress(),
-                arp.getSenderProtocolAddress());
-        // TODO: Need to check the duplication
-        arpEntries.add(arpEntry);
-    }
-
-    /**
-     * Get MAC address to known hosts
-     *
-     * @param destinationAddress IP address to get MAC address
-     * @return MAC Address to given IP address
-     */
-    public byte[] getMacAddressFromIpAddress(int destinationAddress) {
-
-        // Can't we get the host IP address from the TopologyService ??
-
-        Iterator<ArpEntry> iterator = arpEntries.iterator();
-
-        IPv4Address ipAddress = IPv4Address.of(destinationAddress);
-        byte[] ipAddressInByte = ipAddress.getBytes();
-
-        while (iterator.hasNext()) {
-            ArpEntry arpEntry = iterator.next();
-            byte[] address = arpEntry.targetIpAddress;
-
-            IPv4Address a = IPv4Address.of(address);
-            IPv4Address b = IPv4Address.of(ipAddressInByte);
-
-            if (a.equals(b)) {
-                log.debug("Found an arp entry");
-                return arpEntry.targetMacAddress;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Send an ARP request via ArpHandler
-     *
-     * @param destinationAddress
-     * @param sw
-     * @param inPort
-     *
-     */
-    public void sendArpRequest(Switch sw, int destinationAddress, Port inPort) {
-        arpHandler.sendArpRequest(sw, destinationAddress, inPort);
-    }
-
-    /**
-     * Temporary class to to keep ARP entry
-     *
-     */
-    private class ArpEntry {
-
-        byte[] targetMacAddress;
-        byte[] targetIpAddress;
-
-        private ArpEntry(byte[] macAddress, byte[] ipAddress) {
-            this.targetMacAddress = macAddress;
-            this.targetIpAddress = ipAddress;
-        }
-    }
+    // ************************************
+    // Topology event handlers
+    // ************************************
 
     /**
      * Topology events that have been generated.
@@ -397,17 +332,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         log.debug("num events {}, num of process {}, "
                 + "num of Population {}", numOfEvents, numOfEventProcess,
                 numOfPopulation);
-    }
-
-    /**
-     * Add the link immediately
-     * The function is scheduled when link add event happens and called
-     * DELAY_TO_ADD_LINK seconds after the event to avoid link flip-flop.
-     */
-    private void delayedAddLink() {
-
-        processLinkAdd(linksToAdd.values(), true);
-
     }
 
     /**
@@ -595,6 +519,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
+     * Add the link immediately
+     * The function is scheduled when link add event happens and called
+     * DELAY_TO_ADD_LINK seconds after the event to avoid link flip-flop.
+     */
+    private void delayedAddLink() {
+
+        processLinkAdd(linksToAdd.values(), true);
+
+    }
+
+
+    // ************************************
+    // ECMP shorted path routing functions
+    // ************************************
+
+    /**
      * Populate routing rules walking through the ECMP shortest paths
      *
      * @param modified if true, it "modifies" the rules
@@ -677,100 +617,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
 
-    }
-
-
-    /**
-     * This class is used only for link recovery optimization in
-     * modifyEcmpRoutingRules() function.
-     * TODO: please remove if the optimization is not used at all
-     */
-    private class SwitchPair {
-        private Switch src;
-        private Switch dst;
-
-        public SwitchPair(Switch src, Switch dst) {
-            this.src = src;
-            this.dst = dst;
-        }
-
-        public Switch getSource() {
-            return src;
-        }
-
-        public Switch getDestination() {
-            return dst;
-        }
-    }
-
-    /**
-     * Modify the routing rules for the lost links
-     * - Recompute the path if the link failed is included in the path
-     * (including src and dest).
-     *
-     * @param newLink
-     */
-    private void modifyEcmpRoutingRules(LinkData linkRemoved) {
-
-        //HashMap<Switch, SwitchPair> linksToRecompute = new HashMap<Switch, SwitchPair>();
-        Set<SwitchPair> linksToRecompute = new HashSet<SwitchPair>();
-
-        for (ECMPShortestPathGraph ecmpSPG : graphs.values()) {
-            Switch rootSw = ecmpSPG.getRootSwitch();
-            HashMap<Integer, HashMap<Switch, ArrayList<Path>>> paths =
-                    ecmpSPG.getCompleteLearnedSwitchesAndPaths();
-            for (HashMap<Switch, ArrayList<Path>> p: paths.values()) {
-                for (Switch destSw: p.keySet()) {
-                    ArrayList<Path> path = p.get(destSw);
-                    if  (checkPath(path, linkRemoved)) {
-                        boolean found = false;
-                        for (SwitchPair pair: linksToRecompute) {
-                            if (pair.getSource().getDpid() == rootSw.getDpid() &&
-                                    pair.getSource().getDpid() == destSw.getDpid()) {
-                                found = true;
-                            }
-                        }
-                        if (!found) {
-                            linksToRecompute.add(new SwitchPair(rootSw, destSw));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Recompute the path for the specific route
-        for (SwitchPair pair: linksToRecompute) {
-
-            log.debug("Recompute path from {} to {}", pair.getSource(), pair.getDestination());
-            // We need the following function for optimization
-            //ECMPShortestPathGraph ecmpSPG =
-            //     new ECMPShortestPathGraph(pair.getSource(), pair.getDestination());
-            ECMPShortestPathGraph ecmpSPG =
-                    new ECMPShortestPathGraph(pair.getSource());
-            populateEcmpRoutingRulesForPath(pair.getSource(), ecmpSPG, true);
-        }
-    }
-
-    /**
-     * Check if the path is affected from the link removed
-     *
-     * @param path Path to check
-     * @param linkRemoved link removed
-     * @return true if the path contains the link removed
-     */
-    private boolean checkPath(ArrayList<Path> path, LinkData linkRemoved) {
-
-        for (Path ppp: path) {
-            // TODO: need to check if this is a bidirectional or
-            // unidirectional
-            for (LinkData link: ppp) {
-                if (link.getDst().getDpid().equals(linkRemoved.getDst().getDpid()) &&
-                        link.getSrc().getDpid().equals(linkRemoved.getSrc().getDpid()))
-                    return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -866,38 +712,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
 
-    }
-
-    /**
-     * Check if the switch is the edge router or not.
-     *
-     * @param dpid Dpid of the switch to check
-     * @return true if it is an edge router, otherwise false
-     */
-    private boolean IsEdgeRouter(String dpid) {
-
-        for (Switch sw : mutableTopology.getSwitches()) {
-            String dpidStr = sw.getDpid().toString();
-            if (dpid.equals(dpidStr)) {
-                /*
-                String subnetInfo = sw.getStringAttribute("subnets");
-                if (subnetInfo == null || subnetInfo.equals("[]")) {
-                    return false;
-                }
-                else
-                    return true;
-                */
-                String isEdge = sw.getStringAttribute("isEdgeRouter");
-                if (isEdge != null) {
-                    if (isEdge.equals("true"))
-                        return true;
-                    else
-                        return false;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -1104,6 +918,51 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
 
+
+    // ************************************
+    // Policy routing classes and functions
+    // ************************************
+
+    class PolicyRouteInfo {
+
+        String srcSwDpid;
+        List<Dpid> fwdSwDpids;
+        List<String> route;
+
+        PolicyRouteInfo() {
+            fwdSwDpids = new ArrayList<Dpid>();
+            route = new ArrayList<String>();
+        }
+
+        void setSrcDpid(String dpid) {
+            this.srcSwDpid = dpid;
+        }
+
+        void setFwdSwDpid(List<Dpid> dpid) {
+            this.fwdSwDpids = dpid;
+        }
+
+        void addRoute(String id) {
+            route.add(id);
+        }
+
+        void setRoute(List<String> r) {
+            this.route = r;
+        }
+
+        String getSrcSwDpid() {
+            return this.srcSwDpid;
+        }
+
+        List<Dpid> getFwdSwDpid() {
+            return this.fwdSwDpids;
+        }
+
+        List<String> getRoute() {
+            return this.route;
+        }
+    }
+
     /**
      * Create a tunnel for policy routing
      * It delivers the node IDs of tunnels to driver.
@@ -1224,216 +1083,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
-     * Get the forwarding Switch DPIDs to send packets to a node
-     *
-     * @param srcSw source switch
-     * @param nodeId destination node Id
-     * @return list of switch DPID to forward packets to
-     */
-
-    private List<Dpid> getForwardingSwitchForNodeId(Switch srcSw, String nodeId) {
-
-        List<Dpid> fwdSws = new ArrayList<Dpid>();
-        Switch destSw = null;
-
-        destSw = getSwitchFromNodeId(nodeId);
-
-        if (destSw == null) {
-            log.debug("Cannot find the switch with ID {}", nodeId);
-            return null;
-        }
-
-        ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(srcSw);
-
-        HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>> switchVia =
-                ecmpSPG.getAllLearnedSwitchesAndVia();
-        for (Integer itrIdx : switchVia.keySet()) {
-            HashMap<Switch, ArrayList<ArrayList<Dpid>>> swViaMap =
-                    switchVia.get(itrIdx);
-            for (Switch targetSw : swViaMap.keySet()) {
-                String destSwDpid = destSw.getDpid().toString();
-                if (targetSw.getDpid().toString().equals(destSwDpid)) {
-                    for (ArrayList<Dpid> via : swViaMap.get(targetSw)) {
-                        if (via.isEmpty()) {
-                            fwdSws.add(destSw.getDpid());
-                        }
-                        else {
-                            fwdSws.add(via.get(0));
-                        }
-                    }
-                }
-            }
-        }
-
-        return fwdSws;
-    }
-
-    /**
-     * Get switch for the node Id specified
-     *
-     * @param nodeId node ID for switch
-     * @return Switch
-     */
-    private Switch getSwitchFromNodeId(String nodeId) {
-
-        for (Switch sw : mutableTopology.getSwitches()) {
-            String id = sw.getStringAttribute("nodeSid");
-            if (id.equals(nodeId)) {
-                return sw;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Convert a string DPID to its Switch Id (integer)
-     *
-     * @param dpid
-     * @return
-     */
-    private long getSwId(String dpid) {
-
-        long swId = 0;
-
-        String swIdHexStr = "0x"+dpid.substring(dpid.lastIndexOf(":") + 1);
-        if (swIdHexStr != null)
-            swId = Integer.decode(swIdHexStr);
-
-        return swId;
-    }
-
-    private void runTest() {
-
-        String[] routeArray = {"101", "102", "103", "104", "105", "108", "110"};
-        List<String> routeList = new ArrayList<String>();
-        for (int i = 0; i < routeArray.length; i++)
-            routeList.add(routeArray[i]);
-
-        if (createTunnel(1, routeList)) {
-            IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
-            IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
-
-            this.setPolicyTable(null, null, Ethernet.TYPE_IPV4, srcIp, dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 1);
-        }
-        else {
-            testTask.reschedule(5, TimeUnit.SECONDS);
-        }
-    }
-
-    private void runTest1() {
-
-        String dpid1 = "00:00:00:00:00:00:00:01";
-        String dpid2 = "00:00:00:00:00:00:00:0a";
-        Switch srcSw = mutableTopology.getSwitch(new Dpid(dpid1));
-        Switch dstSw = mutableTopology.getSwitch(new Dpid(dpid2));
-
-        if (srcSw == null || dstSw == null) {
-            testTask.reschedule(1, TimeUnit.SECONDS);
-            log.debug("Switch is gone. Reschedule the test");
-            return;
-        }
-
-        String[] routeArray = {"101", "102", "105", "108", "110"};
-        List<String> routeList = new ArrayList<String>();
-        for (int i = 0; i < routeArray.length; i++)
-            routeList.add(routeArray[i]);
-
-        List<String> optimizedRoute = this.getOptimizedPath(srcSw, dstSw, routeList);
-
-        log.debug("Test set is {}", routeList.toString());
-        log.debug("Result set is {}", optimizedRoute.toString());
-
-
-    }
-
-    /**
-     * Optimize the mpls label
-     * The feature will be used only for policy of "avoid a specific switch".
-     * Check route to each router in route backward.
-     * If there is only one route to the router and the routers are included in
-     * the route, remove the id from the path.
-     * A-B-C-D-E  => A-B-C-D-E -> A-E
-     *   |   |    => A-B-H-I   -> A-I
-     *   F-G-H-I  => A-D-I     -> A-D-I
-     */
-    private List<String> getOptimizedPath(Switch srcSw, Switch dstSw, List<String> route) {
-
-        List<String> optimizedPath = new ArrayList<String>();
-        optimizedPath.addAll(route);
-        ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(srcSw);
-
-        HashMap<Integer, HashMap<Switch, ArrayList<Path>>> paths =
-                ecmpSPG.getCompleteLearnedSwitchesAndPaths();
-        for (HashMap<Switch, ArrayList<Path>> p: paths.values()) {
-            for (Switch s: p.keySet()) {
-                if (s.getDpid().toString().equals(dstSw.getDpid().toString())) {
-                    ArrayList<Path> ecmpPaths = p.get(s);
-                    if (ecmpPaths!= null && ecmpPaths.size() == 1) {
-                        for (Path path: ecmpPaths) {
-                            for (LinkData link: path) {
-                                String srcId = getMplsLabel(link.getSrc().getDpid().toString());
-                                String dstId = getMplsLabel(link.getSrc().getDpid().toString());
-                                if (optimizedPath.contains(srcId)) {
-                                    optimizedPath.remove(srcId);
-                                }
-                                if (optimizedPath.contains(dstId)) {
-                                    optimizedPath.remove(dstId);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return optimizedPath;
-
-    }
-
-
-    class PolicyRouteInfo {
-
-        String srcSwDpid;
-        List<Dpid> fwdSwDpids;
-        List<String> route;
-
-        PolicyRouteInfo() {
-            fwdSwDpids = new ArrayList<Dpid>();
-            route = new ArrayList<String>();
-        }
-
-        void setSrcDpid(String dpid) {
-            this.srcSwDpid = dpid;
-        }
-
-        void setFwdSwDpid(List<Dpid> dpid) {
-            this.fwdSwDpids = dpid;
-        }
-
-        void addRoute(String id) {
-            route.add(id);
-        }
-
-        void setRoute(List<String> r) {
-            this.route = r;
-        }
-
-        String getSrcSwDpid() {
-            return this.srcSwDpid;
-        }
-
-        List<Dpid> getFwdSwDpid() {
-            return this.fwdSwDpids;
-        }
-
-        List<String> getRoute() {
-            return this.route;
-        }
-    }
-
-
-    /**
      *
      *
      * @param srcSw
@@ -1528,96 +1177,120 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return rules;
     }
 
+
+    // ************************************
+    // Utility functions
+    // ************************************
+
     /**
-     * print tunnel info - used only for debugging.
-     * @param targetSw
+     * Get the forwarding Switch DPIDs to send packets to a node
      *
-     * @param fwdSwDpids
-     * @param ids
-     * @param tunnelId
+     * @param srcSw source switch
+     * @param nodeId destination node Id
+     * @return list of switch DPID to forward packets to
      */
-    private void printTunnelInfo(IOF13Switch targetSw, int tunnelId,
-            List<String> ids, NeighborSet ns) {
-        StringBuilder logStr = new StringBuilder("In switch " +
-            targetSw.getId() + ", create a tunnel " + tunnelId + " " + " of push ");
-        for (String id: ids)
-            logStr.append(id + "-");
-        logStr.append(" output to ");
-        for (Dpid dpid: ns.getDpids())
-            logStr.append(dpid + " - ");
+    private List<Dpid> getForwardingSwitchForNodeId(Switch srcSw, String nodeId) {
 
-        log.debug(logStr.toString());
+        List<Dpid> fwdSws = new ArrayList<Dpid>();
+        Switch destSw = null;
 
+        destSw = getSwitchFromNodeId(nodeId);
+
+        if (destSw == null) {
+            log.debug("Cannot find the switch with ID {}", nodeId);
+            return null;
+        }
+
+        ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(srcSw);
+
+        HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>> switchVia =
+                ecmpSPG.getAllLearnedSwitchesAndVia();
+        for (Integer itrIdx : switchVia.keySet()) {
+            HashMap<Switch, ArrayList<ArrayList<Dpid>>> swViaMap =
+                    switchVia.get(itrIdx);
+            for (Switch targetSw : swViaMap.keySet()) {
+                String destSwDpid = destSw.getDpid().toString();
+                if (targetSw.getDpid().toString().equals(destSwDpid)) {
+                    for (ArrayList<Dpid> via : swViaMap.get(targetSw)) {
+                        if (via.isEmpty()) {
+                            fwdSws.add(destSw.getDpid());
+                        }
+                        else {
+                            fwdSws.add(via.get(0));
+                        }
+                    }
+                }
+            }
+        }
+
+        return fwdSws;
     }
 
+    /**
+     * Get switch for the node Id specified
+     *
+     * @param nodeId node ID for switch
+     * @return Switch
+     */
+    private Switch getSwitchFromNodeId(String nodeId) {
 
+        for (Switch sw : mutableTopology.getSwitches()) {
+            String id = sw.getStringAttribute("nodeSid");
+            if (id.equals(nodeId)) {
+                return sw;
+            }
+        }
+
+        return null;
+    }
 
     /**
-     * Debugging function to print out the Match Action Entry
-     * @param sw13
+     * Convert a string DPID to its Switch Id (integer)
      *
-     * @param maEntry
+     * @param dpid
+     * @return
      */
-    private void printMatchActionOperationEntry(
-            IOF13Switch sw13, MatchActionOperationEntry maEntry) {
+    private long getSwId(String dpid) {
 
-        StringBuilder logStr = new StringBuilder("In switch " + sw13.getId() + ", ");
+        long swId = 0;
 
-        MatchAction ma = maEntry.getTarget();
-        Match m = ma.getMatch();
-        List<Action> actions = ma.getActions();
+        String swIdHexStr = "0x"+dpid.substring(dpid.lastIndexOf(":") + 1);
+        if (swIdHexStr != null)
+            swId = Integer.decode(swIdHexStr);
 
-        if (m instanceof Ipv4Match) {
-            logStr.append("If the IP matches with ");
-            IPv4Net ip = ((Ipv4Match) m).getDestination();
-            logStr.append(ip.toString());
-            logStr.append(" then ");
-        }
-        else if (m instanceof MplsMatch) {
-            logStr.append("If the MPLS label matches with ");
-            int mplsLabel = ((MplsMatch) m).getMplsLabel();
-            logStr.append(mplsLabel);
-            logStr.append(" then ");
-        }
-        else if (m instanceof PacketMatch) {
-            GroupAction ga = (GroupAction)actions.get(0);
-            logStr.append("if the policy match is XXX then go to group " +
-                    ga.getGroupId());
-            log.debug(logStr.toString());
-            return;
-        }
+        return swId;
+    }
 
-        logStr.append(" do { ");
-        for (Action action : actions) {
-            if (action instanceof CopyTtlInAction) {
-                logStr.append("copy ttl In, ");
-            }
-            else if (action instanceof CopyTtlOutAction) {
-                logStr.append("copy ttl Out, ");
-            }
-            else if (action instanceof DecMplsTtlAction) {
-                logStr.append("Dec MPLS TTL , ");
-            }
-            else if (action instanceof GroupAction) {
-                logStr.append("Forward packet to < ");
-                NeighborSet dpids = ((GroupAction) action).getDpids();
-                logStr.append(dpids.toString() + ",");
+    /**
+     * Check if the switch is the edge router or not.
+     *
+     * @param dpid Dpid of the switch to check
+     * @return true if it is an edge router, otherwise false
+     */
+    private boolean IsEdgeRouter(String dpid) {
 
-            }
-            else if (action instanceof PopMplsAction) {
-                logStr.append("Pop MPLS label, ");
-            }
-            else if (action instanceof PushMplsAction) {
-                logStr.append("Push MPLS label, ");
-            }
-            else if (action instanceof SetMplsIdAction) {
-                int id = ((SetMplsIdAction) action).getMplsId();
-                logStr.append("Set MPLS ID as " + id + ", ");
+        for (Switch sw : mutableTopology.getSwitches()) {
+            String dpidStr = sw.getDpid().toString();
+            if (dpid.equals(dpidStr)) {
+                /*
+                String subnetInfo = sw.getStringAttribute("subnets");
+                if (subnetInfo == null || subnetInfo.equals("[]")) {
+                    return false;
+                }
+                else
+                    return true;
+                */
+                String isEdge = sw.getStringAttribute("isEdgeRouter");
+                if (isEdge != null) {
+                    if (isEdge.equals("true"))
+                        return true;
+                    else
+                        return false;
+                }
             }
         }
 
-        log.debug(logStr.toString());
-
+        return false;
     }
 
     /**
@@ -1626,7 +1299,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param dipid DPID of the switch
      * @return MPLS label for the switch
      */
-
     private String getMplsLabel(String dpid) {
 
         String mplsLabel = null;
@@ -1704,7 +1376,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void addRouteToHost(Switch sw, int hostIpAddress, byte[] hostMacAddress) {
         ipHandler.addRouteToHost(sw, hostIpAddress, hostMacAddress);
-
     }
 
     /**
@@ -1712,7 +1383,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      * @param ipv4
      */
-    public void addPacket(IPv4 ipv4) {
+    public void addPacketToPacketBuffer(IPv4 ipv4) {
         ipPacketQueue.add(ipv4);
     }
 
@@ -1739,6 +1410,359 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return bufferedPackets;
     }
 
+    /**
+     * Get MAC address to known hosts
+     *
+     * @param destinationAddress IP address to get MAC address
+     * @return MAC Address to given IP address
+     */
+    public byte[] getMacAddressFromIpAddress(int destinationAddress) {
+
+        // Can't we get the host IP address from the TopologyService ??
+
+        Iterator<ArpEntry> iterator = arpEntries.iterator();
+
+        IPv4Address ipAddress = IPv4Address.of(destinationAddress);
+        byte[] ipAddressInByte = ipAddress.getBytes();
+
+        while (iterator.hasNext()) {
+            ArpEntry arpEntry = iterator.next();
+            byte[] address = arpEntry.targetIpAddress;
+
+            IPv4Address a = IPv4Address.of(address);
+            IPv4Address b = IPv4Address.of(ipAddressInByte);
+
+            if (a.equals(b)) {
+                log.debug("Found an arp entry");
+                return arpEntry.targetMacAddress;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Send an ARP request via ArpHandler
+     *
+     * @param destinationAddress
+     * @param sw
+     * @param inPort
+     *
+     */
+    public void sendArpRequest(Switch sw, int destinationAddress, Port inPort) {
+        arpHandler.sendArpRequest(sw, destinationAddress, inPort);
+    }
+
+
+    // ************************************
+    // Test functions
+    // ************************************
+
+    private void runTest() {
+
+        String[] routeArray = {"101", "102", "103", "104", "105", "108", "110"};
+        List<String> routeList = new ArrayList<String>();
+        for (int i = 0; i < routeArray.length; i++)
+            routeList.add(routeArray[i]);
+
+        if (createTunnel(1, routeList)) {
+            IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
+            IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
+
+            this.setPolicyTable(null, null, Ethernet.TYPE_IPV4, srcIp, dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 1);
+        }
+        else {
+            testTask.reschedule(5, TimeUnit.SECONDS);
+        }
+    }
+
+    private void runTest1() {
+
+        String dpid1 = "00:00:00:00:00:00:00:01";
+        String dpid2 = "00:00:00:00:00:00:00:0a";
+        Switch srcSw = mutableTopology.getSwitch(new Dpid(dpid1));
+        Switch dstSw = mutableTopology.getSwitch(new Dpid(dpid2));
+
+        if (srcSw == null || dstSw == null) {
+            testTask.reschedule(1, TimeUnit.SECONDS);
+            log.debug("Switch is gone. Reschedule the test");
+            return;
+        }
+
+        String[] routeArray = {"101", "102", "105", "108", "110"};
+        List<String> routeList = new ArrayList<String>();
+        for (int i = 0; i < routeArray.length; i++)
+            routeList.add(routeArray[i]);
+
+        List<String> optimizedRoute = this.getOptimizedPath(srcSw, dstSw, routeList);
+
+        log.debug("Test set is {}", routeList.toString());
+        log.debug("Result set is {}", optimizedRoute.toString());
+
+
+    }
+
+    /**
+     * print tunnel info - used only for debugging.
+     * @param targetSw
+     *
+     * @param fwdSwDpids
+     * @param ids
+     * @param tunnelId
+     */
+    private void printTunnelInfo(IOF13Switch targetSw, int tunnelId,
+            List<String> ids, NeighborSet ns) {
+        StringBuilder logStr = new StringBuilder("In switch " +
+            targetSw.getId() + ", create a tunnel " + tunnelId + " " + " of push ");
+        for (String id: ids)
+            logStr.append(id + "-");
+        logStr.append(" output to ");
+        for (Dpid dpid: ns.getDpids())
+            logStr.append(dpid + " - ");
+
+        log.debug(logStr.toString());
+
+    }
+
+    /**
+     * Debugging function to print out the Match Action Entry
+     * @param sw13
+     *
+     * @param maEntry
+     */
+    private void printMatchActionOperationEntry(
+            IOF13Switch sw13, MatchActionOperationEntry maEntry) {
+
+        StringBuilder logStr = new StringBuilder("In switch " + sw13.getId() + ", ");
+
+        MatchAction ma = maEntry.getTarget();
+        Match m = ma.getMatch();
+        List<Action> actions = ma.getActions();
+
+        if (m instanceof Ipv4Match) {
+            logStr.append("If the IP matches with ");
+            IPv4Net ip = ((Ipv4Match) m).getDestination();
+            logStr.append(ip.toString());
+            logStr.append(" then ");
+        }
+        else if (m instanceof MplsMatch) {
+            logStr.append("If the MPLS label matches with ");
+            int mplsLabel = ((MplsMatch) m).getMplsLabel();
+            logStr.append(mplsLabel);
+            logStr.append(" then ");
+        }
+        else if (m instanceof PacketMatch) {
+            GroupAction ga = (GroupAction)actions.get(0);
+            logStr.append("if the policy match is XXX then go to group " +
+                    ga.getGroupId());
+            log.debug(logStr.toString());
+            return;
+        }
+
+        logStr.append(" do { ");
+        for (Action action : actions) {
+            if (action instanceof CopyTtlInAction) {
+                logStr.append("copy ttl In, ");
+            }
+            else if (action instanceof CopyTtlOutAction) {
+                logStr.append("copy ttl Out, ");
+            }
+            else if (action instanceof DecMplsTtlAction) {
+                logStr.append("Dec MPLS TTL , ");
+            }
+            else if (action instanceof GroupAction) {
+                logStr.append("Forward packet to < ");
+                NeighborSet dpids = ((GroupAction) action).getDpids();
+                logStr.append(dpids.toString() + ",");
+
+            }
+            else if (action instanceof PopMplsAction) {
+                logStr.append("Pop MPLS label, ");
+            }
+            else if (action instanceof PushMplsAction) {
+                logStr.append("Push MPLS label, ");
+            }
+            else if (action instanceof SetMplsIdAction) {
+                int id = ((SetMplsIdAction) action).getMplsId();
+                logStr.append("Set MPLS ID as " + id + ", ");
+            }
+        }
+
+        log.debug(logStr.toString());
+
+    }
+
+
+    // ************************************
+    // Unused classes and functions
+    // ************************************
+
+    /**
+     * Temporary class to to keep ARP entry
+     *
+     */
+    private class ArpEntry {
+
+        byte[] targetMacAddress;
+        byte[] targetIpAddress;
+
+        private ArpEntry(byte[] macAddress, byte[] ipAddress) {
+            this.targetMacAddress = macAddress;
+            this.targetIpAddress = ipAddress;
+        }
+    }
+
+    /**
+     * This class is used only for link recovery optimization in
+     * modifyEcmpRoutingRules() function.
+     * TODO: please remove if the optimization is not used at all
+     */
+    private class SwitchPair {
+        private Switch src;
+        private Switch dst;
+
+        public SwitchPair(Switch src, Switch dst) {
+            this.src = src;
+            this.dst = dst;
+        }
+
+        public Switch getSource() {
+            return src;
+        }
+
+        public Switch getDestination() {
+            return dst;
+        }
+    }
+
+    /**
+     * Update ARP Cache using ARP packets It is used to set destination MAC
+     * address to forward packets to known hosts. But, it will be replace with
+     * Host information of Topology service later.
+     *
+     * @param arp APR packets to use for updating ARP entries
+     */
+    public void updateArpCache(ARP arp) {
+
+        ArpEntry arpEntry = new ArpEntry(arp.getSenderHardwareAddress(),
+                arp.getSenderProtocolAddress());
+        // TODO: Need to check the duplication
+        arpEntries.add(arpEntry);
+    }
+
+    /**
+     * Modify the routing rules for the lost links
+     * - Recompute the path if the link failed is included in the path
+     * (including src and dest).
+     *
+     * @param newLink
+     */
+    private void modifyEcmpRoutingRules(LinkData linkRemoved) {
+
+        //HashMap<Switch, SwitchPair> linksToRecompute = new HashMap<Switch, SwitchPair>();
+        Set<SwitchPair> linksToRecompute = new HashSet<SwitchPair>();
+
+        for (ECMPShortestPathGraph ecmpSPG : graphs.values()) {
+            Switch rootSw = ecmpSPG.getRootSwitch();
+            HashMap<Integer, HashMap<Switch, ArrayList<Path>>> paths =
+                    ecmpSPG.getCompleteLearnedSwitchesAndPaths();
+            for (HashMap<Switch, ArrayList<Path>> p: paths.values()) {
+                for (Switch destSw: p.keySet()) {
+                    ArrayList<Path> path = p.get(destSw);
+                    if  (checkPath(path, linkRemoved)) {
+                        boolean found = false;
+                        for (SwitchPair pair: linksToRecompute) {
+                            if (pair.getSource().getDpid() == rootSw.getDpid() &&
+                                    pair.getSource().getDpid() == destSw.getDpid()) {
+                                found = true;
+                            }
+                        }
+                        if (!found) {
+                            linksToRecompute.add(new SwitchPair(rootSw, destSw));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Recompute the path for the specific route
+        for (SwitchPair pair: linksToRecompute) {
+
+            log.debug("Recompute path from {} to {}", pair.getSource(), pair.getDestination());
+            // We need the following function for optimization
+            //ECMPShortestPathGraph ecmpSPG =
+            //     new ECMPShortestPathGraph(pair.getSource(), pair.getDestination());
+            ECMPShortestPathGraph ecmpSPG =
+                    new ECMPShortestPathGraph(pair.getSource());
+            populateEcmpRoutingRulesForPath(pair.getSource(), ecmpSPG, true);
+        }
+    }
+
+    /**
+     * Optimize the mpls label
+     * The feature will be used only for policy of "avoid a specific switch".
+     * Check route to each router in route backward.
+     * If there is only one route to the router and the routers are included in
+     * the route, remove the id from the path.
+     * A-B-C-D-E  => A-B-C-D-E -> A-E
+     *   |   |    => A-B-H-I   -> A-I
+     *   F-G-H-I  => A-D-I     -> A-D-I
+     */
+    private List<String> getOptimizedPath(Switch srcSw, Switch dstSw, List<String> route) {
+
+        List<String> optimizedPath = new ArrayList<String>();
+        optimizedPath.addAll(route);
+        ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(srcSw);
+
+        HashMap<Integer, HashMap<Switch, ArrayList<Path>>> paths =
+                ecmpSPG.getCompleteLearnedSwitchesAndPaths();
+        for (HashMap<Switch, ArrayList<Path>> p: paths.values()) {
+            for (Switch s: p.keySet()) {
+                if (s.getDpid().toString().equals(dstSw.getDpid().toString())) {
+                    ArrayList<Path> ecmpPaths = p.get(s);
+                    if (ecmpPaths!= null && ecmpPaths.size() == 1) {
+                        for (Path path: ecmpPaths) {
+                            for (LinkData link: path) {
+                                String srcId = getMplsLabel(link.getSrc().getDpid().toString());
+                                String dstId = getMplsLabel(link.getSrc().getDpid().toString());
+                                if (optimizedPath.contains(srcId)) {
+                                    optimizedPath.remove(srcId);
+                                }
+                                if (optimizedPath.contains(dstId)) {
+                                    optimizedPath.remove(dstId);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return optimizedPath;
+
+    }
+
+    /**
+     * Check if the path is affected from the link removed
+     *
+     * @param path Path to check
+     * @param linkRemoved link removed
+     * @return true if the path contains the link removed
+     */
+    private boolean checkPath(ArrayList<Path> path, LinkData linkRemoved) {
+
+        for (Path ppp: path) {
+            // TODO: need to check if this is a bidirectional or
+            // unidirectional
+            for (LinkData link: ppp) {
+                if (link.getDst().getDpid().equals(linkRemoved.getDst().getDpid()) &&
+                        link.getSrc().getDpid().equals(linkRemoved.getSrc().getDpid()))
+                    return true;
+            }
+        }
+
+        return false;
+    }
 
 
 }

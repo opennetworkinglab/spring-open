@@ -87,7 +87,7 @@ public class GenericIpHandler {
 
         // Check if the destination is within subnets of the swtich
         if (isWithinSubnets(sw, IPv4Address.of(destinationAddress).toString())) {
-            srManager.addPacket(ipv4);
+            srManager.addPacketToPacketBuffer(ipv4);
             srManager.sendArpRequest(sw, destinationAddress, inPort);
         }
     }
