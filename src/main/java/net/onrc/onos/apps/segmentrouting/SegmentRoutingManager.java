@@ -115,9 +115,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private int numOfEventProcess = 0;
     private int numOfPopulation = 0;
     private long matchActionId = 0L;
+
     private final int DELAY_TO_ADD_LINK = 10;
     private final int MAX_NUM_LABELS = 3;
-
 
     private final int POLICY_ADD1 = 1;
     private final int POLICY_ADD2 = 2;
@@ -939,16 +939,29 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     public class PolicyInfo {
 
+        public final int TYPE_EXPLICIT = 1;
+        public final int TYPE_AVOID = 2;
+
         private String policyId;
         private PacketMatch match;
         private int priority;
         private String tunnelId;
+        private int type;
 
         public PolicyInfo(String pid, PacketMatch match, int priority, String tid) {
             this.policyId = pid;
             this.match = match;
             this.priority = priority;
             this.tunnelId = tid;
+        }
+
+        public PolicyInfo(String pid, int type, PacketMatch match, int priority,
+                String tid) {
+            this.policyId = pid;
+            this.match = match;
+            this.priority = priority;
+            this.tunnelId = tid;
+            this.type = type;
         }
     }
 
@@ -1119,16 +1132,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
             Short srcTcpPort, Short dstTcpPort, int priority, String tid) {
 
-        //HashMap<String, TunnelRouteInfo> routeInfo = stitchInfo.get(tid);
-        //HashMap<String, Integer> switchGroupPair = tunnelGroupMap.get(tid);
-
         PacketMatchBuilder packetBuilder = new PacketMatchBuilder();
 
         if (srcMac != null)
             packetBuilder.setSrcMac(srcMac);
         if (dstMac != null)
             packetBuilder.setDstMac(dstMac);
-        if (etherType != null)
+        if (etherType == null) // Cqpd requires the type of IPV4
+            packetBuilder.setEtherType(Ethernet.TYPE_IPV4);
+        else
             packetBuilder.setEtherType(etherType);
         if (srcIp != null)
             packetBuilder.setSrcIp(srcIp.address(), srcIp.prefixLen());
@@ -1196,13 +1208,29 @@ public class SegmentRoutingManager implements IFloodlightModule,
         String srcDpid = srcSw.getDpid().toString();
 
         if (route.size() <= MAX_NUM_LABELS+1) {
-            TunnelRouteInfo info = new TunnelRouteInfo();
-            info.setSrcDpid(srcSw.getDpid().toString());
+            boolean match =false;
+            TunnelRouteInfo routeInfo = new TunnelRouteInfo();
+            routeInfo.setSrcDpid(srcSw.getDpid().toString());
+            String nodeId = route.get(1);
             List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, route.get(1));
-            info.setFwdSwDpid(fwdSwDpids);
-            route.remove(0);
-            info.setRoute(route);
-            rules.add(info);
+            for (Dpid dpid: fwdSwDpids) {
+                if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
+                    List<Dpid> fwdSws = new ArrayList<Dpid>();
+                    fwdSws.add(dpid);
+                    routeInfo.setFwdSwDpid(fwdSws);
+                    match = true;
+                    break;
+                }
+            }
+            route.remove(0); // remove source router from the list
+            if (match) {
+                route.remove(0);
+            }
+            else {
+                routeInfo.setFwdSwDpid(fwdSwDpids);
+            }
+            routeInfo.setRoute(route);
+            rules.add(routeInfo);
             return rules;
         }
 
@@ -1217,37 +1245,33 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 srcSw = getSwitchFromNodeId(nodeId);
                 i++;
             }
-            else if (i == 1) {
-                if (checkNeighbor) {
-                    // Check if next node is the neighbor SW of the source SW
-                    List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, nodeId);
-                    if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
-                        log.debug("There is no route from node {} to node {}", srcSw.getDpid(), nodeId);
-                        return null;
-                    }
-                    // If first Id is one of the neighbors, do not include it to route, but set it as a fwd SW.
-                    boolean match = false;
-                    for (Dpid dpid: fwdSwDpids) {
-                        if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
-                            List<Dpid> fwdSws = new ArrayList<Dpid>();
-                            fwdSws.add(dpid);
-                            routeInfo.setFwdSwDpid(fwdSws);
-                            match = true;
-                            break;
-                        }
-                    }
-                    if (!match) {
-                        routeInfo.addRoute(nodeId);
-                        routeInfo.setFwdSwDpid(fwdSwDpids);
-                        i++;
-                    }
-                    // we check only the next node ID of the source router
-                    checkNeighbor = false;
+            else if (i == 1 && checkNeighbor) {
+                // Check if next node is the neighbor SW of the source SW
+                List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw,
+                        nodeId);
+                if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
+                    log.debug("There is no route from node {} to node {}",
+                            srcSw.getDpid(), nodeId);
+                    return null;
                 }
-                else {
+                // If first Id is one of the neighbors, do not include it to route, but set it as a fwd SW.
+                boolean match = false;
+                for (Dpid dpid: fwdSwDpids) {
+                    if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
+                        List<Dpid> fwdSws = new ArrayList<Dpid>();
+                        fwdSws.add(dpid);
+                        routeInfo.setFwdSwDpid(fwdSws);
+                        match = true;
+                        break;
+                    }
+                }
+                if (!match) {
                     routeInfo.addRoute(nodeId);
+                    routeInfo.setFwdSwDpid(fwdSwDpids);
                     i++;
                 }
+                // we check only the next node ID of the source router
+                checkNeighbor = false;
             }
             else {
                 routeInfo.addRoute(nodeId);
