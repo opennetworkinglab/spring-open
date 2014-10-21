@@ -47,7 +47,7 @@ public class SegmentRouterPolicyResource extends ServerResource {
                 createParams.getPriority(), createParams.getTunnel_id());
 
         boolean result = segmentRoutingService.createPolicy(
-                createParams.getPolicy_id(), null, null, (short) 0,
+                createParams.getPolicy_id(), null, null, null,
                 new IPv4Net(createParams.getSrc_ip()),
                 new IPv4Net(createParams.getDst_ip()),
                 getProtoTypeByte(createParams.getProto_type()),
@@ -59,7 +59,7 @@ public class SegmentRouterPolicyResource extends ServerResource {
     }
 
     private Byte getProtoTypeByte(String protoType) {
-        Byte protoTypeByte = 0;
+        Byte protoTypeByte = null;
         switch (protoType) {
         case "tcp":
             protoTypeByte = IPv4.PROTOCOL_TCP;
