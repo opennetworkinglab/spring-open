@@ -1,9 +1,11 @@
 package net.onrc.onos.apps.segmentrouting;
 
+import java.util.Collection;
 import java.util.List;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
 
@@ -58,4 +60,11 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * @return "true/false" depending tunnel deletion status
      */
     public boolean removePolicy(String pid);
+    /**
+     * Return the collection of TunnelInfo which contains
+     * info about tunnels
+     * @return Collection<TunnelInfo>
+     */
+    
+    public Collection<TunnelInfo> getTunnelTable();
 }

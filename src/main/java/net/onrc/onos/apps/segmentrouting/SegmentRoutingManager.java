@@ -937,14 +937,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Policy routing classes and functions
     // ************************************
 
-    class PolicyInfo {
+    public class PolicyInfo {
 
-        String policyId;
-        PacketMatch match;
-        int priority;
-        String tunnelId;
+        private String policyId;
+        private PacketMatch match;
+        private int priority;
+        private String tunnelId;
 
-        PolicyInfo(String pid, PacketMatch match, int priority, String tid) {
+        public PolicyInfo(String pid, PacketMatch match, int priority, String tid) {
             this.policyId = pid;
             this.match = match;
             this.priority = priority;
@@ -952,54 +952,63 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
 
-    class TunnelInfo {
-        String tunnelId;
-        List<Dpid> dpids;
-        List<TunnelRouteInfo> routes;
+    public class TunnelInfo {
+        private String tunnelId;
+        private List<Dpid> dpids;
+        private List<TunnelRouteInfo> routes;
 
-        TunnelInfo(String tid, List<Dpid> dpids, List<TunnelRouteInfo> routes) {
+        public TunnelInfo(String tid, List<Dpid> dpids, List<TunnelRouteInfo> routes) {
             this.tunnelId = tid;
             this.dpids = dpids;
             this.routes = routes;
         }
+        public String getTunnelId(){
+            return this.tunnelId;
+        }
+        public List<Dpid> getDpids(){
+            return this.dpids;
+        }
+        public List<TunnelRouteInfo> getRoutes(){
+            return this.routes;
+        }
     }
 
-    class TunnelRouteInfo {
+    public class TunnelRouteInfo {
 
-        String srcSwDpid;
-        List<Dpid> fwdSwDpids;
-        List<String> route;
+        private String srcSwDpid;
+        private List<Dpid> fwdSwDpids;
+        private List<String> route;
 
-        TunnelRouteInfo() {
+        public TunnelRouteInfo() {
             fwdSwDpids = new ArrayList<Dpid>();
             route = new ArrayList<String>();
         }
 
-        void setSrcDpid(String dpid) {
+        private void setSrcDpid(String dpid) {
             this.srcSwDpid = dpid;
         }
 
-        void setFwdSwDpid(List<Dpid> dpid) {
+        private void setFwdSwDpid(List<Dpid> dpid) {
             this.fwdSwDpids = dpid;
         }
 
-        void addRoute(String id) {
+        private void addRoute(String id) {
             route.add(id);
         }
 
-        void setRoute(List<String> r) {
+        private void setRoute(List<String> r) {
             this.route = r;
         }
 
-        String getSrcSwDpid() {
+        public String getSrcSwDpid() {
             return this.srcSwDpid;
         }
 
-        List<Dpid> getFwdSwDpid() {
+        public List<Dpid> getFwdSwDpid() {
             return this.fwdSwDpids;
         }
 
-        List<String> getRoute() {
+        public List<String> getRoute() {
             return this.route;
         }
     }
@@ -1010,7 +1019,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @return collection of TunnelInfo
      */
     public Collection<TunnelInfo> getTunnelTable() {
-        return tunnelTable.values();
+        return this.tunnelTable.values();
     }
 
     /**

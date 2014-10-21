@@ -15,6 +15,16 @@ import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelRouteInfo;
 /**
  * Base class for return router statistics
  *
@@ -57,9 +67,30 @@ public class SegmentRouterTunnelResource extends ServerResource {
     }
 
     @Get("json")
-    public String getTunnel() {
-        String reply = "success";
+    public Object getTunnel() {
+        System.out.println("Got into getTunnel");
+        ISegmentRoutingService segmentRoutingService =
+                (ISegmentRoutingService) getContext().getAttributes().
+                        get(ISegmentRoutingService.class.getCanonicalName());
+        Iterator<TunnelInfo> ttI = segmentRoutingService.getTunnelTable().iterator();
+        List<SegmentRouterTunnelInfo> infoList = new ArrayList<SegmentRouterTunnelInfo>();
+        while(ttI.hasNext()){
+           TunnelInfo tunnelInfo = ttI.next();
+           Iterator<TunnelRouteInfo>trI = tunnelInfo.getRoutes().iterator();
+           List<List<String>> labelStack = new ArrayList<List<String>>();
+           while(trI.hasNext()){
+               TunnelRouteInfo label = trI.next();
+               labelStack.add(label.getRoute());
+           }
+           SegmentRouterTunnelInfo info = new SegmentRouterTunnelInfo(tunnelInfo.getTunnelId(),
+                   tunnelInfo.getDpids(), labelStack );
+           infoList.add(info);
+           //TODO Add Group/DPID
+           
+        }
         log.debug("getTunnel with params");
-        return reply;
+        Map <String,List<SegmentRouterTunnelInfo>>result = new HashMap<String,List<SegmentRouterTunnelInfo>>();
+        result.put("tunnels", infoList);
+        return infoList;
     }
 }

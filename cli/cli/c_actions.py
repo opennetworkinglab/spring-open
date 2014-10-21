@@ -43,7 +43,7 @@ onos=1
 #
 # ACTION PROCS
 #Format actions for stats per table
-def format_actions(actions):
+def remove_unicodes(actions):
    
     if actions:
         #TODO: Check:- Why I have to remove last two character from string
@@ -2134,20 +2134,26 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
 
 
     if 'showtunnel' in data  and data['showtunnel'] == 'tunnel':
-        #raise error.ArgumentValidationError('\n\n\n %s' % (data))
+        #raise error.ArgumentValidationError('\n\n\n %s' % (entries))
         combResult = []
-        '''portList = entries
-        for port in portList:
-            portData = port.get("port")
-            name = portData.get("stringAttributes").get('name')
-            portNo = portData.get("portNumber")
-            subnetIp = port.get("subnetIp")
+        tunnelList = entries
+        for tunnel in tunnelList:
+            labelStack = str(tunnel.get('labelStack'))
+            labelStack = remove_unicodes(labelStack)
+            tunnelId = tunnel.get('tunnelId')
+            nodes = ''
+            for node in tunnel.get("nodes"):
+                nodes += (node.get('value') + ',')
+            if nodes != '':
+                nodes = nodes[:-1]
+            #portNo = portData.get("portNumber")
+            #subnetIp = port.get("subnetIp")
             combResult.append({
-                               'name'            :name,
-                               'portNo'           : portNo,
-                               'subnetIp'         : subnetIp,
+                               'tunnelId'         : tunnelId,
+                               'nodes'           : nodes,
+                               'labelStack'      :labelStack,
                                })
-        entries = combResult'''
+        entries = combResult
 
     if 'showpolicy' in data  and data['showpolicy'] == 'policy':
         #raise error.ArgumentValidationError('\n\n\n %s' % (data))
@@ -2176,7 +2182,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                     #raise error.ArgumentValidationError('\n\n\n %s' % json.tool(entries))
                 instructions = ipTableEntry['instructions']
                 actions = str(instructions[0]) if instructions[0] else None
-                actions = format_actions(actions)
+                actions = remove_unicodes(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
@@ -2200,7 +2206,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 instructions = ipTableEntry['instructions']
                 #raise error.ArgumentValidationError('\n\n\n %s' %len(actions))
                 actions = str(instructions[0])if instructions[0] else None
-                actions = format_actions(actions)
+                actions = remove_unicodes(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
@@ -2243,7 +2249,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                     mplsBos = match.get('mplsBos') if match.get('mplsBos') else '*'
                 instructions = ipTableEntry['instructions']
                 actions = str(instructions[0])if instructions[0] else None
-                actions = format_actions(actions)
+                actions = remove_unicodes(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],

@@ -2414,12 +2414,13 @@ REALTIME_TABLE_FORMAT = {
 SHOW_TUNNEL_FORMAT = {
     'show_tunnel' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'tunnelId', 'nodes', 'LabelStack', 'Group//DIPD',]
+            'default' : [ 'Idx', 'tunnelId', 'nodes', 'labelStack', 'Group/DIPD',],
+            'scoped' : [ 'Idx', 'tunnelId', 'nodes', 'labelStack', 'Group/DIPD',],
             },
         },
 }
 
-SHOW_TUNNEL_FORMAT = {
+SHOW_POLICYL_FORMAT = {
     'show_policy' : {
         'field-orderings' : {
             'default' : [ 'Idx', 'policyId', 'tunnelId', 'flowEntries']
