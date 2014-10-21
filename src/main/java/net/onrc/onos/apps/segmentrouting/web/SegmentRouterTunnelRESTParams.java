@@ -2,11 +2,11 @@ package net.onrc.onos.apps.segmentrouting.web;
 
 import java.util.List;
 
-public class TunnelCreateParams {
+public class SegmentRouterTunnelRESTParams {
     private String tunnel_id;
     private List<String> tunnel_path;
 
-    public TunnelCreateParams() {
+    public SegmentRouterTunnelRESTParams() {
         this.tunnel_id = null;
         this.tunnel_path = null;
     }

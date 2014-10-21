@@ -155,14 +155,14 @@ SRC_IP_MATCH = {
     'choices' : (
         (
             {
-                'field'        : 'src-ip',
+                'field'        : 'src_ip',
                 'type'         : 'cidr-range',
                 'help-name'    : 'src-cidr',
                 #'data-handler' : 'split-cidr-data-inverse',
                 #'dest-ip'      : 'src-ip',
                 #'dest-netmask' : 'src-ip-mask',
                 'data'         : {
-                                  'dst-ip'      : '0.0.0.0/32',
+                                  'dst_ip'      : '0.0.0.0/32',
                                  },
                 'doc'          : 'vns|vns-access-list-cidr-range',
             }
@@ -171,8 +171,8 @@ SRC_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'src-ip'      : '0.0.0.0/32',
-                              'dst-ip'      : '0.0.0.0/32',
+                              'src_ip'      : '0.0.0.0/32',
+                              'dst_ip'      : '0.0.0.0/32',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }
@@ -182,7 +182,7 @@ SRC_IP_MATCH = {
 
 SRC_PORT_MATCH = (
     {
-        'field'  : 'src-tp-port-op',
+        'field'  : 'src_tp_port_op',
         'type'   : 'enum',
         'values' : ('eq', 'neq'),
         'doc'    : 'vns|vns-access-list-port-op-+',
@@ -190,7 +190,7 @@ SRC_PORT_MATCH = (
     {
         'choices' : (
             {
-                'field'        : 'src-tp-port',
+                'field'        : 'src_tp_port',
                 'base-type'    : 'hex-or-decimal-integer',
                 'range'        : (0,65535),
                 'data-handler' : 'hex-to-integer',
@@ -198,7 +198,7 @@ SRC_PORT_MATCH = (
                 'doc-include'  : [ 'range' ],
             },
             {
-                'field'   : 'src-tp-port',
+                'field'   : 'src_tp_port',
                 'type'    : 'enum',
                 'values'  : fmtcnv.tcp_name_to_number_dict,
                 'permute' : 'skip',
@@ -213,7 +213,7 @@ DST_IP_MATCH = {
     'choices' : (
         (
             {
-                'field'        : 'dst-ip',
+                'field'        : 'dst_ip',
                 'type'         : 'cidr-range',
                 'help-name'    : 'dst-cidr',
                 #'data-handler' : 'split-cidr-data-inverse',
@@ -226,7 +226,7 @@ DST_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'dst-ip'      : '0.0.0.0/32',
+                              'dst_ip'      : '0.0.0.0/32',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }
@@ -237,7 +237,7 @@ DST_IP_MATCH = {
 
 DST_PORT_MATCH = (
     {
-        'field' : 'dst-tp-port-op',
+        'field' : 'dst_tp_port_op',
         'type'  : 'enum',
         'values' : ('eq', 'neq'),
         'doc'          : 'vns|vns-access-list-port-op+',
@@ -245,14 +245,14 @@ DST_PORT_MATCH = (
     {
         'choices' : (
             {
-                'field'        : 'dst-tp-port',
+                'field'        : 'dst_tp_port',
                 'base-type'    : 'hex-or-decimal-integer',
                 'range'        : (0,65535),
                 'data-handler' : 'hex-to-integer',
                 'doc'          : 'vns|vns-access-list-port-hex',
             },
             {
-                'field'   : 'dst-tp-port',
+                'field'   : 'dst_tp_port',
                 'type'    : 'enum',
                 'values'  : fmtcnv.tcp_name_to_number_dict,
                 'permute' : 'skip'
@@ -280,13 +280,13 @@ POLICY_FLOW_ENTRY_COMMAND_DESCRIPTION = {
                 {
                     'choices' : (
                         {
-                            'field'  : 'type',
+                            'field'  : 'proto_type',
                             'type'   : 'enum',
                             'values' : ('ip','tcp','udp'),
                             'doc'    : 'vns|vns-access-list-entry-type-+',
                         },
                         {
-                            'field'        : 'type',
+                            'field'        : 'proto_type',
                             'base-type'    : 'hex-or-decimal-integer',
                             'range'        : (0,255),
                             'help-name'    : 'ip protocol',

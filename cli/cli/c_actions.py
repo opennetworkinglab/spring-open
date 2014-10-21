@@ -117,7 +117,7 @@ def tunnel_remove(data=None):
     tunnel_id=data['tunnel-id']
     url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
     obj_data = {}
-    obj_data['tunnel-id']=data['tunnel_id']
+    obj_data['tunnel_id']=data['tunnel-id']
     data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
     if data != "deleted":
         result = json.loads(data)
@@ -131,7 +131,7 @@ def policy_create(data=None):
         print "policy_create:" , data
     if data.has_key('policy-id'):
         policy_obj_data['policy_id'] = data['policy-id']
-    if data.has_key('src-ip'):
+    if data.has_key('src_ip'):
         for key in data:
             policy_obj_data[key] = data[key]
     if data.has_key('priority'):
@@ -164,7 +164,7 @@ def policy_remove(data=None):
     policy_id=data['policy-id']
     url_str = "http://%s/rest/v1/policy/" % (sdnsh.controller)
     obj_data = {}
-    obj_data['policy-id']=data['policy-id']
+    obj_data['policy_id']=data['policy-id']
     data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
     if data != "deleted":
         result = json.loads(data)

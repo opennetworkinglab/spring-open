@@ -39,10 +39,11 @@ public class SegmentRouterTunnelResource extends ServerResource {
                 (ISegmentRoutingService) getContext().getAttributes().
                         get(ISegmentRoutingService.class.getCanonicalName());
         ObjectMapper mapper = new ObjectMapper();
-        TunnelCreateParams createParams = null;
+        SegmentRouterTunnelRESTParams createParams = null;
         try {
             if (tunnelParams != null) {
-                createParams = mapper.readValue(tunnelParams, TunnelCreateParams.class);
+                createParams = mapper.readValue(tunnelParams,
+                        SegmentRouterTunnelRESTParams.class);
             }
         } catch (IOException ex) {
             log.error("Exception occurred parsing inbound JSON", ex);
@@ -60,10 +61,25 @@ public class SegmentRouterTunnelResource extends ServerResource {
     }
 
     @Delete("json")
-    public String deleteTunnel(String tunnelId) {
-        String reply = "deleted";
-        log.debug("deleteTunnel with Id {}", tunnelId);
-        return reply;
+    public String deleteTunnel(String tunnelParams) {
+        ISegmentRoutingService segmentRoutingService =
+                (ISegmentRoutingService) getContext().getAttributes().
+                        get(ISegmentRoutingService.class.getCanonicalName());
+        ObjectMapper mapper = new ObjectMapper();
+        SegmentRouterTunnelRESTParams createParams = null;
+        try {
+            if (tunnelParams != null) {
+                createParams = mapper.readValue(tunnelParams,
+                        SegmentRouterTunnelRESTParams.class);
+            }
+        } catch (IOException ex) {
+            log.error("Exception occurred parsing inbound JSON", ex);
+            return "fail";
+        }
+        log.debug("deleteTunnel with Id {}", createParams.getTunnel_id());
+        boolean result = segmentRoutingService.removeTunnel(
+                createParams.getTunnel_id());
+        return (result == true) ? "deleted" : "fail";
     }
 
     @Get("json")
