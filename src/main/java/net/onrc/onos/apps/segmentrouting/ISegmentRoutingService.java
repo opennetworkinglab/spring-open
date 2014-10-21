@@ -66,4 +66,15 @@ public interface ISegmentRoutingService extends IFloodlightService {
      */
 
     public Collection<TunnelInfo> getTunnelTable();
+    /**
+     * Get the first group ID for the tunnel for specific source router
+     * If Segment Stitching was required to create the tunnel, there are
+     * mutiple source routers.
+     *
+     * @param tunnelId ID for the tunnel
+     * @param dpid source router DPID
+     * @return the first group ID of the tunnel and -1 if sw with specifed
+     * dpid is not found
+     */
+    public int getTunnelGroupId(String tunnelId, String dpid);
 }

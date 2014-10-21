@@ -19,5 +19,19 @@ SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
                        ],
             'format' : 'show_tunnel',
         },
+              {
+            'choices' : (
+                {
+                 'field'      : 'showtunnel',
+                 'type'       : 'enum',
+                 'values'     : ('details',),
+                 'action'     : 'display-rest',
+                 'url'        : 'showtunnel',
+                 'optional'   : True,
+                 'format' : 'show_tunnel',
+                 'doc'        : 'switch|show-switch-format-+',
+                },
+                         ),
+               }
     )
 }

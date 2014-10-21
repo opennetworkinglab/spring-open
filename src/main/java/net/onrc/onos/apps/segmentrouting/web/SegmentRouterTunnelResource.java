@@ -73,7 +73,6 @@ public class SegmentRouterTunnelResource extends ServerResource {
 
     @Get("json")
     public Object getTunnel() {
-        System.out.println("Got into getTunnel");
         ISegmentRoutingService segmentRoutingService =
                 (ISegmentRoutingService) getContext().getAttributes().
                         get(ISegmentRoutingService.class.getCanonicalName());
@@ -83,19 +82,19 @@ public class SegmentRouterTunnelResource extends ServerResource {
            TunnelInfo tunnelInfo = ttI.next();
            Iterator<TunnelRouteInfo>trI = tunnelInfo.getRoutes().iterator();
            List<List<String>> labelStack = new ArrayList<List<String>>();
+           List<String> dpidGroup = new ArrayList<String>();
            while(trI.hasNext()){
                TunnelRouteInfo label = trI.next();
                labelStack.add(label.getRoute());
+               Integer gId = segmentRoutingService.getTunnelGroupId(tunnelInfo.getTunnelId(), 
+                       label.getSrcSwDpid());
+               dpidGroup.add(label.getSrcSwDpid() + "/"+ gId);
            }
            SegmentRouterTunnelInfo info = new SegmentRouterTunnelInfo(tunnelInfo.getTunnelId(),
-                    /*tunnelInfo.getDpids(),*/labelStack);
+                    labelStack, dpidGroup);
            infoList.add(info);
-           //TODO Add Group/DPID
-
         }
         log.debug("getTunnel with params");
-        Map <String,List<SegmentRouterTunnelInfo>>result = new HashMap<String,List<SegmentRouterTunnelInfo>>();
-        result.put("tunnels", infoList);
         return infoList;
     }
 }

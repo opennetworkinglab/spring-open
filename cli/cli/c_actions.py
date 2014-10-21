@@ -100,7 +100,7 @@ def tunnel_config_exit():
         url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
         obj_data = {}
         obj_data['tunnel_id']=tunnel_id
-        obj_data['label_path']=entries
+        obj_data['tunnel_path']=entries
         data = sdnsh.store.rest_post_request(url_str,obj_data)
         # LOOK! successful stuff should be returned in json too.
         if data != "success":
@@ -117,7 +117,7 @@ def tunnel_remove(data=None):
     tunnel_id=data['tunnel-id']
     url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
     obj_data = {}
-    obj_data['tunnel_id']=data['tunnel-id']
+    obj_data['tunnel-id']=data['tunnel_id']
     data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
     if data != "deleted":
         result = json.loads(data)
@@ -131,7 +131,7 @@ def policy_create(data=None):
         print "policy_create:" , data
     if data.has_key('policy-id'):
         policy_obj_data['policy_id'] = data['policy-id']
-    if data.has_key('src_ip'):
+    if data.has_key('src-ip'):
         for key in data:
             policy_obj_data[key] = data[key]
     if data.has_key('priority'):
@@ -164,7 +164,7 @@ def policy_remove(data=None):
     policy_id=data['policy-id']
     url_str = "http://%s/rest/v1/policy/" % (sdnsh.controller)
     obj_data = {}
-    obj_data['policy_id']=data['policy-id']
+    obj_data['policy-id']=data['policy-id']
     data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
     if data != "deleted":
         result = json.loads(data)
@@ -2132,26 +2132,25 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                })
         entries = combResult
 
-
-    if 'showtunnel' in data  and data['showtunnel'] == 'tunnel':
-        #raise error.ArgumentValidationError('\n\n\n %s' % (entries))
+    if 'showtunnel' in data  and (data['showtunnel'] == 'tunnel' or data['showtunnel'] == 'details'):
+        #eraise error.ArgumentValidationError('\n\n\n %s' % (entries))
         combResult = []
         tunnelList = entries
         for tunnel in tunnelList:
             labelStack = str(tunnel.get('labelStack'))
             labelStack = remove_unicodes(labelStack)
             tunnelId = tunnel.get('tunnelId')
+            dpidGroup = str(tunnel.get('dpidGroup'))
             #nodes = ''
             #for node in tunnel.get("nodes"):
             #    nodes += (node.get('value') + ',')
             #if nodes != '':
             #    nodes = nodes[:-1]
-            #portNo = portData.get("portNumber")
-            #subnetIp = port.get("subnetIp")
             combResult.append({
                                'tunnelId'         : tunnelId,
                                #'nodes'           : nodes,
                                'labelStack'      :labelStack,
+                               'dpidGroup'      :dpidGroup,
                                })
         entries = combResult
 

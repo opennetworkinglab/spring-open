@@ -215,7 +215,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         });
 
         testMode = POLICY_ADD1;
-        //testTask.reschedule(20, TimeUnit.SECONDS);
+        testTask.reschedule(20, TimeUnit.SECONDS);
     }
 
     @Override
@@ -949,13 +949,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         private String tunnelId;
         private int type;
 
-        public PolicyInfo(String pid, PacketMatch match, int priority, String tid) {
-            this.policyId = pid;
-            this.match = match;
-            this.priority = priority;
-            this.tunnelId = tid;
-        }
-
         public PolicyInfo(String pid, int type, PacketMatch match, int priority,
                 String tid) {
             this.policyId = pid;
@@ -963,6 +956,29 @@ public class SegmentRoutingManager implements IFloodlightModule,
             this.priority = priority;
             this.tunnelId = tid;
             this.type = type;
+        }
+        
+        public PolicyInfo(String pid, PacketMatch match, int priority,
+                String tid) {
+            this.policyId = pid;
+            this.match = match;
+            this.priority = priority;
+            this.tunnelId = tid;
+        }
+        public String getPolicyId(){
+            return this.policyId;
+        }
+        public PacketMatch getMatch(){
+            return this.match;
+        }
+        public int getPriority(){
+            return this.priority;
+        }
+        public String getTunnelId(){
+            return this.tunnelId;
+        }
+        public int getType(){
+            return this.type;
         }
     }
 
@@ -1211,6 +1227,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             routeInfo.setSrcDpid(srcSw.getDpid().toString());
             String nodeId = route.get(1);
             List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, nodeId);
+            if (fwdSwDpids == null){
+                return null;
+            }
             for (Dpid dpid: fwdSwDpids) {
                 if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
                     List<Dpid> fwdSws = new ArrayList<Dpid>();
@@ -1718,8 +1737,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 this.createPolicy("2", null, null, Ethernet.TYPE_IPV4, srcIp,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 20000,
                         "2");
-                testMode = POLICY_REMOVE2;
-                testTask.reschedule(5, TimeUnit.SECONDS);
+                //testMode = POLICY_REMOVE2;
+                //testTask.reschedule(5, TimeUnit.SECONDS);
             }
             else {
                 log.debug("Retry it");
