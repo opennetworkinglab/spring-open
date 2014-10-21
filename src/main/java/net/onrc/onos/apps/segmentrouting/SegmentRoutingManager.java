@@ -1023,6 +1023,39 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
+     * Return router DPIDs for the tunnel
+     *
+     * @param tid tunnel ID
+     * @return List of DPID
+     */
+    public List<Dpid> getTunnelInfo(String tid) {
+        TunnelInfo tunnelInfo =  tunnelTable.get(tid);
+        return tunnelInfo.dpids;
+
+    }
+
+    /**
+     * Get the first group ID for the tunnel for specific source router
+     * If Segment Stitching was required to create the tunnel, there are
+     * mutiple source routers.
+     *
+     * @param tunnelId ID for the tunnel
+     * @param dpid source router DPID
+     * @return the first group ID of the tunnel
+     */
+    public int getTunnelGroupId(String tunnelId, String dpid) {
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(dpid));
+
+        if (sw13 == null) {
+            return -1;
+        }
+        else {
+            return sw13.getTunnelGroupId(tunnelId);
+        }
+    }
+
+    /**
      * Create a tunnel for policy routing
      * It delivers the node IDs of tunnels to driver.
      * Split the node IDs if number of IDs exceeds the limit for stitching.
@@ -1073,18 +1106,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         tunnelTable.put(tunnelId, tunnelInfo);
 
         return true;
-    }
-
-    /**
-     * Return router DPIDs for the tunnel
-     *
-     * @param tid tunnel ID
-     * @return List of DPID
-     */
-    public List<Dpid> getTunnelInfo(String tid) {
-        TunnelInfo tunnelInfo =  tunnelTable.get(tid);
-        return tunnelInfo.dpids;
-
     }
 
     /**
@@ -1268,6 +1289,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public boolean removePolicy(String pid) {
         PolicyInfo policyInfo =  policyTable.get(pid);
+        if (policyInfo == null)
+            return false;
         PacketMatch policyMatch = policyInfo.match;
         String tid = policyInfo.tunnelId;
         int priority = policyInfo.priority;
@@ -1286,13 +1309,18 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 new MatchActionOperationEntry(Operator.REMOVE, matchAction);
 
         TunnelInfo tunnelInfo = tunnelTable.get(tid);
+        if (tunnelInfo == null)
+            return false;
         List<TunnelRouteInfo> routes = tunnelInfo.routes;
 
         for (TunnelRouteInfo route : routes) {
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(route.srcSwDpid));
 
-            if (sw13 != null) {
+            if (sw13 == null) {
+                return false;
+            }
+            else {
                 printMatchActionOperationEntry(sw13, maEntry);
                 try {
                     sw13.pushFlow(maEntry);
@@ -1307,27 +1335,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         policyTable.remove(pid);
         log.debug("Policy {} is removed.", pid);
         return true;
-    }
-
-    /**
-     * Get the first group ID for the tunnel for specific source router
-     * If Segment Stitching was required to create the tunnel, there are
-     * mutiple source routers.
-     *
-     * @param tunnelId ID for the tunnel
-     * @param dpid source router DPID
-     * @return the first group ID of the tunnel
-     */
-    public int getTunnelGroupId(String tunnelId, String dpid) {
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(dpid));
-
-        if (sw13 == null) {
-            return -1;
-        }
-        else {
-            return sw13.getTunnelGroupId(tunnelId);
-        }
     }
 
     /**
@@ -1349,13 +1356,18 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         TunnelInfo tunnelInfo = tunnelTable.get(tunnelId);
+        if (tunnelInfo == null)
+            return false;
 
         List<TunnelRouteInfo> routes = tunnelInfo.routes;
         for (TunnelRouteInfo route: routes) {
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     getSwId(route.srcSwDpid));
 
-            if (sw13 != null) {
+            if (sw13 == null) {
+                return false;
+            }
+            else {
                 sw13.removeTunnel(tunnelId);
             }
         }
