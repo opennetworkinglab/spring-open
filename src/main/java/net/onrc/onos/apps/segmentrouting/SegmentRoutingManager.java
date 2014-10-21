@@ -1095,7 +1095,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             log.debug("Failed to get the policy rule.");
             return false;
         }
-        //HashMap<String, Integer> switchGroupPair = new HashMap<String, Integer>();
         for (TunnelRouteInfo route: stitchingRule) {
 
             IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
@@ -1112,11 +1111,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             printTunnelInfo(targetSw, tunnelId, route.getRoute(), ns);
             targetSw.createTunnel(tunnelId, route.getRoute(), ns);
-            //switchGroupPair.put(route.srcSwDpid.toString(), groupId);
-
         }
 
-        //tunnelGroupMap.put(tunnelId, switchGroupPair);
         TunnelInfo tunnelInfo = new TunnelInfo(tunnelId, labelIds, stitchingRule);
         tunnelTable.put(tunnelId, tunnelInfo);
 
@@ -1214,7 +1210,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             TunnelRouteInfo routeInfo = new TunnelRouteInfo();
             routeInfo.setSrcDpid(srcSw.getDpid().toString());
             String nodeId = route.get(1);
-            List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, route.get(1));
+            List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, nodeId);
             for (Dpid dpid: fwdSwDpids) {
                 if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
                     List<Dpid> fwdSws = new ArrayList<Dpid>();
@@ -1374,7 +1370,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         // Check if the tunnel is used for any policy
         for (PolicyInfo policyInfo: policyTable.values()) {
-            if (policyInfo.tunnelId == tunnelId) {
+            if (policyInfo.tunnelId.equals(tunnelId)) {
                 log.debug("Tunnel {} is still used for the policy {}.",
                         policyInfo.policyId, tunnelId);
                 return false;
@@ -1442,7 +1438,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
                             fwdSws.add(destSw.getDpid());
                         }
                         else {
-                            fwdSws.add(via.get(0));
+                            Dpid firstVia = via.get(via.size()-1);
+                            fwdSws.add(firstVia);
                         }
                     }
                 }
