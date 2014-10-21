@@ -6,7 +6,6 @@ import java.util.List;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
-import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
 
 /**
@@ -19,11 +18,11 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * Create a tunnel for policy routing.
      *
      * @param tunnelId ID for the tunnel
-     * @param Ids Node IDs for the tunnel
+     * @param labelIds Node label IDs for the tunnel
      *
      * @return "true/false" depending tunnel creation status
      */
-    public boolean createTunnel(String tunnelId, List<Dpid> Ids);
+    public boolean createTunnel(String tunnelId, List<Integer> labelIds);
 
     /**
      * Remove a Segment Routing tunnel given a tunnel Id.
@@ -36,7 +35,7 @@ public interface ISegmentRoutingService extends IFloodlightService {
 
     /**
      * Create a policy for policy based segment routing
-     * 
+     *
      * @param pid Unique Policy Identifier
      * @param srcIP Source IP address in CIDR format
      * @param dstIP Destination IP address in CIDR format
@@ -65,6 +64,6 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * info about tunnels
      * @return Collection<TunnelInfo>
      */
-    
+
     public Collection<TunnelInfo> getTunnelTable();
 }

@@ -55,15 +55,14 @@ TUNNEL_SUBMODE_COMMAND_DESCRIPTION = {
 def tunnel_node_completion(prefix, completions):
     print "tunnel_node_completion:",prefix,completions
     query_url = "http://127.0.0.1:8000/rest/v1/switches"
-    #print query_url
     result = command.sdnsh.store.rest_simple_request(query_url)
     entries = json.loads(result)
     for entry in entries:
-        if entry['dpid'].startswith(prefix):
-            completions[entry['dpid']+' '] = entry['dpid']
+        if entry['stringAttributes']['nodeSid'].startswith(prefix):
+            completions[entry['stringAttributes']['nodeSid']+' '] = entry['stringAttributes']['nodeSid']
     return
 
-command.add_completion('tunnel-node-completion', tunnel_node_completion,
+command.add_completion('tunnel-node-label-completion', tunnel_node_completion,
                        {'kwargs': { 'prefix'       : '$text',
                                     'completions'  : '$completions',
                                     }})
@@ -80,11 +79,11 @@ TUNNEL_NODE_ENTRY_COMMAND_DESCRIPTION = {
     'args'                : (
          {
              'field'      : 'node-value',
-             'completion'   : 'tunnel-node-completion',
-             'type'         : 'dpid',
-             'other'        : 'switches|dpid',
+             'completion'   : 'tunnel-node-label-completion',
+             'type'         : 'label',
+             'other'        : 'switches|label',
 #             'data-handler' : 'alias-to-value',
-             'help-name'    : 'switch dpid or switch alias',
+             'help-name'    : 'Segment label',
              'action'       : (
                                 {
                                     'proc' : 'create-tunnel',

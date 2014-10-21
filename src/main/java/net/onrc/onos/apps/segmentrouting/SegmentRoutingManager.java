@@ -5,6 +5,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -967,19 +968,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     public class TunnelInfo {
         private String tunnelId;
-        private List<Dpid> dpids;
+        private List<Integer> labelIds;
         private List<TunnelRouteInfo> routes;
 
-        public TunnelInfo(String tid, List<Dpid> dpids, List<TunnelRouteInfo> routes) {
+        public TunnelInfo(String tid, List<Integer> labelIds, List<TunnelRouteInfo> routes) {
             this.tunnelId = tid;
-            this.dpids = dpids;
+            this.labelIds = labelIds;
             this.routes = routes;
         }
         public String getTunnelId(){
             return this.tunnelId;
         }
-        public List<Dpid> getDpids(){
-            return this.dpids;
+
+        public List<Integer> getLabelids() {
+            return this.labelIds;
         }
         public List<TunnelRouteInfo> getRoutes(){
             return this.routes;
@@ -1041,9 +1043,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param tid tunnel ID
      * @return List of DPID
      */
-    public List<Dpid> getTunnelInfo(String tid) {
+    public List<Integer> getTunnelInfo(String tid) {
         TunnelInfo tunnelInfo =  tunnelTable.get(tid);
-        return tunnelInfo.dpids;
+        return tunnelInfo.labelIds;
 
     }
 
@@ -1076,16 +1078,16 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param tunnelId  Node IDs for the tunnel
      * @param Ids tunnel ID
      */
-    public boolean createTunnel(String tunnelId, List<Dpid> dpids) {
+    public boolean createTunnel(String tunnelId, List<Integer> labelIds) {
 
-        if (dpids.isEmpty() || dpids.size() < 2) {
+        if (labelIds.isEmpty() || labelIds.size() < 2) {
             log.debug("Wrong tunnel information");
             return false;
         }
 
         List<String> Ids = new ArrayList<String>();
-        for (Dpid dpid: dpids) {
-            Ids.add(getMplsLabel(dpid.toString()));
+        for (Integer label : labelIds) {
+            Ids.add(label.toString());
         }
 
         List<TunnelRouteInfo> stitchingRule = getStitchingRule(Ids);
@@ -1115,7 +1117,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         //tunnelGroupMap.put(tunnelId, switchGroupPair);
-        TunnelInfo tunnelInfo = new TunnelInfo(tunnelId, dpids, stitchingRule);
+        TunnelInfo tunnelInfo = new TunnelInfo(tunnelId, labelIds, stitchingRule);
         tunnelTable.put(tunnelId, tunnelInfo);
 
         return true;
@@ -1685,14 +1687,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private void runTest() {
 
         if (testMode == POLICY_ADD1) {
-            String[] routeArray = {"101", "105", "110"};
-            List<Dpid> routeList = new ArrayList<Dpid>();
+            Integer[] routeArray = {101, 105, 110};
+            /*List<Dpid> routeList = new ArrayList<Dpid>();
             for (int i = 0; i < routeArray.length; i++) {
                 Dpid dpid = getSwitchFromNodeId(routeArray[i]).getDpid();
                 routeList.add(dpid);
-            }
+            }*/
 
-            if (createTunnel("1", routeList)) {
+            if (createTunnel("1", Arrays.asList(routeArray))) {
                 IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
                 IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
 
@@ -1709,15 +1711,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
         else if (testMode == POLICY_ADD2) {
-            String[] routeArray = {"101", "102", "103", "104", "105", "108",
-                    "110"};
-            List<Dpid> routeList = new ArrayList<Dpid>();
-            for (int i = 0; i < routeArray.length; i++) {
-                Dpid dpid = getSwitchFromNodeId(routeArray[i]).getDpid();
-                routeList.add(dpid);
-            }
+            Integer[] routeArray = {101, 102, 103, 104, 105, 108, 110};
 
-            if (createTunnel("2", routeList)) {
+            if (createTunnel("2", Arrays.asList(routeArray))) {
                 IPv4Net srcIp = new IPv4Net("10.0.1.1/24");
                 IPv4Net dstIp = new IPv4Net("10.1.2.1/24");
 

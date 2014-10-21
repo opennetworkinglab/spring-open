@@ -4,11 +4,11 @@ import java.util.List;
 
 public class SegmentRouterTunnelRESTParams {
     private String tunnel_id;
-    private List<String> tunnel_path;
+    private List<Integer> label_path;
 
     public SegmentRouterTunnelRESTParams() {
         this.tunnel_id = null;
-        this.tunnel_path = null;
+        this.label_path = null;
     }
 
     public void setTunnel_id(String tunnel_id) {
@@ -19,11 +19,11 @@ public class SegmentRouterTunnelRESTParams {
         return this.tunnel_id;
     }
 
-    public void setTunnel_path(List<String> tunnel_path) {
-        this.tunnel_path = tunnel_path;
+    public void setLabel_path(List<Integer> label_path) {
+        this.label_path = label_path;
     }
 
-    public List<String> getTunnel_path() {
-        return this.tunnel_path;
+    public List<Integer> getLabel_path() {
+        return this.label_path;
     }
 }

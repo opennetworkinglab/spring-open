@@ -3957,6 +3957,13 @@ def init_command(bs, modi):
     })
 
     add_typedef({
+        'name'       : 'label',
+        'help-name'  : 'Segment Label',
+        'base-type'  : 'integer',
+        'validation' : 'validate-integer',
+    })
+    
+    add_typedef({
         'name'       : 'dpid',
         'help-name'  : 'switch id (8-hex bytes)',
         'base-type'  : 'string',

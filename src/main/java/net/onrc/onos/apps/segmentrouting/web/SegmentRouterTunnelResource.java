@@ -2,10 +2,14 @@ package net.onrc.onos.apps.segmentrouting.web;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
-import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelRouteInfo;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.resource.Delete;
@@ -14,17 +18,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelRouteInfo;
 /**
  * Base class for return router statistics
  *
@@ -49,14 +42,10 @@ public class SegmentRouterTunnelResource extends ServerResource {
             log.error("Exception occurred parsing inbound JSON", ex);
             return "fail";
         }
-        log.debug("createTunnel with tunnelId {} tunnelPath{}",
-                createParams.getTunnel_id(), createParams.getTunnel_path());
-        List<Dpid> tunnelDpids = new ArrayList<Dpid>();
-        for (String dpid : createParams.getTunnel_path()) {
-            tunnelDpids.add(new Dpid(dpid));
-        }
+        log.debug("createTunnel with tunnelId {} Label Path{}",
+                createParams.getTunnel_id(), createParams.getLabel_path());
         boolean result = segmentRoutingService.createTunnel(createParams.getTunnel_id(),
-                tunnelDpids);
+                createParams.getLabel_path());
         return (result == true) ? "success" : "fail";
     }
 
@@ -99,10 +88,10 @@ public class SegmentRouterTunnelResource extends ServerResource {
                labelStack.add(label.getRoute());
            }
            SegmentRouterTunnelInfo info = new SegmentRouterTunnelInfo(tunnelInfo.getTunnelId(),
-                   tunnelInfo.getDpids(), labelStack );
+                    /*tunnelInfo.getDpids(),*/labelStack);
            infoList.add(info);
            //TODO Add Group/DPID
-           
+
         }
         log.debug("getTunnel with params");
         Map <String,List<SegmentRouterTunnelInfo>>result = new HashMap<String,List<SegmentRouterTunnelInfo>>();

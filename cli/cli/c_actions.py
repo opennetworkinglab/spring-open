@@ -100,7 +100,7 @@ def tunnel_config_exit():
         url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
         obj_data = {}
         obj_data['tunnel_id']=tunnel_id
-        obj_data['tunnel_path']=entries
+        obj_data['label_path']=entries
         data = sdnsh.store.rest_post_request(url_str,obj_data)
         # LOOK! successful stuff should be returned in json too.
         if data != "success":
@@ -2141,16 +2141,16 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             labelStack = str(tunnel.get('labelStack'))
             labelStack = remove_unicodes(labelStack)
             tunnelId = tunnel.get('tunnelId')
-            nodes = ''
-            for node in tunnel.get("nodes"):
-                nodes += (node.get('value') + ',')
-            if nodes != '':
-                nodes = nodes[:-1]
+            #nodes = ''
+            #for node in tunnel.get("nodes"):
+            #    nodes += (node.get('value') + ',')
+            #if nodes != '':
+            #    nodes = nodes[:-1]
             #portNo = portData.get("portNumber")
             #subnetIp = port.get("subnetIp")
             combResult.append({
                                'tunnelId'         : tunnelId,
-                               'nodes'           : nodes,
+                               #'nodes'           : nodes,
                                'labelStack'      :labelStack,
                                })
         entries = combResult
