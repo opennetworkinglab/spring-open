@@ -2131,8 +2131,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                'subnetIp'         : subnetIp,
                                })
         entries = combResult
-
-    if 'showtunnel' in data  and (data['showtunnel'] == 'tunnel' or data['showtunnel'] == 'details'):
+    #raise error.ArgumentValidationError('\n\n\n %s' % (data))
+    if 'showtunnel' in data  and (data['showtunnel'] == 'tunnele' or data['detail'] == 'details'):
         #eraise error.ArgumentValidationError('\n\n\n %s' % (entries))
         combResult = []
         tunnelList = entries
@@ -2141,6 +2141,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             labelStack = remove_unicodes(labelStack)
             tunnelId = tunnel.get('tunnelId')
             dpidGroup = str(tunnel.get('dpidGroup'))
+            dpidGroup= remove_unicodes(dpidGroup)
             policies = tunnel.get('policies')
             #nodes = ''
             #for node in tunnel.get("nodes"):
@@ -2159,18 +2160,35 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
     if 'showpolicy' in data  and data['showpolicy'] == 'policy':
         #raise error.ArgumentValidationError('\n\n\n %s' % (data))
         combResult = []
-        '''portList = entries
-        for port in portList:
-            portData = port.get("port")
-            name = portData.get("stringAttributes").get('name')
-            portNo = portData.get("portNumber")
-            subnetIp = port.get("subnetIp")
+        portList = entries
+        for policy in portList:
+            policyId = policy.get("policyId")
+            policyType = policy.get("policyType")
+            priority = policy.get("priority")
+            match = policy.get("match")
+            dstIpAddress = match.get('dstIpAddress')['value'] if match.get('dstIpAddress') else '*'
+            dstMacAddress = match.get('dstMacAddress')['value'] if match.get('dstMacAddress') else '*'
+            dstTcpPortNumber = match.get('dstTcpPortNumber') if match.get('dstTcpPortNumber') else '*'
+            etherType = match.get('etherType') if match.get('etherType') else '*'
+            ipProtocolNumber = match.get('ipProtocolNumber') if match.get('ipProtocolNumber') else '*'
+            srcIpAddress = match.get('srcIpAddress')['value'] if match.get('srcIpAddress') else '*'
+            srcMacAddress = match.get('srcMacAddress')['value'] if match.get('srcMacAddress') else '*'
+            srcTcpPortNumber = match.get('srcTcpPortNumber') if match.get('srcTcpPortNumber') else '*'
             combResult.append({
-                               'name'            :name,
-                               'portNo'           : portNo,
-                               'subnetIp'         : subnetIp,
+                               'policyId'        : policyId,
+                               'policyType'      : policyType,
+                               'priority'        : priority,
+                               'dstIpAddress'    : dstIpAddress,
+                               'dstMacAddress'   : dstMacAddress,
+                               'dstTcpPortNumber': dstTcpPortNumber,
+                               'etherType'       : etherType,
+                               'ipProtocolNumber': ipProtocolNumber,
+                               'srcIpAddress'    : srcIpAddress,
+                               'srcMacAddress'   : srcMacAddress,
+                               'srcTcpPortNumber': srcTcpPortNumber,
+                               
                                })
-        entries = combResult'''
+        entries = combResult
 
     if 'realtimestats' in data and 'tabletype' in data and data['realtimestats'] == 'table':
         combResult = []

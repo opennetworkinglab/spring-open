@@ -964,6 +964,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             this.match = match;
             this.priority = priority;
             this.tunnelId = tid;
+            this.type = 0;
         }
         public String getPolicyId(){
             return this.policyId;

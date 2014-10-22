@@ -1,8 +1,14 @@
 package net.onrc.onos.apps.segmentrouting.web;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.PolicyInfo;
+import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.util.IPv4Net;
 
@@ -95,9 +101,23 @@ public class SegmentRouterPolicyResource extends ServerResource {
     }
 
     @Get("json")
-    public String getPolicy() {
-        String reply = "success";
+    public Object getPolicy() {
+        ISegmentRoutingService segmentRoutingService =
+                (ISegmentRoutingService) getContext().getAttributes().
+                        get(ISegmentRoutingService.class.getCanonicalName());
+        List<SegmentRouterPolicyInfo> policyList = new ArrayList<SegmentRouterPolicyInfo>();
+        Collection<PolicyInfo> policies = segmentRoutingService.getPoclicyTable();
+        Iterator<PolicyInfo> piI = policies.iterator();
+        while(piI.hasNext()){
+            PolicyInfo policy = piI.next();
+            String policyId = policy.getPolicyId();
+            int priority = policy.getPriority();
+            int policyType = policy.getType();
+            PacketMatch flowEntries = policy.getMatch();
+            SegmentRouterPolicyInfo pInfo = new SegmentRouterPolicyInfo(policyId, policyType, priority, flowEntries);
+            policyList.add(pInfo);
+        }
         log.debug("getPolicy with params");
-        return reply;
+        return policyList;
     }
 }

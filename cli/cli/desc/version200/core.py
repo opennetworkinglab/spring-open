@@ -2429,7 +2429,10 @@ SHOW_TUNNEL_FORMAT = {
 SHOW_POLICYL_FORMAT = {
     'show_policy' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'policyId', 'tunnelId', 'flowEntries']
+            'default' : [ 'Idx', 'policyId', 'policyType','priority','dstMacAddress','srcMacAddress',
+                        'dstIpAddress' ,'srcIpAddress', 'dstTcpPortNumber','srcTcpPortNumber',
+                        'etherType', 'ipProtocolNumber',
+                         ]
             },
         },
 }
