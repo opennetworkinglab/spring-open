@@ -112,6 +112,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
     private HashMap<String, PolicyInfo> policyTable;
     private HashMap<String, TunnelInfo> tunnelTable;
+    private HashMap<Integer, List<Integer>> adjacencyIdTable;
 
     private int testMode = 0;
 
@@ -185,6 +186,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         restApi = context.getServiceImpl(IRestApiService.class);
         policyTable = new HashMap<String, PolicyInfo>();
         tunnelTable = new HashMap<String, TunnelInfo>();
+        adjacencyIdTable = new HashMap<Integer, List<Integer>>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -219,7 +221,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         });
 
         testMode = POLICY_ADD1;
-        testTask.reschedule(20, TimeUnit.SECONDS);
+        //testTask.reschedule(20, TimeUnit.SECONDS);
     }
 
     @Override
@@ -579,23 +581,40 @@ public class SegmentRoutingManager implements IFloodlightModule,
         numOfPopulation++;
     }
 
+    /**
+     * populate the MPLS rules to handle Adjacency IDs
+     *
+     * @param sw  Switch
+     * @throws JSONException
+     */
     private void populateAdjacencyncyRule(Switch sw) throws JSONException {
         String adjInfo = sw.getStringAttribute("adjacencySids");
+        String nodeSidStr = sw.getStringAttribute("nodeSid");
         String srcMac = sw.getStringAttribute("routerMac");
-        if (adjInfo == null || srcMac == null)
+        String autoAdjInfo = sw.getStringAttribute("autogenAdjSids");
+
+        if (adjInfo == null || srcMac == null || nodeSidStr == null)
             return;
 
         JSONArray arry = new JSONArray(adjInfo);
         for (int i = 0; i < arry.length(); i++) {
-            Object a = arry.getJSONObject(i);
+            //Object a = arry.getJSONObject(i);
             Integer adjId = (Integer) arry.getJSONObject(i).get("adjSid");
-            Integer portNo = (Integer) arry.getJSONObject(i).get("portNo");
-            if (adjId == null || portNo == null)
+            JSONArray portNos = (JSONArray) arry.getJSONObject(i).get("ports");
+            if (adjId == null || portNos == null)
                 continue;
 
+            List<Integer> portNoList = new ArrayList<Integer>();
+            for (int j = 0; j < portNos.length(); j++) {
+                portNoList.add(Integer.valueOf(portNos.getInt(0)));
+            }
+
+            adjacencyIdTable.put(Integer.parseInt(nodeSidStr), portNoList);
+
+            /*
             Dpid dstDpid = null;
             for (Link link: sw.getOutgoingLinks()) {
-                if (link.getSrcPort().getPortNumber().value() == portNo) {
+                if (link.getSrcPort().getPortNumber().value() == portNos[1]) {
                     dstDpid = link.getDstPort().getDpid();
                     break;
                 }
@@ -616,11 +635,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             setAdjRule(sw, adjId, srcMac, dstMac, portNo, true); // BoS = 1
             setAdjRule(sw, adjId, srcMac, dstMac, portNo, false); // BoS = 0
+            */
         }
 
     }
 
-
+    /**
+     * Push the MPLS rule for Adjacency ID
+     *
+     * @param sw  Switch to push the rule
+     * @param id  Adjacency ID
+     * @param srcMac  source MAC address
+     * @param dstMac  destination MAC address
+     * @param portNo  port number assigned to the ID
+     * @param bos  BoS option
+     */
     private void setAdjRule(Switch sw, int id, String srcMac, String dstMac, int portNo,
             boolean bos) {
 
@@ -668,7 +697,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
     }
-
 
     /**
      * populate routing rules to forward packets from the switch given to
@@ -929,6 +957,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * If the next hop is not the destination, just forward packets to next
      * hops using Group action.
      *
+     * TODO: refactoring required
+     *
      * @param sw Switch to set the rules
      * @param mplsLabel destination MPLS label
      * @param fwdSws next hop switches
@@ -943,6 +973,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 new ArrayList<MatchActionOperationEntry>();
         String fwdSw1 = fwdSws.get(0);
 
+        //If the next hop is the destination router
         if (fwdSws.size() == 1 && mplsLabel.equals(getMplsLabel(fwdSw1))) {
             // One rule for Bos = 1
             MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), true);
@@ -984,7 +1015,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     new MatchActionOperationEntry(operator, matchActionBos);
             maEntries.add(maEntryBos);
         }
+        // If the next hop is NOT the destination router
         else {
+            // BoS = 0
             MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), false);
             List<Action> actions = new ArrayList<Action>();
 
@@ -1060,7 +1093,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             this.tunnelId = tid;
             this.type = type;
         }
-        
+
         public PolicyInfo(String pid, PacketMatch match, int priority,
                 String tid) {
             this.policyId = pid;
@@ -1156,7 +1189,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     public Collection<TunnelInfo> getTunnelTable() {
         return this.tunnelTable.values();
     }
-    
+
     public Collection<PolicyInfo> getPoclicyTable() {
         return this.policyTable.values();
     }
