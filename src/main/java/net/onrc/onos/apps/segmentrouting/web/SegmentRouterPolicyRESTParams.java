@@ -3,6 +3,7 @@ package net.onrc.onos.apps.segmentrouting.web;
 
 public class SegmentRouterPolicyRESTParams {
     private String policy_id;
+    private String policy_type;
     private int priority;
     private String tunnel_id;
     private String proto_type;
@@ -15,6 +16,7 @@ public class SegmentRouterPolicyRESTParams {
 
     public SegmentRouterPolicyRESTParams() {
         this.policy_id = null;
+        this.policy_type = null;
         this.priority = 0;
         this.tunnel_id = null;
         this.proto_type = null;
@@ -32,6 +34,14 @@ public class SegmentRouterPolicyRESTParams {
 
     public String getPolicy_id() {
         return this.policy_id;
+    }
+
+    public void setPolicy_type(String policy_type) {
+        this.policy_type = policy_type;
+    }
+
+    public String getPolicy_type() {
+        return this.policy_type;
     }
 
     public void setPriority(int priority) {

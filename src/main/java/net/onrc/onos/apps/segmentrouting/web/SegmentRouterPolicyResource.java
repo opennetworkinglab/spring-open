@@ -45,8 +45,9 @@ public class SegmentRouterPolicyResource extends ServerResource {
             return "fail";
         }
 
-        log.debug("createPolicy with params id {} src_ip {} dst_ip {}"
+        log.debug("createPolicy of type {} with params id {} src_ip {} dst_ip {}"
                 + "proto {} src_port {} dst_port {} priority {} tunnel_id {}",
+                createParams.getPolicy_type(),
                 createParams.getPolicy_id(), createParams.getSrc_ip(),
                 createParams.getDst_ip(), createParams.getProto_type(),
                 createParams.getSrc_tp_port(), createParams.getDst_tp_port(),

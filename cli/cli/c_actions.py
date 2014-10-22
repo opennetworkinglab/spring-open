@@ -102,7 +102,7 @@ def tunnel_config_exit():
         url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
         obj_data = {}
         obj_data['tunnel_id']=tunnel_id
-        obj_data['tunnel_path']=entries
+        obj_data['label_path']=entries
         data = sdnsh.store.rest_post_request(url_str,obj_data)
         # LOOK! successful stuff should be returned in json too.
         if data != "success":
