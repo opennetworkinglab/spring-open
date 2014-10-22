@@ -592,13 +592,33 @@ public class SegmentRoutingManager implements IFloodlightModule,
         String nodeSidStr = sw.getStringAttribute("nodeSid");
         String srcMac = sw.getStringAttribute("routerMac");
         String autoAdjInfo = sw.getStringAttribute("autogenAdjSids");
+        List<Integer> adjacecyIdList = new ArrayList<Integer>();
 
-        if (adjInfo == null || srcMac == null || nodeSidStr == null)
+        if (autoAdjInfo == null || srcMac == null || nodeSidStr == null)
             return;
 
-        JSONArray arry = new JSONArray(adjInfo);
+        // parse adjacency Id
+        if (adjInfo != null) {
+            JSONArray arry = new JSONArray(adjInfo);
+
+            for (int i = 0; i < arry.length(); i++) {
+                Integer adjId = (Integer) arry.getJSONObject(i).get("adjSid");
+                JSONArray portNos = (JSONArray) arry.getJSONObject(i).get("ports");
+                if (adjId == null || portNos == null)
+                    continue;
+
+                List<Integer> portNoList = new ArrayList<Integer>();
+                for (int j = 0; j < portNos.length(); j++) {
+                    portNoList.add(Integer.valueOf(portNos.getInt(0)));
+                }
+                adjacecyIdList.add(adjId);
+            }
+        }
+
+        // parse auto generated adjacecy Id
+
+        JSONArray arry = new JSONArray(autoAdjInfo);
         for (int i = 0; i < arry.length(); i++) {
-            //Object a = arry.getJSONObject(i);
             Integer adjId = (Integer) arry.getJSONObject(i).get("adjSid");
             JSONArray portNos = (JSONArray) arry.getJSONObject(i).get("ports");
             if (adjId == null || portNos == null)
@@ -608,8 +628,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
             for (int j = 0; j < portNos.length(); j++) {
                 portNoList.add(Integer.valueOf(portNos.getInt(0)));
             }
+            adjacecyIdList.add(adjId);
+        }
 
-            adjacencyIdTable.put(Integer.parseInt(nodeSidStr), portNoList);
+        adjacencyIdTable.put(Integer.parseInt(nodeSidStr), adjacecyIdList);
 
             /*
             Dpid dstDpid = null;
@@ -636,7 +658,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             setAdjRule(sw, adjId, srcMac, dstMac, portNo, true); // BoS = 1
             setAdjRule(sw, adjId, srcMac, dstMac, portNo, false); // BoS = 0
             */
-        }
 
     }
 
@@ -1563,6 +1584,16 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // ************************************
     // Utility functions
     // ************************************
+
+    /**
+     * Returns the Adjacency IDs for the node
+     *
+     * @param nodeSid Node SID
+     * @return List of Adjacency ID
+     */
+    public List<Integer> getAdjacencyIds(int nodeSid) {
+        return this.adjacencyIdTable.get(Integer.valueOf(nodeSid));
+    }
 
     /**
      * Get the forwarding Switch DPIDs to send packets to a node
