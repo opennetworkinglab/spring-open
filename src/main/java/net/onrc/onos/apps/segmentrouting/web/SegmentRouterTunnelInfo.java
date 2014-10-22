@@ -9,12 +9,14 @@ public class SegmentRouterTunnelInfo {
     private String tunnelId;
     private List<List<String>> labelStack;
     private List<String> dpidGroup;
+    private String policies;
     
-    public SegmentRouterTunnelInfo (String tId,
-            List<List<String>> tunnelRoutes, List<String> dpidsWithGroup){
+    public SegmentRouterTunnelInfo (String tId,List<List<String>> tunnelRoutes,
+            List<String> dpidsWithGroup,String policiesId){
         this.tunnelId = tId;
         this.labelStack = tunnelRoutes;
         this.dpidGroup = dpidsWithGroup;
+        this.policies = policiesId;
     }
     public String getTunnelId (){
         return this.tunnelId;
@@ -24,5 +26,8 @@ public class SegmentRouterTunnelInfo {
     }
     public List<String> getDpidGroup (){
         return this.dpidGroup;
+    }
+    public String getPolicies (){
+        return this.policies;
     }
 }

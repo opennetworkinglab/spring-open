@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.PolicyInfo;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
 import net.onrc.onos.core.util.IPv4Net;
 
@@ -77,4 +78,9 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * dpid is not found
      */
     public int getTunnelGroupId(String tunnelId, String dpid);
+    /**
+     * return list of all the policies currently there in Segment Router
+     * @return Collection<PolicyInfo>
+     */
+    public Collection<PolicyInfo> getPoclicyTable();
 }

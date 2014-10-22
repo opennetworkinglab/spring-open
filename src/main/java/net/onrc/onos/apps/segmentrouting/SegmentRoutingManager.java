@@ -1052,6 +1052,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
     public Collection<TunnelInfo> getTunnelTable() {
         return this.tunnelTable.values();
     }
+    
+    public Collection<PolicyInfo> getPoclicyTable() {
+        return this.policyTable.values();
+    }
 
     /**
      * Return router DPIDs for the tunnel

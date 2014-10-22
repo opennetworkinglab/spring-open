@@ -2141,16 +2141,18 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             labelStack = remove_unicodes(labelStack)
             tunnelId = tunnel.get('tunnelId')
             dpidGroup = str(tunnel.get('dpidGroup'))
+            policies = tunnel.get('policies')
             #nodes = ''
             #for node in tunnel.get("nodes"):
             #    nodes += (node.get('value') + ',')
             #if nodes != '':
             #    nodes = nodes[:-1]
             combResult.append({
-                               'tunnelId'         : tunnelId,
+                               'tunnelId'       : tunnelId,
                                #'nodes'           : nodes,
-                               'labelStack'      :labelStack,
+                               'labelStack'     :labelStack,
                                'dpidGroup'      :dpidGroup,
+                               'policies'       : policies,
                                })
         entries = combResult
 

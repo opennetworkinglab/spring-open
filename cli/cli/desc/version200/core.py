@@ -2414,16 +2414,15 @@ REALTIME_TABLE_FORMAT = {
 SHOW_TUNNEL_FORMAT = {
     'show_tunnel' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'tunnelId', 'labelStack',],
-            'details' : [ 'Idx', 'tunnelId', 'labelStack', 'dpidGroup',],
-            'scoped' : [ 'Idx', 'tunnelId', 'labelStack', 'dpidGroup',],
+            'default' : [ 'Idx', 'tunnelId', 'policies','labelStack',],
+            'details' : [ 'Idx', 'tunnelId', 'policies','labelStack', 'dpidGroup',],
             },
-       # 'fields': {
-       #     'tunnelId'         : { 'verbose-name' : 'Id',
-       #                        },
-       #     'dpidGroup'         : { 'verbose-name' : 'dpid/Group',
-       #                        },
-        #           }
+        'fields': {
+            'tunnelId'         : { 'verbose-name' : 'Id',
+                               },
+            'dpidGroup'         : { 'verbose-name' : 'dpid/Group',
+                               },
+                   }
         },
 }
 

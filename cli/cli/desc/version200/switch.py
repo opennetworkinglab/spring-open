@@ -55,14 +55,15 @@ TUNNEL_SUBMODE_COMMAND_DESCRIPTION = {
 def tunnel_node_completion(prefix, completions):
     print "tunnel_node_completion:",prefix,completions
     query_url = "http://127.0.0.1:8000/rest/v1/switches"
+    #print query_url
     result = command.sdnsh.store.rest_simple_request(query_url)
     entries = json.loads(result)
     for entry in entries:
-        if entry['stringAttributes']['nodeSid'].startswith(prefix):
-            completions[entry['stringAttributes']['nodeSid']+' '] = entry['stringAttributes']['nodeSid']
+        if entry['dpid'].startswith(prefix):
+            completions[entry['dpid']+' '] = entry['dpid']
     return
 
-command.add_completion('tunnel-node-label-completion', tunnel_node_completion,
+command.add_completion('tunnel-node-completion', tunnel_node_completion,
                        {'kwargs': { 'prefix'       : '$text',
                                     'completions'  : '$completions',
                                     }})
@@ -79,11 +80,11 @@ TUNNEL_NODE_ENTRY_COMMAND_DESCRIPTION = {
     'args'                : (
          {
              'field'      : 'node-value',
-             'completion'   : 'tunnel-node-label-completion',
-             'type'         : 'label',
-             'other'        : 'switches|label',
+             'completion'   : 'tunnel-node-completion',
+             'type'         : 'dpid',
+             'other'        : 'switches|dpid',
 #             'data-handler' : 'alias-to-value',
-             'help-name'    : 'Segment label',
+             'help-name'    : 'switch dpid or switch alias',
              'action'       : (
                                 {
                                     'proc' : 'create-tunnel',
@@ -154,14 +155,14 @@ SRC_IP_MATCH = {
     'choices' : (
         (
             {
-                'field'        : 'src_ip',
+                'field'        : 'src-ip',
                 'type'         : 'cidr-range',
                 'help-name'    : 'src-cidr',
                 #'data-handler' : 'split-cidr-data-inverse',
                 #'dest-ip'      : 'src-ip',
                 #'dest-netmask' : 'src-ip-mask',
                 'data'         : {
-                                  'dst_ip'      : '0.0.0.0/32',
+                                  'dst-ip'      : '0.0.0.0/32',
                                  },
                 'doc'          : 'vns|vns-access-list-cidr-range',
             }
@@ -170,8 +171,8 @@ SRC_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'src_ip'      : '0.0.0.0/32',
-                              'dst_ip'      : '0.0.0.0/32',
+                              'src-ip'      : '0.0.0.0/32',
+                              'dst-ip'      : '0.0.0.0/32',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }
@@ -181,7 +182,7 @@ SRC_IP_MATCH = {
 
 SRC_PORT_MATCH = (
     {
-        'field'  : 'src_tp_port_op',
+        'field'  : 'src-tp-port-op',
         'type'   : 'enum',
         'values' : ('eq', 'neq'),
         'doc'    : 'vns|vns-access-list-port-op-+',
@@ -189,7 +190,7 @@ SRC_PORT_MATCH = (
     {
         'choices' : (
             {
-                'field'        : 'src_tp_port',
+                'field'        : 'src-tp-port',
                 'base-type'    : 'hex-or-decimal-integer',
                 'range'        : (0,65535),
                 'data-handler' : 'hex-to-integer',
@@ -197,7 +198,7 @@ SRC_PORT_MATCH = (
                 'doc-include'  : [ 'range' ],
             },
             {
-                'field'   : 'src_tp_port',
+                'field'   : 'src-tp-port',
                 'type'    : 'enum',
                 'values'  : fmtcnv.tcp_name_to_number_dict,
                 'permute' : 'skip',
@@ -212,7 +213,7 @@ DST_IP_MATCH = {
     'choices' : (
         (
             {
-                'field'        : 'dst_ip',
+                'field'        : 'dst-ip',
                 'type'         : 'cidr-range',
                 'help-name'    : 'dst-cidr',
                 #'data-handler' : 'split-cidr-data-inverse',
@@ -225,7 +226,7 @@ DST_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'dst_ip'      : '0.0.0.0/32',
+                              'dst-ip'      : '0.0.0.0/32',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }
@@ -236,7 +237,7 @@ DST_IP_MATCH = {
 
 DST_PORT_MATCH = (
     {
-        'field' : 'dst_tp_port_op',
+        'field' : 'dst-tp-port-op',
         'type'  : 'enum',
         'values' : ('eq', 'neq'),
         'doc'          : 'vns|vns-access-list-port-op+',
@@ -244,14 +245,14 @@ DST_PORT_MATCH = (
     {
         'choices' : (
             {
-                'field'        : 'dst_tp_port',
+                'field'        : 'dst-tp-port',
                 'base-type'    : 'hex-or-decimal-integer',
                 'range'        : (0,65535),
                 'data-handler' : 'hex-to-integer',
                 'doc'          : 'vns|vns-access-list-port-hex',
             },
             {
-                'field'   : 'dst_tp_port',
+                'field'   : 'dst-tp-port',
                 'type'    : 'enum',
                 'values'  : fmtcnv.tcp_name_to_number_dict,
                 'permute' : 'skip'
@@ -279,13 +280,13 @@ POLICY_FLOW_ENTRY_COMMAND_DESCRIPTION = {
                 {
                     'choices' : (
                         {
-                            'field'  : 'proto_type',
+                            'field'  : 'type',
                             'type'   : 'enum',
                             'values' : ('ip','tcp','udp'),
                             'doc'    : 'vns|vns-access-list-entry-type-+',
                         },
                         {
-                            'field'        : 'proto_type',
+                            'field'        : 'type',
                             'base-type'    : 'hex-or-decimal-integer',
                             'range'        : (0,255),
                             'help-name'    : 'ip protocol',
@@ -594,16 +595,6 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                         'field'      : 'realtimestats',
                         'type'       : 'enum',
                         'values'     : 'table',
-                        #'args':(
-                        #        {
-                        #         'field'      : 'tabletype',
-                        #             'type'       : 'enum',
-                        #             'values'     : ('ip',
-                        #                             'acl',
-                        #                             'mpls'
-                        #                             ),
-                        #         },
-                        #        )
                     },
                     {
                         'field'    : 'tabletype',
