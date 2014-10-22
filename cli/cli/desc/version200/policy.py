@@ -83,12 +83,14 @@ POLICY_SUBMODE_COMMAND_DESCRIPTION = {
                 },
                 {
                     'token'        : 'type',
+                    'optional-for-no' : True,
                     'short-help'   : 'Set type of policy',
                     'doc'          : 'policy|policy',
                     'completion'   : 'complete-object-field',
                 },
                 {
                     'field'        : 'policy-type',
+                    'optional-for-no' : True,
                     'type'         : 'enum',
                     'values'       : ('tunnel','loadbalanced','avoid','deny'), 
                     'completion'   : 'complete-object-field',
