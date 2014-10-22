@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -30,6 +32,7 @@ import net.onrc.onos.core.configmanager.NetworkConfig.SwitchConfig;
 import net.onrc.onos.core.configmanager.NetworkConfigManager;
 import net.onrc.onos.core.configmanager.PktLinkConfig;
 import net.onrc.onos.core.configmanager.SegmentRouterConfig;
+import net.onrc.onos.core.configmanager.SegmentRouterConfig.AdjacencySid;
 import net.onrc.onos.core.matchaction.MatchAction;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations;
@@ -55,6 +58,7 @@ import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.PortNumber;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.projectfloodlight.openflow.protocol.OFAsyncGetReply;
 import org.projectfloodlight.openflow.protocol.OFBarrierRequest;
 import org.projectfloodlight.openflow.protocol.OFBucket;
@@ -141,11 +145,11 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private ConcurrentMap<PortNumber, Dpid> portToNeighbors;
     private List<Integer> segmentIds;
     private boolean isEdgeRouter;
-    private int sid;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
     private ConcurrentMap<String, List<Integer>> tunnelGroupIdTable;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
     private AtomicInteger groupid;
+    private Map<String, String> publishAttributes;
 
     public OFSwitchImplCPqD13(OFDescStatsReply desc, boolean usePipeline13) {
         super();
@@ -489,6 +493,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
 
     private void processGroupDesc(OFGroupDescStatsReply gdsr) {
         log.info("Sw: {} Group Desc {}", getStringId(), gdsr);
+        // TODO -- actually do verification
         try {
             nextDriverState();
         } catch (IOException e) {
@@ -608,7 +613,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         if (scs.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
             srConfig = (SegmentRouterConfig) scs.getSwitchConfig();
             isEdgeRouter = srConfig.isEdgeRouter();
-            sid = srConfig.getNodeSid();
         } else {
             log.error("Switch not configured as Segment-Router");
         }
@@ -1248,7 +1252,30 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     }
 
     private void assignAdjacencyLabels() {
-        // TODO
+        List<AdjacencySid> autogenAdjSids = new ArrayList<AdjacencySid>();
+        publishAttributes = new HashMap<String, String>();
+        for (OFPortDesc p : getPorts()) {
+            int pnum = p.getPortNo().getPortNumber();
+
+            if (U32.ofRaw(pnum).compareTo(U32.ofRaw(OFPort.MAX.getPortNumber())) >= 1) {
+                continue;
+            }
+            // create unique adj-sid assuming that operator only
+            // enters adjSids for multiple-ports and only in the range
+            // 1-10k XXX make sure that happens
+            int adjSid = srConfig.getNodeSid() * 1000 + pnum;
+            AdjacencySid as = new AdjacencySid(adjSid,
+                    Collections.singletonList(pnum));
+            autogenAdjSids.add(as);
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            publishAttributes.put("autogenAdjSids",
+                    mapper.writeValueAsString(autogenAdjSids));
+        } catch (IOException e1) {
+            log.error("Error while writing adjacency labels: {}", e1.getCause());
+        }
+
         try {
             nextDriverState();
         } catch (IOException e) {
@@ -1691,6 +1718,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         return groups.get(0);
     }
 
+    @Override
+    public Map<String, String> getPublishAttributes() {
+        return publishAttributes;
+    }
 
     // *****************************
     // Unused
@@ -1955,5 +1986,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             }
         }
     }
+
+
 
 }

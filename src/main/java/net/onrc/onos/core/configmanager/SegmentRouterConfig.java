@@ -33,6 +33,7 @@ public class SegmentRouterConfig extends SwitchConfig {
     public static final String ADJACENCY_SIDS = "adjacencySids";
     public static final String SUBNETS = "subnets";
     public static final String ISEDGE = "isEdgeRouter";
+    private static final int SRGB_MAX = 1000;
 
     public SegmentRouterConfig(SwitchConfig swc) {
         this.setName(swc.getName());
@@ -86,20 +87,20 @@ public class SegmentRouterConfig extends SwitchConfig {
     }
 
     public static class AdjacencySid {
-        private int portNo;
         private int adjSid;
+        private List<Integer> ports;
 
-        public AdjacencySid(int portNo, int adjSid) {
-            this.portNo = portNo;
+        public AdjacencySid(int adjSid, List<Integer> ports) {
+            this.ports = ports;
             this.adjSid = adjSid;
         }
 
-        public int getPortNo() {
-            return portNo;
+        public List<Integer> getPorts() {
+            return ports;
         }
 
-        public void setPortNo(int portNo) {
-            this.portNo = portNo;
+        public void setPorts(List<Integer> ports) {
+            this.ports = ports;
         }
 
         public int getAdjSid() {
@@ -190,6 +191,7 @@ public class SegmentRouterConfig extends SwitchConfig {
             int portNo = -1;
             int adjSid = -1;
             String subnetIp = null;
+            List<Integer> ports = null;
             while (f.hasNext()) {
                 Entry<String, JsonNode> fe = f.next();
                 if (fe.getKey().equals("portNo")) {
@@ -198,12 +200,20 @@ public class SegmentRouterConfig extends SwitchConfig {
                     adjSid = fe.getValue().asInt();
                 } else if (fe.getKey().equals("subnetIp")) {
                     subnetIp = fe.getValue().asText();
+                } else if (fe.getKey().equals("ports")) {
+                    if (fe.getValue().isArray()) {
+                        Iterator<JsonNode> i = fe.getValue().getElements();
+                        ports = new ArrayList<Integer>();
+                        while (i.hasNext()) {
+                            ports.add(i.next().asInt());
+                        }
+                    }
                 } else {
                     throw new UnknownSegmentRouterConfig(fe.getKey(), dpid);
                 }
             }
             if (innerParam.equals("adjacencySids")) {
-                AdjacencySid ads = new AdjacencySid(portNo, adjSid);
+                AdjacencySid ads = new AdjacencySid(adjSid, ports);
                 adjacencySids.add(ads);
             } else {
                 Subnet sip = new Subnet(portNo, subnetIp);
@@ -222,6 +232,20 @@ public class SegmentRouterConfig extends SwitchConfig {
         if (!isEdgeRouter && !subnets.isEmpty()) {
             throw new SubnetSpecifiedInBackboneRouter(dpid);
         }
+        if (nodeSid > SRGB_MAX) {
+            throw new NodeLabelNotInSRGB(nodeSid, dpid);
+        }
+        for (AdjacencySid as : adjacencySids) {
+            int label = as.getAdjSid();
+            List<Integer> plist = as.getPorts();
+            if (label <= SRGB_MAX) {
+                throw new AdjacencyLabelInSRGB(label, dpid);
+            }
+            if (plist.size() <= 1) {
+                throw new AdjacencyLabelNotEnoughPorts(label, dpid);
+            }
+        }
+
 
         // TODO more validations
     }
@@ -284,7 +308,7 @@ public class SegmentRouterConfig extends SwitchConfig {
     }
 
     public static class SubnetSpecifiedInBackboneRouter extends RuntimeException {
-        private static final long serialVersionUID = -5855458472668581268L;
+        private static final long serialVersionUID = 1L;
 
         public SubnetSpecifiedInBackboneRouter(long dpid) {
             super();
@@ -293,6 +317,37 @@ public class SegmentRouterConfig extends SwitchConfig {
         }
     }
 
+    public static class NodeLabelNotInSRGB extends RuntimeException {
+        private static final long serialVersionUID = -8482670903748519526L;
 
+        public NodeLabelNotInSRGB(int label, long dpid) {
+            super();
+            log.error("Node sif {} specified in not in global label-base "
+                    + "in dpid: {}", label,
+                    HexString.toHexString(dpid));
+        }
+    }
 
+    public static class AdjacencyLabelInSRGB extends RuntimeException {
+        private static final long serialVersionUID = -8482670903748519526L;
+
+        public AdjacencyLabelInSRGB(int label, long dpid) {
+            super();
+            log.error("Adjaceny label {} specified from global label-base "
+                    + "in dpid: {}", label,
+                    HexString.toHexString(dpid));
+        }
+    }
+
+    public static class AdjacencyLabelNotEnoughPorts extends RuntimeException {
+        private static final long serialVersionUID = -8482670903748519526L;
+
+        public AdjacencyLabelNotEnoughPorts(int label, long dpid) {
+            super();
+            log.error("Adjaceny label {} must be specified for at least 2 ports. "
+                    + "Adjacency labels for single ports are auto-generated "
+                    + "in dpid: {}", label,
+                    HexString.toHexString(dpid));
+        }
+    }
 }

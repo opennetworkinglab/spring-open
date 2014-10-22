@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
@@ -167,4 +168,6 @@ public interface IOF13Switch extends IOFSwitch {
      * @return first Group ID for the tunnel or -1 if not found
      */
     public int getTunnelGroupId(String tunnelID);
+
+    public Map<String, String> getPublishAttributes();
 }

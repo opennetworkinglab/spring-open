@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
+import net.floodlightcontroller.core.IOF13Switch;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.IOFSwitch.PortChangeType;
 import net.floodlightcontroller.core.IOFSwitchListener;
@@ -389,6 +390,12 @@ public class TopologyPublisher implements IOFSwitchListener,
             Map<String, String> attr = ret.getSwitchConfig().getPublishAttributes();
             for (Entry<String, String> e : attr.entrySet()) {
                 switchData.createStringAttribute(e.getKey(), e.getValue());
+            }
+            if (sw instanceof IOF13Switch) {
+                Map<String, String> pa = ((IOF13Switch) sw).getPublishAttributes();
+                for (Entry<String, String> e : pa.entrySet()) {
+                    switchData.createStringAttribute(e.getKey(), e.getValue());
+                }
             }
             switchData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                     ConfigState.CONFIGURED.toString());
