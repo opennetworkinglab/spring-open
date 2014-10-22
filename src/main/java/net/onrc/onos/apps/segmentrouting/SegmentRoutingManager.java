@@ -112,7 +112,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
     private HashMap<String, PolicyInfo> policyTable;
     private HashMap<String, TunnelInfo> tunnelTable;
-    private HashMap<Integer, List<Integer>> adjacencyIdTable;
+    private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencyIdTable;
 
     private int testMode = 0;
 
@@ -186,7 +186,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         restApi = context.getServiceImpl(IRestApiService.class);
         policyTable = new HashMap<String, PolicyInfo>();
         tunnelTable = new HashMap<String, TunnelInfo>();
-        adjacencyIdTable = new HashMap<Integer, List<Integer>>();
+        adjacencyIdTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -592,46 +592,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
         String nodeSidStr = sw.getStringAttribute("nodeSid");
         String srcMac = sw.getStringAttribute("routerMac");
         String autoAdjInfo = sw.getStringAttribute("autogenAdjSids");
-        List<Integer> adjacecyIdList = new ArrayList<Integer>();
 
         if (autoAdjInfo == null || srcMac == null || nodeSidStr == null)
             return;
 
         // parse adjacency Id
+        List<HashMap<Integer, List<Integer>>> adjacncyInfoList =
+                new ArrayList<HashMap<Integer, List<Integer>>>();
+        HashMap<Integer, List<Integer>> adjacencyInfo = null;
         if (adjInfo != null) {
-            JSONArray arry = new JSONArray(adjInfo);
-
-            for (int i = 0; i < arry.length(); i++) {
-                Integer adjId = (Integer) arry.getJSONObject(i).get("adjSid");
-                JSONArray portNos = (JSONArray) arry.getJSONObject(i).get("ports");
-                if (adjId == null || portNos == null)
-                    continue;
-
-                List<Integer> portNoList = new ArrayList<Integer>();
-                for (int j = 0; j < portNos.length(); j++) {
-                    portNoList.add(Integer.valueOf(portNos.getInt(0)));
-                }
-                adjacecyIdList.add(adjId);
-            }
+            adjacencyInfo = parseAdjacencySidInfo(adjInfo);
+            //adjacncyInfoList.add(adjacencyInfo);
         }
+        // parse auto generated adjacency Id
+        adjacencyInfo.putAll(parseAdjacencySidInfo(autoAdjInfo));
 
-        // parse auto generated adjacecy Id
-
-        JSONArray arry = new JSONArray(autoAdjInfo);
-        for (int i = 0; i < arry.length(); i++) {
-            Integer adjId = (Integer) arry.getJSONObject(i).get("adjSid");
-            JSONArray portNos = (JSONArray) arry.getJSONObject(i).get("ports");
-            if (adjId == null || portNos == null)
-                continue;
-
-            List<Integer> portNoList = new ArrayList<Integer>();
-            for (int j = 0; j < portNos.length(); j++) {
-                portNoList.add(Integer.valueOf(portNos.getInt(0)));
-            }
-            adjacecyIdList.add(adjId);
-        }
-
-        adjacencyIdTable.put(Integer.parseInt(nodeSidStr), adjacecyIdList);
+        adjacencyIdTable.put(Integer.parseInt(nodeSidStr), adjacencyInfo);
 
             /*
             Dpid dstDpid = null;
@@ -1589,10 +1565,43 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * Returns the Adjacency IDs for the node
      *
      * @param nodeSid Node SID
-     * @return List of Adjacency ID
+     * @return Collection of Adjacency ID
      */
-    public List<Integer> getAdjacencyIds(int nodeSid) {
-        return this.adjacencyIdTable.get(Integer.valueOf(nodeSid));
+    public Collection<Integer> getAdjacencyIds(int nodeSid) {
+        HashMap<Integer, List<Integer>> adjecencyInfo =
+                adjacencyIdTable.get(Integer.valueOf(nodeSid));
+
+        return adjecencyInfo.keySet();
+    }
+
+    /**
+     * Returns the Adjacency Info for the node
+     *
+     * @param nodeSid Node SID
+     * @return HashMap of <AdjacencyID, list of ports>
+     */
+    public HashMap<Integer, List<Integer>> getAdjacencyInfo(int nodeSid) {
+        return  adjacencyIdTable.get(Integer.valueOf(nodeSid));
+    }
+
+    private HashMap<Integer, List<Integer>> parseAdjacencySidInfo(String adjInfo) throws JSONException {
+        JSONArray arry = new JSONArray(adjInfo);
+        HashMap<Integer, List<Integer>> AdjacencyInfo =
+                new HashMap<Integer, List<Integer>>();
+
+        for (int i = 0; i < arry.length(); i++) {
+            Integer adjId = (Integer) arry.getJSONObject(i).get("adjSid");
+            JSONArray portNos = (JSONArray) arry.getJSONObject(i).get("ports");
+            if (adjId == null || portNos == null)
+                continue;
+
+            List<Integer> portNoList = new ArrayList<Integer>();
+            for (int j = 0; j < portNos.length(); j++) {
+                portNoList.add(Integer.valueOf(portNos.getInt(0)));
+            }
+            AdjacencyInfo.put(adjId, portNoList);
+        }
+        return AdjacencyInfo;
     }
 
     /**
