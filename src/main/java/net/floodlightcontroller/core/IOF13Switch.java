@@ -132,8 +132,24 @@ public interface IOF13Switch extends IOFSwitch {
      */
     public int getEcmpGroupId(NeighborSet ns);
 
+    /**
+     * Remove the OFBucket that contains the specified port from all the OF
+     * groups. This API can be used by applications, when a port goes down, to
+     * remove that port from all the group that it is part of
+     *
+     * @param port Port Number to be removed from groups
+     * @return None
+     */
     public void removePortFromGroups(PortNumber port);
 
+    /**
+     * Add the OFBucket to groups that have reachability through the given port.
+     * This API can be used by applications, when a port is operational again,
+     * to add that port to all the relevant groups
+     * 
+     * @param port Port Number to be added to groups
+     * @return None
+     */
     public void addPortToGroups(PortNumber port);
 
     /**
