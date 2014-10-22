@@ -172,6 +172,20 @@ def policy_remove(data=None):
     if data != "deleted":
         result = json.loads(data)
         return result
+    
+    
+
+    if not detail:
+        detail = data.get('detail', 'default')
+    url = "http://%s/rest/v1/" % sdnsh.controller + (select_url % data)
+
+    result = sdnsh.store.rest_simple_request(url)
+    check_rest_result(result)
+    if sdnsh.description:   # description debugging
+        print "command_display_rest: result ", result
+    entries = json.loads(result)
+    
+    
 
 def write_fields(obj_type, obj_id, data):
     """
@@ -2092,6 +2106,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
     # It certainly seems possible to map from url's to the type associated,
     # with the result, but it also makes sense to encode that type information
     # into the description
+    if 'routerrealtimestats' in data  and data['routerrealtimestats'] == 'adjacency':
+        rest_type =False
     if rest_type:
         entries = command_display_rest_type_converter(table_format,
                                                       rest_type,
@@ -2128,13 +2144,29 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             name = portData.get("stringAttributes").get('name')
             portNo = portData.get("portNumber")
             subnetIp = port.get("subnetIp")
+            adjacency = str(port.get('adjacency'))
             combResult.append({
                                'name'            :name,
                                'portNo'           : portNo,
                                'subnetIp'         : subnetIp,
+                               'adjacency'        : adjacency,
+                               })
+        entries = combResult
+    if 'routerrealtimestats' in data  and data['routerrealtimestats'] == 'adjacency':
+        #raise error.ArgumentValidationError('\n\n\n %s' % (entries))
+        #raise error.ArgumentValidationError('\n\n\n %s' % (entries))
+        combResult = []
+        adjacencyPairList = entries
+        for adjacencyPair in adjacencyPairList:
+            adjacencySid = adjacencyPair.get("adjacencySid")
+            ports = adjacencyPair.get("ports")
+            combResult.append({
+                               'adjacencySid'    : adjacencySid,
+                               'ports'           : ports,
                                })
         entries = combResult
     #raise error.ArgumentValidationError('\n\n\n %s' % (data))
+
     if 'showtunnel' in data  and (data['showtunnel'] == 'tunnel' or data['detail'] == 'details'):
         #eraise error.ArgumentValidationError('\n\n\n %s' % (entries))
         combResult = []

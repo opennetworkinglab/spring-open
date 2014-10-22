@@ -1,7 +1,6 @@
 package net.onrc.onos.apps.segmentrouting.web;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 import net.onrc.onos.core.topology.Port;
 
@@ -12,18 +11,23 @@ import net.onrc.onos.core.topology.Port;
 
 public class SegmentRouterPortInfo {
     //TODO set attributes to private and provide setter and getter.
-    public String subnetIp= null;
-    public Port  port = null;
+    private String subnetIp= null;
+    private Port  port = null;
+    private List<Integer> adjacency = null;
     
-    public SegmentRouterPortInfo(String ssubnets, Port pport){
+    public SegmentRouterPortInfo(String ssubnets, Port pport, List<Integer> adj){
         this.port = pport;
         this.subnetIp = ssubnets;
+        this.adjacency = adj;
     }
-
-    public void setInfo(String subnetIp, Port p) {
-        this.port = p;
-        this.subnetIp = subnetIp;
-        
+    public String getSubnetIp(){
+        return this.subnetIp;
+    }
+    public Port getPort(){
+        return this.port;
+    }
+    public List<Integer> getAdjacency(){
+        return this.adjacency;
     }
 
 }

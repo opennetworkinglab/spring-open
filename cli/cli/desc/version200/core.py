@@ -2422,11 +2422,13 @@ SHOW_TUNNEL_FORMAT = {
                                },
             'dpidGroup'         : { 'verbose-name' : 'dpid/Group',
                                },
+            'labelStack'         : { 'verbose-name' : 'Label Stack',
+                               },
                    }
         },
 }
 
-SHOW_POLICYL_FORMAT = {
+SHOW_POLICY_FORMAT = {
     'show_policy' : {
         'field-orderings' : {
             'default' : [ 'Idx', 'policyId', 'policyType','priority','dstMacAddress','srcMacAddress',
@@ -2434,6 +2436,12 @@ SHOW_POLICYL_FORMAT = {
                         'etherType', 'ipProtocolNumber',
                          ]
             },
+            'fields': {
+                       'policyId'             : { 'verbose-name' : 'Policy Id',
+                                               },
+                       'policyType'         : { 'verbose-name': 'Policy Type',
+                                               },
+                                               }
         },
 }
 
@@ -2532,40 +2540,59 @@ ROUTER_FORMAT = {
                          ],
             },
         'fields': {
-            'dpid'               : { 'verbose-name' : 'RouterDPID',
+            'dpid'               : { 'verbose-name' : 'Router DPID',
                                         #'formatter' : fmtcnv.replace_switch_with_alias
                                         },
-            'name'                 : { 'verbose-name' : 'RouterName',
+            'name'                 : { 'verbose-name' : 'Router Name',
                                        #'formatter' : fmtcnv.decode_port_counter
                                        },
-            'routerIP'                   : { 'verbose-name' : 'RouterIP',
+            'routerIP'                   : { 'verbose-name' : 'Router IP',
                                       },
-            'routerMac'                  : { 'verbose-name' : 'RouterMac',
+            'routerMac'                  : { 'verbose-name' : 'Router Mac',
                                        #'formatter' : fmtcnv.decode_port_counter
                                      },
-            'isEdgeRouter'                  : { 'verbose-name' : 'isEdgeRouter',
+            'isEdgeRouter'                  : { 'verbose-name' : 'Edge Router',
                                        #'formatter' : fmtcnv.decode_port_counter
                                      },
-            'nodeSId'                     : { 'verbose-name' : 'nodeSId',
+            'nodeSId'                     : { 'verbose-name' : 'Node SId',
                                        #'formatter' : fmtcnv.decode_port_counter
                                      },
             }
         },
 }
 
+#adjacency
+ROUTER_ADJACENCY_FORMAT= {
+    'router_adjacency' : {
+        'field-orderings' : {
+            'default' : [ 'Idx', 'adjacencySid', 'ports'],
+            'scoped'  : [ 'Idx', 'adjacencySid', 'ports'],
+            },
+        'fields': {
+            'adjacencySid'               : { 'verbose-name' : 'Adjacency Sid(s)',
+                                     },
+
+        },
+
+        },
+}
 
 ROUTER_PORT_FORMAT = {
     'router_port' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'name', 'portNo', 'subnetIp','adjacencySid'],
-            'scoped' : [ 'Idx', 'name', 'portNo', 'subnetIp','adjacencySid'],
+            'default' : [ 'Idx', 'name', 'portNo', 'subnetIp','adjacency'],
+            'scoped' : [ 'Idx', 'name', 'portNo', 'subnetIp','adjacency'],
             },
-        #'fields': {
-        #    'switch'               : { 'verbose-name' : 'Switch',
-        #                                'formatter' : fmtcnv.replace_switch_with_alias
-        #                             },
+        'fields': {
+            'adjacency'               : { 'verbose-name' : 'Adjacency Sid(s)',
+                                     },
+            'portNo'               : { 'verbose-name' : 'Port #',
+                                     },
+            'subnetIp'               : { 'verbose-name' : 'Subnet',
+                                     },
 
         },
+                     }
 }
 
 """

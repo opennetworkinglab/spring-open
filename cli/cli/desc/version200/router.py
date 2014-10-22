@@ -77,12 +77,12 @@ ROUTER_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                         'field'      : 'routerrealtimestats',
                         'type'       : 'enum',
                         'values'     : (
-                                        'port',
+                                        'port', 'adjacency'
                                         ),
                         'action'     : 'display-rest',
                         'url'        : 'router/%(dpid)s/%(routerrealtimestats)s',
                         'rest-type'  : 'dict-of-list-of-switch',
-                        'format'     : 'router_port',
+                        'format'     : 'router_%(routerrealtimestats)s',
                         'short-help' : 'Show requested item by querying router/switch',
                         'doc'        : 'switch|realtime-+',
                     },

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
@@ -27,7 +28,7 @@ import org.restlet.resource.ServerResource;
  * Base class for return router statistics
  *
  */
-public class RouterStatisticsResource extends ServerResource {
+public class SegmentRouterResource extends ServerResource {
     /**
      * Gets the switches/routers and ports information from the network topology.
      *
@@ -35,7 +36,7 @@ public class RouterStatisticsResource extends ServerResource {
      * topology. Each switch contains the switch ports.
      */
     @Get("json")
-    public Representation retrieve() {
+    public Object retrieve() {
         String routerId = (String) getRequestAttributes().get("routerId");
         String statsType = (String) getRequestAttributes().get("statsType");
         ITopologyService topologyService =
@@ -55,6 +56,9 @@ public class RouterStatisticsResource extends ServerResource {
                     //TODO: Add exception
                     return null;
                 }
+                ISegmentRoutingService segmentRoutingService =
+                        (ISegmentRoutingService) getContext().getAttributes().
+                                get(ISegmentRoutingService.class.getCanonicalName());
                 Map <String, List<SegmentRouterPortInfo>> result = new HashMap <String, List<SegmentRouterPortInfo>>();
                 List<SegmentRouterPortInfo> listPortInfo = new ArrayList<SegmentRouterPortInfo>();
                 Collection<Port> portList =sw.getPorts();
@@ -63,9 +67,20 @@ public class RouterStatisticsResource extends ServerResource {
                     subnets = sw.getAllStringAttributes().get("subnets");
                     JSONArray subnetArray = JSONArray.fromObject(subnets);
                     Iterator<Port> pI = portList.iterator();
+                    int nodeSid = Integer.parseInt(sw.getStringAttribute("nodeSid"));
+                    HashMap<Integer, List<Integer>> adjPortInfo = segmentRoutingService.getAdjacencyInfo(nodeSid);
                     while(pI.hasNext()){
                         Port p = pI.next();
+                        Iterator<Integer> keyIt = adjPortInfo.keySet().iterator();
                         Iterator<?> sI = subnetArray.iterator();
+                        List<Integer> adjacency = new ArrayList<Integer>();
+                        while(keyIt.hasNext()){
+                            Integer adj = keyIt.next();
+                            List<Integer> adjPortList = adjPortInfo.get(adj);
+                            if(adjPortList.contains(Integer.valueOf(p.getNumber().shortValue()))){
+                                adjacency.add(adj);
+                            }
+                        }
                         String subnet = null;
                         while(sI.hasNext()){
                             JSONObject portSubnetIp = (JSONObject) sI.next();
@@ -75,21 +90,60 @@ public class RouterStatisticsResource extends ServerResource {
                                 break;
                             }
                         }
-                        listPortInfo.add( new SegmentRouterPortInfo(subnet,p));
+                        listPortInfo.add( new SegmentRouterPortInfo(subnet,p, adjacency));
                     }
                     result.put(routerId, listPortInfo);
                     return eval(toRepresentation(result,null));
                 }
                 else{
                     Iterator<Port> pI = portList.iterator();
+                    int nodeSid = Integer.parseInt(sw.getStringAttribute("nodeSid"));
+                    HashMap<Integer, List<Integer>> adjPortInfo = segmentRoutingService.getAdjacencyInfo(nodeSid);
                     while(pI.hasNext()){
                         Port p = pI.next();
                         String subnet = null;
-                        listPortInfo.add( new SegmentRouterPortInfo(subnet,p));
+                        Iterator<Integer> keyIt = adjPortInfo.keySet().iterator();
+                        List<Integer> adjacency = new ArrayList<Integer>();
+                        while(keyIt.hasNext()){
+                            Integer adj = keyIt.next();
+                            List<Integer> adjPortList = adjPortInfo.get(adj);
+                            if(adjPortList.contains(Integer.valueOf(p.getNumber().shortValue()))){
+                                adjacency.add(adj);
+                            }
+                        }
+                        listPortInfo.add( new SegmentRouterPortInfo(subnet,p, adjacency));
                     }
                     result.put(routerId, listPortInfo);
                     return eval(toRepresentation(result,null));
                 }
+            }
+            else if(routerId != null && statsType.equals("adjacency")){
+                ISegmentRoutingService segmentRoutingService =
+                        (ISegmentRoutingService) getContext().getAttributes().
+                                get(ISegmentRoutingService.class.getCanonicalName());
+                Switch sw = mutableTopology
+                .getSwitch(new Dpid(HexString.toLong(routerId)));
+                if(sw ==null){
+                    //TODO: Add exception
+                    return null;
+                }
+                int nodeSid = Integer.parseInt(sw.getStringAttribute("nodeSid"));
+                HashMap<Integer, List<Integer>> adjPortInfo = segmentRoutingService.getAdjacencyInfo(nodeSid);
+                Iterator<Integer> aPIt = adjPortInfo.keySet().iterator();
+                List<SegmentRouterAdjacencyInfo> result= new ArrayList<SegmentRouterAdjacencyInfo>();
+                while(aPIt.hasNext()){
+                    Integer adj = aPIt.next();
+                    result.add( new SegmentRouterAdjacencyInfo(adj,
+                            adjPortInfo.get(adj)));
+                }
+                /*HashMap<String,HashMap<Integer, List<Integer>>> dpidAdjPortMap = 
+                        new HashMap<String,HashMap<Integer, List<Integer>>>();
+                dpidAdjPortMap.put(routerId, adjPortInfo);
+                List<HashMap<String,HashMap<Integer, List<Integer>>>> result = 
+                        new ArrayList<HashMap<String,HashMap<Integer, List<Integer>>>>();
+                result.add(dpidAdjPortMap);*/
+                
+                return  result;
             }
         } finally {
             mutableTopology.releaseReadLock();

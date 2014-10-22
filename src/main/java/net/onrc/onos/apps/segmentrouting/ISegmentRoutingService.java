@@ -1,6 +1,7 @@
 package net.onrc.onos.apps.segmentrouting;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
@@ -83,4 +84,18 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * @return Collection<PolicyInfo>
      */
     public Collection<PolicyInfo> getPoclicyTable();
+    /**
+     * Returns the Adjacency Info for the node
+     *
+     * @param nodeSid Node SID
+     * @return HashMap of <AdjacencyID, list of ports>
+     */
+    public HashMap<Integer, List<Integer>> getAdjacencyInfo(int nodeSid);
+    /**
+     * Returns the Adjacency IDs for the node
+     *
+     * @param nodeSid Node SID
+     * @return Collection of Adjacency ID
+     */
+    public Collection<Integer> getAdjacencyIds(int nodeSid);
 }
