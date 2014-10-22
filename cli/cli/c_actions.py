@@ -87,8 +87,10 @@ def tunnel_create(data=None):
         tunnel_dict[tunnel_id]=[]
     if sdnsh.description:   # description debugging
         print "tunnel_create:" , tunnel_id, tunnel_dict
-    if data.has_key('node-value'):    
-        tunnel_dict[tunnel_id].append(data['node-value'])
+    if data.has_key('node-label'):    
+        tunnel_dict[tunnel_id].append(data['node-label'])
+    if data.has_key('adjacency-label'):    
+        tunnel_dict[tunnel_id].append(data['adjacency-label'])
 
 def tunnel_config_exit():
     global tunnel_id,tunnel_dict
@@ -131,7 +133,8 @@ def policy_create(data=None):
         print "policy_create:" , data
     if data.has_key('policy-id'):
         policy_obj_data['policy_id'] = data['policy-id']
-    if data.has_key('src-ip'):
+        policy_obj_data['policy_type'] = data['policy-type']
+    if data.has_key('src_ip'):
         for key in data:
             policy_obj_data[key] = data[key]
     if data.has_key('priority'):

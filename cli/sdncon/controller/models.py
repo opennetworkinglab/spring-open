@@ -64,21 +64,6 @@ def get_timestamp():
     """
     return int(time.time()*1000000)
 
-class TunnelPathSeqId(models.Model):
-
-    pathid_seq = models.IntegerField(
-        primary_key=True,
-        verbose_name = 'Path Id Seq',
-        help_text='ID of this Tunnel Path Entry')
-
-    def __unicode__ (self):
-        return self.pathid_seq
-
-    class Rest:
-        NAME = 'tunnel-pathid-seq'
-        FIELD_INFO = (
-        )
-            
 class Tunnel(models.Model):
 
     id_max_length = 64
@@ -108,9 +93,6 @@ class Tunnel(models.Model):
     def __unicode__ (self):
         return self.tunnel_id
     
-    class CassandraSettings:
-        COMPOUND_KEY_FIELDS = ('tunnel_id')
-
     def delete(self):
         super(Tunnel, self).delete()
     class Rest:
@@ -120,7 +102,7 @@ class Tunnel(models.Model):
             {'name': 'path_seq',     'rest_name': 'path-seq'},
             )
 
-class SRPolicy(models.Model):
+class Policy(models.Model):
 
     id_max_length = 64
     #
@@ -136,21 +118,25 @@ class SRPolicy(models.Model):
         validators   = [ TenantNameValidator() ],
         max_length   = id_max_length)
     
+    sr_policy_type = models.CharField(
+        verbose_name = 'SR Policy Type',
+        help_text    = 'Type of SR Policy',
+        validators   = [ TenantNameValidator() ],
+        max_length   = id_max_length)
     #
     # end fields ----------------------------------------
 
     def __unicode__ (self):
-        return self.tunnel_id
+        return self.sr_policy_id
     
-    class CassandraSettings:
-        COMPOUND_KEY_FIELDS = ('sr_policy_id')
-
     def delete(self):
-        super(Tunnel, self).delete()
+        super(Policy, self).delete()
+
     class Rest:
         NAME = 'policy-config'
         FIELD_INFO = (
             {'name': 'sr_policy_id',    'rest_name': 'policy-id'},
+            {'name': 'sr_policy_type',    'rest_name': 'policy-type'},
             )
 
 #

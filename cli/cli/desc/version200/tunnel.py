@@ -1,4 +1,150 @@
+import command
+import json
 import fmtcnv
+
+
+TUNNEL_SUBMODE_COMMAND_DESCRIPTION = {
+    'name'          : 'tunnel',
+    'short-help'    : 'Enter tunnel submode, configure tunnel details',
+    'mode'          : 'config',
+    'parent-field'  : None,
+    'command-type'  : 'config-submode',
+    'obj-type'      : 'tunnel-config',
+    'submode-name'  : 'config-tunnel',
+    'doc'           : 'tunnel|tunnel',
+    'doc-example'   : 'tunnel|tunnel-example',
+    'args' : (
+        {
+            'field'        : 'tunnel-id',
+            'type'         : 'identifier',
+            'completion'   : 'complete-object-field',
+            'syntax-help'  : 'Enter a tunnel name',
+            'doc'          : 'tunnel|tunnel',
+            'doc-include'  : [ 'type-doc' ],
+            'action'       : (
+                                {
+                                    'proc' : 'create-tunnel',
+                                },
+                                {
+                                    'proc' : 'push-mode-stack',
+                                },
+                              ),
+            'no-action': (
+                {
+                    'proc' : 'remove-tunnel',
+                }
+            ),
+        }
+    )
+}
+
+TUNNEL_CONFIG_FORMAT = {
+    'tunnel-config' : {
+        'field-orderings' : {
+            'default' : [
+                          'tunnel-id',
+                        ],
+        },
+    },
+}
+
+
+def tunnel_node_label_completion(prefix, completions):
+    #print "tunnel_node_label_completion:",prefix,completions
+    query_url = "http://127.0.0.1:8000/rest/v1/switches"
+    result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = json.loads(result)
+    for entry in entries:
+        if entry['stringAttributes']['nodeSid'].startswith(prefix):
+            completions[entry['stringAttributes']['nodeSid']+' '] = entry['stringAttributes']['nodeSid']
+    return
+
+command.add_completion('tunnel-node-label-completion', tunnel_node_label_completion,
+                       {'kwargs': { 'prefix'       : '$text',
+                                    'completions'  : '$completions',
+                                    }})
+
+def tunnel_adjacency_label_completion(prefix, data, completions):
+    #print "tunnel_adjacency_label_completion:",prefix,data,completions
+    query_url = "http://127.0.0.1:8000/rest/v1/switches"
+    result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = json.loads(result)
+    for entry in entries:
+        if (int(entry['stringAttributes']['nodeSid']) != int(data['node-label'])):
+            continue
+        adjacencySids = entry['stringAttributes']['adjacencySids']
+        #print "adjacencySids=",adjacencySids
+        for subs in adjacencySids.split('}'):
+            pair = subs.split('adjSid\":')
+            if len(pair) < 2:
+                continue
+            adjacency_label = pair[1]
+            #adjacency_label = entry['stringAttributes']['nodeSid'] + ':' + pair[1]
+            #print "adjacency_label=",adjacency_label 
+            if adjacency_label.startswith(prefix):
+                completions[adjacency_label+' '] = adjacency_label
+    return
+
+command.add_completion('tunnel-adjacency-label-completion', tunnel_adjacency_label_completion,
+                       {'kwargs': { 'prefix'       : '$text',
+                                    'data'         : '$data',
+                                    'completions'  : '$completions',
+                                    }})
+
+TUNNEL_ADJACENCY_INFO = (
+    {
+        'token'               : 'adjacency',
+        'short-help'          : 'Set adjacency label on this node',
+        'doc'                 : 'tunnel|adjacency',
+        'doc-example'         : 'tunnel|adjacency',
+    },
+    {
+         'field'      : 'adjacency-label',
+         'type'       : 'label',
+         'completion' : 'tunnel-adjacency-label-completion',
+         'help-name'  : 'Adjacency label',
+         'data'       : {
+                          'node_label'      : '$node-label',
+                        },
+         'action'       : (
+                            {
+                                'proc' : 'create-tunnel',
+                            },
+                          ),
+    }
+)
+
+# obj_type flow-entry field hard-timeout
+TUNNEL_NODE_ENTRY_COMMAND_DESCRIPTION = {
+    'name'                : 'node',
+    'mode'                : 'config-tunnel',
+    'short-help'          : 'Set node for this tunnel',
+    'doc'                 : 'tunnel|node',
+    'doc-example'         : 'tunnel|node',
+    'parent-field'        : 'tunnel',
+    'command-type'        : 'config',
+    'args'                : (
+         {
+             'field'      : 'node-label',
+             'completion'   : 'tunnel-node-label-completion',
+             'type'         : 'label',
+             'other'        : 'switches|label',
+#             'data-handler' : 'alias-to-value',
+             'help-name'    : 'Segment label',
+             'action'       : (
+                                {
+                                    'proc' : 'create-tunnel',
+                                },
+                              ),
+         },
+         {
+            'optional' : True,
+            'optional-for-no' : True,
+            'args' : TUNNEL_ADJACENCY_INFO,
+         },
+    )
+}
+
 SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
     'name'                : 'show',
     'mode'                : 'login',

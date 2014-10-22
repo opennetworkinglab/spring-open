@@ -248,6 +248,42 @@ class CliModelInfo():
         },
 
 
+        'tunnel-config' : {
+            'source'          : 'user-config',
+            'source'          : 'display',
+            'url'             : 'tunnel-config',
+            'config-obj-type' : 'tunnel-config',
+
+            'fields' : {
+                'tunnel-id'               : {
+                                         'edit' : False,
+                                         'max_length': 32,
+                                         'null': False,
+                                         'primary_key': True,
+                                         'type': 'CharField',
+                                         'edit' : False,
+                                       },
+                        },
+        },
+                                      
+        'policy-config' : {
+            'source'          : 'user-config',
+            'source'          : 'display',
+            'url'             : 'policy-config',
+            'config-obj-type' : 'policy-config',
+
+            'fields' : {
+                'policy-id'               : {
+                                         'edit' : False,
+                                         'max_length': 32,
+                                         'null': False,
+                                         'primary_key': True,
+                                         'type': 'CharField',
+                                         'edit' : False,
+                                       },
+                        },
+        },
+                                      
         'switch-alias' : {
             'source'          : 'user-config',
             'cascade_delete'  : True,
