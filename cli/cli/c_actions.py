@@ -2132,7 +2132,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                })
         entries = combResult
     #raise error.ArgumentValidationError('\n\n\n %s' % (data))
-    if 'showtunnel' in data  and (data['showtunnel'] == 'tunnele' or data['detail'] == 'details'):
+    if 'showtunnel' in data  and (data['showtunnel'] == 'tunnel' or data['detail'] == 'details'):
         #eraise error.ArgumentValidationError('\n\n\n %s' % (entries))
         combResult = []
         tunnelList = entries
