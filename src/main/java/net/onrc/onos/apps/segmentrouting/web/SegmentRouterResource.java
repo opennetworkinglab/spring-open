@@ -21,7 +21,6 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.projectfloodlight.openflow.util.HexString;
-import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 /**
@@ -136,13 +135,6 @@ public class SegmentRouterResource extends ServerResource {
                     result.add( new SegmentRouterAdjacencyInfo(adj,
                             adjPortInfo.get(adj)));
                 }
-                /*HashMap<String,HashMap<Integer, List<Integer>>> dpidAdjPortMap = 
-                        new HashMap<String,HashMap<Integer, List<Integer>>>();
-                dpidAdjPortMap.put(routerId, adjPortInfo);
-                List<HashMap<String,HashMap<Integer, List<Integer>>>> result = 
-                        new ArrayList<HashMap<String,HashMap<Integer, List<Integer>>>>();
-                result.add(dpidAdjPortMap);*/
-                
                 return  result;
             }
         } finally {

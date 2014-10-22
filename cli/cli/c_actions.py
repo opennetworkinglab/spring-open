@@ -2142,7 +2142,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
         for port in portList:
             portData = port.get("port")
             name = portData.get("stringAttributes").get('name')
-            portNo = portData.get("portNumber")
+            portNo = portData.get("portNumber") & 0xFFFF # converting to unsigned16int
             subnetIp = port.get("subnetIp")
             adjacency = str(port.get('adjacency'))
             combResult.append({

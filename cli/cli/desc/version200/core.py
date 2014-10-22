@@ -2054,11 +2054,11 @@ REALTIME_TABLE_MPLS_FLOW_FORMAT = {
                                  },
             'flowEntryCnt'     : { 'verbose-name' : 'Flow-Entries'
                                  },
-            'mplsTc'           : { 'verbose-name' : 'MPLS_TC'
+            'mplsTc'           : { 'verbose-name' : 'MPLS TC'
                                  },
-            'mplsLabel'        : { 'verbose-name' : 'MPLS_Label'
+            'mplsLabel'        : { 'verbose-name' : 'MPLS Label'
                                  },
-            'mplsBos'          : { 'verbose-name' : 'MPLS_BOS'
+            'mplsBos'          : { 'verbose-name' : 'MPLS BOS'
                                  },
             }
         },
@@ -2186,11 +2186,11 @@ REALTIME_TABLE_ACL_FLOW_FORMAT = {
                                  },
             'flowEntryCnt'     : { 'verbose-name' : 'Flow-Entries'
                                  },
-            'mplsTc'           : { 'verbose-name' : 'MPLS_TC'
+            'mplsTc'           : { 'verbose-name' : 'MPLS TC'
                                  },
-            'mplsLabel'        : { 'verbose-name' : 'MPLS_LABEL'
+            'mplsLabel'        : { 'verbose-name' : 'MPLS LABEL'
                                  },
-            'mplsBos'          : { 'verbose-name' : 'MPLS_BOS'
+            'mplsBos'          : { 'verbose-name' : 'MPLS BOS'
                                  },
             }
         },
@@ -2360,17 +2360,17 @@ REALTIME_GROUP_FORMAT = {
             'bucketbytecnt'       : { 'verbose-name' : 'Bucket Bytes',
                                        'formatter' : fmtcnv.decode_port_counter
                                      },
-            'setsrcmac'           : { 'verbose-name' : 'set_src_mac',
+            'setsrcmac'           : { 'verbose-name' : 'Set Src Mac',
                                       },
-            'setdstmac'           : { 'verbose-name' : 'set_dst_mac',
+            'setdstmac'           : { 'verbose-name' : 'Set Dst Mac',
                                       },
-            'pushMplsLabel'            : { 'verbose-name' : 'push_mpls',
+            'pushMplsLabel'            : { 'verbose-name' : 'Push Mpls',
                                      },
-            'setBos'              : { 'verbose-name' : 'setBos',
+            'setBos'              : { 'verbose-name' : 'Set Bos',
                                      },
-            'outport'             : { 'verbose-name' : 'outport',
+            'outport'             : { 'verbose-name' : 'Outport',
                                      },
-            'goToGroup'           : { 'verbose-name' : 'goToGroup',
+            'goToGroup'           : { 'verbose-name' : 'Go To Group',
                                     },
             }
         },
@@ -2440,6 +2440,23 @@ SHOW_POLICY_FORMAT = {
                        'policyId'             : { 'verbose-name' : 'Policy Id',
                                                },
                        'policyType'         : { 'verbose-name': 'Policy Type',
+                                               },
+                       'dstMacAddress'         : { 'verbose-name': 'Dst Mac',
+                                               },
+                       'srcMacAddress'         : { 'verbose-name': 'Src Mac',
+                                               },
+                       'dstIpAddress'         : { 'verbose-name': 'Dst IP',
+                                               },
+                       'srcIpAddress'         : { 'verbose-name': 'Src IP',
+                                               },
+                       'dstTcpPortNumber'         : { 'verbose-name': 'Dst TcpPort',
+                                               },
+                       'srcTcpPortNumber'         : { 'verbose-name': 'Src TcpPort',
+                                               },
+                       'etherType'         : { 'verbose-name': 'Ether Type',
+                                               },
+
+                       'ipProtocolNumber'         : { 'verbose-name': 'IP Protocol',
                                                },
                                                }
         },
