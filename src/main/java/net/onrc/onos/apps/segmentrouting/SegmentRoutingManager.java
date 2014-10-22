@@ -47,6 +47,9 @@ import net.onrc.onos.core.matchaction.action.CopyTtlOutAction;
 import net.onrc.onos.core.matchaction.action.DecMplsTtlAction;
 import net.onrc.onos.core.matchaction.action.DecNwTtlAction;
 import net.onrc.onos.core.matchaction.action.GroupAction;
+import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
+import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
+import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
 import net.onrc.onos.core.matchaction.action.PushMplsAction;
 import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
@@ -71,6 +74,7 @@ import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.json.JSONArray;
@@ -563,9 +567,108 @@ public class SegmentRoutingManager implements IFloodlightModule,
             //log.debug("ECMPShortestPathGraph is computed for switch {}",
             //        HexString.toHexString(sw.getDpid().value()));
             populateEcmpRoutingRulesForPath(sw, ecmpSPG, modified);
+
+            // Set adjacency routing rule for all switches
+            try {
+                populateAdjacencyncyRule(sw);
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
         numOfPopulation++;
     }
+
+    private void populateAdjacencyncyRule(Switch sw) throws JSONException {
+        String adjInfo = sw.getStringAttribute("adjacencySids");
+        String srcMac = sw.getStringAttribute("routerMac");
+        if (adjInfo == null || srcMac == null)
+            return;
+
+        JSONArray arry = new JSONArray(adjInfo);
+        for (int i = 0; i < arry.length(); i++) {
+            Object a = arry.getJSONObject(i);
+            Integer adjId = (Integer) arry.getJSONObject(i).get("adjSid");
+            Integer portNo = (Integer) arry.getJSONObject(i).get("portNo");
+            if (adjId == null || portNo == null)
+                continue;
+
+            Dpid dstDpid = null;
+            for (Link link: sw.getOutgoingLinks()) {
+                if (link.getSrcPort().getPortNumber().value() == portNo) {
+                    dstDpid = link.getDstPort().getDpid();
+                    break;
+                }
+            }
+            if (dstDpid == null) {
+                log.debug("Cannot find the destination switch for the adjacency ID {}", adjId);
+                continue;
+            }
+            Switch dstSw = mutableTopology.getSwitch(dstDpid);
+            String dstMac = null;
+            if (dstSw == null) {
+                log.debug("Cannot find SW {}", dstDpid.toString());
+                continue;
+            }
+            else {
+                dstMac = dstSw.getStringAttribute("routerMac");
+            }
+
+            setAdjRule(sw, adjId, srcMac, dstMac, portNo, true); // BoS = 1
+            setAdjRule(sw, adjId, srcMac, dstMac, portNo, false); // BoS = 0
+        }
+
+    }
+
+
+    private void setAdjRule(Switch sw, int id, String srcMac, String dstMac, int portNo,
+            boolean bos) {
+
+        MplsMatch mplsMatch = new MplsMatch(id, bos);
+        List<Action> actions = new ArrayList<Action>();
+
+        if (bos) {
+            PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
+            CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
+            DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
+            actions.add(copyTtlInAction);
+            actions.add(popAction);
+            actions.add(decNwTtlAction);
+        }
+        else {
+            PopMplsAction popAction = new PopMplsAction(EthType.MPLS_UNICAST);
+            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
+            actions.add(popAction);
+            actions.add(decMplsTtlAction);
+        }
+
+        ModifyDstMacAction setDstAction = new ModifyDstMacAction(MACAddress.valueOf(srcMac));
+        ModifySrcMacAction setSrcAction = new ModifySrcMacAction(MACAddress.valueOf(dstMac));
+        OutputAction outportAction = new OutputAction(PortNumber.uint32(portNo));
+
+        actions.add(setDstAction);
+        actions.add(setSrcAction);
+        actions.add(outportAction);
+
+        MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
+                new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
+        Operator operator = Operator.ADD;
+        MatchActionOperationEntry maEntry =
+                new MatchActionOperationEntry(operator, matchAction);
+
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(sw.getDpid().toString()));
+
+        if (sw13 != null) {
+            try {
+                //printMatchActionOperationEntry(sw, maEntry);
+                sw13.pushFlow(maEntry);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     /**
      * populate routing rules to forward packets from the switch given to
