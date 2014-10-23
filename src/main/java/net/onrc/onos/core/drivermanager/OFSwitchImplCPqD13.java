@@ -1788,16 +1788,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     }
     @Override
     /**
-     * Create a group chain with the same label stack for a given set of ports
-     * in the neighborset. This can be used for a basic scenario of tunnel based
-     * policy routing.
+     * Create a group chain with the specified label stack for a given set of
+     * ports. This API can be used by user to create groups for a tunnel based
+     * policy routing scenario. NOTE: This API can not be used if a group to be
+     * created with different label stacks for each port in the given set of
+     * ports. Use XXX API for this purpose
      *
-     * @param labelStack list of router segment Ids to be pushed
-     * @param ns neighborSet to get to the first router in the labelStack
-     * NOTE:
-     *        The edgeLabel inside the neighborSet is ignored and user should
-     *        explicitly push that label on to the labelStack that is passed as
-     *        first argument
+     * @param labelStack list of router segment Ids to be pushed. Can be empty.
+     *        labelStack is processed from left to right with leftmost
+     *        representing the outermost label and rightmost representing
+     *        innermost label to be pushed
+     * @param ports List of ports on this switch to get to the first router in
+     *        the labelStack
      * @return group identifier
      */
     public int createGroup(List<Integer> labelStack, List<PortNumber> ports) {
@@ -1809,12 +1811,14 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         log.debug("createGroup with labelStack {} and ports {}",
                 labelStack, ports);
 
-        /* Create for each port, through which neighbors in ns are reachable,
-         * an indirect group with the outermost label
-         */
         HashMap<PortNumber, Integer> lastSetOfGroupIds =
                 new HashMap<PortNumber, Integer>();
         int innermostGroupId = -1;
+        /* If it is empty label stack or label stack with only one label,
+         * Create a single select group with buckets for each port in the list
+         * of specified ports and specified label if any and return the
+         * created group id
+         */
         if (labelStack.size() < 2) {
             int curLabel = -1;
             boolean bos = false;
@@ -1839,6 +1843,19 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             return innermostGroupId;
         }
 
+        /* If the label stack has two or more labels, then a chain of groups
+         * to be created.
+         * Step1: Create for each port in the list of specified ports,
+         * an indirect group with the outermost label. These groups are the
+         * end of the chain and hence don't reference to any other groups
+         * Step2: Create for each port in the list of specified ports, an
+         * indirect group with middle labels (if any). These groups will
+         * have references to group ids that are created in the previous
+         * iteration for the same ports
+         * Step3: Create a select group with all ports and innermost label.
+         * This group will have references to indirect group ids that are
+         * created in the previous iteration for the same ports
+         */
         for (int i = 0; i < labelStack.size(); i++) {
             for (PortNumber sp : ports) {
                 if (i == 0) {
