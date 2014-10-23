@@ -158,6 +158,7 @@ SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
         {
             'token'  : 'tunnel',
             'field'  : 'showtunnel',
+            'sort'   : ['tunnelId',],
             'action' : 'display-rest',
             'doc'    : 'switch|show',
             'url'    : [

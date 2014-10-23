@@ -10,7 +10,6 @@ import net.onrc.onos.core.topology.Port;
  */
 
 public class SegmentRouterPortInfo {
-    //TODO set attributes to private and provide setter and getter.
     private String subnetIp= null;
     private Port  port = null;
     private List<Integer> adjacency = null;

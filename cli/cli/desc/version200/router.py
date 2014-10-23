@@ -28,6 +28,7 @@ SWITCH_ROUTER_COMMAND_DESCRIPTION = {
             'token'  : 'router',
             'field'  : 'router',
             'action' : 'display-rest',
+            'sort'   : ['dpid',],
             'doc'    : 'switch|show',
             'url'    : [
                         'routers',
@@ -80,6 +81,7 @@ ROUTER_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                                         'port', 'adjacency'
                                         ),
                         'action'     : 'display-rest',
+                        'sort'       : ['portNo'],
                         'url'        : 'router/%(dpid)s/%(routerrealtimestats)s',
                         'rest-type'  : 'dict-of-list-of-switch',
                         'format'     : 'router_%(routerrealtimestats)s',

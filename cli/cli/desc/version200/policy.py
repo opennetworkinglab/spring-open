@@ -333,6 +333,7 @@ SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
             'token'  : 'policy',
             'field'  : 'showpolicy',
             'action' : 'display-rest',
+            'sort'   :  ['policyId',],
             'doc'    : 'switch|show',
             'url'    : [
                         'showpolicy',
