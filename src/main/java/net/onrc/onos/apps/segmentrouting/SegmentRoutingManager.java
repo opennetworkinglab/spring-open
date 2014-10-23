@@ -1665,7 +1665,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 return false;
             }
             else {
-                sw13.removeTunnel(tunnelId);
+                sw13.removeGroup(route.getGroupId());
             }
         }
 
