@@ -201,6 +201,7 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                                         'group'
                                         ),
                         'action'     : 'display-rest',
+                        'sort'       : ['groupid',],
                         'url'        : [
                                         'realtimestats/%(realtimestats)s/%(dpid)s/',
                                         'realtimestats/%(realtimestats)s/all/',

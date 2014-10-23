@@ -2057,7 +2057,6 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
 
     When sort isn't None, it names a field whose's value are sorted on.
     """
-
     if sdnsh.description:   # description debugging
         print "command_display_rest: ", data, url, rest_type, table_format, detail
 
@@ -2397,7 +2396,6 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                         table_format % data,
                                         detail,
                                         sdnsh.debug)
-        # 
         if sort:
             def sort_cmp(x,y):
                 for f in sort:
