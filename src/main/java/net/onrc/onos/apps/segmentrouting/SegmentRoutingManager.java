@@ -112,7 +112,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
     private HashMap<String, PolicyInfo> policyTable;
     private HashMap<String, TunnelInfo> tunnelTable;
-    private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencyIdTable;
+    private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
 
     private int testMode = 0;
 
@@ -186,7 +186,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         restApi = context.getServiceImpl(IRestApiService.class);
         policyTable = new HashMap<String, PolicyInfo>();
         tunnelTable = new HashMap<String, TunnelInfo>();
-        adjacencyIdTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
+        adjacencySidTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -597,43 +597,87 @@ public class SegmentRoutingManager implements IFloodlightModule,
             return;
 
         // parse adjacency Id
-        List<HashMap<Integer, List<Integer>>> adjacncyInfoList =
-                new ArrayList<HashMap<Integer, List<Integer>>>();
         HashMap<Integer, List<Integer>> adjacencyInfo = null;
         if (adjInfo != null) {
             adjacencyInfo = parseAdjacencySidInfo(adjInfo);
-            //adjacncyInfoList.add(adjacencyInfo);
         }
         // parse auto generated adjacency Id
         adjacencyInfo.putAll(parseAdjacencySidInfo(autoAdjInfo));
 
-        adjacencyIdTable.put(Integer.parseInt(nodeSidStr), adjacencyInfo);
+        adjacencySidTable.put(Integer.parseInt(nodeSidStr), adjacencyInfo);
 
-            /*
-            Dpid dstDpid = null;
-            for (Link link: sw.getOutgoingLinks()) {
-                if (link.getSrcPort().getPortNumber().value() == portNos[1]) {
-                    dstDpid = link.getDstPort().getDpid();
-                    break;
-                }
-            }
-            if (dstDpid == null) {
-                log.debug("Cannot find the destination switch for the adjacency ID {}", adjId);
-                continue;
-            }
-            Switch dstSw = mutableTopology.getSwitch(dstDpid);
-            String dstMac = null;
-            if (dstSw == null) {
-                log.debug("Cannot find SW {}", dstDpid.toString());
-                continue;
+        for (Integer adjId: adjacencyInfo.keySet()) {
+            List<Integer> ports = adjacencyInfo.get(adjId);
+            if (ports.size() == 1) {
+                setAdjacencyRuleOfOutput(sw, adjId, srcMac, ports.get(0));
             }
             else {
-                dstMac = dstSw.getStringAttribute("routerMac");
+                setAdjacencyRuleOfGroup(sw, adjId, ports);
             }
+        }
+    }
 
-            setAdjRule(sw, adjId, srcMac, dstMac, portNo, true); // BoS = 1
-            setAdjRule(sw, adjId, srcMac, dstMac, portNo, false); // BoS = 0
-            */
+    /**
+     * Set Adjacency Rule to MPLS table for adjacency Ids attached to multiple
+     * ports
+     *
+     * @param sw Switch
+     * @param adjId Adjacency ID
+     * @param ports List of ports assigned to the Adjacency ID
+     */
+    private void setAdjacencyRuleOfGroup(Switch sw, Integer adjId, List<Integer> ports) {
+
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(sw.getDpid().toString()));
+
+        int groupId = -1;
+        if (sw13 != null) {
+            List<PortNumber> portList = new ArrayList<PortNumber>();
+            for (Integer port: ports)
+                portList.add(PortNumber.uint32(port));
+            groupId = sw13.createGroup(new ArrayList<Integer>(), portList);
+        }
+
+        if (groupId < 0) {
+            log.debug("Failed to create a group at driver for adj ID {}", adjId);
+        }
+
+        pushAdjRule(sw, adjId, null, null, groupId, true);
+        pushAdjRule(sw, adjId, null, null, groupId, false);
+    }
+
+    /**
+     * Set Adjacency Rule to MPLS table for adjacency Ids attached to single port
+     *
+     * @param sw Switch
+     * @param adjId Adjacency ID
+     * @param ports List of ports assigned to the Adjacency ID
+     */
+    private void setAdjacencyRuleOfOutput(Switch sw, Integer adjId, String srcMac, Integer portNo) {
+
+        Dpid dstDpid = null;
+        for (Link link: sw.getOutgoingLinks()) {
+            if (link.getSrcPort().getPortNumber().value() == portNo) {
+                dstDpid = link.getDstPort().getDpid();
+                break;
+            }
+        }
+        if (dstDpid == null) {
+            log.debug("Cannot find the destination switch for the adjacency ID {}", adjId);
+            return;
+        }
+        Switch dstSw = mutableTopology.getSwitch(dstDpid);
+        String dstMac = null;
+        if (dstSw == null) {
+            log.debug("Cannot find SW {}", dstDpid.toString());
+            return;
+        }
+        else {
+            dstMac = dstSw.getStringAttribute("routerMac");
+        }
+
+        pushAdjRule(sw, adjId, srcMac, dstMac, portNo, true); // BoS = 1
+        pushAdjRule(sw, adjId, srcMac, dstMac, portNo, false); // BoS = 0
 
     }
 
@@ -647,8 +691,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param portNo  port number assigned to the ID
      * @param bos  BoS option
      */
-    private void setAdjRule(Switch sw, int id, String srcMac, String dstMac, int portNo,
-            boolean bos) {
+    private void pushAdjRule(Switch sw, int id, String srcMac, String dstMac,
+            int num, boolean bos) {
 
         MplsMatch mplsMatch = new MplsMatch(id, bos);
         List<Action> actions = new ArrayList<Action>();
@@ -668,13 +712,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(decMplsTtlAction);
         }
 
-        ModifyDstMacAction setDstAction = new ModifyDstMacAction(MACAddress.valueOf(srcMac));
-        ModifySrcMacAction setSrcAction = new ModifySrcMacAction(MACAddress.valueOf(dstMac));
-        OutputAction outportAction = new OutputAction(PortNumber.uint32(portNo));
+        // Output action
+        if (srcMac != null && dstMac != null) {
+            ModifyDstMacAction setDstAction = new ModifyDstMacAction(MACAddress.valueOf(srcMac));
+            ModifySrcMacAction setSrcAction = new ModifySrcMacAction(MACAddress.valueOf(dstMac));
+            OutputAction outportAction = new OutputAction(PortNumber.uint32(num));
 
-        actions.add(setDstAction);
-        actions.add(setSrcAction);
-        actions.add(outportAction);
+            actions.add(setDstAction);
+            actions.add(setSrcAction);
+            actions.add(outportAction);
+        }
+        // Group Action
+        else {
+            GroupAction groupAction = new GroupAction();
+            groupAction.setGroupId(num);
+            actions.add(groupAction);
+        }
 
         MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
                 new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
@@ -1121,7 +1174,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         private List<Integer> labelIds;
         private List<TunnelRouteInfo> routes;
 
-        public TunnelInfo(String tid, List<Integer> labelIds, List<TunnelRouteInfo> routes) {
+        public TunnelInfo(String tid, List<Integer> labelIds,
+                List<TunnelRouteInfo> routes) {
             this.tunnelId = tid;
             this.labelIds = labelIds;
             this.routes = routes;
@@ -1143,6 +1197,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         private String srcSwDpid;
         private List<Dpid> fwdSwDpids;
         private List<String> route;
+        private int gropuId;
 
         public TunnelRouteInfo() {
             fwdSwDpids = new ArrayList<Dpid>();
@@ -1165,6 +1220,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
             this.route = r;
         }
 
+        private void setGroupId(int groupId) {
+            this.gropuId = groupId;
+        }
+
         public String getSrcSwDpid() {
             return this.srcSwDpid;
         }
@@ -1175,6 +1234,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         public List<String> getRoute() {
             return this.route;
+        }
+
+        public int getGroupId() {
+            return this.gropuId;
         }
     }
 
@@ -1213,15 +1276,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @return the first group ID of the tunnel
      */
     public int getTunnelGroupId(String tunnelId, String dpid) {
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(dpid));
+       TunnelInfo tunnelInfo = tunnelTable.get(tunnelId);
+       for (TunnelRouteInfo routeInfo: tunnelInfo.getRoutes()) {
+           String tunnelSrcDpid = routeInfo.getSrcSwDpid();
+           if (tunnelSrcDpid.equals(dpid))
+               return routeInfo.getGroupId();
+        }
 
-        if (sw13 == null) {
-            return -1;
-        }
-        else {
-            return sw13.getTunnelGroupId(tunnelId);
-        }
+        return -1;
     }
 
     /**
@@ -1246,31 +1308,49 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         List<TunnelRouteInfo> stitchingRule = getStitchingRule(Ids);
         if (stitchingRule == null) {
-            log.debug("Failed to get the policy rule.");
+            log.debug("Failed to get a tunnel rule.");
             return false;
         }
         for (TunnelRouteInfo route: stitchingRule) {
-
-            IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(route.srcSwDpid));
-
-            if (targetSw == null) {
-                log.debug("Switch {} is gone.", route.srcSwDpid);
-                return false;
-            }
-
             NeighborSet ns = new NeighborSet();
             for (Dpid dpid: route.getFwdSwDpid())
                 ns.addDpid(dpid);
 
-            printTunnelInfo(targetSw, tunnelId, route.getRoute(), ns);
-            targetSw.createTunnel(tunnelId, route.getRoute(), ns);
+            printTunnelInfo(route.srcSwDpid, tunnelId, route.getRoute(), ns);
+            int groupId = -1;
+            if ((groupId =createGroupsForTunnel(tunnelId, route, ns)) < 0) {
+                log.debug("Failed to create a tunnel at driver.");
+                return false;
+            }
+            route.setGroupId(groupId);
         }
 
-        TunnelInfo tunnelInfo = new TunnelInfo(tunnelId, labelIds, stitchingRule);
+        TunnelInfo tunnelInfo = new TunnelInfo(tunnelId, labelIds,
+                stitchingRule);
         tunnelTable.put(tunnelId, tunnelInfo);
 
         return true;
+    }
+
+    private int createGroupsForTunnel(String tunnelId, TunnelRouteInfo routeInfo,
+            NeighborSet ns) {
+
+        IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(routeInfo.srcSwDpid));
+
+        if (targetSw == null) {
+            log.debug("Switch {} is gone.", routeInfo.srcSwDpid);
+            return -1;
+        }
+
+        List<Integer> Ids = new ArrayList<Integer>();
+        for (String IdStr: routeInfo.route)
+            Ids.add(Integer.parseInt(IdStr));
+
+        List<PortNumber> ports = getPortsFromNeighborSet(routeInfo.srcSwDpid, ns);
+        int groupId = targetSw.createGroup(Ids, ports);
+
+        return groupId;
     }
 
     /**
@@ -1306,12 +1386,16 @@ public class SegmentRoutingManager implements IFloodlightModule,
             packetBuilder.setDstTcpPort(dstTcpPort);
         PacketMatch policyMatch = packetBuilder.build();
         TunnelInfo tunnelInfo = tunnelTable.get(tid);
+        if (tunnelInfo == null) {
+            log.debug("Tunnel {} is not defined", tid);
+            return false;
+        }
         List<TunnelRouteInfo> routes = tunnelInfo.routes;
 
         for (TunnelRouteInfo route : routes) {
             List<Action> actions = new ArrayList<>();
             GroupAction groupAction = new GroupAction();
-            groupAction.setTunnelId(tid);
+            groupAction.setGroupId(route.getGroupId());
             actions.add(groupAction);
 
             MatchAction matchAction = new MatchAction(new MatchActionId(
@@ -1357,8 +1441,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
         List<TunnelRouteInfo> rules = new ArrayList<TunnelRouteInfo>();
 
         Switch srcSw = this.getSwitchFromNodeId(route.get(0));
+        if (srcSw == null) {
+            log.warn("Switch is not found for Node SID {}", route.get(0));
+            return null;
+        }
         String srcDpid = srcSw.getDpid().toString();
 
+        /*
         if (route.size() <= MAX_NUM_LABELS+1) {
             boolean match =false;
             TunnelRouteInfo routeInfo = new TunnelRouteInfo();
@@ -1388,47 +1477,73 @@ public class SegmentRoutingManager implements IFloodlightModule,
             rules.add(routeInfo);
             return rules;
         }
+        */
 
         int i = 0;
         TunnelRouteInfo routeInfo = new TunnelRouteInfo();
         boolean checkNeighbor = true;
+        String prevAdjacencySid = null;
+        String prevNodeId = null;
 
         for (String nodeId: route) {
-            // First node ID is always the source router
+            // The first node ID is always the source router.
+            // We assume that the first ID cannot be an Adjacency SID.
             if (i == 0) {
                 routeInfo.setSrcDpid(srcDpid);
                 srcSw = getSwitchFromNodeId(nodeId);
                 i++;
             }
-            else if (i == 1 && checkNeighbor) {
-                // Check if next node is the neighbor SW of the source SW
-                List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw,
-                        nodeId);
-                if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
-                    log.debug("There is no route from node {} to node {}",
-                            srcSw.getDpid(), nodeId);
-                    return null;
-                }
-                // If first Id is one of the neighbors, do not include it to route, but set it as a fwd SW.
-                boolean match = false;
-                for (Dpid dpid: fwdSwDpids) {
-                    if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
-                        List<Dpid> fwdSws = new ArrayList<Dpid>();
-                        fwdSws.add(dpid);
-                        routeInfo.setFwdSwDpid(fwdSws);
-                        match = true;
-                        break;
-                    }
-                }
-                if (!match) {
+            else if (i == 1) {
+                if (isAdjacencySid(nodeId)) {
                     routeInfo.addRoute(nodeId);
-                    routeInfo.setFwdSwDpid(fwdSwDpids);
+                    i++;
+                    prevAdjacencySid = nodeId;
+                }
+                else if (checkNeighbor) {
+                    // Check if next node is the neighbor SW of the source SW
+                    List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw,
+                            nodeId);
+                    if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
+                        log.debug("There is no route from node {} to node {}",
+                                srcSw.getDpid(), nodeId);
+                        return null;
+                    }
+                    // If first Id is one of the neighbors, do not include it to route, but set it as a fwd SW.
+                    boolean match = false;
+                    for (Dpid dpid: fwdSwDpids) {
+                        if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
+                            List<Dpid> fwdSws = new ArrayList<Dpid>();
+                            fwdSws.add(dpid);
+                            routeInfo.setFwdSwDpid(fwdSws);
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        routeInfo.addRoute(nodeId);
+                        routeInfo.setFwdSwDpid(fwdSwDpids);
+                        i++;
+                    }
+                    // we check only the next node ID of the source router
+                    checkNeighbor = false;
+
+                // if we don't need to check neighbor
+                }else {
+                    routeInfo.addRoute(nodeId);
                     i++;
                 }
-                // we check only the next node ID of the source router
-                checkNeighbor = false;
             }
+            // if i > 1
             else {
+                // If the adjacency SID is pushed and the next SID is the destination
+                // of the adjacency SID, then do not add the SID.
+                if (prevAdjacencySid != null) {
+                    if (isAdjacencySidNeighborOf(prevNodeId, prevAdjacencySid, nodeId)) {
+                        prevAdjacencySid = null;
+                        continue;
+                    }
+                    prevAdjacencySid = null;
+                }
                 routeInfo.addRoute(nodeId);
                 i++;
             }
@@ -1443,6 +1558,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 i = 1;
                 checkNeighbor = true;
             }
+
+            if (prevAdjacencySid == null)
+                prevNodeId = nodeId;
         }
 
         if (i < MAX_NUM_LABELS+1) {
@@ -1561,6 +1679,47 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Utility functions
     // ************************************
 
+    private List<PortNumber> getPortsFromNeighborSet(String srcSwDpid, NeighborSet ns) {
+
+        List<PortNumber> portList = new ArrayList<PortNumber>();
+        Switch srcSwitch = mutableTopology.getSwitch(new Dpid(srcSwDpid));
+        if (srcSwitch == null)
+            return null;
+        for (Dpid neighborDpid: ns.getDpids()) {
+            Link link = srcSwitch.getLinkToNeighbor(neighborDpid);
+            portList.add(link.getSrcPort().getNumber());
+        }
+
+        return portList;
+    }
+
+    private boolean isAdjacencySidNeighborOf(String prevNodeId, String prevAdjacencySid, String nodeId) {
+
+        HashMap<Integer, List<Integer>> adjacencySidInfo = adjacencySidTable.get(Integer.valueOf(prevNodeId));
+        List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(prevAdjacencySid));
+
+        for (Integer port: ports) {
+            Switch sw = getSwitchFromNodeId(prevNodeId);
+            for (Link link: sw.getOutgoingLinks()) {
+                if (link.getSrcPort().getPortNumber().value() == port) {
+                    if (getMplsLabel(link.getDstPort().getDpid().toString()).equals(nodeId)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isAdjacencySid(String nodeId) {
+        // XXX The rule might change
+        if (Integer.parseInt(nodeId) > 10000)
+            return true;
+
+        return false;
+    }
+
     /**
      * Returns the Adjacency IDs for the node
      *
@@ -1569,7 +1728,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public Collection<Integer> getAdjacencyIds(int nodeSid) {
         HashMap<Integer, List<Integer>> adjecencyInfo =
-                adjacencyIdTable.get(Integer.valueOf(nodeSid));
+                adjacencySidTable.get(Integer.valueOf(nodeSid));
 
         return adjecencyInfo.keySet();
     }
@@ -1581,7 +1740,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @return HashMap of <AdjacencyID, list of ports>
      */
     public HashMap<Integer, List<Integer>> getAdjacencyInfo(int nodeSid) {
-        return  adjacencyIdTable.get(Integer.valueOf(nodeSid));
+        return  adjacencySidTable.get(Integer.valueOf(nodeSid));
     }
 
     private HashMap<Integer, List<Integer>> parseAdjacencySidInfo(String adjInfo) throws JSONException {
@@ -1987,10 +2146,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param ids
      * @param tunnelId
      */
-    private void printTunnelInfo(IOF13Switch targetSw, String tunnelId,
+    private void printTunnelInfo(String targetSw, String tunnelId,
             List<String> ids, NeighborSet ns) {
         StringBuilder logStr = new StringBuilder("In switch " +
-            targetSw.getId() + ", create a tunnel " + tunnelId + " " + " of push ");
+                targetSw + ", create a tunnel " + tunnelId + " " + " of push ");
         for (String id: ids)
             logStr.append(id + "-");
         logStr.append(" output to ");
