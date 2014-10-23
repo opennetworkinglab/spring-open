@@ -146,7 +146,7 @@ public interface IOF13Switch extends IOFSwitch {
      * Add the OFBucket to groups that have reachability through the given port.
      * This API can be used by applications, when a port is operational again,
      * to add that port to all the relevant groups
-     * 
+     *
      * @param port Port Number to be added to groups
      * @return None
      */
@@ -169,11 +169,33 @@ public interface IOF13Switch extends IOFSwitch {
     public void createTunnel(String tunnelId, List<String> route, NeighborSet ns);
 
     /**
+     * Create a group chain with the same label stack for a given set of ports
+     * in the neighborset. This can be used for a basic scenario of tunnel based
+     * policy routing.
+     *
+     * @param labelStack list of router segment Ids to be pushed
+     * @param ns neighborSet to get to the first router in the labelStack. NOTE:
+     *        The edgeLabel inside the neighborSet is ignored and user should
+     *        explicitly push that label on to the labelStack that is passed as
+     *        first argument
+     * @return group identifier
+     */
+    public int createGroup(List<Integer> labelStack, List<PortNumber> ports);
+
+    /**
      * Remove all groups for the tunnel
      *
      * @param tunnelId tunnel ID to remove
      */
     public void removeTunnel(String tunnelId);
+
+    /**
+     * Remove the specified group
+     *
+     * @param groupId group identifier
+     * @return success/fail
+     */
+    public boolean removeGroup(int groupId);
 
     /**
      * Return the first group ID for the tunnel.

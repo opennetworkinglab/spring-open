@@ -146,6 +146,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private List<Integer> segmentIds;
     private boolean isEdgeRouter;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
+    private ConcurrentMap<Integer, EcmpInfo> userDefinedGroups;
     private ConcurrentMap<String, List<Integer>> tunnelGroupIdTable;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
     private AtomicInteger groupid;
@@ -160,6 +161,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         neighbors = new ConcurrentHashMap<Dpid, Set<PortNumber>>();
         portToNeighbors = new ConcurrentHashMap<PortNumber, Dpid>();
         ecmpGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
+        userDefinedGroups = new ConcurrentHashMap<Integer, EcmpInfo>();
         portNeighborSetMap =
                 new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
         tunnelGroupIdTable = new ConcurrentHashMap<String, List<Integer>>();
@@ -227,8 +229,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     }
 
     public void removePortFromGroups(PortNumber port) {
-        /* FIX: removePortFromGroups is not working */
-
         log.debug("removePortFromGroups: Remove port {} from Switch {}",
                 port, getStringId());
         ArrayList<NeighborSet> portNSSet = portNeighborSetMap.get(port);
@@ -891,7 +891,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 Integer.parseInt(nodeId), bos);
         buckets.add(bucket);
         EcmpInfo ecmpInfo = new EcmpInfo(groupId, buckets);
-        setPolicyEcmpGroup(ecmpInfo);
+        setEcmpGroup(ecmpInfo);
 //        ecmpGroups.put(ns, ecmpInfo);
         log.debug(
                 "createGroupForANeighborSet: Creating ecmp group {} in sw {} "
@@ -1009,6 +1009,17 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             bos = b;
         }
 
+        BucketInfo(Dpid nDpid, MacAddress smac, MacAddress dmac,
+                PortNumber p, int label, boolean bos, int gotoGroupNo) {
+            neighborDpid = nDpid;
+            srcMac = smac;
+            dstMac = dmac;
+            outport = p;
+            mplsLabel = label;
+            this.bos = bos;
+            groupNo = gotoGroupNo;
+        }
+
 
         @Override
         public String toString() {
@@ -1025,95 +1036,30 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
 
         List<OFBucket> buckets = new ArrayList<OFBucket>();
         for (BucketInfo b : ecmpInfo.buckets) {
-            OFOxmEthDst dmac = factory.oxms()
-                    .ethDst(b.dstMac);
-            OFAction setDA = factory.actions().buildSetField()
-                    .setField(dmac).build();
-            OFOxmEthSrc smac = factory.oxms()
-                    .ethSrc(b.srcMac);
-            OFAction setSA = factory.actions().buildSetField()
-                    .setField(smac).build();
-            OFAction outp = factory.actions().buildOutput()
-                    .setPort(OFPort.of(b.outport.shortValue()))
-                    .build();
             List<OFAction> actions = new ArrayList<OFAction>();
-            actions.add(setSA);
-            actions.add(setDA);
-            actions.add(outp);
-            if (b.mplsLabel != -1) {
-                OFAction pushLabel = factory.actions().buildPushMpls()
-                        .setEthertype(EthType.MPLS_UNICAST).build();
-                OFOxmMplsBos bosX = factory.oxms()
-                        .mplsBos(OFBooleanValue.TRUE);
-                OFAction setBX = factory.actions().buildSetField()
-                        .setField(bosX).build();
-                OFOxmMplsLabel lid = factory.oxms()
-                        .mplsLabel(U32.of(b.mplsLabel));
-                OFAction setLabel = factory.actions().buildSetField()
-                        .setField(lid).build();
-                OFAction copyTtl = factory.actions().copyTtlOut();
-                OFAction decrTtl = factory.actions().decMplsTtl();
-                actions.add(pushLabel);
-                actions.add(setLabel);
-                actions.add(setBX);
-                actions.add(copyTtl);
-                actions.add(decrTtl);
-            }
-            OFBucket ofb = factory.buildBucket()
-                    .setWeight(1)
-                    .setActions(actions)
-                    .build();
-            buckets.add(ofb);
-        }
-
-        OFMessage gm = factory.buildGroupAdd()
-                .setGroup(group)
-                .setBuckets(buckets)
-                .setGroupType(OFGroupType.SELECT)
-                .setXid(getNextTransactionId())
-                .build();
-        msglist.add(gm);
-        try {
-            write(msglist);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    private void setPolicyEcmpGroup(EcmpInfo ecmpInfo) {
-        List<OFMessage> msglist = new ArrayList<OFMessage>();
-        OFGroup group = OFGroup.of(ecmpInfo.groupId);
-
-        List<OFBucket> buckets = new ArrayList<OFBucket>();
-        List<OFAction> actions = new ArrayList<OFAction>();
-        for (BucketInfo b : ecmpInfo.buckets) {
-            if (b.dstMac != null && b.srcMac != null && b.outport != null) {
+            if (b.dstMac != null) {
                 OFOxmEthDst dmac = factory.oxms()
                         .ethDst(b.dstMac);
                 OFAction setDA = factory.actions().buildSetField()
                         .setField(dmac).build();
+                actions.add(setDA);
+            }
+            if (b.srcMac != null) {
                 OFOxmEthSrc smac = factory.oxms()
                         .ethSrc(b.srcMac);
                 OFAction setSA = factory.actions().buildSetField()
                         .setField(smac).build();
+                actions.add(setSA);
+            }
+            if (b.outport != null) {
                 OFAction outp = factory.actions().buildOutput()
                         .setPort(OFPort.of(b.outport.shortValue()))
                         .build();
-                actions.add(setSA);
-                actions.add(setDA);
                 actions.add(outp);
-            }
-            if (b.groupNo > 0) {
-                OFAction groupTo = factory.actions().buildGroup()
-                        .setGroup(OFGroup.of(b.groupNo))
-                        .build();
-                actions.add(groupTo);
             }
             if (b.mplsLabel != -1) {
                 OFAction pushLabel = factory.actions().buildPushMpls()
                         .setEthertype(EthType.MPLS_UNICAST).build();
-
                 OFBooleanValue bosValue = null;
                 if (b.bos)
                     bosValue = OFBooleanValue.TRUE;
@@ -1137,6 +1083,12 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 if (b.bos)
                     actions.add(decrTtl);
             }
+            if (b.groupNo > 0) {
+                OFAction groupTo = factory.actions().buildGroup()
+                        .setGroup(OFGroup.of(b.groupNo))
+                        .build();
+                actions.add(groupTo);
+            }
             OFBucket ofb = factory.buildBucket()
                     .setWeight(1)
                     .setActions(actions)
@@ -1159,6 +1111,85 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
+    /*
+        private void setPolicyEcmpGroup(EcmpInfo ecmpInfo) {
+            List<OFMessage> msglist = new ArrayList<OFMessage>();
+            OFGroup group = OFGroup.of(ecmpInfo.groupId);
+
+            List<OFBucket> buckets = new ArrayList<OFBucket>();
+            List<OFAction> actions = new ArrayList<OFAction>();
+            for (BucketInfo b : ecmpInfo.buckets) {
+                if (b.dstMac != null && b.srcMac != null && b.outport != null) {
+                    OFOxmEthDst dmac = factory.oxms()
+                            .ethDst(b.dstMac);
+                    OFAction setDA = factory.actions().buildSetField()
+                            .setField(dmac).build();
+                    OFOxmEthSrc smac = factory.oxms()
+                            .ethSrc(b.srcMac);
+                    OFAction setSA = factory.actions().buildSetField()
+                            .setField(smac).build();
+                    OFAction outp = factory.actions().buildOutput()
+                            .setPort(OFPort.of(b.outport.shortValue()))
+                            .build();
+                    actions.add(setSA);
+                    actions.add(setDA);
+                    actions.add(outp);
+                }
+                if (b.groupNo > 0) {
+                    OFAction groupTo = factory.actions().buildGroup()
+                            .setGroup(OFGroup.of(b.groupNo))
+                            .build();
+                    actions.add(groupTo);
+                }
+                if (b.mplsLabel != -1) {
+                    OFAction pushLabel = factory.actions().buildPushMpls()
+                            .setEthertype(EthType.MPLS_UNICAST).build();
+
+                    OFBooleanValue bosValue = null;
+                    if (b.bos)
+                        bosValue = OFBooleanValue.TRUE;
+                    else
+                        bosValue = OFBooleanValue.FALSE;
+                    OFOxmMplsBos bosX = factory.oxms()
+                            .mplsBos(bosValue);
+                    OFAction setBX = factory.actions().buildSetField()
+                            .setField(bosX).build();
+                    OFOxmMplsLabel lid = factory.oxms()
+                            .mplsLabel(U32.of(b.mplsLabel));
+                    OFAction setLabel = factory.actions().buildSetField()
+                            .setField(lid).build();
+                    OFAction copyTtl = factory.actions().copyTtlOut();
+                    OFAction decrTtl = factory.actions().decMplsTtl();
+                    actions.add(pushLabel);
+                    actions.add(setLabel);
+                    actions.add(setBX);
+                    actions.add(copyTtl);
+                    // decrement TTL only when the first MPLS label is pushed
+                    if (b.bos)
+                        actions.add(decrTtl);
+                }
+                OFBucket ofb = factory.buildBucket()
+                        .setWeight(1)
+                        .setActions(actions)
+                        .build();
+                buckets.add(ofb);
+            }
+
+            OFMessage gm = factory.buildGroupAdd()
+                    .setGroup(group)
+                    .setBuckets(buckets)
+                    .setGroupType(OFGroupType.SELECT)
+                    .setXid(getNextTransactionId())
+                    .build();
+            msglist.add(gm);
+            try {
+                write(msglist);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    */
     private void deleteGroup(int groupId) {
 
         List<OFMessage> msglist = new ArrayList<OFMessage>();
@@ -1669,6 +1700,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     }
 
     @Override
+    @Deprecated
     public void createTunnel(String tunnelId, List<String> route, NeighborSet ns) {
 
         List<Integer> groups = new ArrayList<Integer>();
@@ -1718,6 +1750,141 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         return groups.get(0);
     }
 
+    private void createIndirectGroup(int groupId, MacAddress srcMac,
+            MacAddress dstMac, PortNumber outPort, int gotoGroupNo,
+            int mplsLabel, boolean bos) {
+        List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+        BucketInfo b = new BucketInfo(null, srcMac, dstMac, outPort,
+                mplsLabel, bos, gotoGroupNo);
+        buckets.add(b);
+
+        EcmpInfo ecmpInfo = new EcmpInfo(groupId, buckets);
+        setEcmpGroup(ecmpInfo);
+        log.debug(
+                "createIndirectGroup: Creating indirect group {} in sw {} "
+                        + "with: {}", groupId, getStringId(), ecmpInfo);
+        return;
+    }
+
+    private EcmpInfo createInnermostLabelGroup(int innermostGroupId,
+            List<PortNumber> ports, int mplsLabel, boolean bos,
+            HashMap<PortNumber, Integer> lastSetOfGroupIds) {
+        List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+        for (PortNumber sp : ports) {
+            Dpid neighborDpid = portToNeighbors.get(sp);
+            BucketInfo b = new BucketInfo(neighborDpid,
+                    MacAddress.of(srConfig.getRouterMac()),
+                    getNeighborRouterMacAddress(neighborDpid), null,
+                    mplsLabel, bos,
+                    lastSetOfGroupIds.get(sp));
+            buckets.add(b);
+        }
+        EcmpInfo ecmpInfo = new EcmpInfo(innermostGroupId, buckets);
+        setEcmpGroup(ecmpInfo);
+        log.debug(
+                "createInnermostLabelGroup: Creating indirect group {} in sw {} "
+                        + "with: {}", innermostGroupId, getStringId(), ecmpInfo);
+        return ecmpInfo;
+    }
+    @Override
+    /**
+     * Create a group chain with the same label stack for a given set of ports
+     * in the neighborset. This can be used for a basic scenario of tunnel based
+     * policy routing.
+     *
+     * @param labelStack list of router segment Ids to be pushed
+     * @param ns neighborSet to get to the first router in the labelStack
+     * NOTE:
+     *        The edgeLabel inside the neighborSet is ignored and user should
+     *        explicitly push that label on to the labelStack that is passed as
+     *        first argument
+     * @return group identifier
+     */
+    public int createGroup(List<Integer> labelStack, List<PortNumber> ports) {
+
+        if ((ports == null) ||
+                ((labelStack != null) && (labelStack.size() > 3))) {
+            log.warn("createGroup with wrong input parameters");
+        }
+        log.debug("createGroup with labelStack {} and ports {}",
+                labelStack, ports);
+
+        /* Create for each port, through which neighbors in ns are reachable,
+         * an indirect group with the outermost label
+         */
+        HashMap<PortNumber, Integer> lastSetOfGroupIds =
+                new HashMap<PortNumber, Integer>();
+        int innermostGroupId = -1;
+        if (labelStack.size() < 2) {
+            int curLabel = -1;
+            boolean bos = false;
+            if (labelStack.size()==1) {
+                curLabel = labelStack.get(0).intValue();
+                bos = true;
+            }
+
+            List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+            for (PortNumber sp : ports) {
+                Dpid neighborDpid = portToNeighbors.get(sp);
+                BucketInfo b = new BucketInfo(neighborDpid,
+                        MacAddress.of(srConfig.getRouterMac()),
+                        getNeighborRouterMacAddress(neighborDpid),
+                        sp, curLabel, bos, -1);
+                buckets.add(b);
+            }
+            innermostGroupId = groupid.incrementAndGet();
+            EcmpInfo ecmpInfo = new EcmpInfo(innermostGroupId, buckets);
+            setEcmpGroup(ecmpInfo);
+            userDefinedGroups.put(innermostGroupId, ecmpInfo);
+            return innermostGroupId;
+        }
+
+        for (int i = 0; i < labelStack.size(); i++) {
+            for (PortNumber sp : ports) {
+                if (i == 0) {
+                    /* Outermost label processing */
+                    int currGroupId = groupid.incrementAndGet();
+                    createIndirectGroup(currGroupId,
+                            null, null, sp, -1,
+                            labelStack.get(i).intValue(), false);
+                    lastSetOfGroupIds.put(sp, currGroupId);
+                }
+                else if (i == (labelStack.size() - 1)) {
+                    /* Innermost label processing */
+                    innermostGroupId = groupid.incrementAndGet();
+                    EcmpInfo topLevelGroup = createInnermostLabelGroup(
+                            innermostGroupId,
+                            ports,
+                            labelStack.get(i).intValue(), true,
+                            lastSetOfGroupIds);
+                    userDefinedGroups.put(
+                            innermostGroupId, topLevelGroup);
+                    break;
+                }
+                else {
+                    /* Middle label processing */
+                    int currGroupId = groupid.incrementAndGet();
+                    createIndirectGroup(currGroupId,
+                            null, null, null,
+                            lastSetOfGroupIds.get(sp),
+                            labelStack.get(i).intValue(), false);
+                    /* Overwrite with this iteration's group IDs */
+                    lastSetOfGroupIds.put(sp, currGroupId);
+                }
+            }
+        }
+        return innermostGroupId;
+    }
+
+    /**
+     * Remove the specified group
+     *
+     * @param groupId group identifier
+     * @return success/fail
+     */
+    public boolean removeGroup(int groupId) {
+        return false;
+    }
     @Override
     public Map<String, String> getPublishAttributes() {
         return publishAttributes;
