@@ -66,23 +66,20 @@ command.add_completion('tunnel-node-label-completion', tunnel_node_label_complet
 
 def tunnel_adjacency_label_completion(prefix, data, completions):
     #print "tunnel_adjacency_label_completion:",prefix,data,completions
-    query_url = "http://127.0.0.1:8000/rest/v1/switches"
-    result = command.sdnsh.store.rest_simple_request(query_url)
-    entries = json.loads(result)
-    for entry in entries:
-        if (int(entry['stringAttributes']['nodeSid']) != int(data['node-label'])):
-            continue
-        adjacencySids = entry['stringAttributes']['adjacencySids']
-        #print "adjacencySids=",adjacencySids
-        for subs in adjacencySids.split('}'):
-            pair = subs.split('adjSid\":')
-            if len(pair) < 2:
-                continue
-            adjacency_label = pair[1]
-            #adjacency_label = entry['stringAttributes']['nodeSid'] + ':' + pair[1]
-            #print "adjacency_label=",adjacency_label 
-            if adjacency_label.startswith(prefix):
-                completions[adjacency_label+' '] = adjacency_label
+    query_url1 = "http://127.0.0.1:8000/rest/v1/switches"
+    result1 = command.sdnsh.store.rest_simple_request(query_url1)
+    entries1 = json.loads(result1)
+    node_dpid = None
+    for entry in entries1:
+        if (int (entry['stringAttributes']['nodeSid']) == int(data['node-label'])):
+            node_dpid = entry['dpid']
+    if (node_dpid != None):
+        query_url2 = "http://127.0.0.1:8000/rest/v1/router/"+node_dpid+"/adjacency"
+        result2 = command.sdnsh.store.rest_simple_request(query_url2)
+        entries2 = json.loads(result2)
+        for entry in entries2:
+            if str(entry.get("adjacencySid")).startswith(prefix):
+                completions[str(entry.get("adjacencySid"))+' '] = entry.get("adjacencySid")
     return
 
 command.add_completion('tunnel-adjacency-label-completion', tunnel_adjacency_label_completion,

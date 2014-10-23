@@ -53,10 +53,13 @@ public class SegmentRouterPolicyResource extends ServerResource {
                 createParams.getSrc_tp_port(), createParams.getDst_tp_port(),
                 createParams.getPriority(), createParams.getTunnel_id());
 
+        IPv4Net src_ip = (createParams.getSrc_ip() != null) ?
+                new IPv4Net(createParams.getSrc_ip()) : null;
+        IPv4Net dst_ip = (createParams.getDst_ip() != null) ?
+                new IPv4Net(createParams.getDst_ip()) : null;
         boolean result = segmentRoutingService.createPolicy(
                 createParams.getPolicy_id(), null, null, null,
-                new IPv4Net(createParams.getSrc_ip()),
-                new IPv4Net(createParams.getDst_ip()),
+                src_ip, dst_ip,
                 getProtoTypeByte(createParams.getProto_type()),
                 createParams.getSrc_tp_port(),
                 createParams.getDst_tp_port(),

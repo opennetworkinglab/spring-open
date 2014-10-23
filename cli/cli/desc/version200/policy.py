@@ -114,7 +114,7 @@ SRC_IP_MATCH = {
                 #'dest-ip'      : 'src-ip',
                 #'dest-netmask' : 'src-ip-mask',
                 'data'         : {
-                                  'dst_ip'      : '0.0.0.0/32',
+                                  'dst_ip'      : '0.0.0.0/0',
                                  },
                 'doc'          : 'vns|vns-access-list-cidr-range',
             }
@@ -123,8 +123,8 @@ SRC_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'src_ip'      : '0.0.0.0/32',
-                              'dst_ip'      : '0.0.0.0/32',
+                              'src_ip'      : '0.0.0.0/0',
+                              'dst_ip'      : '0.0.0.0/0',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }
@@ -178,7 +178,7 @@ DST_IP_MATCH = {
             {
                 'token'  : 'any',
                 'data'   : {
-                              'dst_ip'      : '0.0.0.0/32',
+                              'dst_ip'      : '0.0.0.0/0',
                            },
                 'doc'    : 'vns|vns-access-list-ip-any',
             }

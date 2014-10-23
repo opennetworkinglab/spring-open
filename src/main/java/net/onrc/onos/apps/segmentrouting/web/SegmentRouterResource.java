@@ -47,7 +47,7 @@ public class SegmentRouterResource extends ServerResource {
         try {
             if (routerId == null && statsType == null){
                 return eval(toRepresentation(mutableTopology.getSwitches(), null));
-        }
+            }
             else if(routerId != null && statsType.equals("port")){
                 Switch sw = mutableTopology
                 .getSwitch(new Dpid(HexString.toLong(routerId)));
