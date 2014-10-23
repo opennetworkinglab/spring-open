@@ -160,15 +160,6 @@ public interface IOF13Switch extends IOFSwitch {
     public TableId getTableId(String tableType);
 
     /**
-     * Create a tunnel for policy routing
-     *
-     * @param tunnelId tunnel ID for the tunnel
-     * @param route list of router DPIDs for the tunnel
-     * @param ns NeighborSet to get to the first router of the tunnel
-     */
-    public void createTunnel(String tunnelId, List<String> route, NeighborSet ns);
-
-    /**
      * Create a group chain with the specified label stack for a given set of
      * ports. This API can be used by user to create groups for a tunnel based
      * policy routing scenario. NOTE: This API can not be used if a group to be
@@ -186,29 +177,12 @@ public interface IOF13Switch extends IOFSwitch {
     public int createGroup(List<Integer> labelStack, List<PortNumber> ports);
 
     /**
-     * Remove all groups for the tunnel
-     *
-     * @param tunnelId tunnel ID to remove
-     */
-    public void removeTunnel(String tunnelId);
-
-    /**
      * Remove the specified group
      *
      * @param groupId group identifier
      * @return success/fail
      */
     public boolean removeGroup(int groupId);
-
-    /**
-     * Return the first group ID for the tunnel.
-     * If the router is not the source of the tunnel, it returns -1
-     *
-     * @param tunnelID tunnel ID for the tunnel
-     * @param srcDpid source router DPID
-     * @return first Group ID for the tunnel or -1 if not found
-     */
-    public int getTunnelGroupId(String tunnelID);
 
     public Map<String, String> getPublishAttributes();
 }

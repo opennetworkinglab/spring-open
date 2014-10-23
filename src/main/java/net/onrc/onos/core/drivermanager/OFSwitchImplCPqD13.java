@@ -147,7 +147,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private boolean isEdgeRouter;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
     private ConcurrentMap<Integer, EcmpInfo> userDefinedGroups;
-    private ConcurrentMap<String, List<Integer>> tunnelGroupIdTable;
     private ConcurrentMap<PortNumber, ArrayList<NeighborSet>> portNeighborSetMap;
     private AtomicInteger groupid;
     private Map<String, String> publishAttributes;
@@ -164,7 +163,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         userDefinedGroups = new ConcurrentHashMap<Integer, EcmpInfo>();
         portNeighborSetMap =
                 new ConcurrentHashMap<PortNumber, ArrayList<NeighborSet>>();
-        tunnelGroupIdTable = new ConcurrentHashMap<String, List<Integer>>();
         segmentIds = new ArrayList<Integer>();
         isEdgeRouter = false;
         groupid = new AtomicInteger(0);
@@ -317,7 +315,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                     MacAddress.of(srConfig.getRouterMac()),
                     getNeighborRouterMacAddress(neighborDpid),
                     port,
-                    ns.getEdgeLabel());
+                    ns.getEdgeLabel(), true, -1);
             buckets.add(b);
             log.debug("addPortToGroups: Modifying Group on Switch {} "
                     + "and Neighborset {} with {}",
@@ -859,7 +857,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 BucketInfo b = new BucketInfo(d,
                         MacAddress.of(srConfig.getRouterMac()),
                         getNeighborRouterMacAddress(d), sp,
-                        ns.getEdgeLabel());
+                        ns.getEdgeLabel(), true, -1);
                 buckets.add(b);
 
                 /* Update Port Neighborset map */
@@ -881,22 +879,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 "createGroupForANeighborSet: Creating ecmp group {} in sw {} "
                         + "for neighbor set {} with: {}",
                 groupId, getStringId(), ns, ecmpInfo);
-        return;
-    }
-
-    private void createGroupForMplsLabel(int groupId, String nodeId,
-            int nextGroupId, boolean bos) {
-        List<BucketInfo> buckets = new ArrayList<BucketInfo>();
-        BucketInfo bucket = new BucketInfo(nextGroupId,
-                Integer.parseInt(nodeId), bos);
-        buckets.add(bucket);
-        EcmpInfo ecmpInfo = new EcmpInfo(groupId, buckets);
-        setEcmpGroup(ecmpInfo);
-//        ecmpGroups.put(ns, ecmpInfo);
-        log.debug(
-                "createGroupForANeighborSet: Creating ecmp group {} in sw {} "
-                        + "for pushing label {} and group to {}",
-                groupId, getStringId(), nodeId, nextGroupId);
         return;
     }
 
@@ -989,26 +971,27 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         int mplsLabel;
         boolean bos;
 
-        BucketInfo(Dpid nDpid, MacAddress smac, MacAddress dmac,
-                PortNumber p, int label) {
-            neighborDpid = nDpid;
-            srcMac = smac;
-            dstMac = dmac;
-            outport = p;
-            mplsLabel = label;
-            groupNo = -1;
-        }
+        /*
+                BucketInfo(Dpid nDpid, MacAddress smac, MacAddress dmac,
+                        PortNumber p, int label) {
+                    neighborDpid = nDpid;
+                    srcMac = smac;
+                    dstMac = dmac;
+                    outport = p;
+                    mplsLabel = label;
+                    groupNo = -1;
+                }
 
-        BucketInfo(int no, int label, boolean b) {
-            neighborDpid = null;
-            srcMac = null;
-            dstMac = null;
-            outport = null;
-            groupNo = no;
-            mplsLabel = label;
-            bos = b;
-        }
-
+                BucketInfo(int no, int label, boolean b) {
+                    neighborDpid = null;
+                    srcMac = null;
+                    dstMac = null;
+                    outport = null;
+                    groupNo = no;
+                    mplsLabel = label;
+                    bos = b;
+                }
+        */
         BucketInfo(Dpid nDpid, MacAddress smac, MacAddress dmac,
                 PortNumber p, int label, boolean bos, int gotoGroupNo) {
             neighborDpid = nDpid;
@@ -1353,9 +1336,8 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         } else if (action instanceof GroupAction) {
             int gid = -1;
             GroupAction ga = (GroupAction)action;
-            if (ga.getTunnelId() != null) {
-                List<Integer> groupIds = tunnelGroupIdTable.get(ga.getTunnelId());
-                gid = groupIds.get(groupIds.size()-1);
+            if (ga.getGroupId() > 0) {
+                gid = ga.getGroupId();
             }
             else {
                 NeighborSet ns = ((GroupAction) action).getDpids();
@@ -1699,57 +1681,6 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
-    @Override
-    @Deprecated
-    public void createTunnel(String tunnelId, List<String> route, NeighborSet ns) {
-
-        List<Integer> groups = new ArrayList<Integer>();
-
-        // create a last group of the group chaining
-        int finalGroupId = groupid.incrementAndGet();
-        createGroupForANeighborSet(ns, finalGroupId);
-        groups.add(Integer.valueOf(finalGroupId));
-
-        int groupId = 0;
-        int nextGroupId = finalGroupId;
-        boolean bos = false;
-
-        // process the node ID in order
-        for (int i = 0; i < route.size(); i++) {
-            String nodeId = route.get(i);
-            groupId = groupid.incrementAndGet();
-            groups.add(Integer.valueOf(groupId));
-            if (i == route.size()-1)
-                bos = true;
-            createGroupForMplsLabel(groupId, nodeId, nextGroupId, bos);
-            nextGroupId = groupId;
-        }
-        tunnelGroupIdTable.putIfAbsent(tunnelId, groups);
-    }
-
-    @Override
-    public void removeTunnel(String tunnelId) {
-        List<Integer> groups = tunnelGroupIdTable.get(tunnelId);
-        if (groups == null)
-            return;
-
-        // we need to delete groups in reverse order
-        for (int i = groups.size() - 1; i >= 0; i--) {
-            int groupId = groups.get(i);
-            deleteGroup(groupId);
-        }
-        tunnelGroupIdTable.remove(tunnelId);
-    }
-
-    @Override
-    public int getTunnelGroupId(String tunnelId) {
-        List<Integer> groups = tunnelGroupIdTable.get(tunnelId);
-        if (groups == null)
-            return -1;
-
-        return groups.get(0);
-    }
-
     private void createIndirectGroup(int groupId, MacAddress srcMac,
             MacAddress dstMac, PortNumber outPort, int gotoGroupNo,
             int mplsLabel, boolean bos) {
@@ -1893,6 +1824,22 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         return innermostGroupId;
     }
 
+    /*
+    @Override
+    public void removeTunnel(String tunnelId) {
+        List<Integer> groups = tunnelGroupIdTable.get(tunnelId);
+        if (groups == null)
+            return;
+
+        // we need to delete groups in reverse order
+        for (int i = groups.size() - 1; i >= 0; i--) {
+            int groupId = groups.get(i);
+            deleteGroup(groupId);
+        }
+        tunnelGroupIdTable.remove(tunnelId);
+    }
+    */
+
     /**
      * Remove the specified group
      *
@@ -1902,6 +1849,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     public boolean removeGroup(int groupId) {
         return false;
     }
+
     @Override
     public Map<String, String> getPublishAttributes() {
         return publishAttributes;
