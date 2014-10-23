@@ -175,18 +175,6 @@ def policy_remove(data=None):
     
     
 
-    if not detail:
-        detail = data.get('detail', 'default')
-    url = "http://%s/rest/v1/" % sdnsh.controller + (select_url % data)
-
-    result = sdnsh.store.rest_simple_request(url)
-    check_rest_result(result)
-    if sdnsh.description:   # description debugging
-        print "command_display_rest: result ", result
-    entries = json.loads(result)
-    
-    
-
 def write_fields(obj_type, obj_id, data):
     """
     Typical action to update fields of a row in the model

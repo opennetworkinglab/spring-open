@@ -1681,7 +1681,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         }
     }
 
-    private void createIndirectGroup(int groupId, MacAddress srcMac,
+    private EcmpInfo createIndirectGroup(int groupId, MacAddress srcMac,
             MacAddress dstMac, PortNumber outPort, int gotoGroupNo,
             int mplsLabel, boolean bos) {
         List<BucketInfo> buckets = new ArrayList<BucketInfo>();
@@ -1694,7 +1694,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         log.debug(
                 "createIndirectGroup: Creating indirect group {} in sw {} "
                         + "with: {}", groupId, getStringId(), ecmpInfo);
-        return;
+        return ecmpInfo;
     }
 
     private EcmpInfo createInnermostLabelGroup(int innermostGroupId,
@@ -1713,7 +1713,7 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
         EcmpInfo ecmpInfo = new EcmpInfo(innermostGroupId, buckets);
         setEcmpGroup(ecmpInfo);
         log.debug(
-                "createInnermostLabelGroup: Creating indirect group {} in sw {} "
+                "createInnermostLabelGroup: Creating select group {} in sw {} "
                         + "with: {}", innermostGroupId, getStringId(), ecmpInfo);
         return ecmpInfo;
     }
@@ -1792,10 +1792,11 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 if (i == 0) {
                     /* Outermost label processing */
                     int currGroupId = groupid.incrementAndGet();
-                    createIndirectGroup(currGroupId,
+                    EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
                             null, null, sp, -1,
                             labelStack.get(i).intValue(), false);
                     lastSetOfGroupIds.put(sp, currGroupId);
+                    userDefinedGroups.put(currGroupId, indirectGroup);
                 }
                 else if (i == (labelStack.size() - 1)) {
                     /* Innermost label processing */
@@ -1812,15 +1813,18 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 else {
                     /* Middle label processing */
                     int currGroupId = groupid.incrementAndGet();
-                    createIndirectGroup(currGroupId,
+                    EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
                             null, null, null,
                             lastSetOfGroupIds.get(sp),
                             labelStack.get(i).intValue(), false);
                     /* Overwrite with this iteration's group IDs */
                     lastSetOfGroupIds.put(sp, currGroupId);
+                    userDefinedGroups.put(currGroupId, indirectGroup);
                 }
             }
         }
+        log.debug("createGroup: group created with innermost group id {}",
+                innermostGroupId);
         return innermostGroupId;
     }
 
@@ -1847,7 +1851,27 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
      * @return success/fail
      */
     public boolean removeGroup(int groupId) {
-        return false;
+        EcmpInfo group = userDefinedGroups.get(groupId);
+        if (group == null) {
+            log.warn("removeGroup: with invalid group id");
+            return false;
+        }
+        for (BucketInfo bucket : group.buckets) {
+            int currGroupIdToBeDeleted = bucket.groupNo;
+            while (currGroupIdToBeDeleted != -1) {
+                /* Assuming indirect groups with single buckets */
+                int nextGroupIdToBeDeleted =
+                        userDefinedGroups.get(currGroupIdToBeDeleted).
+                        buckets.get(0).groupNo;
+                deleteGroup(groupId);
+                userDefinedGroups.remove(currGroupIdToBeDeleted);
+                currGroupIdToBeDeleted = nextGroupIdToBeDeleted;
+            }
+        }
+
+        userDefinedGroups.remove(groupid);
+        log.debug("removeGroup: removed group with group id {}", groupId);
+        return true;
     }
 
     @Override
