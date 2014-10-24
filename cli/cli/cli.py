@@ -534,7 +534,7 @@ class SDNSh():
                                               'ping', 'test', 'version',
                                               'connect', 'watch', 'no' ]
 
-        #self.command_nested_dict['enable'] = [ 'clear', 'end' ]
+        self.command_nested_dict['enable'] = [ 'clear', 'end' ]
 
         #self.command_dict['config-internal'] = ['lint', 'permute']
 

@@ -82,15 +82,20 @@ def tunnel_create(data=None):
     global tunnel_id,tunnel_dict
     if sdnsh.description:   # description debugging
         print "tunnel_create:" , data
-    if not tunnel_dict:
+    if data.has_key('tunnel-id'):
+        if (tunnel_id != None):
+            if sdnsh.description:   # description debugging
+                print "tunnel_create: previous data is not cleaned up"
+            tunnel_id=None
+            tunnel_dict={}
         tunnel_id=data['tunnel-id']
         tunnel_dict[tunnel_id]=[]
-    if sdnsh.description:   # description debugging
-        print "tunnel_create:" , tunnel_id, tunnel_dict
     if data.has_key('node-label'):    
         tunnel_dict[tunnel_id].append(data['node-label'])
     if data.has_key('adjacency-label'):    
         tunnel_dict[tunnel_id].append(data['adjacency-label'])
+    if sdnsh.description:   # description debugging
+        print "tunnel_create:" , tunnel_id, tunnel_dict
 
 def tunnel_config_exit():
     global tunnel_id,tunnel_dict
@@ -103,15 +108,20 @@ def tunnel_config_exit():
         obj_data = {}
         obj_data['tunnel_id']=tunnel_id
         obj_data['label_path']=entries
-        data = sdnsh.store.rest_post_request(url_str,obj_data)
+        result = "fail"
+        try:
+            result = sdnsh.store.rest_post_request(url_str,obj_data)
+        except Exception, e:
+            errors = sdnsh.rest_error_to_dict(e)
+            print sdnsh.rest_error_dict_to_message(errors)
         # LOOK! successful stuff should be returned in json too.
-        if data != "success":
-            result = json.loads(data)
-            return result
+        tunnel_dict = {}
+        tunnel_id = None
+        if result != "success":
+            print "command failed"
     else:
         print "empty command"
     #Clear the transit information    
-    tunnel_dict = {}
             
 def tunnel_remove(data=None):
     if sdnsh.description:   # description debugging
@@ -120,18 +130,25 @@ def tunnel_remove(data=None):
     url_str = "http://%s/rest/v1/tunnel/" % (sdnsh.controller)
     obj_data = {}
     obj_data['tunnel_id']=data['tunnel-id']
-    data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
-    if data != "deleted":
-        result = json.loads(data)
-        return result
+    result = "fail"
+    try:
+        result = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
+    except Exception, e:
+        errors = sdnsh.rest_error_to_dict(e)
+        print sdnsh.rest_error_dict_to_message(errors)
+    if result != "deleted":
+        print "command failed"
 
 policy_obj_data = {}
-flow = {}
 def policy_create(data=None):
     global policy_obj_data
     if sdnsh.description:   # description debugging
         print "policy_create:" , data
     if data.has_key('policy-id'):
+        if policy_obj_data:
+            if sdnsh.description:   # description debugging
+                print "policy_create: previous data is not cleaned up"
+            policy_obj_data = {}
         policy_obj_data['policy_id'] = data['policy-id']
         policy_obj_data['policy_type'] = data['policy-type']
     if data.has_key('src_ip'):
@@ -151,15 +168,18 @@ def policy_config_exit():
         print "policy_config_exit entered", policy_obj_data
     if policy_obj_data:
         url_str = "http://%s/rest/v1/policy/" % (sdnsh.controller)
-        data = sdnsh.store.rest_post_request(url_str,policy_obj_data)
-        # LOOK! successful stuff should be returned in json too.
-        if data != "success":
-            result = json.loads(data)
-            return result
+        result = "fail"
+        try:
+            result = sdnsh.store.rest_post_request(url_str,policy_obj_data)
+        except Exception, e:
+            errors = sdnsh.rest_error_to_dict(e)
+            print sdnsh.rest_error_dict_to_message(errors)
+        if result != "success":
+            print "command failed"
+        policy_obj_data = {}
     else:
         print "empty command"
     #Clear the transit information    
-    policy_obj_data = {}
             
 def policy_remove(data=None):
     if sdnsh.description:   # description debugging
@@ -168,11 +188,15 @@ def policy_remove(data=None):
     url_str = "http://%s/rest/v1/policy/" % (sdnsh.controller)
     obj_data = {}
     obj_data['policy_id']=data['policy-id']
-    data = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
-    if data != "deleted":
-        result = json.loads(data)
-        return result
-    
+    result = "fail"
+    try:
+        result = sdnsh.store.rest_post_request(url_str,obj_data,'DELETE')
+    except Exception, e:
+        errors = sdnsh.rest_error_to_dict(e)
+        print sdnsh.rest_error_dict_to_message(errors)
+    if result != "deleted":
+        print "command failed"
+  
     
 
 def write_fields(obj_type, obj_id, data):

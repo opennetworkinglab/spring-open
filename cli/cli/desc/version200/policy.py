@@ -1,42 +1,6 @@
 import command
 import json
 import fmtcnv
-"""
-POLICY_SUBMODE_COMMAND_DESCRIPTION = {
-    'name'          : 'policy',
-    'short-help'    : 'Enter policy submode, configure SR policy details',
-    'mode'          : 'config',
-    'parent-field'  : None,
-    'command-type'  : 'config-submode',
-    'obj-type'      : 'policy-config',
-    'submode-name'  : 'config-policy',
-    'doc'           : 'policy|policy',
-    'doc-example'   : 'policy|tunnel-example',
-    'args' : (
-        {
-            'field'        : 'policy-id',
-            'type'         : 'identifier',
-            'completion'   : 'complete-object-field',
-            'syntax-help'  : 'Enter a policy id',
-            'doc'          : 'policy|policy',
-            'doc-include'  : [ 'type-doc' ],
-            'action'       : (
-                                {
-                                    'proc' : 'create-policy',
-                                },
-                                {
-                                    'proc' : 'push-mode-stack',
-                                },
-                              ),
-            'no-action': (
-                {
-                    'proc' : 'remove-policy',
-                }
-            ),
-        }
-    )
-}
-"""
 POLICY_CONFIG_FORMAT = {
     'policy-config' : {
         'field-orderings' : {
@@ -92,7 +56,7 @@ POLICY_SUBMODE_COMMAND_DESCRIPTION = {
                     'field'        : 'policy-type',
                     'optional-for-no' : True,
                     'type'         : 'enum',
-                    'values'       : ('tunnel','loadbalanced','avoid','deny'), 
+                    'values'       : ('tunnel-flow','loadbalanced','avoid','deny'), 
                     'completion'   : 'complete-object-field',
                     'syntax-help'  : 'Enter a policy type',
                     'doc'          : 'policy|policy',

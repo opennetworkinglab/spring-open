@@ -57,10 +57,11 @@ public class SegmentRouterPolicyResource extends ServerResource {
                 new IPv4Net(createParams.getSrc_ip()) : null;
         IPv4Net dst_ip = (createParams.getDst_ip() != null) ?
                 new IPv4Net(createParams.getDst_ip()) : null;
+        Byte protoType = (createParams.getProto_type() != null) ?
+                getProtoTypeByte(createParams.getProto_type()) : null;
         boolean result = segmentRoutingService.createPolicy(
                 createParams.getPolicy_id(), null, null, null,
-                src_ip, dst_ip,
-                getProtoTypeByte(createParams.getProto_type()),
+                src_ip, dst_ip, protoType,
                 createParams.getSrc_tp_port(),
                 createParams.getDst_tp_port(),
                 createParams.getPriority(),
