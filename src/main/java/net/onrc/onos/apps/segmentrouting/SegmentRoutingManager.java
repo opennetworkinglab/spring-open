@@ -52,7 +52,9 @@ import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
 import net.onrc.onos.core.matchaction.action.PushMplsAction;
+import net.onrc.onos.core.matchaction.action.SetDAAction;
 import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
+import net.onrc.onos.core.matchaction.action.SetSAAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.MplsMatch;
@@ -82,6 +84,7 @@ import org.json.JSONException;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,8 +117,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<String, TunnelInfo> tunnelTable;
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
 
-    private int testMode = 0;
+    // Flag whether transit router supports ECMP or not
+    private boolean supportTransitECMP = true;
 
+    private int testMode = 0;
 
     private int numOfEvents = 0;
     private int numOfEventProcess = 0;
@@ -1023,88 +1028,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 new ArrayList<MatchActionOperationEntry>();
         String fwdSw1 = fwdSws.get(0);
 
-        //If the next hop is the destination router
+        //If the next hop is the destination router, do PHP
         if (fwdSws.size() == 1 && mplsLabel.equals(getMplsLabel(fwdSw1))) {
-            // One rule for Bos = 1
-            MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), true);
-            List<Action> actions = new ArrayList<Action>();
-
-            PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
-            CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
-            DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
-
-            actions.add(copyTtlInAction);
-            actions.add(popAction);
-            actions.add(decNwTtlAction);
-
-            GroupAction groupAction = new GroupAction();
-            groupAction.addSwitch(new Dpid(fwdSw1));
-            actions.add(groupAction);
-
-            MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
-                    new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
-            Operator operator = Operator.ADD;
-            MatchActionOperationEntry maEntry =
-                    new MatchActionOperationEntry(operator, matchAction);
-            maEntries.add(maEntry);
-
-            // One rule for Bos = 0
-            MplsMatch mplsMatchBos = new MplsMatch(Integer.parseInt(mplsLabel), false);
-            List<Action> actionsBos = new ArrayList<Action>();
-            PopMplsAction popActionBos = new PopMplsAction(EthType.MPLS_UNICAST);
-            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
-
-            actionsBos.add(copyTtlInAction);
-            actionsBos.add(popActionBos);
-            actionsBos.add(decMplsTtlAction);
-            actionsBos.add(groupAction);
-
-            MatchAction matchActionBos = new MatchAction(new MatchActionId(matchActionId++),
-                    new SwitchPort((long) 0, (short) 0), mplsMatchBos, actionsBos);
-            MatchActionOperationEntry maEntryBos =
-                    new MatchActionOperationEntry(operator, matchActionBos);
-            maEntries.add(maEntryBos);
+            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, true));
+            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, false));
         }
-        // If the next hop is NOT the destination router
         else {
-            // BoS = 0
-            MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), false);
-            List<Action> actions = new ArrayList<Action>();
-
-            DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
-            actions.add(decMplsTtlAction);
-
-            GroupAction groupAction = new GroupAction();
-            for (String fwdSw : fwdSws)
-                groupAction.addSwitch(new Dpid(fwdSw));
-            actions.add(groupAction);
-
-            MatchAction matchAction = new MatchAction(new MatchActionId(
-                    matchActionId++),
-                    new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
-            Operator operator = Operator.ADD;
-            MatchActionOperationEntry maEntry =
-                    new MatchActionOperationEntry(operator, matchAction);
-            maEntries.add(maEntry);
-
-            // BoS = 1
-            MplsMatch mplsMatchBoS = new MplsMatch(Integer.parseInt(mplsLabel), true);
-            List<Action> actionsBoS = new ArrayList<Action>();
-
-            DecMplsTtlAction decMplsTtlActionBoS = new DecMplsTtlAction(1);
-            actionsBoS.add(decMplsTtlActionBoS);
-
-            GroupAction groupActionBoS = new GroupAction();
-            for (String fwdSw : fwdSws)
-                groupActionBoS.addSwitch(new Dpid(fwdSw));
-            actionsBoS.add(groupActionBoS);
-
-            MatchAction matchActionBos = new MatchAction(new MatchActionId(
-                    matchActionId++),
-                    new SwitchPort((long) 0, (short) 0), mplsMatchBoS, actionsBoS);
-            MatchActionOperationEntry maEntryBoS =
-                    new MatchActionOperationEntry(operator, matchActionBos);
-            maEntries.add(maEntryBoS);
+            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, true));
+            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, false));
         }
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
@@ -1118,6 +1049,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
     }
+
 
 
     // ************************************
@@ -1675,13 +1607,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
             else {
                 if (!sw13.removeGroup(route.getGroupId())) {
-                    log.warn("Tunnel {} was not removed ", tunnelId);
+                    log.warn("Faied to remove the tunnel {} at driver",
+                            tunnelId);
                     return false;                }
             }
         }
 
         tunnelTable.remove(tunnelId);
-        log.debug("Tunnel {} was removed ", tunnelId);
+        log.debug("Tunnel {} was removed successfully.", tunnelId);
 
         return true;
     }
@@ -1783,10 +1716,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return portList;
     }
 
-    private boolean isAdjacencySidNeighborOf(String prevNodeId, String prevAdjacencySid, String nodeId) {
+    /**
+     * Check whether the router with preNodeid is connected to the router
+     * with nodeId via adjacencySid or not
+     *
+     * @param prevNodeId the router node ID of the adjacencySid
+     * @param adjacencySid adjacency SID
+     * @param nodeId the router node ID to check
+     * @return
+     */
+    private boolean isAdjacencySidNeighborOf(String prevNodeId, String adjacencySid, String nodeId) {
 
         HashMap<Integer, List<Integer>> adjacencySidInfo = adjacencySidTable.get(Integer.valueOf(prevNodeId));
-        List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(prevAdjacencySid));
+        List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(adjacencySid));
 
         for (Integer port: ports) {
             Switch sw = getSwitchFromNodeId(prevNodeId);
@@ -1802,6 +1744,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return false;
     }
 
+    /**
+     * Check if the node ID is the adjacency ID or not
+     *
+     * @param nodeId to check
+     * @return true if the node ID is the adjacency ID, false otherwise
+     */
     private boolean isAdjacencySid(String nodeId) {
         // XXX The rule might change
         if (Integer.parseInt(nodeId) > 10000)
@@ -1833,7 +1781,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return  adjacencySidTable.get(Integer.valueOf(nodeSid));
     }
 
-    private HashMap<Integer, List<Integer>> parseAdjacencySidInfo(String adjInfo) throws JSONException {
+    /**
+     * Parse the adjacency jason string and build the adjacency Table
+     *
+     * @param adjInfo  adjacency info jason string
+     * @return HashMap<Adjacency ID, List of ports> object
+     * @throws JSONException
+     */
+    private HashMap<Integer, List<Integer>> parseAdjacencySidInfo(String adjInfo)
+            throws JSONException {
         JSONArray arry = new JSONArray(adjInfo);
         HashMap<Integer, List<Integer>> AdjacencyInfo =
                 new HashMap<Integer, List<Integer>>();
@@ -1851,6 +1807,112 @@ public class SegmentRoutingManager implements IFloodlightModule,
             AdjacencyInfo.put(adjId, portNoList);
         }
         return AdjacencyInfo;
+    }
+
+    /**
+     * Build the MatchActionOperationEntry according to the flag
+     *
+     * @param sw node ID to push for MPLS label
+     * @param mplsLabel List of Switch DPIDs to forwards packets to
+     * @param fwdSws PHP flag
+     * @param Bos BoS flag
+     * @param isTransitRouter
+     * @return MatchiACtionOperationEntry object
+     */
+    private MatchActionOperationEntry buildMAEntry(Switch sw,
+            String mplsLabel, List<String> fwdSws, boolean php,
+            boolean Bos) {
+        MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), Bos);
+        List<Action> actions = new ArrayList<Action>();
+
+        PopMplsAction popActionBos = new PopMplsAction(EthType.IPv4);
+        PopMplsAction popAction = new PopMplsAction(EthType.MPLS_UNICAST);
+        CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
+        DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
+        DecMplsTtlAction decMplsTtlAction = new DecMplsTtlAction(1);
+
+        if (php) {
+            actions.add(copyTtlInAction);
+            if (Bos) {
+                actions.add(popActionBos);
+                actions.add(decNwTtlAction);
+            }
+            else {
+                actions.add(popAction);
+                actions.add(decMplsTtlAction);
+            }
+        }
+        else {
+            actions.add(decMplsTtlAction);
+        }
+
+        if (!supportTransitECMP && isTransitRouter(sw) && !php) {
+            PortNumber port = pickOnePort(sw, fwdSws);
+            if (port == null) {
+                log.warn("Failed to get a port from NeightborSet");
+                return null;
+            }
+            OutputAction outputAction = new OutputAction(port);
+            Switch destSwitch =
+                    mutableTopology.getSwitch(new Dpid(fwdSws.get(0)));
+            MacAddress srcMac =
+                    MacAddress.of(sw.getStringAttribute("routerMac"));
+            MacAddress dstMac =
+                    MacAddress.of(destSwitch.getStringAttribute("routerMac"));
+            SetSAAction setSAAction = new SetSAAction(srcMac);
+            SetDAAction setDAAction = new SetDAAction(dstMac);
+            actions.add(outputAction);
+            actions.add(setSAAction);
+            actions.add(setDAAction);
+        }
+        else {
+            GroupAction groupAction = new GroupAction();
+            for (String dpid: fwdSws)
+                groupAction.addSwitch(new Dpid(dpid));
+            actions.add(groupAction);
+        }
+
+        MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
+                new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
+        Operator operator = Operator.ADD;
+        MatchActionOperationEntry maEntry =
+                new MatchActionOperationEntry(operator, matchAction);
+
+        return maEntry;
+    }
+
+    /**
+     * Pick a router from the neighbor set and return the port
+     * connected to the router.
+     *
+     * @param sw source switch
+     * @param fwdSwDpids neighbor set of the switch
+     * @return PortNumber connected to one of the neighbors
+     */
+    private PortNumber pickOnePort(Switch sw, List<String> fwdSwDpids) {
+        for (Link link: sw.getOutgoingLinks()) {
+            if (link.getDstSwitch().getDpid().toString().equals(fwdSwDpids.get(0)))
+                return link.getSrcPort().getNumber();
+        }
+
+        return null;
+    }
+
+    /**
+     * check if the router is the transit router or not
+     *
+     * @param sw  router switch to check
+     * @return true if the switch is the transit router, false otherwise
+     */
+    private boolean isTransitRouter(Switch sw) {
+        int i = 0;
+        for(Switch neighbor: sw.getNeighbors()) {
+            i++;
+        }
+        if (i > 1)
+            return true;
+        else
+            return false;
     }
 
     /**
@@ -2125,7 +2187,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         arpHandler.sendArpRequest(sw, destinationAddress, inPort);
     }
 
-
     // ************************************
     // Test functions
     // ************************************
@@ -2317,7 +2378,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         log.debug(logStr.toString());
 
     }
-
 
     // ************************************
     // Unused classes and functions

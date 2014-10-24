@@ -48,8 +48,10 @@ import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
 import net.onrc.onos.core.matchaction.action.PushMplsAction;
+import net.onrc.onos.core.matchaction.action.SetDAAction;
 import net.onrc.onos.core.matchaction.action.SetMplsBosAction;
 import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
+import net.onrc.onos.core.matchaction.action.SetSAAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.matchaction.match.MplsMatch;
@@ -1361,6 +1363,16 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
             ofAction = factory.actions().copyTtlIn();
         } else if (action instanceof CopyTtlOutAction) {
             ofAction = factory.actions().copyTtlOut();
+        } else if (action instanceof SetDAAction) {
+            OFOxmEthDst dmac = factory.oxms()
+                    .ethDst(((SetDAAction)action).getAddress());
+            ofAction = factory.actions().buildSetField()
+                    .setField(dmac).build();
+        } else if (action instanceof SetSAAction) {
+            OFOxmEthSrc smac = factory.oxms()
+                    .ethSrc(((SetSAAction)action).getAddress());
+            ofAction = factory.actions().buildSetField()
+                    .setField(smac).build();
         } else {
             log.warn("Unsupported Action type: {}", action.getClass().getName());
             return null;
