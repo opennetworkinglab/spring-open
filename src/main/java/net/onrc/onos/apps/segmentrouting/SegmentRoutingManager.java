@@ -1523,17 +1523,41 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 rules.add(routeInfo);
                 routeInfo = new TunnelRouteInfo();
 
-                if (!isAdjacencySid(nodeId)) {
-                    srcSw = getSwitchFromNodeId(nodeId);
-                }
-                // If the previous sub tunnel finishes with adjacency SID, then we need to
-                // start the procedure from the adjacency destination ID
-                // TODO: if we more than one port are assigned to the adjacency node, then we need to
-                // create multiple rules
-                else {
-                    List<Switch> destNodeList = getAdjacencyDestinationNode(prevNodeId, nodeId);
-                    if (destNodeList != null && !destNodeList.isEmpty())
+                if (isAdjacencySid(nodeId)) {
+                    // If the previous sub tunnel finishes with adjacency SID,
+                    // then we need to start the procedure from the adjacency
+                    // destination ID.
+                    List<Switch> destNodeList =
+                            getAdjacencyDestinationNode(prevNodeId, nodeId);
+                    if (destNodeList == null || destNodeList.isEmpty()) {
+                        log.warn("Cannot find destination node for adjacencySID {}",
+                                nodeId);
+                        return null;
+                    }
+                    // If the previous sub tunnel finishes with adjacency SID with
+                    // multiple ports, then we need to remove the adjacency Sid
+                    // from the previous sub tunnel and start the new sub tunnel
+                    // with the adjacency Sid. Technically, the new subtunnel
+                    // forward packets to the port assigned to the adjacency Sid
+                    // and the label stack starts with the next ID.
+                    // This is to avoid to install new policy rule to multiple nodes for stitching when the
+                    // adjacency Sid that has more than one port.
+                    if (destNodeList.size() > 1) {
+                        rules.get(rules.size()-1).route.remove(nodeId);
+                        srcSw = getSwitchFromNodeId(prevNodeId);
+                        List<Dpid> fwdSws = getDpidIfNeighborOf(nodeId, srcSw);
+                        routeInfo.setFwdSwDpid(fwdSws);
+                        routeInfo.setSrcDpid(srcSw.getDpid().toString());
+                        i = 1;
+                        checkNeighbor = false;
+                        continue;
+                    }
+                    else {
                         srcSw = destNodeList.get(0);
+                    }
+                }
+                else {
+                    srcSw = getSwitchFromNodeId(nodeId);
                 }
                 srcDpid = srcSw.getDpid().toString();
                 routeInfo.setSrcDpid(srcDpid);
@@ -1819,7 +1843,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
             List<Integer> portNoList = new ArrayList<Integer>();
             for (int j = 0; j < portNos.length(); j++) {
-                portNoList.add(Integer.valueOf(portNos.getInt(0)));
+                portNoList.add(Integer.valueOf(portNos.getInt(j)));
             }
             AdjacencyInfo.put(adjId, portNoList);
         }
