@@ -1570,9 +1570,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
 
-        if (i < MAX_NUM_LABELS+1) {
+        if (i < MAX_NUM_LABELS+1 && (routeInfo.getFwdSwDpid() != null &&
+                !routeInfo.getFwdSwDpid().isEmpty())) {
             rules.add(routeInfo);
-            // NOTE: empty label stack can happen
+            // NOTE: empty label stack can happen, but forwarding destination should be set
         }
 
         return rules;
