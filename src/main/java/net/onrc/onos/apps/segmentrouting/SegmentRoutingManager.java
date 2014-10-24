@@ -1332,6 +1332,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return true;
     }
 
+    /**
+     * Create groups for the tunnel
+     *
+     * @param tunnelId tunnel ID
+     * @param routeInfo label stacks for the tunnel
+     * @param ns NeighborSet to forward packets
+     * @return group ID, return -1 if it fails
+     */
     private int createGroupsForTunnel(String tunnelId, TunnelRouteInfo routeInfo,
             NeighborSet ns) {
 
@@ -1435,7 +1443,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     private List<TunnelRouteInfo> getStitchingRule(List<String> route) {
 
-        if (route.isEmpty() || route.size() < 2)
+        if (route.isEmpty() || route.size() < 3)
             return null;
 
         List<TunnelRouteInfo> rules = new ArrayList<TunnelRouteInfo>();
@@ -1447,41 +1455,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
         String srcDpid = srcSw.getDpid().toString();
 
-        /*
-        if (route.size() <= MAX_NUM_LABELS+1) {
-            boolean match =false;
-            TunnelRouteInfo routeInfo = new TunnelRouteInfo();
-            routeInfo.setSrcDpid(srcSw.getDpid().toString());
-            String nodeId = route.get(1);
-            List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw, nodeId);
-            if (fwdSwDpids == null){
-                return null;
-            }
-            for (Dpid dpid: fwdSwDpids) {
-                if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
-                    List<Dpid> fwdSws = new ArrayList<Dpid>();
-                    fwdSws.add(dpid);
-                    routeInfo.setFwdSwDpid(fwdSws);
-                    match = true;
-                    break;
-                }
-            }
-            route.remove(0); // remove source router from the list
-            if (match) {
-                route.remove(0);
-            }
-            else {
-                routeInfo.setFwdSwDpid(fwdSwDpids);
-            }
-            routeInfo.setRoute(route);
-            rules.add(routeInfo);
-            return rules;
-        }
-        */
-
         int i = 0;
         TunnelRouteInfo routeInfo = new TunnelRouteInfo();
-        boolean checkNeighbor = true;
+        boolean checkNeighbor = false;
         String prevAdjacencySid = null;
         String prevNodeId = null;
 
@@ -1489,46 +1465,34 @@ public class SegmentRoutingManager implements IFloodlightModule,
             // The first node ID is always the source router.
             // We assume that the first ID cannot be an Adjacency SID.
             if (i == 0) {
-                routeInfo.setSrcDpid(srcDpid);
                 srcSw = getSwitchFromNodeId(nodeId);
+                if (srcDpid == null)
+                    srcDpid = srcSw.getDpid().toString();
+                routeInfo.setSrcDpid(srcDpid);
+                checkNeighbor = true;
                 i++;
             }
+            // if this is the first node ID to put the label stack..
             else if (i == 1) {
-                if (isAdjacencySid(nodeId)) {
-                    routeInfo.addRoute(nodeId);
-                    i++;
-                    prevAdjacencySid = nodeId;
-                }
-                else if (checkNeighbor) {
-                    // Check if next node is the neighbor SW of the source SW
-                    List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw,
-                            nodeId);
-                    if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
-                        log.debug("There is no route from node {} to node {}",
-                                srcSw.getDpid(), nodeId);
-                        return null;
-                    }
-                    // If first Id is one of the neighbors, do not include it to route, but set it as a fwd SW.
-                    boolean match = false;
-                    for (Dpid dpid: fwdSwDpids) {
-                        if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
-                            List<Dpid> fwdSws = new ArrayList<Dpid>();
-                            fwdSws.add(dpid);
-                            routeInfo.setFwdSwDpid(fwdSws);
-                            match = true;
-                            break;
+                if (checkNeighbor) {
+                    List<Dpid> fwdSws = getDpidIfNeighborOf(nodeId, srcSw);
+                    // if nodeId is NOT the neighbor of srcSw..
+                    if (fwdSws.isEmpty()) {
+                        fwdSws = getForwardingSwitchForNodeId(srcSw,nodeId);
+                        if (fwdSws == null || fwdSws.isEmpty()) {
+                            log.warn("There is no route from node {} to node {}",
+                                    srcSw.getDpid(), nodeId);
+                            return null;
                         }
-                    }
-                    if (!match) {
                         routeInfo.addRoute(nodeId);
-                        routeInfo.setFwdSwDpid(fwdSwDpids);
                         i++;
                     }
+                    routeInfo.setFwdSwDpid(fwdSws);
                     // we check only the next node ID of the source router
                     checkNeighbor = false;
-
-                // if we don't need to check neighbor
-                }else {
+                }
+                // if neighbor check is already done, then just add it
+                else  {
                     routeInfo.addRoute(nodeId);
                     i++;
                 }
@@ -1548,12 +1512,30 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 i++;
             }
 
+            // If the adjacency ID is added the label stack,
+            // then we need to check if the next node is the destination of the adjacency SID
+            if (isAdjacencySid(nodeId))
+                prevAdjacencySid = nodeId;
+
             // If the number of labels reaches the limit, start over the procedure
             if (i == MAX_NUM_LABELS+1) {
+
                 rules.add(routeInfo);
                 routeInfo = new TunnelRouteInfo();
-                srcSw = getSwitchFromNodeId(nodeId);
-                srcDpid = getSwitchFromNodeId(nodeId).getDpid().toString();
+
+                if (!isAdjacencySid(nodeId)) {
+                    srcSw = getSwitchFromNodeId(nodeId);
+                }
+                // If the previous sub tunnel finishes with adjacency SID, then we need to
+                // start the procedure from the adjacency destination ID
+                // TODO: if we more than one port are assigned to the adjacency node, then we need to
+                // create multiple rules
+                else {
+                    List<Switch> destNodeList = getAdjacencyDestinationNode(prevNodeId, nodeId);
+                    if (destNodeList != null && !destNodeList.isEmpty())
+                        srcSw = destNodeList.get(0);
+                }
+                srcDpid = srcSw.getDpid().toString();
                 routeInfo.setSrcDpid(srcDpid);
                 i = 1;
                 checkNeighbor = true;
@@ -1563,8 +1545,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 prevNodeId = nodeId;
         }
 
+
         if (i < MAX_NUM_LABELS+1) {
             rules.add(routeInfo);
+            // NOTE: empty label stack can happen
         }
 
         return rules;
@@ -1679,6 +1663,85 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Utility functions
     // ************************************
 
+    /**
+     * Get the destination Nodes of the adjacency Sid
+     *
+     * @param nodeId  node ID of the adjacency Sid
+     * @param adjacencySid  adjacency Sid
+     * @return List of Switch, empty list if not found
+     */
+    private List<Switch> getAdjacencyDestinationNode(String nodeId, String adjacencySid) {
+        List<Switch> dstSwList = new ArrayList<Switch>();
+
+        HashMap<Integer, List<Integer>> adjacencySidInfo =
+                adjacencySidTable.get(Integer.valueOf(nodeId));
+        List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(adjacencySid));
+        Switch srcSw = getSwitchFromNodeId(nodeId);
+        for (Integer port: ports) {
+            for (Link link: srcSw.getOutgoingLinks()) {
+                if (link.getSrcPort().getPortNumber().value() == port) {
+                    dstSwList.add(link.getDstSwitch());
+                }
+            }
+        }
+
+        return dstSwList;
+
+    }
+
+    /**
+     * Get the DPID of the router with node ID IF the node ID is the neighbor of the
+     * Switch srcSW.
+     * If the nodeId is the adjacency Sid, then it returns the destination router DPIDs.
+     *
+     * @param nodeId Node ID to check
+     * @param srcSw target Switch
+     * @return List of DPID of nodeId, empty list if the nodeId is not the neighbor of srcSW
+     */
+    private List<Dpid> getDpidIfNeighborOf(String nodeId, Switch srcSw) {
+        List<Dpid> fwdSws = new ArrayList<Dpid>();
+        // if the nodeID is the adjacency ID, then we need to regard it as the
+        // neighbor node ID and need to return the destination router DPID(s)
+        if (isAdjacencySid(nodeId)) {
+            String srcNodeId = this.getMplsLabel(srcSw.getDpid().toString());
+            HashMap<Integer, List<Integer>> adjacencySidInfo =
+                    adjacencySidTable.get(Integer.valueOf(srcNodeId));
+            List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(nodeId));
+
+            for (Integer port: ports) {
+                for (Link link: srcSw.getOutgoingLinks()) {
+                    if (link.getSrcPort().getPortNumber().value() == port) {
+                        fwdSws.add(link.getDstSwitch().getDpid());
+                    }
+                }
+            }
+        }
+        else {
+            List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw,nodeId);
+            if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
+                log.warn("There is no route from node {} to node {}",
+                        srcSw.getDpid(), nodeId);
+                return null;
+            }
+
+            for (Dpid dpid: fwdSwDpids) {
+                if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
+                    fwdSws.add(dpid);
+                    break;
+                }
+            }
+        }
+
+        return fwdSws;
+    }
+
+    /**
+     * Get port numbers of the neighbor set
+     *
+     * @param srcSwDpid source switch
+     * @param ns Neighbor set of the switch
+     * @return List of PortNumber, null if not found
+     */
     private List<PortNumber> getPortsFromNeighborSet(String srcSwDpid, NeighborSet ns) {
 
         List<PortNumber> portList = new ArrayList<PortNumber>();
