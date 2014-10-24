@@ -69,6 +69,21 @@ def remove_unicodes(actions):
         return newActions
     else:
         actions
+def renameActions(actions):
+    actions = actions.replace('GOTO_TABLE','GOTO')
+    actions = actions.replace('WRITE_ACTIONS','WRITE')
+    actions = actions.replace('APPLY_ACTIONS','APPLY')
+    actions = actions.replace('DEC_NW_TTL: True','DEC_NW_TTL')
+    actions = actions.replace('POP_MPLS: True','POP_MPLS')
+    actions = actions.replace('COPY_TTL_IN: True','COPY_TTL_IN')
+    actions = actions.replace('COPY_TTL_OUT: True','COPY_TTL_OUT')
+    actions = actions.replace('DEC_MPLS_TTL: True','DEC_MPLS_TTL')
+    actions = actions.replace('SET_DL_SRC','SRC_MAC')
+    actions = actions.replace('SET_DL_DST','DST_MAC')
+    actions = actions.replace('SET_NW_SRC','SRC_IP')
+    actions = actions.replace('SET_NW_DST','DST_IP')
+    
+    return actions
 
 def check_rest_result(result, message=None):
     if isinstance(result, collections.Mapping):
@@ -2247,6 +2262,10 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                     #raise error.ArgumentValidationError('\n\n\n %s' % json.tool(entries))
                 instructions = ipTableEntry['instructions']
                 actions = str(instructions[0]) if instructions[0] else None
+                print "actions: ", actions
+                if actions != None:
+                    actions = remove_unicodes(actions)
+                    actions = renameActions(actions)
                 actions = remove_unicodes(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
@@ -2271,7 +2290,9 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 instructions = ipTableEntry['instructions']
                 #raise error.ArgumentValidationError('\n\n\n %s' %len(actions))
                 actions = str(instructions[0])if instructions[0] else None
-                actions = remove_unicodes(actions)
+                if actions != None:
+                    actions = remove_unicodes(actions)
+                    actions = renameActions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
@@ -2314,7 +2335,9 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                     mplsBos = match.get('mplsBos') if match.get('mplsBos') else '*'
                 instructions = ipTableEntry['instructions']
                 actions = str(instructions[0])if instructions[0] else None
-                actions = remove_unicodes(actions)
+                if actions != None:
+                    actions = remove_unicodes(actions)
+                    actions = renameActions(actions)
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
