@@ -1863,13 +1863,14 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
                 int nextGroupIdToBeDeleted =
                         userDefinedGroups.get(currGroupIdToBeDeleted).
                         buckets.get(0).groupNo;
-                deleteGroup(groupId);
+                deleteGroup(currGroupIdToBeDeleted);
                 userDefinedGroups.remove(currGroupIdToBeDeleted);
                 currGroupIdToBeDeleted = nextGroupIdToBeDeleted;
             }
         }
 
-        userDefinedGroups.remove(groupid);
+        deleteGroup(groupId);
+        userDefinedGroups.remove(groupId);
         log.debug("removeGroup: removed group with group id {}", groupId);
         return true;
     }

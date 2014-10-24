@@ -1674,7 +1674,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 return false;
             }
             else {
-                sw13.removeGroup(route.getGroupId());
+                if (!sw13.removeGroup(route.getGroupId())) {
+                    log.warn("Tunnel {} was not removed ", tunnelId);
+                    return false;                }
             }
         }
 
