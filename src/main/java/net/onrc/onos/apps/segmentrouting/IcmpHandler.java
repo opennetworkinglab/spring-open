@@ -446,6 +446,11 @@ public class IcmpHandler {
         String gwIpSrc = getGwIpForSubnet(ipv4.getSourceAddress());
         String gwIpDest = getGwIpForSubnet(ipv4.getDestinationAddress());
 
+        if (gwIpSrc == null || gwIpDest == null) {
+            log.warn("Failed to get gateway IP for {}", ipv4);
+            return false;
+        }
+
         if (gwIpSrc.equals(gwIpDest)) {
             return true;
         }
