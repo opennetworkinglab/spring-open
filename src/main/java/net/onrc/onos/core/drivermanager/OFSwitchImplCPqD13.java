@@ -1270,6 +1270,10 @@ public class OFSwitchImplCPqD13 extends OFSwitchImplBase implements IOF13Switch 
     private void assignAdjacencyLabels() {
         List<AdjacencySid> autogenAdjSids = new ArrayList<AdjacencySid>();
         publishAttributes = new HashMap<String, String>();
+        if (srConfig == null) {
+            log.error("Cannot obtain SegmentRouterConfig in sw {}", getStringId());
+            return; // this will cause handshake to fail
+        }
         for (OFPortDesc p : getPorts()) {
             int pnum = p.getPortNo().getPortNumber();
 
