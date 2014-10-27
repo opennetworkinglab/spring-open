@@ -25,10 +25,11 @@ import java.util.concurrent.TimeUnit;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.annotations.LogMessageDoc;
-import net.onrc.onos.core.drivermanager.OFSwitchImplCPqD13;
+import net.onrc.onos.core.drivermanager.OFSwitchImplSpringOpenTTP;
 
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFFlowStatsEntry;
+import org.projectfloodlight.openflow.protocol.OFFlowStatsReply;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsEntry;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFGroupStatsEntry;
@@ -36,9 +37,7 @@ import org.projectfloodlight.openflow.protocol.OFGroupStatsReply;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.OFPortStatsEntry;
-import org.projectfloodlight.openflow.protocol.OFFlowStatsReply;
 import org.projectfloodlight.openflow.protocol.OFPortStatsReply;
-import org.projectfloodlight.openflow.protocol.OFPortStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.OFStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFStatsType;
@@ -113,7 +112,7 @@ public class SwitchResourceBase extends ServerResource {
                     log.error("Failure retrieving statistics from switch " + sw, e);
                 }
                 return flowStats;
-            } 
+            }
             else if (statType == OFStatsType.PORT){
                 log.debug("Switch Port Stats: req sent for all "
                         + "ports in switch {}", sw.getStringId());
@@ -224,7 +223,7 @@ public class SwitchResourceBase extends ServerResource {
         //getting tableId from CPqD driver
         TableId tableId;
         if (sw != null) {
-            if((tableId = ((OFSwitchImplCPqD13) sw).getTableId(tableType)) == null){
+            if ((tableId = ((OFSwitchImplSpringOpenTTP) sw).getTableId(tableType)) == null) {
                 log.error("Invalid tableType {} " + tableType);
                 return null;
             }
@@ -254,7 +253,7 @@ public class SwitchResourceBase extends ServerResource {
                     log.error("Failure retrieving per table statistics from switch " + sw, e);
                 }
                 return flowStats;
-            } 
+            }
         }
         //should never get to this point
         log.error("Failure retrieving  {} table statistics from switch {}",tableType, sw);

@@ -34,6 +34,7 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.apps.segmentrouting.web.SegmentRoutingWebRoutable;
+import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
@@ -118,7 +119,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
 
     // Flag whether transit router supports ECMP or not
-    private boolean supportTransitECMP = true;
+    // private boolean supportTransitECMP = true;
 
     private int testMode = 0;
 
@@ -1866,7 +1867,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(decMplsTtlAction);
         }
 
-        if (!supportTransitECMP && isTransitRouter(sw) && !php) {
+        if ((sw instanceof OFSwitchImplDellOSR) && isTransitRouter(sw) && !php) {
             PortNumber port = pickOnePort(sw, fwdSws);
             if (port == null) {
                 log.warn("Failed to get a port from NeightborSet");

@@ -39,7 +39,13 @@ public final class DriverManager {
         if (vendor.startsWith("Stanford University, Ericsson Research and CPqD Research")
                 &&
                 hw.startsWith("OpenFlow 1.3 Reference Userspace Switch")) {
-            return new OFSwitchImplCPqD13(desc, cpqdUsePipeline13);
+            return new OFSwitchImplCpqdOSR(desc, cpqdUsePipeline13);
+        }
+
+        if (vendor.contains("Dell")
+                &&
+                hw.contains("OpenFlow 1.3")) {
+            return new OFSwitchImplDellOSR(desc, cpqdUsePipeline13);
         }
 
         if (!disableOvsClassification && vendor.startsWith("Nicira") &&
