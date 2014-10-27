@@ -507,7 +507,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             log.debug("Remove port {} from switch {}", srcPort, srcSw);
             log.debug("Remove port {} from switch {}", dstPort, dstSw);
 
-            if (!supportTransitECMP &&
+            if ((srcSw instanceof OFSwitchImplDellOSR &&
+                    dstSw instanceof OFSwitchImplDellOSR) &&
                isTransitRouter(mutableTopology.getSwitch(srcPort.getDpid())) &&
                isTransitRouter(mutableTopology.getSwitch(dstPort.getDpid()))) {
                 populateEcmpRoutingRules(false);
@@ -1716,8 +1717,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
         Switch srcSwitch = mutableTopology.getSwitch(new Dpid(srcSwDpid));
         if (srcSwitch == null)
             return null;
+        IOF13Switch srcSwitch13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                getSwId(srcSwitch.getDpid().toString()));
+
         for (Dpid neighborDpid: ns.getDpids()) {
-            if (!supportTransitECMP && ns.getDpids().size() == 1) {
+            if (srcSwitch13 instanceof OFSwitchImplDellOSR &&
+                    ns.getDpids().size() == 1) {
                 Switch dstSwitch = mutableTopology.getSwitch(neighborDpid);
                 if (isTransitRouter(srcSwitch) && isTransitRouter(dstSwitch)) {
                     Link link = srcSwitch.getLinkToNeighbor(neighborDpid);
@@ -1974,7 +1979,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         else {
                             Dpid firstVia = via.get(via.size()-1);
                             fwdSws.add(firstVia);
-                            if (!supportTransitECMP &&
+                            IOF13Switch targetSw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
+                                    getSwId(targetSw.getDpid().toString()));
+                            if (targetSw13 instanceof OFSwitchImplDellOSR &&
                                 isTransitRouter(targetSw) &&
                                 isTransitRouter(mutableTopology.getSwitch(firstVia))) {
                                 return fwdSws;
