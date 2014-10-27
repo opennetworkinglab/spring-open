@@ -1056,7 +1056,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
 
-
     // ************************************
     // Policy routing classes and functions
     // ************************************
@@ -1248,6 +1247,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             log.debug("Failed to get a tunnel rule.");
             return false;
         }
+
         for (TunnelRouteInfo route: stitchingRule) {
             NeighborSet ns = new NeighborSet();
             for (Dpid dpid: route.getFwdSwDpid())
@@ -1686,7 +1686,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
                 log.warn("There is no route from node {} to node {}",
                         srcSw.getDpid(), nodeId);
-                return null;
+                return fwdSws;
             }
 
             for (Dpid dpid: fwdSwDpids) {
@@ -1701,7 +1701,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
-     * Get port numbers of the neighbor set
+     * Get port numbers of the neighbor set.
+     * If ECMP in transit router is not supported, then only one port should be returned
+     * regardless of number of nodes in neighbor set.
      *
      * @param srcSwDpid source switch
      * @param ns Neighbor set of the switch
@@ -1714,8 +1716,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
         if (srcSwitch == null)
             return null;
         for (Dpid neighborDpid: ns.getDpids()) {
-            Link link = srcSwitch.getLinkToNeighbor(neighborDpid);
-            portList.add(link.getSrcPort().getNumber());
+            if (!supportTransitECMP && ns.getDpids().size() == 1) {
+                Switch dstSwitch = mutableTopology.getSwitch(neighborDpid);
+                if (isTransitRouter(srcSwitch) && isTransitRouter(dstSwitch)) {
+                    Link link = srcSwitch.getLinkToNeighbor(neighborDpid);
+                    portList.add(link.getSrcPort().getNumber());
+                    break;
+                }
+            }
+            else {
+                for (Link link: srcSwitch.getOutgoingLinks()) {
+                    if (link.getDstSwitch().getDpid().equals(neighborDpid)) {
+                        portList.add(link.getSrcPort().getNumber());
+                    }
+                }
+            }
         }
 
         return portList;
@@ -1921,7 +1936,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
-     * Get the forwarding Switch DPIDs to send packets to a node
+     * Get the forwarding Switch DPIDs to send packets to a node.
+     * If ECMP in transit routers is not supported, only one switch needs to be
+     * selected as the neighbor set to forward packets to.
      *
      * @param srcSw source switch
      * @param nodeId destination node Id
@@ -1956,6 +1973,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         else {
                             Dpid firstVia = via.get(via.size()-1);
                             fwdSws.add(firstVia);
+                            if (!supportTransitECMP &&
+                                isTransitRouter(targetSw) &&
+                                isTransitRouter(mutableTopology.getSwitch(firstVia))) {
+                                return fwdSws;
+                            }
                         }
                     }
                 }
