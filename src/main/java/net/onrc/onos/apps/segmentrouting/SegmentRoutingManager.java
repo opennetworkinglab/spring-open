@@ -1062,18 +1062,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Policy routing classes and functions
     // ************************************
 
+    /**
+     * Enums for policy type
+     *
+     */
+    public enum PolicyType{
+        TUNNEL_FLOW,
+        LOADBALANCE,
+        AVOID,
+        DENY
+    }
     public class PolicyInfo {
-
-        public final int TYPE_EXPLICIT = 1;
-        public final int TYPE_AVOID = 2;
-
         private String policyId;
         private PacketMatch match;
         private int priority;
         private String tunnelId;
-        private int type;
+        private PolicyType type;
 
-        public PolicyInfo(String pid, int type, PacketMatch match, int priority,
+        public PolicyInfo(String pid, PolicyType type, PacketMatch match, int priority,
                 String tid) {
             this.policyId = pid;
             this.match = match;
@@ -1088,7 +1094,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             this.match = match;
             this.priority = priority;
             this.tunnelId = tid;
-            this.type = 0;
+            this.type = PolicyType.TUNNEL_FLOW;
         }
         public String getPolicyId(){
             return this.policyId;
@@ -1102,7 +1108,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         public String getTunnelId(){
             return this.tunnelId;
         }
-        public int getType(){
+        public PolicyType getType(){
             return this.type;
         }
     }

@@ -118,7 +118,7 @@ public class SegmentRouterPolicyResource extends ServerResource {
             String policyId = policy.getPolicyId();
             String tunnelId = policy.getTunnelId();
             int priority = policy.getPriority();
-            int policyType = policy.getType();
+            String policyType = policy.getType().name();
             PacketMatch flowEntries = policy.getMatch();
             SegmentRouterPolicyInfo pInfo = new SegmentRouterPolicyInfo(policyId, policyType, tunnelId,
                     priority,  flowEntries);

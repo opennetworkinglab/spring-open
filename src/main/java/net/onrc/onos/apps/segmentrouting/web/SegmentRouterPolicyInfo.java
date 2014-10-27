@@ -10,12 +10,12 @@ import net.onrc.onos.core.matchaction.match.PacketMatch;
 
 public class SegmentRouterPolicyInfo {
     private String policyId;
-    private int policyType;
+    private String policyType;
     private int priority;
     private String tunnelId = null;
     private PacketMatch match;
     
-    public SegmentRouterPolicyInfo(String Id,int type,String tunnelUsed, int ppriority,PacketMatch flowEntries){
+    public SegmentRouterPolicyInfo(String Id,String type,String tunnelUsed, int ppriority,PacketMatch flowEntries){
         this.policyId = Id;
         this.policyType = type;
         this.tunnelId =tunnelUsed;
@@ -25,7 +25,7 @@ public class SegmentRouterPolicyInfo {
     public String getPolicyId(){
         return this.policyId;
     }
-    public int getPolicyType(){
+    public String getPolicyType(){
         return this.policyType;
     }
     public String getTunnelId(){

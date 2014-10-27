@@ -2392,8 +2392,8 @@ REALTIME_TABLE_FORMAT = {
 SHOW_TUNNEL_FORMAT = {
     'show_tunnel' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'tunnelId', 'policies','labelStack','tunnelPath'],
-            'details' : [ 'Idx', 'tunnelId', 'policies','labelStack', 'dpidGroup',],
+            'default' : [ 'Idx', 'tunnelId', 'policies','tunnelPath','labelStack',],
+            'details' : [ 'Idx', 'tunnelId', 'policies','tunnelPath','labelStack', 'dpidGroup',],
             },
         'fields': {
             'tunnelId'         : { 'verbose-name' : 'Id',
