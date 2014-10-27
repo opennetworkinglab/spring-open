@@ -211,13 +211,13 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                         'short-help' : 'Show requested item by querying switch',
                         'doc'        : 'switch|realtime-+',
                     },
-                    {
-                        'field'    : 'detail',
-                        'optional' : True,
-                        'type'     : 'enum',
-                        'values'   : ('details','brief'),
-                        'doc'      : 'format|+',
-                    },
+                    #{
+                    #    'field'    : 'detail',
+                    #    'optional' : True,
+                    #    'type'     : 'enum',
+                    #    'values'   : ('details','brief'),
+                    #    'doc'      : 'format|+',
+                    #},
                 ),
                 (
                     {
@@ -254,20 +254,24 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                                         'acl',
                                         'mpls'
                                         ),
-                        'doc'      : 'format|+',
-                    },
-                  {
-                        'field'    : 'tableflow',
-                        'type'     : 'enum',
-                        'values'     : ('flow',
-                                        ),
                         'action'     : 'display-rest',
-                        'url'        : 'realtimestats/%(realtimestats)s/%(tabletype)s/%(tableflow)s/%(dpid)s/',
+                        'url'        : 'realtimestats/%(realtimestats)s/%(tabletype)s/flow/%(dpid)s/',
                         'rest-type'  : 'dict-of-list-of-switch',
                         'format'     : 'realtime_%(realtimestats)s_%(tabletype)s_flow',
-                        'short-help' : 'Show requested item by querying switch',
-                        'doc'        : 'switch|realtime-+',
+                        'doc'      : 'format|+',
                     },
+                  #{
+                  #      'field'    : 'tableflow',
+                  #   'type'     : 'enum',
+                  #      'values'     : ('flow',
+                  #                      ),
+                  #      'action'     : 'display-rest',
+                  #      'url'        : 'realtimestats/%(realtimestats)s/%(tabletype)s/%(tableflow)s/%(dpid)s/',
+                  #      'rest-type'  : 'dict-of-list-of-switch',
+                  #      'format'     : 'realtime_%(realtimestats)s_%(tabletype)s_flow',
+                  #      'short-help' : 'Show requested item by querying switch',
+                  #      'doc'        : 'switch|realtime-+',
+                  #  },
                 ),
             )
         }

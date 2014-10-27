@@ -12,11 +12,13 @@ public class SegmentRouterPolicyInfo {
     private String policyId;
     private int policyType;
     private int priority;
+    private String tunnelId = null;
     private PacketMatch match;
     
-    public SegmentRouterPolicyInfo(String Id,int type, int ppriority,PacketMatch flowEntries){
+    public SegmentRouterPolicyInfo(String Id,int type,String tunnelUsed, int ppriority,PacketMatch flowEntries){
         this.policyId = Id;
         this.policyType = type;
+        this.tunnelId =tunnelUsed;
         this.priority = ppriority;
         this.match = flowEntries;
     }
@@ -25,6 +27,9 @@ public class SegmentRouterPolicyInfo {
     }
     public int getPolicyType(){
         return this.policyType;
+    }
+    public String getTunnelId(){
+        return this.tunnelId;
     }
     public int getPriority(){
         return this.priority;

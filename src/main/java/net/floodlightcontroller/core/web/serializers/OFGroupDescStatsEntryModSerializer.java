@@ -66,6 +66,14 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
                 else if(action.getType().compareTo(OFActionType.GROUP) == 0){
                     jGen.writeNumberField("goToGroup", ((OFActionGroup)action).getGroup().getGroupNumber());
                 }
+                else if(action.getType().compareTo(OFActionType.COPY_TTL_IN) == 0
+                        || action.getType().compareTo(OFActionType.COPY_TTL_OUT) == 0
+                        || action.getType().compareTo(OFActionType.DEC_MPLS_TTL) == 0
+                        || action.getType().compareTo(OFActionType.DEC_NW_TTL) == 0
+                        || action.getType().compareTo(OFActionType.POP_PBB) == 0
+                        || action.getType().compareTo(OFActionType.POP_VLAN) == 0){
+                    jGen.writeStringField(action.getType().name(), "True");
+                }
             }
             jGen.writeEndObject();
         }

@@ -116,10 +116,12 @@ public class SegmentRouterPolicyResource extends ServerResource {
         while(piI.hasNext()){
             PolicyInfo policy = piI.next();
             String policyId = policy.getPolicyId();
+            String tunnelId = policy.getTunnelId();
             int priority = policy.getPriority();
             int policyType = policy.getType();
             PacketMatch flowEntries = policy.getMatch();
-            SegmentRouterPolicyInfo pInfo = new SegmentRouterPolicyInfo(policyId, policyType, priority, flowEntries);
+            SegmentRouterPolicyInfo pInfo = new SegmentRouterPolicyInfo(policyId, policyType, tunnelId,
+                    priority,  flowEntries);
             policyList.add(pInfo);
         }
         log.debug("getPolicy with params");

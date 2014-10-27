@@ -2226,11 +2226,12 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             policyId = policy.get("policyId")
             policyType = policy.get("policyType")
             priority = policy.get("priority")
+            tunnelId = policy.get('tunnelId')
             match = policy.get("match")
             dstIpAddress = match.get('dstIpAddress')['value'] if match.get('dstIpAddress') else '*'
             dstMacAddress = match.get('dstMacAddress')['value'] if match.get('dstMacAddress') else '*'
             dstTcpPortNumber = match.get('dstTcpPortNumber') if match.get('dstTcpPortNumber') else '*'
-            etherType = match.get('etherType') if match.get('etherType') else '*'
+            etherType = ('0x'+ str(match.get('etherType'))) if match.get('etherType') else '*'
             ipProtocolNumber = match.get('ipProtocolNumber') if match.get('ipProtocolNumber') else '*'
             srcIpAddress = match.get('srcIpAddress')['value'] if match.get('srcIpAddress') else '*'
             srcMacAddress = match.get('srcMacAddress')['value'] if match.get('srcMacAddress') else '*'
@@ -2238,6 +2239,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             combResult.append({
                                'policyId'        : policyId,
                                'policyType'      : policyType,
+                               'tunnelId'        : tunnelId,
                                'priority'        : priority,
                                'dstIpAddress'    : dstIpAddress,
                                'dstMacAddress'   : dstMacAddress,
@@ -2262,7 +2264,6 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                     #raise error.ArgumentValidationError('\n\n\n %s' % json.tool(entries))
                 instructions = ipTableEntry['instructions']
                 actions = str(instructions[0]) if instructions[0] else None
-                print "actions: ", actions
                 if actions != None:
                     actions = remove_unicodes(actions)
                     actions = renameActions(actions)
@@ -2370,31 +2371,44 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if groupId == entry["groupId"]:
                     groupDescEntry = entry
                     break
-            if groupDescEntry is None:
+            if groupDescEntry is '':
                 print "command_display_rest: missing group desc for group id %s" % (groupId)
                 continue
             for bucketId in range(len(groupStatEntry['bucketStats'])):
-                setsrcmac = '*'
+                setsrcmac = ''
                 if 'SET_DL_SRC' in groupDescEntry['bucketsActions'][bucketId]:
                     setsrcmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_SRC']
-                setdstmac = '*'
+                setdstmac = ''
                 if 'SET_DL_DST' in groupDescEntry['bucketsActions'][bucketId]:
                     setdstmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_DST']
-                pushmpls = '*'
+                pushmpls = ''
                 if 'PUSH_MPLS_LABEL' in groupDescEntry['bucketsActions'][bucketId]:
                     pushmpls = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_LABEL']
-                popmpls = '*'
+                popmpls = ''
                 if 'POP_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
                     popmpls = groupDescEntry['bucketsActions'][bucketId]['POP_MPLS']
-                outport = '*'
+                outport = ''
                 if 'OUTPPUT' in groupDescEntry['bucketsActions'][bucketId]:
                     outport = groupDescEntry['bucketsActions'][bucketId]['OUTPPUT']
-                goToGroup = '*'
+                goToGroup = ''
                 if 'goToGroup' in groupDescEntry['bucketsActions'][bucketId]:
                     goToGroup = groupDescEntry['bucketsActions'][bucketId]['goToGroup']
-                setBos= None
+                setBos= ''
                 if 'PUSH_MPLS_BOS' in groupDescEntry['bucketsActions'][bucketId]:
                     setBos = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_BOS']
+                COPY_TTL_IN= ''
+                if 'COPY_TTL_IN' in groupDescEntry['bucketsActions'][bucketId]:
+                    COPY_TTL_IN = groupDescEntry['bucketsActions'][bucketId]['COPY_TTL_IN']
+                COPY_TTL_OUT= ''
+                if 'COPY_TTL_OUT' in groupDescEntry['bucketsActions'][bucketId]:
+                    COPY_TTL_OUT = groupDescEntry['bucketsActions'][bucketId]['COPY_TTL_OUT']
+                DEC_MPLS_TTL= ''
+                if 'DEC_MPLS_TTL' in groupDescEntry['bucketsActions'][bucketId]:
+                    DEC_MPLS_TTL = groupDescEntry['bucketsActions'][bucketId]['DEC_MPLS_TTL']
+                DEC_NW_TTL= ''
+                if 'DEC_NW_TTL' in groupDescEntry['bucketsActions'][bucketId]:
+                    DEC_NW_TTL = groupDescEntry['bucketsActions'][bucketId]['DEC_NW_TTL']
+
                 combResult.append({
                        'groupid'       : groupId,
                        'grouptype'     : groupDescEntry['groupType'],
@@ -2404,11 +2418,15 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'bucketbytecnt' : groupStatEntry['bucketStats'][bucketId]['byteCount'],
                        'setsrcmac'     : setsrcmac,
                        'setdstmac'     : setdstmac,
-                       'pushMplsLabel'     : pushmpls,
-                       'popmpls'     : popmpls,
-                       'outport'     : outport,
+                       'pushMplsLabel' : pushmpls,
+                       'popmpls'       : popmpls,
+                       'outport'       : outport,
                        'goToGroup'     : goToGroup,
-                       'setBos'     : setBos,
+                       'setBos'        : setBos,
+                       'COPY_TTL_IN'   : COPY_TTL_IN,
+                       'COPY_TTL_OUT'  : COPY_TTL_OUT,
+                       'DEC_MPLS_TTL'  : DEC_MPLS_TTL,
+                       'DEC_NW_TTL'    : DEC_NW_TTL,
                     })
         entries = combResult
     #

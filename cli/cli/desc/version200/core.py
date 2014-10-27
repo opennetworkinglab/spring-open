@@ -596,7 +596,7 @@ VERSION_COMMAND_DESCRIPTION = {
     }
 }
 
-
+"""
 CLEAR_COMMAND_DESCRIPTION = {
     'name'                : 'clearterm',
     'no-supported'        : False,
@@ -607,7 +607,7 @@ CLEAR_COMMAND_DESCRIPTION = {
     'action'              : 'clearterm',
     'args'                : {}
 }
-
+"""
 
 COPY_COMMAND_DESCRIPTION = {
     'name'                : 'copy',
@@ -2332,21 +2332,23 @@ REALTIME_PORT_FORMAT = {
 REALTIME_GROUP_FORMAT = {
     'realtime_group' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'groupid', 'grouptype', 'totalpktcnt', 'totalbytecnt',
+            'default' : [ 'Idx', 'grouptype','groupid' , 'totalpktcnt', 'totalbytecnt',
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
                           'pushMplslabel', 'setBos',
-                          'outport','goToGroup'],
-            'scoped' : [ 'Idx', 'groupid', 'grouptype', 'totalpktcnt', 'totalbytecnt',
+                          'outport','goToGroup','COPY_TTL_IN','COPY_TTL_OUT','DEC_MPLS_TTL',
+                           'DEC_NW_TTL'],
+            'scoped' : [ 'Idx', 'grouptype','groupid','totalpktcnt', 'totalbytecnt',
                           'bucketpktcnt', 'bucketbytecnt', 
                           'setsrcmac', 'setdstmac',
                           'pushMplsLabel','setBos',
-                          'outport','goToGroup' ],
+                          'outport','goToGroup','COPY_TTL_IN','COPY_TTL_OUT','DEC_MPLS_TTL',
+                          'DEC_NW_TTL'],
             },
         'fields': {
             'groupid'               : { 'verbose-name' : 'Group Id',
                                      },
-            'grouptype'               : { 'verbose-name' : 'Group type',
+            'grouptype'               : { 'verbose-name' : 'Group Type',
                                      },
             'totalpktcnt'         : { 'verbose-name' : 'Pkts',
                                        'formatter' : fmtcnv.decode_port_counter
@@ -2370,7 +2372,7 @@ REALTIME_GROUP_FORMAT = {
                                      },
             'outport'             : { 'verbose-name' : 'Outport',
                                      },
-            'goToGroup'           : { 'verbose-name' : 'Go To Group',
+            'goToGroup'           : { 'verbose-name' : 'Group',
                                     },
             }
         },
@@ -2431,7 +2433,7 @@ SHOW_TUNNEL_FORMAT = {
 SHOW_POLICY_FORMAT = {
     'show_policy' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'policyId', 'policyType','priority','dstMacAddress','srcMacAddress',
+            'default' : [ 'Idx', 'policyId', 'policyType','tunnelId','priority','dstMacAddress','srcMacAddress',
                         'dstIpAddress' ,'srcIpAddress', 'dstTcpPortNumber','srcTcpPortNumber',
                         'etherType', 'ipProtocolNumber',
                          ]
@@ -2458,6 +2460,9 @@ SHOW_POLICY_FORMAT = {
 
                        'ipProtocolNumber'         : { 'verbose-name': 'IP Protocol',
                                                },
+                       'tunnelId'                : { 'verbose-name': 'Tunnel Used',
+                                               },
+                       
                                                }
         },
 }

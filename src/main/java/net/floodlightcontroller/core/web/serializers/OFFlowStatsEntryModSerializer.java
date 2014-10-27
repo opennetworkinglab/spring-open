@@ -143,8 +143,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                         jGen.writeNumberField("output", ((OFActionOutput)action).getPort().getPortNumber());
                     }
                 }
-                else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0
-                        || action.getType().compareTo(OFActionType.COPY_TTL_IN) == 0
+                else if(action.getType().compareTo(OFActionType.COPY_TTL_IN) == 0
                         || action.getType().compareTo(OFActionType.COPY_TTL_OUT) == 0
                         || action.getType().compareTo(OFActionType.DEC_MPLS_TTL) == 0
                         || action.getType().compareTo(OFActionType.DEC_NW_TTL) == 0
@@ -152,9 +151,9 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                         || action.getType().compareTo(OFActionType.POP_VLAN) == 0){
                     jGen.writeStringField(action.getType().name(), "True");
                 }
-                /*else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0){
+                else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0){
                     jGen.writeStringField("POP_MPLS", ((OFActionPopMpls)action).getEthertype().toString());
-                }*/
+                }
                 else if (action.getType().equals(OFActionType.SET_FIELD)){
                     //TODO Support for more setFields
                     if (((OFActionSetField)action).getField().toString().contains("OFOxmEthSrcVer13")){
