@@ -82,6 +82,7 @@ public class SegmentRouterTunnelResource extends ServerResource {
         List<SegmentRouterTunnelInfo> infoList = new ArrayList<SegmentRouterTunnelInfo>();
         while(ttI.hasNext()){
            TunnelInfo tunnelInfo = ttI.next();
+           List<Integer> tunnelPath = tunnelInfo.getLabelids();
            String tunnelId = tunnelInfo.getTunnelId();
            Collection<PolicyInfo> policies = segmentRoutingService.getPoclicyTable();
            Iterator<PolicyInfo> piI = policies.iterator();
@@ -106,7 +107,7 @@ public class SegmentRouterTunnelResource extends ServerResource {
                dpidGroup.add(label.getSrcSwDpid() + "/"+ gId);
            }
            SegmentRouterTunnelInfo info = new SegmentRouterTunnelInfo(tunnelId,
-                    labelStack, dpidGroup, policiesId);
+                    labelStack, dpidGroup, tunnelPath, policiesId );
            infoList.add(info);
         }
         log.debug("getTunnel with params");

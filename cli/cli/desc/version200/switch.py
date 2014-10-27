@@ -492,13 +492,13 @@ SWITCH_SHOW_SWITCH_DPID_INTERFACES_COMMAND_DESCRIPTION = {
                         'doc'        : 'switch|show-interfaces-alias',
                     }
                 ),
-                {
-                    'field'      : 'vns',
-                    'type'       : 'enum',
-                    'values'     : 'vns',
-                    'action'     : 'legacy-cli',
-                    'obj-type'   : 'switch-ports-vns'
-                },
+                #{
+                #    'field'      : 'vns',
+                #    'type'       : 'enum',
+                #    'values'     : 'vns',
+                #    'action'     : 'legacy-cli',
+                #    'obj-type'   : 'switch-ports-vns'
+                #},
                 {
                     'field'     : 'alias',
                     'type'      : 'enum',

@@ -84,3 +84,7 @@ eclipse:
 
 build-sdnplatform:
 #	cd $(FL_DIR); ant dist
+clean-srdb: stop-sdncon
+	rm -fr sdncon/sdncon
+	make clean
+	make start-sdncon

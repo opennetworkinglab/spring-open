@@ -2070,38 +2070,14 @@ REALTIME_TABLE_MPLS_FLOW_FORMAT = {
 REALTIME_TABLE_ACL_FLOW_FORMAT = {
     'realtime_table_acl_flow' : {
         'field-orderings' : {
-            'default' : [
-                          'Idx',  'cookie', 'priority'
-                          'byteCount', 'packetCount',
-                         'dataLayerSource', 'dataLayerDestination',
-                          'flow-brief','mplsLabel','mplsBos','mplsTc','actions'
-                        ],
-            'scoped'  : [
-                          'Idx', 'cookie', 'priority',
-                          'byteCount', 'packetCount',
-                          'dataLayerSource', 'dataLayerDestination','mplsLabel','mplsBos','mplsTc'
-                          'flow-brief','actions'
-
-                        ],
-            'brief'   : [ 'Idx', 'cookie','priority', 'dataLayerSource', 'dataLayerDestination',
-                          'networkSource', 'networkDestination', 'networkProtocol',
-                          'transportSource', 'transportDestination','mplsLabel','mplsBos','mplsTc','actions'],
             'default' : [ 'Idx','byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority', 'inputPort', 'dataLayerSource', 'dataLayerDestination',
                           'dataLayerType', 'networkSource', 'networkDestination', 'networkProtocol',
-                          'transportSource', 'transportDestination''mplsLabel','mplsBos','mplsTc', 'actions'],
+                          'transportSource', 'transportDestination''mplsLabel','actions'],
             'scoped'  : [ 'Idx','byteCount', 'packetCount', 'durationSeconds',
                           'cookie','priority', 'inputPort', 'dataLayerSource', 'dataLayerDestination',
                           'dataLayerType', 'networkSource', 'networkDestination', 'networkProtocol',
-                          'transportSource', 'transportDestination','mplsLabel','mplsBos','mplsTc','actions'],
-            'details' : [ 'Idx','byteCount', 'packetCount', 'durationSeconds',
-                          'cookie', 'priority','hardTimeout', 'idleTimeout', 'priority', 'tableId', 'inputPort',
-                          'dataLayerSource', 'dataLayerDestination', 'dataLayerType', 'dataLayerVirtualLan',
-                          'dataLayerVirtualLanPriorityCodePoint', 'networkSource', 'networkDestination',
-                          'networkProtocol', 'transportSource', 'transportDestination',
-                          'networkTypeOfService','mplsLabel','mplsBos','mplsTc', 'actions'],
-            #'vns_flow': [ 'Idx', 'dataLayerSource', 'dataLayerDestination', 'dataLayerVirtualLan', 'dataLayerType'],
-            #'summary' : [ 'Idx', 'vnsName', 'vnsFlowCnt', 'flowEntryCnt'],
+                          'transportSource', 'transportDestination','actions'],
             },
         'fields': {
             'switch'           : { 'verbose-name' : 'Switch',
@@ -2148,7 +2124,7 @@ REALTIME_TABLE_ACL_FLOW_FORMAT = {
             'dataLayerDestination' : { 'verbose-name' : 'Dst MAC',
                                        'formatter' : fmtcnv.replace_host_with_alias
                                  },
-            'dataLayerType'    : { 'verbose-name' : 'Ether Type',
+            'dataLayerType'    : { 'verbose-name' : 'EthType',
                                    'formatter' : fmtcnv.decode_ether_type
                                  },
             'dataLayerVirtualLan' : { 'verbose-name' : 'VLAN ID',
@@ -2416,7 +2392,7 @@ REALTIME_TABLE_FORMAT = {
 SHOW_TUNNEL_FORMAT = {
     'show_tunnel' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'tunnelId', 'policies','labelStack',],
+            'default' : [ 'Idx', 'tunnelId', 'policies','labelStack','tunnelPath'],
             'details' : [ 'Idx', 'tunnelId', 'policies','labelStack', 'dpidGroup',],
             },
         'fields': {
@@ -2424,7 +2400,9 @@ SHOW_TUNNEL_FORMAT = {
                                },
             'dpidGroup'         : { 'verbose-name' : 'dpid/Group',
                                },
-            'labelStack'         : { 'verbose-name' : 'Label Stack',
+            'labelStack'         : { 'verbose-name' : 'Label Stack [Outer-->Inner]',
+                               },
+            'tunnelPath'         : { 'verbose-name' : 'Tunnel Path [Head-->Tail]',
                                },
                    }
         },
@@ -2433,9 +2411,9 @@ SHOW_TUNNEL_FORMAT = {
 SHOW_POLICY_FORMAT = {
     'show_policy' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'policyId', 'policyType','tunnelId','priority','dstMacAddress','srcMacAddress',
-                        'dstIpAddress' ,'srcIpAddress', 'dstTcpPortNumber','srcTcpPortNumber',
-                        'etherType', 'ipProtocolNumber',
+            'default' : [ 'Idx', 'policyId', 'policyType','priority','dstMacAddress','srcMacAddress',
+                        'etherType','dstIpAddress' ,'ipProtocolNumber','srcIpAddress', 'dstTcpPortNumber',
+                        'srcTcpPortNumber','tunnelId'
                          ]
             },
             'fields': {

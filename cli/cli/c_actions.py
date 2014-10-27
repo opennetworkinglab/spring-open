@@ -68,7 +68,7 @@ def remove_unicodes(actions):
                 newActions += ch
         return newActions
     else:
-        actions
+        ''
 def renameActions(actions):
     actions = actions.replace('GOTO_TABLE','GOTO')
     actions = actions.replace('WRITE_ACTIONS','WRITE')
@@ -2198,22 +2198,18 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
         combResult = []
         tunnelList = entries
         for tunnel in tunnelList:
-            labelStack = str(tunnel.get('labelStack'))
+            labelStack = str(tunnel.get('labelStack')) if tunnel.get('labelStack') else ''
             labelStack = remove_unicodes(labelStack)
             tunnelId = tunnel.get('tunnelId')
+            tunnelPath = tunnel.get('tunnelPath')
             dpidGroup = str(tunnel.get('dpidGroup'))
             dpidGroup= remove_unicodes(dpidGroup)
             policies = tunnel.get('policies')
-            #nodes = ''
-            #for node in tunnel.get("nodes"):
-            #    nodes += (node.get('value') + ',')
-            #if nodes != '':
-            #    nodes = nodes[:-1]
             combResult.append({
                                'tunnelId'       : tunnelId,
-                               #'nodes'           : nodes,
-                               'labelStack'     :labelStack,
-                               'dpidGroup'      :dpidGroup,
+                               'labelStack'     : labelStack,
+                               'dpidGroup'      : dpidGroup,
+                               'tunnelPath'     : tunnelPath,
                                'policies'       : policies,
                                })
         entries = combResult
@@ -2267,7 +2263,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if actions != None:
                     actions = remove_unicodes(actions)
                     actions = renameActions(actions)
-                actions = remove_unicodes(actions)
+                else:
+                    actions =''
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
@@ -2294,6 +2291,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if actions != None:
                     actions = remove_unicodes(actions)
                     actions = renameActions(actions)
+                else:
+                    actions =''
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],
@@ -2339,6 +2338,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if actions != None:
                     actions = remove_unicodes(actions)
                     actions = renameActions(actions)
+                else:
+                    actions = ''
                 combResult.append({
                        'switch'        : ipTableEntry['switch'],
                        'byteCount'     : ipTableEntry['byteCount'],

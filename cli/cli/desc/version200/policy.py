@@ -43,10 +43,9 @@ POLICY_SUBMODE_COMMAND_DESCRIPTION = {
                     'completion'   : 'complete-object-field',
                     'syntax-help'  : 'Enter a policy name',
                     'doc'          : 'policy|policy',
-                    #'doc-include'  : [ 'type-doc' ],
                 },
                 {
-                    'token'        : 'type',
+                    'token'        : 'policy-type',
                     'optional-for-no' : True,
                     'short-help'   : 'Set type of policy',
                     'doc'          : 'policy|policy',
