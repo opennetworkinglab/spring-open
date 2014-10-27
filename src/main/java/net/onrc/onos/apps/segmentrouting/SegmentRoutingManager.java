@@ -118,7 +118,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
 
     // Flag whether transit router supports ECMP or not
-    private boolean supportTransitECMP = true;
+    private boolean supportTransitECMP = false;
 
     private int testMode = 0;
 
@@ -482,13 +482,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
     /**
      * Check if all links are gone b/w the two switches. If all links are gone,
      * then we need to recalculate the path. Otherwise, just report link failure
-     * to the driver.
+     * to the driver. IF the switches do not support ECMP in transit routers and
+     * the link removed is between transit routers, then just recompute the path
+     * regardless of ECMP.
      *
      * @param linkEntries
      */
     private void processLinkRemoval(Collection<LinkData> linkEntries) {
-        boolean recomputationRequired = false;
-
         for (LinkData link : linkEntries) {
             SwitchPort srcPort = link.getSrc();
             SwitchPort dstPort = link.getDst();
@@ -506,13 +506,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
             log.debug("Remove port {} from switch {}", srcPort, srcSw);
             log.debug("Remove port {} from switch {}", dstPort, dstSw);
 
-            Switch srcSwitch = mutableTopology.getSwitch(srcPort.getDpid());
-            if (srcSwitch.getLinkToNeighbor(dstPort.getDpid()) == null) {
-                // TODO: it is only for debugging purpose.
-                // We just need to call populateEcmpRoutingRules() and return;
-                recomputationRequired = true;
-                log.debug("All links are gone b/w {} and {}", srcPort.getDpid(),
-                        dstPort.getDpid());
+            if (!supportTransitECMP &&
+               isTransitRouter(mutableTopology.getSwitch(srcPort.getDpid())) &&
+               isTransitRouter(mutableTopology.getSwitch(dstPort.getDpid()))) {
+                populateEcmpRoutingRules(false);
+            }
+            else {
+                Switch srcSwitch = mutableTopology.getSwitch(srcPort.getDpid());
+                if (srcSwitch.getLinkToNeighbor(dstPort.getDpid()) == null) {
+                    log.debug("All links are gone b/w {} and {}", srcPort.getDpid(),
+                            dstPort.getDpid());
+                    log.debug("All paths will recomputed regardless of the rest "
+                            + "of the event");
+                    populateEcmpRoutingRules(false);
+                }
             }
 
             String key = link.getSrc().getDpid().toString()+
@@ -522,8 +529,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
 
-        if (recomputationRequired)
-            populateEcmpRoutingRules(false);
     }
 
     /**
