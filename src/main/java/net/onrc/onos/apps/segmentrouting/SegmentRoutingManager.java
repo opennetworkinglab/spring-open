@@ -118,7 +118,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
 
     // Flag whether transit router supports ECMP or not
-    private boolean supportTransitECMP = false;
+    private boolean supportTransitECMP = true;
 
     private int testMode = 0;
 
