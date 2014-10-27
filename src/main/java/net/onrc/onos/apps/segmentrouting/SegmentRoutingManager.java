@@ -1878,7 +1878,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(decMplsTtlAction);
         }
 
-        if ((sw instanceof OFSwitchImplDellOSR) && isTransitRouter(sw) && !php) {
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(sw.getDpid().toString()));
+        if ((sw13 instanceof OFSwitchImplDellOSR) && isTransitRouter(sw) && !php) {
             PortNumber port = pickOnePort(sw, fwdSws);
             if (port == null) {
                 log.warn("Failed to get a port from NeightborSet");
