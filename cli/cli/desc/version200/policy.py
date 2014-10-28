@@ -21,6 +21,7 @@ POLICY_SUBMODE_COMMAND_DESCRIPTION = {
     'parent-field'  : None,
     'doc'           : 'policy|policy',
     'doc-example'   : 'policy|policy-example',
+    #'completion'    : 'policy-id-completion',
     'args' : {
         'action'       : (
                             {
@@ -238,7 +239,6 @@ POLICY_FLOW_ENTRY_COMMAND_DESCRIPTION = {
         ),
     },
 }
-
 POLICY_TUNNEL_ID_COMMAND_DESCRIPTION = {
     'name'            : 'tunnel',
     'mode'            : 'config-policy',
@@ -254,6 +254,7 @@ POLICY_TUNNEL_ID_COMMAND_DESCRIPTION = {
                                 'proc' : 'create-policy',
                             },
                          ),
+        'completion'   : 'tunnel-id-completion',
         'field'        : 'tunnel-id',
         'type'         : 'identifier',
         'syntax-help'  : 'Enter tunnel id',
@@ -282,7 +283,7 @@ POLICY_PRIORITY_COMMAND_DESCRIPTION = {
     }
 }
 
-SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
+SHOW_POLICY_COMMAND_DESCRIPTION = {
     'name'                : 'show',
     'mode'                : 'login',
     'command-type'        : 'display-table',
@@ -305,3 +306,33 @@ SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
         },
     )
 }
+
+
+def tunnel_id_completion(prefix, completions):
+    query_url = "http://127.0.0.1:8000/rest/v1/showtunnel"
+    result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = json.loads(result)
+    for entry in entries:
+        if entry['tunnelId'].startswith(prefix):
+            completions[entry['tunnelId']+' '] = entry['tunnelId']
+    return
+
+command.add_completion('tunnel-id-completion', tunnel_id_completion,
+                       {'kwargs': { 'prefix'       : '$text',
+                                    'completions'  : '$completions',
+                                    }})
+
+
+def policy_id_completion(prefix, completions):
+    query_url = "http://127.0.0.1:8000/rest/v1/showpolicy"
+    result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = json.loads(result)
+    for entry in entries:
+        if entry['policyId'].startswith(prefix):
+            completions[entry['policyId']+' '] = entry['policyId']
+    return
+
+command.add_completion('policy-id-completion', policy_id_completion,
+                       {'kwargs': { 'prefix'       : '$text',
+                                    'completions'  : '$completions',
+                                    }})

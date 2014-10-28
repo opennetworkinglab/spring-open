@@ -17,10 +17,11 @@ TUNNEL_SUBMODE_COMMAND_DESCRIPTION = {
         {
             'field'        : 'tunnel-id',
             'type'         : 'identifier',
-            'completion'   : 'complete-object-field',
+            #'completion'   : 'complete-object-field',
             'syntax-help'  : 'Enter a tunnel name',
             'doc'          : 'tunnel|tunnel',
             'doc-include'  : [ 'type-doc' ],
+            'completion'   : 'tunnel-id-completion',
             'action'       : (
                                 {
                                     'proc' : 'create-tunnel',
@@ -178,3 +179,18 @@ SWITCH_TUNNEL_COMMAND_DESCRIPTION = {
                }
     )
 }
+
+
+def tunnel_id_completion(prefix, completions):
+    query_url = "http://127.0.0.1:8000/rest/v1/showtunnel"
+    result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = json.loads(result)
+    for entry in entries:
+        if entry['tunnelId'].startswith(prefix):
+            completions[entry['tunnelId']+' '] = entry['tunnelId']
+    return
+
+command.add_completion('tunnel-id-completion', tunnel_id_completion,
+                       {'kwargs': { 'prefix'       : '$text',
+                                    'completions'  : '$completions',
+                                    }})
