@@ -1347,6 +1347,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         for (TunnelRouteInfo route : routes) {
             List<Action> actions = new ArrayList<>();
+
+            // Check PHP was done by stitching
+            // If no MPLS label is added, then NW TTL needs to be decremented
+            if (route.getRoute().isEmpty()) {
+                DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
+                actions.add(decNwTtlAction);
+            }
+
             GroupAction groupAction = new GroupAction();
             groupAction.setGroupId(route.getGroupId());
             actions.add(groupAction);
@@ -2383,11 +2391,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             logStr.append(" then ");
         }
         else if (m instanceof PacketMatch) {
-            GroupAction ga = (GroupAction)actions.get(0);
-            logStr.append("if the policy match is XXX then go to group " +
-                    ga.getGroupId());
-            log.debug(logStr.toString());
-            return;
+            logStr.append("if the policy match is XXX then ");
         }
 
         logStr.append(" do { ");
@@ -2405,7 +2409,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 logStr.append("Forward packet to < ");
                 NeighborSet dpids = ((GroupAction) action).getDpids();
                 logStr.append(dpids.toString() + ",");
-
             }
             else if (action instanceof PopMplsAction) {
                 logStr.append("Pop MPLS label, ");
