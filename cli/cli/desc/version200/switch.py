@@ -254,6 +254,7 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                                         'acl',
                                         'mpls'
                                         ),
+                        'sort'       : ['mplsLabel','priority',],
                         'action'     : 'display-rest',
                         'url'        : 'realtimestats/%(realtimestats)s/%(tabletype)s/flow/%(dpid)s/',
                         'rest-type'  : 'dict-of-list-of-switch',

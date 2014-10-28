@@ -2084,6 +2084,9 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
 
     When sort isn't None, it names a field whose's value are sorted on.
     """
+    #just a hack check to implement decending sorting
+    descending = False
+    #raise error.ArgumentValidationError('\n\n\n %s' % (descending))
     if sdnsh.description:   # description debugging
         print "command_display_rest: ", data, url, rest_type, table_format, detail
 
@@ -2252,6 +2255,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
     if 'realtimestats' in data and 'tabletype' in data and data['realtimestats'] == 'table':
         combResult = []
         if data['tabletype'] == 'ip':
+            #for decending sorting
+            descending = True
             for ipTableEntry in entries:
                 match = ipTableEntry['match']
                 networkDestination = '*'
@@ -2306,6 +2311,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                        'actions'        : actions
                     })
         elif data['tabletype'] == 'acl':
+            descending = True
             for ipTableEntry in entries:
                 match = ipTableEntry['match']
                 networkDestination ='*'
@@ -2451,6 +2457,10 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                                         detail,
                                         sdnsh.debug)
         if sort:
+            if descending:
+                reverse = True
+            else:
+                reverse = False
             def sort_cmp(x,y):
                 for f in sort:
                     if f in x:
@@ -2458,7 +2468,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                         if c != 0:
                             return c
                 return 0
-            entries = sorted(entries,  cmp=sort_cmp)
+            entries = sorted(entries,  cmp=sort_cmp, reverse=reverse )
 
         display = sdnsh.pp.format_table(entries, table_format % data, detail)
     else:

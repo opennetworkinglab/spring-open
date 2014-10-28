@@ -76,7 +76,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                 jGen.writeStringField("dataLayerSource", matchGeneric.getValue().toString());
             }
             else if (matchGeneric.getMatchField().id == MatchFields.ETH_TYPE){
-                jGen.writeNumberField("dataLayerType", Integer.decode(matchGeneric.getValue().toString()));
+                jGen.writeStringField("dataLayerType", "0x"+(matchGeneric.getValue().toString()));
             }
             else if (matchGeneric.getMatchField().id == MatchFields.IN_PORT){
                 jGen.writeNumberField("inputPort", Integer.parseInt(matchGeneric.getValue().toString()));
@@ -152,7 +152,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                     jGen.writeStringField(action.getType().name(), "True");
                 }
                 else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0){
-                    jGen.writeStringField("POP_MPLS", ((OFActionPopMpls)action).getEthertype().toString());
+                    jGen.writeStringField("POP_MPLS", "0x"+((OFActionPopMpls)action).getEthertype().toString());
                 }
                 else if (action.getType().equals(OFActionType.SET_FIELD)){
                     //TODO Support for more setFields
@@ -188,7 +188,6 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
      * @param x
      * @return
      */
-    
     public static int covertToMask(int x) {
         x = x - ((x >>> 1) & 0x55555555);
         x = (x & 0x33333333) + ((x >>> 2) & 0x33333333);
