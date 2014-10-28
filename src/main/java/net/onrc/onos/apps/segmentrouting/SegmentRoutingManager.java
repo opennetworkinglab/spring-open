@@ -726,8 +726,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         // Output action
         if (srcMac != null && dstMac != null) {
-            ModifyDstMacAction setDstAction = new ModifyDstMacAction(MACAddress.valueOf(srcMac));
-            ModifySrcMacAction setSrcAction = new ModifySrcMacAction(MACAddress.valueOf(dstMac));
+            ModifyDstMacAction setDstAction = new ModifyDstMacAction(MACAddress.valueOf(dstMac));
+            ModifySrcMacAction setSrcAction = new ModifySrcMacAction(MACAddress.valueOf(srcMac));
             OutputAction outportAction = new OutputAction(PortNumber.uint32(num));
 
             actions.add(setDstAction);
@@ -1449,6 +1449,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 if (prevAdjacencySid != null) {
                     if (isAdjacencySidNeighborOf(prevNodeId, prevAdjacencySid, nodeId)) {
                         prevAdjacencySid = null;
+                        prevNodeId = nodeId;
                         continue;
                     }
                     prevAdjacencySid = null;
