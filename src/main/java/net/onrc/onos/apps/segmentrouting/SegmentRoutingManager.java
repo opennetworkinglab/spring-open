@@ -33,6 +33,8 @@ import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingTunnel.TunnelRouteInfo;
 import net.onrc.onos.apps.segmentrouting.web.SegmentRoutingWebRoutable;
 import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
@@ -114,8 +116,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<String, LinkData> linksDown;
     private HashMap<String, LinkData> linksToAdd;
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
-    private HashMap<String, PolicyInfo> policyTable;
-    private HashMap<String, TunnelInfo> tunnelTable;
+    private HashMap<String, SegmentRoutingPolicy> policyTable;
+    private HashMap<String, SegmentRoutingTunnel> tunnelTable;
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
 
     // Flag whether transit router supports ECMP or not
@@ -190,8 +192,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
         packetService = context.getServiceImpl(IPacketService.class);
         restApi = context.getServiceImpl(IRestApiService.class);
-        policyTable = new HashMap<String, PolicyInfo>();
-        tunnelTable = new HashMap<String, TunnelInfo>();
+        policyTable = new HashMap<String, SegmentRoutingPolicy>();
+        tunnelTable = new HashMap<String, SegmentRoutingTunnel>();
         adjacencySidTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
 
         packetService.registerPacketListener(this);
@@ -1063,138 +1065,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // ************************************
 
     /**
-     * Enums for policy type
-     *
-     */
-    public enum PolicyType{
-        TUNNEL_FLOW,
-        LOADBALANCE,
-        AVOID,
-        DENY
-    }
-    public class PolicyInfo {
-        private String policyId;
-        private PacketMatch match;
-        private int priority;
-        private String tunnelId;
-        private PolicyType type;
-
-        public PolicyInfo(String pid, PolicyType type, PacketMatch match, int priority,
-                String tid) {
-            this.policyId = pid;
-            this.match = match;
-            this.priority = priority;
-            this.tunnelId = tid;
-            this.type = type;
-        }
-
-        public PolicyInfo(String pid, PacketMatch match, int priority,
-                String tid) {
-            this.policyId = pid;
-            this.match = match;
-            this.priority = priority;
-            this.tunnelId = tid;
-            this.type = PolicyType.TUNNEL_FLOW;
-        }
-        public String getPolicyId(){
-            return this.policyId;
-        }
-        public PacketMatch getMatch(){
-            return this.match;
-        }
-        public int getPriority(){
-            return this.priority;
-        }
-        public String getTunnelId(){
-            return this.tunnelId;
-        }
-        public PolicyType getType(){
-            return this.type;
-        }
-    }
-
-    public class TunnelInfo {
-        private String tunnelId;
-        private List<Integer> labelIds;
-        private List<TunnelRouteInfo> routes;
-
-        public TunnelInfo(String tid, List<Integer> labelIds,
-                List<TunnelRouteInfo> routes) {
-            this.tunnelId = tid;
-            this.labelIds = labelIds;
-            this.routes = routes;
-        }
-        public String getTunnelId(){
-            return this.tunnelId;
-        }
-
-        public List<Integer> getLabelids() {
-            return this.labelIds;
-        }
-        public List<TunnelRouteInfo> getRoutes(){
-            return this.routes;
-        }
-    }
-
-    public class TunnelRouteInfo {
-
-        private String srcSwDpid;
-        private List<Dpid> fwdSwDpids;
-        private List<String> route;
-        private int gropuId;
-
-        public TunnelRouteInfo() {
-            fwdSwDpids = new ArrayList<Dpid>();
-            route = new ArrayList<String>();
-        }
-
-        private void setSrcDpid(String dpid) {
-            this.srcSwDpid = dpid;
-        }
-
-        private void setFwdSwDpid(List<Dpid> dpid) {
-            this.fwdSwDpids = dpid;
-        }
-
-        private void addRoute(String id) {
-            route.add(id);
-        }
-
-        private void setRoute(List<String> r) {
-            this.route = r;
-        }
-
-        private void setGroupId(int groupId) {
-            this.gropuId = groupId;
-        }
-
-        public String getSrcSwDpid() {
-            return this.srcSwDpid;
-        }
-
-        public List<Dpid> getFwdSwDpid() {
-            return this.fwdSwDpids;
-        }
-
-        public List<String> getRoute() {
-            return this.route;
-        }
-
-        public int getGroupId() {
-            return this.gropuId;
-        }
-    }
-
-    /**
      * Return the Tunnel table
      *
      * @return collection of TunnelInfo
      */
-    public Collection<TunnelInfo> getTunnelTable() {
+    public Collection<SegmentRoutingTunnel> getTunnelTable() {
         return this.tunnelTable.values();
     }
 
-    public Collection<PolicyInfo> getPoclicyTable() {
+    public Collection<SegmentRoutingPolicy> getPoclicyTable() {
         return this.policyTable.values();
     }
 
@@ -1204,24 +1083,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param tid tunnel ID
      * @return List of DPID
      */
-    public List<Integer> getTunnelInfo(String tid) {
-        TunnelInfo tunnelInfo =  tunnelTable.get(tid);
-        return tunnelInfo.labelIds;
-
+    public SegmentRoutingTunnel getTunnelInfo(String tid) {
+        return tunnelTable.get(tid);
     }
 
     /**
      * Get the first group ID for the tunnel for specific source router
      * If Segment Stitching was required to create the tunnel, there are
-     * mutiple source routers.
+     * multiple source routers.
      *
      * @param tunnelId ID for the tunnel
      * @param dpid source router DPID
      * @return the first group ID of the tunnel
      */
     public int getTunnelGroupId(String tunnelId, String dpid) {
-       TunnelInfo tunnelInfo = tunnelTable.get(tunnelId);
-       for (TunnelRouteInfo routeInfo: tunnelInfo.getRoutes()) {
+       SegmentRoutingTunnel tunnel = tunnelTable.get(tunnelId);
+       for (TunnelRouteInfo routeInfo: tunnel.getRoutes()) {
            String tunnelSrcDpid = routeInfo.getSrcSwDpid();
            if (tunnelSrcDpid.equals(dpid))
                return routeInfo.getGroupId();
@@ -1240,70 +1117,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public boolean createTunnel(String tunnelId, List<Integer> labelIds) {
 
-        if (labelIds.isEmpty() || labelIds.size() < 2) {
-            log.debug("Wrong tunnel information");
+        SegmentRoutingTunnel srTunnel =
+                new SegmentRoutingTunnel(this, tunnelId, labelIds);
+        if (srTunnel.createTunnel()) {
+            tunnelTable.put(tunnelId, srTunnel);
+            return true;
+        }
+        else {
             return false;
         }
-
-        List<String> Ids = new ArrayList<String>();
-        for (Integer label : labelIds) {
-            Ids.add(label.toString());
-        }
-
-        List<TunnelRouteInfo> stitchingRule = getStitchingRule(Ids);
-        if (stitchingRule == null) {
-            log.debug("Failed to get a tunnel rule.");
-            return false;
-        }
-
-        for (TunnelRouteInfo route: stitchingRule) {
-            NeighborSet ns = new NeighborSet();
-            for (Dpid dpid: route.getFwdSwDpid())
-                ns.addDpid(dpid);
-
-            printTunnelInfo(route.srcSwDpid, tunnelId, route.getRoute(), ns);
-            int groupId = -1;
-            if ((groupId =createGroupsForTunnel(tunnelId, route, ns)) < 0) {
-                log.debug("Failed to create a tunnel at driver.");
-                return false;
-            }
-            route.setGroupId(groupId);
-        }
-
-        TunnelInfo tunnelInfo = new TunnelInfo(tunnelId, labelIds,
-                stitchingRule);
-        tunnelTable.put(tunnelId, tunnelInfo);
-
-        return true;
     }
 
-    /**
-     * Create groups for the tunnel
-     *
-     * @param tunnelId tunnel ID
-     * @param routeInfo label stacks for the tunnel
-     * @param ns NeighborSet to forward packets
-     * @return group ID, return -1 if it fails
-     */
-    private int createGroupsForTunnel(String tunnelId, TunnelRouteInfo routeInfo,
-            NeighborSet ns) {
+    @Override
+    public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
+            Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
+            Short srcPort, Short dstPort, int priority, String tid) {
 
-        IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(routeInfo.srcSwDpid));
-
-        if (targetSw == null) {
-            log.debug("Switch {} is gone.", routeInfo.srcSwDpid);
-            return -1;
-        }
-
-        List<Integer> Ids = new ArrayList<Integer>();
-        for (String IdStr: routeInfo.route)
-            Ids.add(Integer.parseInt(IdStr));
-
-        List<PortNumber> ports = getPortsFromNeighborSet(routeInfo.srcSwDpid, ns);
-        int groupId = targetSw.createGroup(Ids, ports);
-
-        return groupId;
+        return createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
+                srcPort, dstPort, priority, tid, PolicyType.TUNNEL_FLOW);
     }
 
     /**
@@ -1315,7 +1146,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
-            Short srcTcpPort, Short dstTcpPort, int priority, String tid) {
+            Short srcTcpPort, Short dstTcpPort, int priority, String tid,
+            PolicyType type) {
+
+        // Sanity check
+        SegmentRoutingTunnel tunnelInfo = tunnelTable.get(tid);
+        if (tunnelInfo == null) {
+            log.warn("Tunnel {} is not defined", tid);
+            return false;
+        }
 
         PacketMatchBuilder packetBuilder = new PacketMatchBuilder();
 
@@ -1338,199 +1177,23 @@ public class SegmentRoutingManager implements IFloodlightModule,
         if (dstTcpPort > 0)
             packetBuilder.setDstTcpPort(dstTcpPort);
         PacketMatch policyMatch = packetBuilder.build();
-        TunnelInfo tunnelInfo = tunnelTable.get(tid);
-        if (tunnelInfo == null) {
-            log.debug("Tunnel {} is not defined", tid);
+
+        if (type == PolicyType.TUNNEL_FLOW) {
+            SegmentRoutingPolicy srPolicy =
+                    new SegmentRoutingPolicyTunnel(this,pid, type, policyMatch,
+                           priority, tid);
+            if (srPolicy.createPolicy()) {
+                policyTable.put(pid, srPolicy);
+                return true;
+            }
+            else {                log.warn("Failed to create a policy");
+                return false;
+            }
+        }
+        else {
+            log.warn("No other policy is supported yet.");
             return false;
         }
-        List<TunnelRouteInfo> routes = tunnelInfo.routes;
-
-        for (TunnelRouteInfo route : routes) {
-            List<Action> actions = new ArrayList<>();
-
-            // Check PHP was done by stitching
-            // If no MPLS label is added, then NW TTL needs to be decremented
-            if (route.getRoute().isEmpty()) {
-                DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
-                actions.add(decNwTtlAction);
-            }
-
-            GroupAction groupAction = new GroupAction();
-            groupAction.setGroupId(route.getGroupId());
-            actions.add(groupAction);
-
-            MatchAction matchAction = new MatchAction(new MatchActionId(
-                    matchActionId++),
-                    new SwitchPort((long) 0, (short) 0), policyMatch, priority,
-                    actions);
-            MatchActionOperationEntry maEntry =
-                    new MatchActionOperationEntry(Operator.ADD, matchAction);
-
-            IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(route.srcSwDpid));
-
-            if (sw13 != null) {
-                printMatchActionOperationEntry(sw13, maEntry);
-                try {
-                    sw13.pushFlow(maEntry);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
-        }
-
-        PolicyInfo policyInfo = new PolicyInfo(pid, policyMatch, priority, tid);
-        policyTable.put(pid, policyInfo);
-
-        return true;
-    }
-
-    /**
-     * Split the nodes IDs into multiple tunnel if Segment Stitching is required.
-     * We assume that the first node ID is the one of source router, and the last
-     * node ID is that of the destination router.
-     *
-     * @param route list of node IDs
-     * @return List of the TunnelRoutInfo
-     */
-    private List<TunnelRouteInfo> getStitchingRule(List<String> route) {
-
-        if (route.isEmpty() || route.size() < 3)
-            return null;
-
-        List<TunnelRouteInfo> rules = new ArrayList<TunnelRouteInfo>();
-
-        Switch srcSw = this.getSwitchFromNodeId(route.get(0));
-        if (srcSw == null) {
-            log.warn("Switch is not found for Node SID {}", route.get(0));
-            return null;
-        }
-        String srcDpid = srcSw.getDpid().toString();
-
-        int i = 0;
-        TunnelRouteInfo routeInfo = new TunnelRouteInfo();
-        boolean checkNeighbor = false;
-        String prevAdjacencySid = null;
-        String prevNodeId = null;
-
-        for (String nodeId: route) {
-            // The first node ID is always the source router.
-            // We assume that the first ID cannot be an Adjacency SID.
-            if (i == 0) {
-                srcSw = getSwitchFromNodeId(nodeId);
-                if (srcDpid == null)
-                    srcDpid = srcSw.getDpid().toString();
-                routeInfo.setSrcDpid(srcDpid);
-                checkNeighbor = true;
-                i++;
-            }
-            // if this is the first node ID to put the label stack..
-            else if (i == 1) {
-                if (checkNeighbor) {
-                    List<Dpid> fwdSws = getDpidIfNeighborOf(nodeId, srcSw);
-                    // if nodeId is NOT the neighbor of srcSw..
-                    if (fwdSws.isEmpty()) {
-                        fwdSws = getForwardingSwitchForNodeId(srcSw,nodeId);
-                        if (fwdSws == null || fwdSws.isEmpty()) {
-                            log.warn("There is no route from node {} to node {}",
-                                    srcSw.getDpid(), nodeId);
-                            return null;
-                        }
-                        routeInfo.addRoute(nodeId);
-                        i++;
-                    }
-                    routeInfo.setFwdSwDpid(fwdSws);
-                    // we check only the next node ID of the source router
-                    checkNeighbor = false;
-                }
-                // if neighbor check is already done, then just add it
-                else  {
-                    routeInfo.addRoute(nodeId);
-                    i++;
-                }
-            }
-            // if i > 1
-            else {
-                // If the adjacency SID is pushed and the next SID is the destination
-                // of the adjacency SID, then do not add the SID.
-                if (prevAdjacencySid != null) {
-                    if (isAdjacencySidNeighborOf(prevNodeId, prevAdjacencySid, nodeId)) {
-                        prevAdjacencySid = null;
-                        prevNodeId = nodeId;
-                        continue;
-                    }
-                    prevAdjacencySid = null;
-                }
-                routeInfo.addRoute(nodeId);
-                i++;
-            }
-
-            // If the adjacency ID is added the label stack,
-            // then we need to check if the next node is the destination of the adjacency SID
-            if (isAdjacencySid(nodeId))
-                prevAdjacencySid = nodeId;
-
-            // If the number of labels reaches the limit, start over the procedure
-            if (i == MAX_NUM_LABELS+1) {
-
-                rules.add(routeInfo);
-                routeInfo = new TunnelRouteInfo();
-
-                if (isAdjacencySid(nodeId)) {
-                    // If the previous sub tunnel finishes with adjacency SID,
-                    // then we need to start the procedure from the adjacency
-                    // destination ID.
-                    List<Switch> destNodeList =
-                            getAdjacencyDestinationNode(prevNodeId, nodeId);
-                    if (destNodeList == null || destNodeList.isEmpty()) {
-                        log.warn("Cannot find destination node for adjacencySID {}",
-                                nodeId);
-                        return null;
-                    }
-                    // If the previous sub tunnel finishes with adjacency SID with
-                    // multiple ports, then we need to remove the adjacency Sid
-                    // from the previous sub tunnel and start the new sub tunnel
-                    // with the adjacency Sid. Technically, the new subtunnel
-                    // forward packets to the port assigned to the adjacency Sid
-                    // and the label stack starts with the next ID.
-                    // This is to avoid to install new policy rule to multiple nodes for stitching when the
-                    // adjacency Sid that has more than one port.
-                    if (destNodeList.size() > 1) {
-                        rules.get(rules.size()-1).route.remove(nodeId);
-                        srcSw = getSwitchFromNodeId(prevNodeId);
-                        List<Dpid> fwdSws = getDpidIfNeighborOf(nodeId, srcSw);
-                        routeInfo.setFwdSwDpid(fwdSws);
-                        routeInfo.setSrcDpid(srcSw.getDpid().toString());
-                        i = 1;
-                        checkNeighbor = false;
-                        continue;
-                    }
-                    else {
-                        srcSw = destNodeList.get(0);
-                    }
-                }
-                else {
-                    srcSw = getSwitchFromNodeId(nodeId);
-                }
-                srcDpid = srcSw.getDpid().toString();
-                routeInfo.setSrcDpid(srcDpid);
-                i = 1;
-                checkNeighbor = true;
-            }
-
-            if (prevAdjacencySid == null)
-                prevNodeId = nodeId;
-        }
-
-
-        if (i < MAX_NUM_LABELS+1 && (routeInfo.getFwdSwDpid() != null &&
-                !routeInfo.getFwdSwDpid().isEmpty())) {
-            rules.add(routeInfo);
-            // NOTE: empty label stack can happen, but forwarding destination should be set
-        }
-
-        return rules;
     }
 
     /**
@@ -1548,53 +1211,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @return
      */
     public boolean removePolicy(String pid) {
-        PolicyInfo policyInfo =  policyTable.get(pid);
-        if (policyInfo == null)
+        //Sanity check
+        SegmentRoutingPolicy policy =  policyTable.get(pid);
+        if (policy == null) {
+            log.warn("Cannot find the policy {}", pid);
             return false;
-        PacketMatch policyMatch = policyInfo.match;
-        String tid = policyInfo.tunnelId;
-        int priority = policyInfo.priority;
-
-        List<Action> actions = new ArrayList<>();
-        int gropuId = 0; // dummy group ID
-        GroupAction groupAction = new GroupAction();
-        groupAction.setGroupId(gropuId);
-        actions.add(groupAction);
-
-        MatchAction matchAction = new MatchAction(new MatchActionId(
-                matchActionId++),
-                new SwitchPort((long) 0, (short) 0), policyMatch, priority,
-                actions);
-        MatchActionOperationEntry maEntry =
-                new MatchActionOperationEntry(Operator.REMOVE, matchAction);
-
-        TunnelInfo tunnelInfo = tunnelTable.get(tid);
-        if (tunnelInfo == null)
+        }
+        if (policy.removePolicy()) {
+            policyTable.remove(pid);
+            log.debug("Policy {} is removed.", pid);
+            return true;
+        }
+        else {
+            log.warn("Faild to remove the policy {}", pid);
             return false;
-        List<TunnelRouteInfo> routes = tunnelInfo.routes;
-
-        for (TunnelRouteInfo route : routes) {
-            IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(route.srcSwDpid));
-
-            if (sw13 == null) {
-                return false;
-            }
-            else {
-                printMatchActionOperationEntry(sw13, maEntry);
-                try {
-                    sw13.pushFlow(maEntry);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    log.debug("policy remove failed due to pushFlow() exception");
-                    return false;
-                }
-            }
         }
 
-        policyTable.remove(pid);
-        log.debug("Policy {} is removed.", pid);
-        return true;
     }
 
     public enum removeTunnelMessages{
@@ -1636,183 +1268,51 @@ public class SegmentRoutingManager implements IFloodlightModule,
     public removeTunnelMessages removeTunnel(String tunnelId) {
 
         // Check if the tunnel is used for any policy
-        for (PolicyInfo policyInfo: policyTable.values()) {
-            if (policyInfo.tunnelId.equals(tunnelId)) {
-                log.debug("Tunnel {} is still used for the policy {}.",
-                        policyInfo.policyId, tunnelId);
-                return removeTunnelMessages.ERROR_REFERENCED;
+        for (SegmentRoutingPolicy policy: policyTable.values()) {
+            if (policy.getType() == PolicyType.TUNNEL_FLOW) {
+                String tid = ((SegmentRoutingPolicyTunnel)policy).getTunnelId();
+                if (tid.equals(tunnelId)) {
+                    log.debug("Tunnel {} is still used for the policy {}.",
+                    policy.getPolicyId(), tunnelId);
+                    return removeTunnelMessages.ERROR_REFERENCED;
+                }
             }
         }
 
-        TunnelInfo tunnelInfo = tunnelTable.get(tunnelId);
-        if (tunnelInfo == null)
+        SegmentRoutingTunnel tunnel = tunnelTable.get(tunnelId);
+        if (tunnel == null) {
+            log.warn("Tunnul object does not exist {}", tunnelId);
             return removeTunnelMessages.ERROR_TUNNEL;
-
-        List<TunnelRouteInfo> routes = tunnelInfo.routes;
-        for (TunnelRouteInfo route: routes) {
-            IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(route.srcSwDpid));
-
-            if (sw13 == null) {
-                return removeTunnelMessages.ERROR_SWITCH;
+        }
+        else {
+            if (tunnel.removeTunnel()) {
+                tunnelTable.remove(tunnelId);
+                log.debug("Tunnel {} was removed successfully.", tunnelId);
+                return removeTunnelMessages.SUCCESS;
             }
             else {
-                if (!sw13.removeGroup(route.getGroupId())) {
-                    log.warn("Faied to remove the tunnel {} at driver",
-                            tunnelId);
-                    return removeTunnelMessages.ERROR_DRIVER;
-                    }
+                log.warn("Faild in removing the tunnel {}", tunnelId);
+                return removeTunnelMessages.ERROR_DRIVER;
             }
         }
-
-        tunnelTable.remove(tunnelId);
-        log.debug("Tunnel {} was removed successfully.", tunnelId);
-
-        return removeTunnelMessages.SUCCESS;
     }
 
     // ************************************
     // Utility functions
     // ************************************
 
-    /**
-     * Get the destination Nodes of the adjacency Sid
-     *
-     * @param nodeId  node ID of the adjacency Sid
-     * @param adjacencySid  adjacency Sid
-     * @return List of Switch, empty list if not found
-     */
-    private List<Switch> getAdjacencyDestinationNode(String nodeId, String adjacencySid) {
-        List<Switch> dstSwList = new ArrayList<Switch>();
+    public long getNextMatchActionID() {
+        return this.matchActionId++;
+    }
 
+
+    public List<Integer> getAdacencyPorts(int nodeSid, int adjacencySid) {
         HashMap<Integer, List<Integer>> adjacencySidInfo =
-                adjacencySidTable.get(Integer.valueOf(nodeId));
-        List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(adjacencySid));
-        Switch srcSw = getSwitchFromNodeId(nodeId);
-        for (Integer port: ports) {
-            for (Link link: srcSw.getOutgoingLinks()) {
-                if (link.getSrcPort().getPortNumber().value() == port) {
-                    dstSwList.add(link.getDstSwitch());
-                }
-            }
-        }
-
-        return dstSwList;
-
-    }
-
-    /**
-     * Get the DPID of the router with node ID IF the node ID is the neighbor of the
-     * Switch srcSW.
-     * If the nodeId is the adjacency Sid, then it returns the destination router DPIDs.
-     *
-     * @param nodeId Node ID to check
-     * @param srcSw target Switch
-     * @return List of DPID of nodeId, empty list if the nodeId is not the neighbor of srcSW
-     */
-    private List<Dpid> getDpidIfNeighborOf(String nodeId, Switch srcSw) {
-        List<Dpid> fwdSws = new ArrayList<Dpid>();
-        // if the nodeID is the adjacency ID, then we need to regard it as the
-        // neighbor node ID and need to return the destination router DPID(s)
-        if (isAdjacencySid(nodeId)) {
-            String srcNodeId = this.getMplsLabel(srcSw.getDpid().toString());
-            HashMap<Integer, List<Integer>> adjacencySidInfo =
-                    adjacencySidTable.get(Integer.valueOf(srcNodeId));
-            List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(nodeId));
-
-            for (Integer port: ports) {
-                for (Link link: srcSw.getOutgoingLinks()) {
-                    if (link.getSrcPort().getPortNumber().value() == port) {
-                        fwdSws.add(link.getDstSwitch().getDpid());
-                    }
-                }
-            }
-        }
-        else {
-            List<Dpid> fwdSwDpids = getForwardingSwitchForNodeId(srcSw,nodeId);
-            if (fwdSwDpids == null || fwdSwDpids.isEmpty()) {
-                log.warn("There is no route from node {} to node {}",
-                        srcSw.getDpid(), nodeId);
-                return fwdSws;
-            }
-
-            for (Dpid dpid: fwdSwDpids) {
-                if (getMplsLabel(dpid.toString()).toString().equals(nodeId)) {
-                    fwdSws.add(dpid);
-                    break;
-                }
-            }
-        }
-
-        return fwdSws;
-    }
-
-    /**
-     * Get port numbers of the neighbor set.
-     * If ECMP in transit router is not supported, then only one port should be returned
-     * regardless of number of nodes in neighbor set.
-     *
-     * @param srcSwDpid source switch
-     * @param ns Neighbor set of the switch
-     * @return List of PortNumber, null if not found
-     */
-    private List<PortNumber> getPortsFromNeighborSet(String srcSwDpid, NeighborSet ns) {
-
-        List<PortNumber> portList = new ArrayList<PortNumber>();
-        Switch srcSwitch = mutableTopology.getSwitch(new Dpid(srcSwDpid));
-        if (srcSwitch == null)
+                adjacencySidTable.get(Integer.valueOf(nodeSid));
+        if (adjacencySidInfo == null)
             return null;
-        IOF13Switch srcSwitch13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
-                getSwId(srcSwitch.getDpid().toString()));
-
-        for (Dpid neighborDpid: ns.getDpids()) {
-            if (srcSwitch13 instanceof OFSwitchImplDellOSR &&
-                    ns.getDpids().size() == 1) {
-                Switch dstSwitch = mutableTopology.getSwitch(neighborDpid);
-                if (isTransitRouter(srcSwitch) && isTransitRouter(dstSwitch)) {
-                    Link link = srcSwitch.getLinkToNeighbor(neighborDpid);
-                    portList.add(link.getSrcPort().getNumber());
-                    break;
-                }
-            }
-            else {
-                for (Link link: srcSwitch.getOutgoingLinks()) {
-                    if (link.getDstSwitch().getDpid().equals(neighborDpid)) {
-                        portList.add(link.getSrcPort().getNumber());
-                    }
-                }
-            }
-        }
-
-        return portList;
-    }
-
-    /**
-     * Check whether the router with preNodeid is connected to the router
-     * with nodeId via adjacencySid or not
-     *
-     * @param prevNodeId the router node ID of the adjacencySid
-     * @param adjacencySid adjacency SID
-     * @param nodeId the router node ID to check
-     * @return
-     */
-    private boolean isAdjacencySidNeighborOf(String prevNodeId, String adjacencySid, String nodeId) {
-
-        HashMap<Integer, List<Integer>> adjacencySidInfo = adjacencySidTable.get(Integer.valueOf(prevNodeId));
-        List<Integer> ports = adjacencySidInfo.get(Integer.valueOf(adjacencySid));
-
-        for (Integer port: ports) {
-            Switch sw = getSwitchFromNodeId(prevNodeId);
-            for (Link link: sw.getOutgoingLinks()) {
-                if (link.getSrcPort().getPortNumber().value() == port) {
-                    if (getMplsLabel(link.getDstPort().getDpid().toString()).equals(nodeId)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        else
+            return adjacencySidInfo.get(Integer.valueOf(adjacencySid));
     }
 
     /**
@@ -1821,7 +1321,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param nodeId to check
      * @return true if the node ID is the adjacency ID, false otherwise
      */
-    private boolean isAdjacencySid(String nodeId) {
+    public boolean isAdjacencySid(String nodeId) {
         // XXX The rule might change
         if (Integer.parseInt(nodeId) > 10000)
             return true;
@@ -1977,7 +1477,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param sw  router switch to check
      * @return true if the switch is the transit router, false otherwise
      */
-    private boolean isTransitRouter(Switch sw) {
+    public boolean isTransitRouter(Switch sw) {
         int i = 0;
         for(Switch neighbor: sw.getNeighbors()) {
             i++;
@@ -1997,7 +1497,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param nodeId destination node Id
      * @return list of switch DPID to forward packets to
      */
-    private List<Dpid> getForwardingSwitchForNodeId(Switch srcSw, String nodeId) {
+    public List<Dpid> getForwardingSwitchForNodeId(Switch srcSw, String nodeId) {
 
         List<Dpid> fwdSws = new ArrayList<Dpid>();
         Switch destSw = null;
@@ -2048,7 +1548,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param nodeId node ID for switch
      * @return Switch
      */
-    private Switch getSwitchFromNodeId(String nodeId) {
+    public Switch getSwitchFromNodeId(String nodeId) {
 
         for (Switch sw : mutableTopology.getSwitches()) {
             String id = sw.getStringAttribute("nodeSid");
@@ -2115,7 +1615,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param dipid DPID of the switch
      * @return MPLS label for the switch
      */
-    private String getMplsLabel(String dpid) {
+    public String getMplsLabel(String dpid) {
 
         String mplsLabel = null;
         for (Switch sw : mutableTopology.getSwitches()) {
@@ -2269,6 +1769,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
         arpHandler.sendArpRequest(sw, destinationAddress, inPort);
     }
 
+    public IOF13Switch getIOF13Switch(String dpid) {
+
+        IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(dpid));
+
+        return targetSw;
+    }
+
+    public Switch getSwitch(String dpid) {
+        return mutableTopology.getSwitch(new Dpid(dpid));
+    }
+
+
     // ************************************
     // Test functions
     // ************************************
@@ -2371,27 +1884,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     }
 
-    /**
-     * print tunnel info - used only for debugging.
-     * @param targetSw
-     *
-     * @param fwdSwDpids
-     * @param ids
-     * @param tunnelId
-     */
-    private void printTunnelInfo(String targetSw, String tunnelId,
-            List<String> ids, NeighborSet ns) {
-        StringBuilder logStr = new StringBuilder("In switch " +
-                targetSw + ", create a tunnel " + tunnelId + " " + " of push ");
-        for (String id: ids)
-            logStr.append(id + "-");
-        logStr.append(" output to ");
-        for (Dpid dpid: ns.getDpids())
-            logStr.append(dpid + " - ");
 
-        log.debug(logStr.toString());
-
-    }
 
     /**
      * Debugging function to print out the Match Action Entry
@@ -2399,7 +1892,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      * @param maEntry
      */
-    private void printMatchActionOperationEntry(
+    public void printMatchActionOperationEntry(
             IOF13Switch sw13, MatchActionOperationEntry maEntry) {
 
         StringBuilder logStr = new StringBuilder("In switch " + sw13.getId() + ", ");
@@ -2626,6 +2119,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         return false;
     }
+
 
 
 }

@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.PolicyInfo;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicyTunnel;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.util.IPv4Net;
@@ -111,12 +113,15 @@ public class SegmentRouterPolicyResource extends ServerResource {
                 (ISegmentRoutingService) getContext().getAttributes().
                         get(ISegmentRoutingService.class.getCanonicalName());
         List<SegmentRouterPolicyInfo> policyList = new ArrayList<SegmentRouterPolicyInfo>();
-        Collection<PolicyInfo> policies = segmentRoutingService.getPoclicyTable();
-        Iterator<PolicyInfo> piI = policies.iterator();
+        Collection<SegmentRoutingPolicy> policies = segmentRoutingService.getPoclicyTable();
+        Iterator<SegmentRoutingPolicy> piI = policies.iterator();
         while(piI.hasNext()){
-            PolicyInfo policy = piI.next();
+            SegmentRoutingPolicy policy = piI.next();
             String policyId = policy.getPolicyId();
-            String tunnelId = policy.getTunnelId();
+            String tunnelId = null;
+            if (policy.getType() == PolicyType.TUNNEL_FLOW) {
+                tunnelId = ((SegmentRoutingPolicyTunnel)policy).getTunnelId();
+            }
             int priority = policy.getPriority();
             String policyType = policy.getType().name();
             PacketMatch flowEntries = policy.getMatch();

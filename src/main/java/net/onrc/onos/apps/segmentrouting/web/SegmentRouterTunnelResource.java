@@ -3,16 +3,16 @@ package net.onrc.onos.apps.segmentrouting.web;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.PolicyInfo;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelRouteInfo;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.removeTunnelMessages;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicyTunnel;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingTunnel;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingTunnel.TunnelRouteInfo;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.resource.Delete;
@@ -79,18 +79,19 @@ public class SegmentRouterTunnelResource extends ServerResource {
         ISegmentRoutingService segmentRoutingService =
                 (ISegmentRoutingService) getContext().getAttributes().
                         get(ISegmentRoutingService.class.getCanonicalName());
-        Iterator<TunnelInfo> ttI = segmentRoutingService.getTunnelTable().iterator();
+        Iterator<SegmentRoutingTunnel> ttI = segmentRoutingService.getTunnelTable().iterator();
         List<SegmentRouterTunnelInfo> infoList = new ArrayList<SegmentRouterTunnelInfo>();
         while(ttI.hasNext()){
-           TunnelInfo tunnelInfo = ttI.next();
+           SegmentRoutingTunnel tunnelInfo = ttI.next();
            List<Integer> tunnelPath = tunnelInfo.getLabelids();
            String tunnelId = tunnelInfo.getTunnelId();
-           Collection<PolicyInfo> policies = segmentRoutingService.getPoclicyTable();
-           Iterator<PolicyInfo> piI = policies.iterator();
+           Collection<SegmentRoutingPolicy> policies = segmentRoutingService.getPoclicyTable();
+           Iterator<SegmentRoutingPolicy> piI = policies.iterator();
            String policiesId = "";
            while(piI.hasNext()){
-               PolicyInfo policy = piI.next();
-               if(policy.getTunnelId().equals(tunnelId)){
+               SegmentRoutingPolicy policy = piI.next();
+               if(policy.getType() == PolicyType.TUNNEL_FLOW &&
+                 ((SegmentRoutingPolicyTunnel)policy).getTunnelId().equals(tunnelId)){
                    policiesId += (policy.getPolicyId()+",");
                }
            }
@@ -103,7 +104,7 @@ public class SegmentRouterTunnelResource extends ServerResource {
            while(trI.hasNext()){
                TunnelRouteInfo label = trI.next();
                labelStack.add(label.getRoute());
-               Integer gId = segmentRoutingService.getTunnelGroupId(tunnelId, 
+               Integer gId = segmentRoutingService.getTunnelGroupId(tunnelId,
                        label.getSrcSwDpid());
                dpidGroup.add(label.getSrcSwDpid() + "/"+ gId);
            }

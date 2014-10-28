@@ -6,9 +6,8 @@ import java.util.List;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.PolicyInfo;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.removeTunnelMessages;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
 import net.onrc.onos.core.util.IPv4Net;
 
 /**
@@ -52,7 +51,26 @@ public interface ISegmentRoutingService extends IFloodlightService {
      */
     public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
+            Short srcPort, Short dstPort, int priority, String tid, PolicyType type);
+
+    /**
+     * Create a policy for policy based segment routing
+     *
+     * @param pid Unique Policy Identifier
+     * @param srcIP Source IP address in CIDR format
+     * @param dstIP Destination IP address in CIDR format
+     * @param ipProto IP protocol type
+     * @param srcPort Source L4 port
+     * @param dstPort Destination L4 port
+     * @param priority Priority of the policy
+     * @param tid SR Tunnel Id to be associated with this policy
+     *
+     * @return "true/false" depending tunnel creation status
+     */
+    public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
+            Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
             Short srcPort, Short dstPort, int priority, String tid);
+
 
     /**
      * Remove a policy given policy Id
@@ -68,7 +86,7 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * @return Collection<TunnelInfo>
      */
 
-    public Collection<TunnelInfo> getTunnelTable();
+    public Collection<SegmentRoutingTunnel> getTunnelTable();
     /**
      * Get the first group ID for the tunnel for specific source router
      * If Segment Stitching was required to create the tunnel, there are
@@ -84,7 +102,7 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * return list of all the policies currently there in Segment Router
      * @return Collection<PolicyInfo>
      */
-    public Collection<PolicyInfo> getPoclicyTable();
+    public Collection<SegmentRoutingPolicy> getPoclicyTable();
     /**
      * Returns the Adjacency Info for the node
      *
