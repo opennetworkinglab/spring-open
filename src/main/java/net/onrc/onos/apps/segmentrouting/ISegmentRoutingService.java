@@ -8,6 +8,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.PolicyInfo;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.removeTunnelMessages;
 import net.onrc.onos.core.util.IPv4Net;
 
 /**
@@ -33,7 +34,7 @@ public interface ISegmentRoutingService extends IFloodlightService {
      *
      * @return "true/false" depending tunnel deletion status
      */
-    public boolean removeTunnel(String tunnelId);
+    public removeTunnelMessages removeTunnel(String tunnelId);
 
     /**
      * Create a policy for policy based segment routing

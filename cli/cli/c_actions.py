@@ -151,8 +151,8 @@ def tunnel_remove(data=None):
     except Exception, e:
         errors = sdnsh.rest_error_to_dict(e)
         print sdnsh.rest_error_dict_to_message(errors)
-    if result != "deleted":
-        print "command failed"
+    if not result.startswith("SUCCESS"):
+        print result
 
 policy_obj_data = {}
 def policy_create(data=None):

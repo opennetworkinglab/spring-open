@@ -12,6 +12,7 @@ import net.onrc.onos.apps.segmentrouting.ISegmentRoutingService;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.PolicyInfo;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelInfo;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.TunnelRouteInfo;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.removeTunnelMessages;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.resource.Delete;
@@ -68,9 +69,9 @@ public class SegmentRouterTunnelResource extends ServerResource {
             return "fail";
         }
         log.debug("deleteTunnel with Id {}", createParams.getTunnel_id());
-        boolean result = segmentRoutingService.removeTunnel(
+        removeTunnelMessages result = segmentRoutingService.removeTunnel(
                 createParams.getTunnel_id());
-        return (result == true) ? "deleted" : "fail";
+        return result.name()+" "+result.toString();
     }
 
     @Get("json")

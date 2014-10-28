@@ -1597,6 +1597,35 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return true;
     }
 
+    public enum removeTunnelMessages{
+        SUCCESS(0, "Tunnel is removed successfully."),
+        ERROR_REFERENCED(1, "Can't remove tunnel as its referenced by other policy(s)"),
+        ERROR_SWITCH(2, "Switch not found in the tunnel route"),
+        ERROR_DRIVER(3, "Can't remove tunnel at driver"),
+        ERROR_TUNNEL(4, "Tunnel not found");
+
+        private final int code;
+        private final String description;
+
+        private removeTunnelMessages(int code, String description) {
+          this.code = code;
+          this.description = description;
+        }
+
+        public String getDescription() {
+           return this.description;
+        }
+
+        public int getCode() {
+           return this.code;
+        }
+
+        @Override
+        public String toString() {
+          return "[" + this.code + ": " + this.description + "]";
+        }
+
+    }
     /**
      * Remove a tunnel
      * It removes all groups for the tunnel if the tunnel is not used for any
@@ -1604,20 +1633,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      * @param tunnelId tunnel ID to remove
      */
-    public boolean removeTunnel(String tunnelId) {
+    public removeTunnelMessages removeTunnel(String tunnelId) {
 
         // Check if the tunnel is used for any policy
         for (PolicyInfo policyInfo: policyTable.values()) {
             if (policyInfo.tunnelId.equals(tunnelId)) {
                 log.debug("Tunnel {} is still used for the policy {}.",
                         policyInfo.policyId, tunnelId);
-                return false;
+                return removeTunnelMessages.ERROR_REFERENCED;
             }
         }
 
         TunnelInfo tunnelInfo = tunnelTable.get(tunnelId);
         if (tunnelInfo == null)
-            return false;
+            return removeTunnelMessages.ERROR_TUNNEL;
 
         List<TunnelRouteInfo> routes = tunnelInfo.routes;
         for (TunnelRouteInfo route: routes) {
@@ -1625,20 +1654,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     getSwId(route.srcSwDpid));
 
             if (sw13 == null) {
-                return false;
+                return removeTunnelMessages.ERROR_SWITCH;
             }
             else {
                 if (!sw13.removeGroup(route.getGroupId())) {
                     log.warn("Faied to remove the tunnel {} at driver",
                             tunnelId);
-                    return false;                }
+                    return removeTunnelMessages.ERROR_DRIVER;
+                    }
             }
         }
 
         tunnelTable.remove(tunnelId);
         log.debug("Tunnel {} was removed successfully.", tunnelId);
 
-        return true;
+        return removeTunnelMessages.SUCCESS;
     }
 
     // ************************************
