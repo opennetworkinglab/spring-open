@@ -119,7 +119,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<String, SegmentRoutingPolicy> policyTable;
     private HashMap<String, SegmentRoutingTunnel> tunnelTable;
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
-    private HashMap<Integer, Integer> adjcencyGroupIdTable;
+    private HashMap<String, HashMap<Integer, Integer>> adjcencyGroupIdTable;
 
 
     // Flag whether transit router supports ECMP or not
@@ -197,7 +197,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         policyTable = new HashMap<String, SegmentRoutingPolicy>();
         tunnelTable = new HashMap<String, SegmentRoutingTunnel>();
         adjacencySidTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
-        adjcencyGroupIdTable = new HashMap<Integer, Integer>();
+        adjcencyGroupIdTable = new HashMap<String, HashMap<Integer, Integer>>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -351,11 +351,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 for (MastershipData ms: mastershipRemovedAll) {
                     for (PortData port: portEntriesRemovedAll) {
                         // TODO: check ALL ports of the switch are dead ..
-                        if (port.getDpid().equals(ms.getDpid())) {
-                            mastershipToRemove.put(ms.getDpid().toString(), ms);
-                        }
+                        mastershipToRemove.put(ms.getDpid().toString(), ms);
+                        log.debug("Swtich {} is really down.", ms.getDpid());
+                        break;
                     }
-                    log.debug("Swtich {} is really down.", ms.getDpid());
                 }
                 processMastershipRemoved(mastershipToRemove.values());
             }
@@ -395,6 +394,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     log.debug("MasterSwitch {} is gone: remove port {}", sw.getDpid(), dstPort);
                 }
             }
+            // Flush the groupId table for adjacencySid;
+            log.debug("Flush the AdjacencyGroupId table for sw {}", sw);
+            adjcencyGroupIdTable.remove(sw.getDpid().toString());
         }
 
         linksToAdd.clear();
@@ -657,15 +659,36 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 key += portNumber.hashCode();
             }
             key += sw.getDpid().hashCode();
-            groupId = adjcencyGroupIdTable.get(key);
-            if (groupId == null) {
+
+            HashMap<Integer, Integer> adjGroupIdMap =
+                    adjcencyGroupIdTable.get(sw.getDpid().toString());
+            if (adjGroupIdMap != null) {
+                groupId = adjGroupIdMap.get(key);
+                if (groupId == null) {
+                    groupId = sw13.createGroup(new ArrayList<Integer>(),
+                            portList);
+                    if (groupId < 0) {
+                        log.debug("Failed to create a group at driver for "
+                                + "adj ID {}", adjId);
+                        return;
+                    }
+                    else {
+                        adjGroupIdMap.put(key, groupId);
+                    }
+                }
+            }
+            else {
                 groupId = sw13.createGroup(new ArrayList<Integer>(), portList);
                 if (groupId < 0) {
-                    log.debug("Failed to create a group at driver for adj ID {}", adjId);
+                    log.debug("Failed to create a group at driver for adj ID {}",
+                            adjId);
                     return;
                 }
                 else {
-                    adjcencyGroupIdTable.put(key, groupId);
+                    adjGroupIdMap = new HashMap<Integer, Integer>();
+                    adjGroupIdMap.put(key, groupId);
+                    adjcencyGroupIdTable.put(sw.getDpid().toString(),
+                            adjGroupIdMap);
                 }
             }
         }
