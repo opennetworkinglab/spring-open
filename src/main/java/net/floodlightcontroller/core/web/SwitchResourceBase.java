@@ -103,7 +103,7 @@ public class SwitchResourceBase extends ServerResource {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
                     for (OFFlowStatsEntry entry : ((OFFlowStatsReply)values.get(0)).getEntries()) {
-                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry);
+                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry, sw);
                         flowStats.add(entryMod);
                     }
                     log.debug("Switch flow Stats Entries from switch {} are {}",
@@ -244,7 +244,7 @@ public class SwitchResourceBase extends ServerResource {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
                     for (OFFlowStatsEntry entry : ((OFFlowStatsReply)values.get(0)).getEntries()) {
-                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry);
+                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry, sw);
                         flowStats.add(entryMod);
                     }
                     log.debug("Switch flow Stats Entries for table {} from switch {} are {}",

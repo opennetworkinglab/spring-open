@@ -2403,8 +2403,8 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if 'POP_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
                     popmpls = groupDescEntry['bucketsActions'][bucketId]['POP_MPLS']
                 outport = ''
-                if 'OUTPPUT' in groupDescEntry['bucketsActions'][bucketId]:
-                    outport = groupDescEntry['bucketsActions'][bucketId]['OUTPPUT']
+                if 'OUTPUT' in groupDescEntry['bucketsActions'][bucketId]:
+                    outport = groupDescEntry['bucketsActions'][bucketId]['OUTPUT']
                 goToGroup = ''
                 if 'goToGroup' in groupDescEntry['bucketsActions'][bucketId]:
                     goToGroup = groupDescEntry['bucketsActions'][bucketId]['goToGroup']

@@ -2,6 +2,7 @@ package net.floodlightcontroller.core.web.serializers;
 import java.io.IOException;
 import java.util.List;
 
+import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.web.OFGroupDescStatsEntryMod;
 
 import org.apache.commons.codec.binary.Hex;
@@ -58,12 +59,13 @@ public class OFGroupDescStatsEntryModSerializer extends SerializerBase<OFGroupDe
                     }
                 }
                 else if(action.getType().compareTo(OFActionType.OUTPUT) == 0){
-                    jGen.writeNumberField("OUTPPUT", ((OFActionOutput)action).getPort().getPortNumber());
+                    jGen.writeNumberField("OUTPUT", ((OFActionOutput)action).getPort().getPortNumber());
                 }
                 else if(action.getType().compareTo(OFActionType.POP_MPLS) == 0){
                     jGen.writeStringField("POP_MPLS",  "0x"+((OFActionPopMpls)action).getEthertype().toString());
                 }
                 else if(action.getType().compareTo(OFActionType.GROUP) == 0){
+                    ((OFActionGroup)action).getGroup().getGroupNumber();
                     jGen.writeNumberField("goToGroup", ((OFActionGroup)action).getGroup().getGroupNumber());
                 }
                 else if(action.getType().compareTo(OFActionType.COPY_TTL_IN) == 0

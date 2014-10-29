@@ -8,17 +8,17 @@ import net.floodlightcontroller.core.web.serializers.OFGroupDescStatsEntryModSer
 @JsonSerialize(using = OFGroupDescStatsEntryModSerializer.class)
 
 public class OFGroupDescStatsEntryMod {
-        private OFGroupDescStatsEntry GroupDescStatsEntry = null;
+    private OFGroupDescStatsEntry GroupDescStatsEntry = null;
 
-        public OFGroupDescStatsEntryMod() {
-        }
+    public OFGroupDescStatsEntryMod() {
+    }
 
-        public OFGroupDescStatsEntryMod(OFGroupDescStatsEntry GroupStatsEntry) {
-            this.GroupDescStatsEntry = GroupStatsEntry;
-        }
+    public OFGroupDescStatsEntryMod(OFGroupDescStatsEntry GroupStatsEntry) {
+        this.GroupDescStatsEntry = GroupStatsEntry;
+    }
 
-        public OFGroupDescStatsEntry getGroupDescStatsEntry() {
-            return this.GroupDescStatsEntry;
-        }
+    public OFGroupDescStatsEntry getGroupDescStatsEntry() {
+        return this.GroupDescStatsEntry;
+    }
 
 }

@@ -309,6 +309,8 @@ class CliModelInfo():
         'host-alias' : {
             'source'          : 'user-config',
             'cascade_delete'  : True,
+            'fields' : {
+                }
             },
 
 

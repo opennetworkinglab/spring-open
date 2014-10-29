@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.floodlightcontroller.core.web.OFFlowStatsEntryMod;
+import net.onrc.onos.core.drivermanager.OFSwitchImplSpringOpenTTP;
 import net.onrc.onos.core.packet.IPv4;
 
 import org.projectfloodlight.openflow.protocol.action.*;
@@ -36,6 +37,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
             JsonGenerationException {
         OFFlowStatsEntry flowStatsEntry = FlowStatsEntryMod.getFlowStatsEntry();
         OFOxmList matches = ((OFMatchV3)flowStatsEntry.getMatch()).getOxmList();
+        OFSwitchImplSpringOpenTTP sw = (OFSwitchImplSpringOpenTTP)FlowStatsEntryMod.getSwitch();
         
         List<OFInstruction> instructions = flowStatsEntry.getInstructions();
         jGen.writeStartObject();
@@ -121,8 +123,22 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                 
                 jGen.writeFieldName(instruction.getType().name());
                 jGen.writeStartObject();
-                jGen.writeNumberField("tableId"
-                        , ((OFInstructionGotoTable)instruction).getTableId().getValue());
+                if(((OFInstructionGotoTable)instruction).getTableId().getValue()==
+                        sw.getTableId("ip").getValue()){
+                    jGen.writeStringField("tableId", "ip");
+                }
+                else if(((OFInstructionGotoTable)instruction).getTableId().getValue()==
+                        sw.getTableId("mpls").getValue()){
+                    jGen.writeStringField("tableId", "mpls");
+                }
+                else if(((OFInstructionGotoTable)instruction).getTableId().getValue()==
+                        sw.getTableId("acl").getValue()){
+                    jGen.writeStringField("tableId", "acl");
+                }
+                else{
+                    jGen.writeNumberField("tableId"
+                            , ((OFInstructionGotoTable)instruction).getTableId().getValue());
+                }
                 jGen.writeEndObject();
                 continue;
             }//*/
