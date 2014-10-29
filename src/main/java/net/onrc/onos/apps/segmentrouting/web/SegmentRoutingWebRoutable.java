@@ -1,9 +1,6 @@
 package net.onrc.onos.apps.segmentrouting.web;
 
-import java.util.Iterator;
-
 import net.floodlightcontroller.restserver.RestletRoutable;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager;
 
 import org.restlet.Context;
 import org.restlet.Restlet;
@@ -23,7 +20,6 @@ public class SegmentRoutingWebRoutable implements RestletRoutable {
         router.attach("/router/{routerId}/{statsType}",  SegmentRouterResource.class);
         router.attach("/tunnel", SegmentRouterTunnelResource.class);
         router.attach("/policy", SegmentRouterPolicyResource.class);
-        // SegmentRouterTunnelResource.class);
         return router;
     }
 

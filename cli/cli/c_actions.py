@@ -2201,8 +2201,16 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
         combResult = []
         tunnelList = entries
         for tunnel in tunnelList:
-            labelStack = str(tunnel.get('labelStack')) if tunnel.get('labelStack') else ''
-            labelStack = remove_unicodes(labelStack)
+            labelStackList = (tunnel.get('labelStack'))
+            labelStackString ='['
+            for labelSack in labelStackList:
+                for label in labelSack:
+                    labelStackString += (label + ',')
+            if labelStackString == '[':
+                labelStackString = ''
+            else:
+                labelStackString = labelStackString[:-1]
+                labelStackString += ']'
             tunnelId = tunnel.get('tunnelId')
             tunnelPath = tunnel.get('tunnelPath')
             dpidGroup = str(tunnel.get('dpidGroup'))
@@ -2210,7 +2218,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             policies = tunnel.get('policies')
             combResult.append({
                                'tunnelId'       : tunnelId,
-                               'labelStack'     : labelStack,
+                               'labelStack'     : labelStackString,
                                'dpidGroup'      : dpidGroup,
                                'tunnelPath'     : tunnelPath,
                                'policies'       : policies,
