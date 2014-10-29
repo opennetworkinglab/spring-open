@@ -119,6 +119,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<String, SegmentRoutingPolicy> policyTable;
     private HashMap<String, SegmentRoutingTunnel> tunnelTable;
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
+    private HashMap<Integer, Integer> adjcencyGroupIdTable;
+
 
     // Flag whether transit router supports ECMP or not
     // private boolean supportTransitECMP = true;
@@ -195,6 +197,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         policyTable = new HashMap<String, SegmentRoutingPolicy>();
         tunnelTable = new HashMap<String, SegmentRoutingTunnel>();
         adjacencySidTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
+        adjcencyGroupIdTable = new HashMap<Integer, Integer>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -644,16 +647,27 @@ public class SegmentRoutingManager implements IFloodlightModule,
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
 
-        int groupId = -1;
+        Integer groupId = -1;
         if (sw13 != null) {
             List<PortNumber> portList = new ArrayList<PortNumber>();
-            for (Integer port: ports)
-                portList.add(PortNumber.uint32(port));
-            groupId = sw13.createGroup(new ArrayList<Integer>(), portList);
-        }
-
-        if (groupId < 0) {
-            log.debug("Failed to create a group at driver for adj ID {}", adjId);
+            int key = 0;
+            for (Integer port: ports) {
+                PortNumber portNumber = PortNumber.uint32(port);
+                portList.add(portNumber);
+                key += portNumber.hashCode();
+            }
+            key += sw.getDpid().hashCode();
+            groupId = adjcencyGroupIdTable.get(key);
+            if (groupId == null) {
+                groupId = sw13.createGroup(new ArrayList<Integer>(), portList);
+                if (groupId < 0) {
+                    log.debug("Failed to create a group at driver for adj ID {}", adjId);
+                    return;
+                }
+                else {
+                    adjcencyGroupIdTable.put(key, groupId);
+                }
+            }
         }
 
         pushAdjRule(sw, adjId, null, null, groupId, true);
@@ -1362,7 +1376,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<Integer, List<Integer>> parseAdjacencySidInfo(String adjInfo)
             throws JSONException {
         JSONArray arry = new JSONArray(adjInfo);
-        HashMap<Integer, List<Integer>> AdjacencyInfo =
+        HashMap<Integer, List<Integer>> adjacencyInfo =
                 new HashMap<Integer, List<Integer>>();
 
         for (int i = 0; i < arry.length(); i++) {
@@ -1375,9 +1389,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             for (int j = 0; j < portNos.length(); j++) {
                 portNoList.add(Integer.valueOf(portNos.getInt(j)));
             }
-            AdjacencyInfo.put(adjId, portNoList);
+            adjacencyInfo.put(adjId, portNoList);
         }
-        return AdjacencyInfo;
+        return adjacencyInfo;
     }
 
     /**
