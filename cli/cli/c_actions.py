@@ -2276,6 +2276,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if actions != None:
                     actions = remove_unicodes(actions)
                     actions = renameActions(actions)
+                    actions = actions.lower()
                 else:
                     actions =''
                 combResult.append({
@@ -2304,6 +2305,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if actions != None:
                     actions = remove_unicodes(actions)
                     actions = renameActions(actions)
+                    actions = actions.lower()
                 else:
                     actions =''
                 combResult.append({
@@ -2352,6 +2354,7 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                 if actions != None:
                     actions = remove_unicodes(actions)
                     actions = renameActions(actions)
+                    actions = actions.lower()
                 else:
                     actions = ''
                 combResult.append({
