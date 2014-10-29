@@ -31,6 +31,7 @@ public class SegmentRouterTunnelResource extends ServerResource {
 
     @Post("json")
     public String createTunnel(String tunnelParams) {
+        log.debug("createTunnel with tunnelParams {}", tunnelParams);
         ISegmentRoutingService segmentRoutingService =
                 (ISegmentRoutingService) getContext().getAttributes().
                         get(ISegmentRoutingService.class.getCanonicalName());
@@ -41,6 +42,8 @@ public class SegmentRouterTunnelResource extends ServerResource {
                 createParams = mapper.readValue(tunnelParams,
                         SegmentRouterTunnelRESTParams.class);
             }
+            else
+                return "fail";
         } catch (IOException ex) {
             log.error("Exception occurred parsing inbound JSON", ex);
             return "fail";

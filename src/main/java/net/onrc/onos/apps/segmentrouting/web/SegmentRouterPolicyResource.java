@@ -32,6 +32,7 @@ public class SegmentRouterPolicyResource extends ServerResource {
 
     @Post("json")
     public String createPolicy(String policyParams) {
+        log.debug("createPolicy with policyParams {}", policyParams);
         ISegmentRoutingService segmentRoutingService =
                 (ISegmentRoutingService) getContext().getAttributes().
                         get(ISegmentRoutingService.class.getCanonicalName());
