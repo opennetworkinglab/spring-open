@@ -711,11 +711,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MplsMatch mplsMatch = new MplsMatch(id, bos);
         List<Action> actions = new ArrayList<Action>();
 
+        CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
+        actions.add(copyTtlInAction);
         if (bos) {
             PopMplsAction popAction = new PopMplsAction(EthType.IPv4);
-            CopyTtlInAction copyTtlInAction = new CopyTtlInAction();
             DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
-            actions.add(copyTtlInAction);
             actions.add(popAction);
             actions.add(decNwTtlAction);
         }
