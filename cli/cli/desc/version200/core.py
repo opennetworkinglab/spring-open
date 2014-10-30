@@ -1942,30 +1942,30 @@ REALTIME_TABLE_MPLS_FLOW_FORMAT = {
     'realtime_table_mpls_flow' : {
         'field-orderings' : {
             'default' : [
-                          'Idx', 'cookie', 'priority',
+                          'Idx',   'priority',
                           'byteCount', 'packetCount',
                           'mplsLabel','mplsBos','mplsTc',
                           'flow-brief', 'actions'
                         ],
             'scoped'  : [
                           'Idx', 'byteCount', 'packetCount', 'durationSeconds',
-                          'cookie', 'priority',
+                            'priority',
                            'mplsLabel','mplsBos','mplsTc','actions'
                         ],
             'brief'   : [ 'Idx', 'byteCount', 'packetCount', 'durationSeconds',
-                          'cookie','priority',
+                           'priority',
                           'mplsLabel','mplsBos','mplsTc','actions'
                           ],
             'default' : [ 'Idx',  'byteCount', 'packetCount', 'durationSeconds',
-                          'cookie','priority',
+                           'priority',
                            'mplsLabel','mplsBos','mplsTc','actions'
                           ],
             'scoped'  : [ 'Idx',  'byteCount', 'packetCount', 'durationSeconds',
-                          'cookie','priority',
+                           'priority',
                            'mplsLabel','mplsBos','mplsTc','actions'
                           ],
             'details' : [ 'Idx', 'byteCount', 'packetCount', 'durationSeconds',
-                          'cookie','priority',
+                           'priority',
                          'mplsLabel','mplsBos','mplsTc','actions'
                           ],
             #'vns_flow': [ 'Idx', 'dataLayerSource', 'dataLayerDestination', 'dataLayerVirtualLan', 'dataLayerType'],
