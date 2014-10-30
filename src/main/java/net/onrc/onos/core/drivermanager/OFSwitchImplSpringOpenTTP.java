@@ -824,7 +824,9 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
          */
         int powerElements = (1 << elements);
 
-        /* run a binary counter for the number of power elements */
+        /* run a binary counter for the number of power elements
+         * NOTE: Exclude empty set
+         */
         for (long i = 1; i < powerElements; i++) {
             Set<Dpid> dpidSubSet = new HashSet<Dpid>();
             for (int j = 0; j < elements; j++) {
@@ -922,22 +924,39 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             if (combo.isEmpty())
                 continue;
             if (isEdgeRouter && !segmentIds.isEmpty()) {
+                /* Filter out SegmentIds matching with the
+                 * nodes in the combo
+                 * Add one entry for "no label" (-1) to the list
+                 */
+                List<Integer> groupSegmentIds = new ArrayList<Integer>();
+                groupSegmentIds.add(-1);
                 for (Integer sId : segmentIds) {
+                    boolean filterOut = false;
+                    /* Check if the edge label being set is of
+                     * any node in the Neighbor set
+                     */
+                    for (Dpid dpid : combo) {
+                        if (isSegmentIdSameAsNodeSegmentId(dpid, sId)) {
+                            filterOut = true;
+                            break;
+                        }
+                    }
+                    if (!filterOut)
+                        groupSegmentIds.add(sId);
+                }
+                for (Integer sId : groupSegmentIds) {
                     NeighborSet ns = new NeighborSet();
                     ns.addDpids(combo);
-                    /* Check if the edge label being set is of the
-                     * same node in the Neighbor set
-                     */
-                    if ((combo.size() != 1) ||
-                            (!isSegmentIdSameAsNodeSegmentId(
-                                    combo.iterator().next(), sId))) {
-                        ns.setEdgeLabel(sId);
-                    }
+                    ns.setEdgeLabel(sId);
+                    log.debug("createGroups: sw {} combo {} sId {} ns {}",
+                            getStringId(), combo, sId, ns);
                     nsSet.add(ns);
                 }
             } else {
                 NeighborSet ns = new NeighborSet();
                 ns.addDpids(combo);
+                log.debug("createGroups: sw {} combo {} ns {}",
+                        getStringId(), combo, ns);
                 nsSet.add(ns);
             }
         }
@@ -1070,6 +1089,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 .setXid(getNextTransactionId())
                 .build();
         msglist.add(gm);
+        log.debug("GroupAdd in sw {} groupId {}",
+                getStringId(), ecmpInfo.groupId);
         try {
             write(msglist);
         } catch (IOException e) {
@@ -1091,6 +1112,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 .setXid(getNextTransactionId())
                 .build();
         msglist.add(gm);
+        log.debug("GroupDelete in sw {} groupId {}",
+                getStringId(), groupInfo.groupId);
         try {
             write(msglist);
         } catch (IOException e) {
@@ -1153,6 +1176,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 .setXid(getNextTransactionId())
                 .build();
         msglist.add(gm);
+        log.debug("GroupMod in sw {} groupId {}",
+                getStringId(), ecmpInfo.groupId);
         try {
             write(msglist);
         } catch (IOException e) {
