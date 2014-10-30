@@ -112,12 +112,18 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         jGen.writeStartObject();
         List<OFAction> actions = null;
         for (OFInstruction instruction: instructions){
-            
             if(instruction.getType().equals(OFInstructionType.APPLY_ACTIONS)){
                 actions = ((OFInstructionApplyActions)instruction).getActions();
             }
             else if(instruction.getType().equals(OFInstructionType.WRITE_ACTIONS)){
                 actions = ((OFInstructionWriteActions)instruction).getActions();
+            }
+            else if(instruction.getType().equals(OFInstructionType.CLEAR_ACTIONS)){
+                jGen.writeFieldName(instruction.getType().name());
+                jGen.writeStartObject();
+                jGen.writeStringField(instruction.getType().name(), "True");
+                jGen.writeEndObject();
+                continue;
             }
             else if(instruction.getType().equals(OFInstructionType.GOTO_TABLE)){
                 

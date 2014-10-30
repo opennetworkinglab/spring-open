@@ -70,6 +70,7 @@ def remove_unicodes(actions):
     else:
         ''
 def renameActions(actions):
+   
     actions = actions.replace('GOTO_TABLE','GOTO')
     actions = actions.replace('WRITE_ACTIONS','WRITE')
     actions = actions.replace('APPLY_ACTIONS','APPLY')
@@ -82,6 +83,7 @@ def renameActions(actions):
     actions = actions.replace('SET_DL_DST','DST_MAC')
     actions = actions.replace('SET_NW_SRC','SRC_IP')
     actions = actions.replace('SET_NW_DST','DST_IP')
+    actions = actions.replace('CLEAR_ACTIONS: {CLEAR_ACTIONS: True}','CLEAR_ACTIONS')
     
     return actions
 
