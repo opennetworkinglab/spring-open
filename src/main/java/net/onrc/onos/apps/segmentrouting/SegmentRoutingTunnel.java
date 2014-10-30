@@ -26,6 +26,13 @@ public class SegmentRoutingTunnel {
 
     private final int MAX_NUM_LABELS = 3;
 
+    /**
+     * Constructor
+     *
+     * @param srm SegmentRoutingManager object
+     * @param tid  Tunnel ID
+     * @param labelIds Label stack of the tunnel
+     */
     public SegmentRoutingTunnel(SegmentRoutingManager srm, String tid,
             List<Integer> labelIds) {
         this.srManager = srm;
@@ -34,18 +41,39 @@ public class SegmentRoutingTunnel {
         this.routes = new ArrayList<TunnelRouteInfo>();
     }
 
+    /**
+     * Get tunnel ID
+     *
+     * @return tunnel ID
+     */
     public String getTunnelId(){
         return this.tunnelId;
     }
 
+    /**
+     * Get Nodes IDs for the tunnel including source and destination router
+     *
+     * @return List of Node ID
+     */
     public List<Integer> getLabelids() {
         return this.labelIds;
     }
 
+    /**
+     * Get tunnel information after stitching if necessary
+     *
+     * @return List of TunnelRouteInfo object
+     */
     public List<TunnelRouteInfo> getRoutes(){
         return this.routes;
     }
 
+    /**
+     * Create a tunnel
+     * It requests the driver to create a group chaining for the tunnel.
+     *
+     * @return true if succeeds, false otherwise
+     */
     public boolean createTunnel() {
 
         if (labelIds.isEmpty() || labelIds.size() < 2) {
@@ -83,6 +111,12 @@ public class SegmentRoutingTunnel {
         return true;
     }
 
+    /**
+     * Remove the tunnel.
+     * It requests driver to remove all groups for the tunnel
+     *
+     * @return true if succeeds, false otherwise.
+     */
     public boolean removeTunnel() {
 
         for (TunnelRouteInfo route: routes) {
@@ -102,7 +136,6 @@ public class SegmentRoutingTunnel {
 
         return true;
     }
-
 
     /**
      * Create groups for the tunnel
@@ -131,7 +164,6 @@ public class SegmentRoutingTunnel {
 
         return groupId;
     }
-
 
     /**
      * Split the nodes IDs into multiple tunnel if Segment Stitching is required.
@@ -280,7 +312,6 @@ public class SegmentRoutingTunnel {
         return rules;
     }
 
-
     /**
      * Get port numbers of the neighbor set.
      * If ECMP in transit router is not supported, then only one port should be returned
@@ -321,7 +352,6 @@ public class SegmentRoutingTunnel {
 
         return portList;
     }
-
 
     /**
      * Get the DPID of the router with node ID IF the node ID is the neighbor of the
@@ -371,8 +401,6 @@ public class SegmentRoutingTunnel {
         return fwdSws;
     }
 
-
-
     /**
      * Check whether the router with preNodeid is connected to the router
      * with nodeId via adjacencySid or not
@@ -410,7 +438,6 @@ public class SegmentRoutingTunnel {
         return false;
     }
 
-
     /**
      * Get the destination Nodes of the adjacency Sid
      *
@@ -436,9 +463,6 @@ public class SegmentRoutingTunnel {
         return dstSwList;
 
     }
-
-
-
 
     /**
      * print tunnel info - used only for debugging.

@@ -1087,6 +1087,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return this.tunnelTable.values();
     }
 
+    /**
+     * Return the Policy Table
+     */
     public Collection<SegmentRoutingPolicy> getPoclicyTable() {
         return this.policyTable.values();
     }
@@ -1142,6 +1145,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
 
+    /**
+     *  Create a policy
+     *  TODO: To be removed
+     */
     @Override
     public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
@@ -1152,12 +1159,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
-     * Set policy table for policy routing
+     * Create a policy
      *
-     * @param sw
-     * @param mplsLabel
-     * @return
      */
+    @Override
     public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
             Short srcTcpPort, Short dstTcpPort, int priority, String tid,
@@ -1315,11 +1320,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Utility functions
     // ************************************
 
+    /**
+     * Get the next MatchAction ID
+     *
+     * @return MatchAction ID
+     */
     public long getNextMatchActionID() {
         return this.matchActionId++;
     }
 
-
+    /**
+     * Get ports for the adjacency SID given
+     *
+     * @param nodeSid  Node SID of the adjacency SID
+     * @param adjacencySid Adjacency SID
+     * @return List of ports
+     */
     public List<Integer> getAdacencyPorts(int nodeSid, int adjacencySid) {
         HashMap<Integer, List<Integer>> adjacencySidInfo =
                 adjacencySidTable.get(Integer.valueOf(nodeSid));
@@ -1356,6 +1372,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return adjecencyInfo.keySet();
     }
 
+    /**
+     * Send a Barrier request message and wait for the reply.
+     * It waits for the reply for 2 seconds and it cause exception when timer
+     * expires.
+     * TODO: When it does not receive the reply within timeout, recovery action
+     * is required.
+     *
+     * @param sw Switch to send the Barrier message
+     */
     private void sendBarrierAndCheckReply(Switch sw) {
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
@@ -1807,6 +1832,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
         arpHandler.sendArpRequest(sw, destinationAddress, inPort);
     }
 
+    /**
+     * Get IOF13Switch object for the DPID
+     *
+     * @param dpid Switch DPID
+     * @return IOF13Switch object
+     */
     public IOF13Switch getIOF13Switch(String dpid) {
 
         IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
@@ -1815,6 +1846,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return targetSw;
     }
 
+    /**
+     * Get Switch object for the DPID
+     *
+     * @param dpid Switch DPID
+     * @return Switch object
+     */
     public Switch getSwitch(String dpid) {
         return mutableTopology.getSwitch(new Dpid(dpid));
     }
@@ -1921,8 +1958,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
 
     }
-
-
 
     /**
      * Debugging function to print out the Match Action Entry

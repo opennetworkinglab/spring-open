@@ -21,6 +21,15 @@ public class SegmentRoutingPolicy {
     protected int priority;
     protected PolicyType type;
 
+    /**
+     * Constructor
+     *
+     * @param srm Segment Routing Manager object
+     * @param pid Policy ID
+     * @param type Policy type
+     * @param match PacketMatch for the policy
+     * @param priority Priority
+     */
     public SegmentRoutingPolicy(SegmentRoutingManager srm, String pid,
             PolicyType type, PacketMatch match, int priority) {
         this.srManager = srm;
@@ -30,33 +39,56 @@ public class SegmentRoutingPolicy {
         this.type = type;
     }
 
-    public SegmentRoutingPolicy(String pid, PacketMatch match, int priority) {
-        this.policyId = pid;
-        this.match = match;
-        this.priority = priority;
-        this.type = PolicyType.TUNNEL_FLOW;
-    }
-
+    /**
+     * Get the policy ID
+     *
+     * @return policy ID
+     */
     public String getPolicyId(){
         return this.policyId;
     }
 
+    /**
+     * Get Match
+     *
+     * @return PacketMatch object
+     */
     public PacketMatch getMatch(){
         return this.match;
     }
 
+    /**
+     * Get the priority of the policy
+     *
+     * @return priority
+     */
     public int getPriority(){
         return this.priority;
     }
 
+    /**
+     * Get the policy type
+     *
+     * @return policy type
+     */
     public PolicyType getType(){
         return this.type;
     }
 
+    /**
+     * Create a policy
+     *
+     * @return true if succeeds, false otherwise
+     */
     public boolean createPolicy() {
         return false;
     }
 
+    /**
+     * Remove the policy
+     *
+     * @return true if succeeds, false otherwise
+     */
     public boolean removePolicy() {
         return false;
     }

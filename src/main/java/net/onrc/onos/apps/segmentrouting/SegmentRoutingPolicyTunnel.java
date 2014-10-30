@@ -32,7 +32,6 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
             PolicyType type, PacketMatch match, int priority, String tid) {
         super(srm, pid, type, match, priority);
         this.tunnelId = tid;
-        // TODO Auto-generated constructor stub
     }
 
     @Override
@@ -128,7 +127,10 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
         return true;
     }
 
-
+    /**
+     * Get the Tunnel ID
+     * @return tunnel ID
+     */
     public String getTunnelId(){
         return this.tunnelId;
     }
