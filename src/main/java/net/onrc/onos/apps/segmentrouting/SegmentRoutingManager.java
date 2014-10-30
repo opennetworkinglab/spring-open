@@ -835,32 +835,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     }
                 }
                 setRoutingRule(targetSw, destSw, fwdToSw, modified);
-            }
-
-            // Send Barrier Message and make sure all rules are set
-            // before we set the rules to next routers
-            // TODO: barriers to all switches in this update stage
-            IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(sw.getDpid().toString()));
-            if (sw13 != null) {
-                OFBarrierReplyFuture replyFuture = null;
-                try {
-                    replyFuture = sw13.sendBarrier();
-                } catch (IOException e) {
-                    log.error("Error sending barrier request to switch {}",
-                            sw13.getId(), e.getCause());
-                }
-                OFBarrierReply br = null;
-                try {
-                    br = replyFuture.get(2, TimeUnit.SECONDS);
-                } catch (TimeoutException | InterruptedException | ExecutionException e) {
-                    // XXX for some reason these exceptions are not being thrown
-                }
-                if (br == null) {
-                    log.warn("Did not receive barrier-reply from {}", sw13.getId());
-                    // XXX take corrective action
-                }
-
+                // Send Barrier Message and make sure all rules are set
+                // before we set the rules to next routers
+                sendBarrierAndCheckReply(targetSw);
             }
         }
 
@@ -1377,6 +1354,30 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 adjacencySidTable.get(Integer.valueOf(nodeSid));
 
         return adjecencyInfo.keySet();
+    }
+
+    private void sendBarrierAndCheckReply(Switch sw) {
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                getSwId(sw.getDpid().toString()));
+        if (sw13 != null) {
+            OFBarrierReplyFuture replyFuture = null;
+            try {
+                replyFuture = sw13.sendBarrier();
+            } catch (IOException e) {
+                log.error("Error sending barrier request to switch {}",
+                        sw13.getId(), e.getCause());
+            }
+            OFBarrierReply br = null;
+            try {
+                br = replyFuture.get(2, TimeUnit.SECONDS);
+            } catch (TimeoutException | InterruptedException | ExecutionException e) {
+                // XXX for some reason these exceptions are not being thrown
+            }
+            if (br == null) {
+                log.warn("Did not receive barrier-reply from {}", sw13.getId());
+                // XXX take corrective action
+            }
+        }
     }
 
     /**
