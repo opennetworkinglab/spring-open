@@ -812,6 +812,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         HashMap<Integer, HashMap<Switch, ArrayList<ArrayList<Dpid>>>> switchVia =
                 ecmpSPG.getAllLearnedSwitchesAndVia();
+        List<OFBarrierReplyFuture> replies = new ArrayList<OFBarrierReplyFuture>();
         for (Integer itrIdx : switchVia.keySet()) {
             //log.debug("ECMPShortestPathGraph:Switches learned in "
             //        + "Iteration{} from switch {}:",
@@ -837,10 +838,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 setRoutingRule(targetSw, destSw, fwdToSw, modified);
                 // Send Barrier Message and make sure all rules are set
                 // before we set the rules to next routers
-                sendBarrierAndCheckReply(targetSw);
+                OFBarrierReplyFuture replyFuture = sendBarrier(targetSw);
+                if (replyFuture != null)
+                    replies.add(replyFuture);
+                else {
+                    log.warn("Failed to send a Barrier message to sw {}",
+                            targetSw);
+                }
+            }
+            if (!checkBarrierReplies(replies)) {
+                log.warn("Failed to get Barrier replis");
+                return;
             }
         }
-
     }
 
     /**
@@ -1381,17 +1391,25 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      * @param sw Switch to send the Barrier message
      */
-    private void sendBarrierAndCheckReply(Switch sw) {
+    private OFBarrierReplyFuture sendBarrier(Switch sw) {
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 getSwId(sw.getDpid().toString()));
+        OFBarrierReplyFuture replyFuture = null;
         if (sw13 != null) {
-            OFBarrierReplyFuture replyFuture = null;
             try {
                 replyFuture = sw13.sendBarrier();
             } catch (IOException e) {
                 log.error("Error sending barrier request to switch {}",
                         sw13.getId(), e.getCause());
             }
+        }
+
+        return replyFuture;
+    }
+
+    private boolean checkBarrierReplies(List<OFBarrierReplyFuture> replies) {
+
+        for (OFBarrierReplyFuture replyFuture: replies) {
             OFBarrierReply br = null;
             try {
                 br = replyFuture.get(2, TimeUnit.SECONDS);
@@ -1399,10 +1417,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 // XXX for some reason these exceptions are not being thrown
             }
             if (br == null) {
-                log.warn("Did not receive barrier-reply from {}", sw13.getId());
+                log.warn("Did not receive barrier-reply for request ID {}",
+                        replyFuture.getTransactionId());
                 // XXX take corrective action
+                return false;
             }
         }
+        return true;
     }
 
     /**
