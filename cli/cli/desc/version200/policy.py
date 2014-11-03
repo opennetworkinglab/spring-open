@@ -254,7 +254,7 @@ POLICY_TUNNEL_ID_COMMAND_DESCRIPTION = {
                                 'proc' : 'create-policy',
                             },
                          ),
-        'completion'   : 'tunnel-id-completion',
+        'completion'   : 'tunnelid-completion',
         'field'        : 'tunnel-id',
         'type'         : 'identifier',
         'syntax-help'  : 'Enter tunnel id',

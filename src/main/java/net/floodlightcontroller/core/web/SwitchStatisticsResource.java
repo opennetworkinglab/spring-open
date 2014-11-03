@@ -42,6 +42,7 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
 
         String switchId = (String) getRequestAttributes().get("switchId");
         String statType = (String) getRequestAttributes().get("statType");
+        String groupId = (String) getRequestAttributes().get("groupId");
         String tableType = null;
         if(getRequestAttributes().containsKey("tableType")){
             tableType = (String) getRequestAttributes().get("tableType");
@@ -70,7 +71,12 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
         }else if (statType.equals("groupDesc")) {
             values = getSwitchStatistics(switchId, OFStatsType.GROUP_DESC);
         }else if (statType.equals("groupStats")) {
-            values = getSwitchStatistics(switchId, OFStatsType.GROUP);
+            if (groupId != null){
+                values = getSwitchGroupStats(switchId, OFStatsType.GROUP, (Integer.valueOf(groupId)));
+            }
+            else{
+                values = getSwitchStatistics(switchId, OFStatsType.GROUP);
+            }
         }
 
         result.put(switchId, values);

@@ -416,6 +416,21 @@ def do_realtimestats(request, stattype, dpid):
     return get_sdnplatform_response(url)
 
 @safe_rest_view
+def do_realtimegroupstats(request, groupId, dpid ):
+    """
+    This returns realtime group statistics for specified groupId
+    for a dpid by calling the localhost sdnplatform
+    """
+    #raise RestInvalidMethodException()
+    if request.method != 'GET':
+        raise RestInvalidMethodException()
+    #url = controller_url('core', 'switch', dpid, stattype, 'json')
+    #import error
+    #raise error.ArgumentValidationError('\n\n\n %s' % (groupId))
+    url = "http://localhost:8080/wm/floodlight/core/switch/%s/groupStats/%s/json" % (dpid, groupId)
+    return get_sdnplatform_response(url)
+
+@safe_rest_view
 def do_tablerealtimestats(request, tabletype, dpid):
     """
     This returns realtime statistics per table (flows (only)

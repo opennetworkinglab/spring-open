@@ -41,6 +41,7 @@ import org.projectfloodlight.openflow.protocol.OFPortStatsReply;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.OFStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFStatsType;
+import org.projectfloodlight.openflow.types.OFGroup;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.TableId;
 import org.projectfloodlight.openflow.util.HexString;
@@ -138,7 +139,7 @@ public class SwitchResourceBase extends ServerResource {
             }
             else if (statType == OFStatsType.GROUP){
                 log.debug("Switch Group Stats: req sent for all "
-                        + "ports in switch {}", sw.getStringId());
+                        + "groups in switch {}", sw.getStringId());
                 req = sw.getFactory().buildGroupStatsRequest().setXid
                         (sw.getNextTransactionId()).build();
                 List<OFGroupStatsEntryMod> groupStats = new ArrayList<OFGroupStatsEntryMod>();
@@ -158,7 +159,7 @@ public class SwitchResourceBase extends ServerResource {
             }
             else if (statType == OFStatsType.GROUP_DESC){
                 log.debug("Switch Group Desc Stats: req sent for all "
-                        + "ports in switch {}", sw.getStringId());
+                        + "groups in switch {}", sw.getStringId());
                 List<OFGroupDescStatsEntryMod> GroupDescStats= new ArrayList<OFGroupDescStatsEntryMod>();
                 req = sw.getFactory().buildGroupDescStatsRequest().setXid
                         (sw.getNextTransactionId()).build();
@@ -210,6 +211,43 @@ public class SwitchResourceBase extends ServerResource {
 
     protected Object getSwitchStatistics(String switchId, OFStatsType statType) {
         return getSwitchStatistics(HexString.toLong(switchId), statType);
+    }
+    
+    protected Object getSwitchGroupStats(String switchId, OFStatsType statType, Integer groupId) {
+        
+        IFloodlightProviderService floodlightProvider =
+                (IFloodlightProviderService) getContext().getAttributes().
+                get(IFloodlightProviderService.class.getCanonicalName());
+        IOFSwitch sw = floodlightProvider.getSwitches().get(HexString.toLong(switchId));
+        Future<List<OFStatsReply>> future;
+        List<OFStatsReply> values = null;
+        if (sw != null){
+            log.debug("Switch Group Stats: req sent for groupId {} "
+                    + "in switch {}",groupId, sw.getStringId());
+            OFStatsRequest<?> req = null;
+            req = sw.getFactory().buildGroupStatsRequest().setXid
+                    (sw.getNextTransactionId()).setGroup(OFGroup.of(groupId)).build();
+            List<OFGroupStatsEntryMod> groupStats = new ArrayList<OFGroupStatsEntryMod>();
+            try {
+                future = sw.getStatistics(req);
+                values = future.get(10, TimeUnit.SECONDS);
+                if(values.isEmpty()){
+                    log.warn("group with groupId {} not found", groupId);
+                    return null;
+                }
+                for (OFGroupStatsEntry entry : ((OFGroupStatsReply)values.get(0)).getEntries()) {
+                    OFGroupStatsEntryMod entryMod = new OFGroupStatsEntryMod(entry);
+                    groupStats.add(entryMod);
+                }
+                log.debug("Switch Group Stats Entries from switch {} are {}",
+                        sw.getStringId(), groupStats);
+            } catch (Exception e) {
+                log.error("Failure retrieving statistics from switch " + sw, e);
+            }
+            return groupStats;
+            
+        }
+        return null;
     }
     //TODO: Java doc
     protected List<?> getSwitchStatisticsForTable(long switchId,

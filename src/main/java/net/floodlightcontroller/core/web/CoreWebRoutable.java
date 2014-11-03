@@ -43,6 +43,8 @@ public class CoreWebRoutable implements RestletRoutable {
         router.attach("/switch/{switchId}/role/json", SwitchRoleResource.class);
         router.attach("/switch/all/{statType}/json", AllSwitchStatisticsResource.class);
         router.attach("/switch/{switchId}/{statType}/json", SwitchStatisticsResource.class);
+        //TODO replace {statsType} by groupStats
+        router.attach("/switch/{switchId}/{statType}/{groupId}/json", SwitchStatisticsResource.class);
         router.attach("/switch/{switchId}/table/{tableType}/{statType}/json", SwitchStatisticsResource.class);
         router.attach("/controller/switches/json", ControllerSwitchesResource.class);
         router.attach("/memory/json", ControllerMemoryResource.class);

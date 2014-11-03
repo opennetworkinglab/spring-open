@@ -211,13 +211,6 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                         'short-help' : 'Show requested item by querying switch',
                         'doc'        : 'switch|realtime-+',
                     },
-                    #{
-                    #    'field'    : 'detail',
-                    #    'optional' : True,
-                    #    'type'     : 'enum',
-                    #    'values'   : ('details','brief'),
-                    #    'doc'      : 'format|+',
-                    #},
                 ),
                 (
                     {
@@ -261,18 +254,27 @@ SWITCH_SHOW_REALTIME_STATS_COMMAND_DESCRIPTION = {
                         'format'     : 'realtime_%(realtimestats)s_%(tabletype)s_flow',
                         'doc'      : 'format|+',
                     },
-                  #{
-                  #      'field'    : 'tableflow',
-                  #   'type'     : 'enum',
-                  #      'values'     : ('flow',
-                  #                      ),
-                  #      'action'     : 'display-rest',
-                  #      'url'        : 'realtimestats/%(realtimestats)s/%(tabletype)s/%(tableflow)s/%(dpid)s/',
-                  #      'rest-type'  : 'dict-of-list-of-switch',
-                  #      'format'     : 'realtime_%(realtimestats)s_%(tabletype)s_flow',
-                  #      'short-help' : 'Show requested item by querying switch',
-                  #      'doc'        : 'switch|realtime-+',
-                  #  },
+                ),
+                (
+                    {
+                        'field'      : 'realtimestats',
+                        'type'       : 'enum',
+                        'values'     : 'group',
+                    },
+                    {
+                        'field'    : 'groupId',
+                        #'data'     : {
+                        #              'dpid'     : '$dpid',
+                        #              },
+                        #'type'     : 'groupId',
+                        'completion' : 'group-id-completion',
+                        #'sort'       : ['mplsLabel','priority',],
+                        'action'     : 'display-rest',
+                        'url'        : 'realtimestats/%(realtimestats)s/%(groupId)s/%(dpid)s/',
+                        'rest-type'  : 'dict-of-list-of-switch',
+                        'format'     : 'realtime_group',
+                        'doc'      : 'format|+',
+                    },
                 ),
             )
         }
@@ -1189,3 +1191,23 @@ TUNNEL_DETAILS_FORMAT = {
     },
 }
 """
+
+def group_id_completion(prefix, data, completions):
+    dpid = data.get('dpid')
+    #print dpid
+    query_url = "http://127.0.0.1:8000/rest/v1/realtimestats/group/%s/" %(dpid)
+    result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = json.loads(result)
+    entries = entries[dpid]
+    #print "result", entries
+    for entry in entries:
+        #print entry['groupId']
+        if str(entry['groupId']).startswith(prefix):
+            completions[str(entry['groupId'])+' '] = entry['groupId']
+    return
+
+command.add_completion('group-id-completion', group_id_completion,
+                       {'kwargs': { 'prefix'       : '$text',
+                                    'data'         : '$data',
+                                    'completions'  : '$completions',
+                                    }})
