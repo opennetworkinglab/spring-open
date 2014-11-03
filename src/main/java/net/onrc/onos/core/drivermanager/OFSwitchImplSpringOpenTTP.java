@@ -153,6 +153,15 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     private AtomicInteger groupid;
     private Map<String, String> publishAttributes;
 
+    /* Set the default values. These variables will get
+     * overwritten based on the switch vendor type
+     */
+    private int vlanTableId = TABLE_VLAN;
+    private int tmacTableId = TABLE_TMAC;
+    private int ipv4UnicastTableId = TABLE_IPv4_UNICAST;
+    private int mplsTableId = TABLE_MPLS;
+    private int aclTableId = TABLE_ACL;
+
     public OFSwitchImplSpringOpenTTP(OFDescStatsReply desc, boolean usePipeline13) {
         super();
         haltStateMachine = new AtomicBoolean(false);
@@ -508,13 +517,13 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
     void setTableMissEntries() throws IOException {
         // set all table-miss-entries
-        populateTableMissEntry(TABLE_VLAN, true, false, false, -1);
-        populateTableMissEntry(TABLE_TMAC, true, false, false, -1);
-        populateTableMissEntry(TABLE_IPv4_UNICAST, false, true, true,
-                TABLE_ACL);
-        populateTableMissEntry(TABLE_MPLS, false, true, true,
-                TABLE_ACL);
-        populateTableMissEntry(TABLE_ACL, false, false, false, -1);
+        populateTableMissEntry(vlanTableId, true, false, false, -1);
+        populateTableMissEntry(tmacTableId, true, false, false, -1);
+        populateTableMissEntry(ipv4UnicastTableId, false, true, true,
+                aclTableId);
+        populateTableMissEntry(mplsTableId, false, true, true,
+                aclTableId);
+        populateTableMissEntry(aclTableId, false, false, false, -1);
     }
 
     private void sendHandshakeBarrier() throws IOException {
@@ -654,12 +663,12 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                         .setActions(actionlist).build();*/
 
                 OFInstruction gotoTbl = factory.instructions().buildGotoTable()
-                        .setTableId(TableId.of(TABLE_TMAC)).build();
+                        .setTableId(TableId.of(tmacTableId)).build();
                 List<OFInstruction> instructions = new ArrayList<OFInstruction>();
                 // instructions.add(appAction);
                 instructions.add(gotoTbl);
                 OFMessage flowEntry = factory.buildFlowAdd()
-                        .setTableId(TableId.of(TABLE_VLAN))
+                        .setTableId(TableId.of(vlanTableId))
                         .setMatch(match)
                         .setInstructions(instructions)
                         .setPriority(1000) // does not matter - all rules
@@ -684,10 +693,10 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         OFMatchV3 matchIp = factory.buildMatchV3()
                 .setOxmList(oxmListIp).build();
         OFInstruction gotoTblIp = factory.instructions().buildGotoTable()
-                .setTableId(TableId.of(TABLE_IPv4_UNICAST)).build();
+                .setTableId(TableId.of(ipv4UnicastTableId)).build();
         List<OFInstruction> instructionsIp = Collections.singletonList(gotoTblIp);
         OFMessage ipEntry = factory.buildFlowAdd()
-                .setTableId(TableId.of(TABLE_TMAC))
+                .setTableId(TableId.of(tmacTableId))
                 .setMatch(matchIp)
                 .setInstructions(instructionsIp)
                 .setPriority(1000) // strict priority required lower than
@@ -704,10 +713,10 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         OFMatchV3 matchMpls = factory.buildMatchV3()
                 .setOxmList(oxmListMpls).build();
         OFInstruction gotoTblMpls = factory.instructions().buildGotoTable()
-                .setTableId(TableId.of(TABLE_MPLS)).build();
+                .setTableId(TableId.of(mplsTableId)).build();
         List<OFInstruction> instructionsMpls = Collections.singletonList(gotoTblMpls);
         OFMessage mplsEntry = factory.buildFlowAdd()
-                .setTableId(TableId.of(TABLE_TMAC))
+                .setTableId(TableId.of(tmacTableId))
                 .setMatch(matchMpls)
                 .setInstructions(instructionsMpls)
                 .setPriority(1001) // strict priority required lower than
@@ -1342,7 +1351,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         OFInstruction writeInstr = factory.instructions().buildWriteActions()
                 .setActions(writeActions).build();
         OFInstruction gotoInstr = factory.instructions().buildGotoTable()
-                .setTableId(TableId.of(TABLE_ACL)).build();
+                .setTableId(TableId.of(aclTableId)).build();
         List<OFInstruction> instructions = new ArrayList<OFInstruction>();
         instructions.add(writeInstr);
         instructions.add(gotoInstr);
@@ -1370,7 +1379,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             return null;
         }
         OFMessage ipFlow = fmBuilder
-                .setTableId(TableId.of(TABLE_IPv4_UNICAST))
+                .setTableId(TableId.of(ipv4UnicastTableId))
                 .setMatch(match)
                 .setInstructions(instructions)
                 .setPriority(priority)
@@ -1415,7 +1424,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         OFInstruction writeInstr = factory.instructions().buildWriteActions()
                 .setActions(writeActions).build();
         OFInstruction gotoInstr = factory.instructions().buildGotoTable()
-                .setTableId(TableId.of(TABLE_ACL)).build();
+                .setTableId(TableId.of(aclTableId)).build();
         List<OFInstruction> instructions = new ArrayList<OFInstruction>();
         instructions.add(writeInstr);
         instructions.add(gotoInstr);
@@ -1438,7 +1447,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
 
         OFMessage mplsFlow = fmBuilder
-                .setTableId(TableId.of(TABLE_MPLS))
+                .setTableId(TableId.of(mplsTableId))
                 .setMatch(matchlabel)
                 .setInstructions(instructions)
                 .setPriority(MAX_PRIORITY) // exact match and exclusive
@@ -1541,7 +1550,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
 
         OFMessage aclFlow = fmBuilder
-                .setTableId(TableId.of(TABLE_ACL))
+                .setTableId(TableId.of(aclTableId))
                 .setMatch(matchBuilder.build())
                 .setInstructions(instructions)
                 .setPriority(ma.getPriority()) // exact match and exclusive
@@ -1609,13 +1618,13 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     public TableId getTableId(String tableType) {
         tableType = tableType.toLowerCase();
         if (tableType.contentEquals("ip")) {
-            return TableId.of(OFSwitchImplSpringOpenTTP.TABLE_IPv4_UNICAST);
+            return TableId.of(ipv4UnicastTableId);
         }
         else if (tableType.contentEquals("mpls")) {
-            return TableId.of(OFSwitchImplSpringOpenTTP.TABLE_MPLS);
+            return TableId.of(mplsTableId);
         }
         else if (tableType.contentEquals("acl")) {
-            return TableId.of(OFSwitchImplSpringOpenTTP.TABLE_ACL);
+            return TableId.of(aclTableId);
         }
         else {
             log.warn("Invalid tableType: {}", tableType);
@@ -2054,7 +2063,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             OFFlowMod.Builder fmBuilder = factory.buildFlowAdd();
 
             OFMessage aclFlow = fmBuilder
-                    .setTableId(TableId.of(TABLE_ACL))
+                    .setTableId(TableId.of(aclTableId))
                     .setMatch(matchBuilder.build())
                     .setInstructions(instructions)
                     .setPriority(10) // TODO: wrong - should be MA
@@ -2075,6 +2084,43 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
     }
 
+    protected int getVlanTableId() {
+        return vlanTableId;
+    }
 
+    protected void setVlanTableId(int vlanTableId) {
+        this.vlanTableId = vlanTableId;
+    }
 
+    protected int getTmacTableId() {
+        return tmacTableId;
+    }
+
+    protected void setTmacTableId(int tmacTableId) {
+        this.tmacTableId = tmacTableId;
+    }
+
+    protected int getIpv4UnicastTableId() {
+        return ipv4UnicastTableId;
+    }
+
+    protected void setIpv4UnicastTableId(int ipv4UnicastTableId) {
+        this.ipv4UnicastTableId = ipv4UnicastTableId;
+    }
+
+    protected int getMplsTableId() {
+        return mplsTableId;
+    }
+
+    protected void setMplsTableId(int mplsTableId) {
+        this.mplsTableId = mplsTableId;
+    }
+
+    protected int getAclTableId() {
+        return aclTableId;
+    }
+
+    protected void setAclTableId(int aclTableId) {
+        this.aclTableId = aclTableId;
+    }
 }
