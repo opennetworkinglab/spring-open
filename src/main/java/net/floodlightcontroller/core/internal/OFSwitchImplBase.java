@@ -462,6 +462,23 @@ public class OFSwitchImplBase implements IOFSwitch {
         portManager.updatePorts(pdrep.getEntries());
     }
 
+    /**
+     * Set the port descriptions for this switch from the handshake for an OF1.3
+     * switch.
+     */
+    protected void setPortDescReplies(List<OFPortDescStatsReply> portDescList) {
+        if (ofversion != OFVersion.OF_13)
+            return;
+        if (portDescList == null) {
+            log.error("Error setting ports description for switch: {}", getStringId());
+            return;
+        }
+
+        for (OFPortDescStatsReply portDesc: portDescList) {
+            portManager.updatePorts(portDesc.getEntries());
+        }
+    }
+
     @Override
     public int getNumBuffers() {
         return buffers;

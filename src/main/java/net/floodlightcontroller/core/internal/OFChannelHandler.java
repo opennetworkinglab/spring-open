@@ -113,7 +113,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
     // Temporary storage for switch-features and port-description
     private OFFeaturesReply featuresReply;
-    private OFPortDescStatsReply portDescReply;
+    private List<OFPortDescStatsReply> portDescReplies;
     // a concurrent ArrayList to temporarily store port status messages
     // before we are ready to deal with them
     private final CopyOnWriteArrayList<OFPortStatus> pendingPortStatusMsg;
@@ -723,12 +723,28 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                             h.channel.getRemoteAddress());
                     return;
                 }
-                if (m.getFlags().contains(OFStatsReplyFlags.REPLY_MORE)) {
+                if (h.portDescReplies == null) {
+                    h.portDescReplies = new ArrayList<OFPortDescStatsReply>();
+                    h.portDescReplies.add((OFPortDescStatsReply) m);
+                    if (m.getFlags().contains(OFStatsReplyFlags.REPLY_MORE)) {
+                        log.warn("Stats reply indicates more stats from sw {} for "
+                                + "port description - not currently handled",
+                                h.getSwitchInfoString());
+                        return;
+                    }
+
+                }
+                else if (m.getFlags().contains(OFStatsReplyFlags.REPLY_MORE)) {
                     log.warn("Stats reply indicates more stats from sw {} for "
                             + "port description - not currently handled",
                             h.getSwitchInfoString());
+                    h.portDescReplies.add((OFPortDescStatsReply)m);
+                    return;
                 }
-                h.portDescReply = (OFPortDescStatsReply) m; // temp store
+                else {
+                    h.portDescReplies.add((OFPortDescStatsReply)m);
+                }
+                //h.portDescReply = (OFPortDescStatsReply) m; // temp store
                 log.info("Received port desc reply for switch at {}",
                         h.getSwitchInfoString());
                 try {
@@ -863,7 +879,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                 // set switch information
                 h.sw.setOFVersion(h.ofVersion);
                 ((OFSwitchImplBase) h.sw).setFeaturesReply(h.featuresReply);
-                ((OFSwitchImplBase) h.sw).setPortDescReply(h.portDescReply);
+                ((OFSwitchImplBase) h.sw).setPortDescReplies(h.portDescReplies);
                 h.sw.setConnected(true);
                 h.sw.setChannel(h.channel);
                 h.sw.setFloodlightProvider(h.controller);

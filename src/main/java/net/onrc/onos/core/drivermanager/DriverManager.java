@@ -44,7 +44,7 @@ public final class DriverManager {
 
         if (vendor.contains("Dell")
                 &&
-                hw.contains("OpenFlow 1.3")) {
+                hw.contains("OpenFlow switch HW ver. 1.0")) {
             return new OFSwitchImplDellOSR(desc, cpqdUsePipeline13);
         }
 
