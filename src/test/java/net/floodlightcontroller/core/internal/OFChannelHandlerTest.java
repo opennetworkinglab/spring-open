@@ -484,6 +484,7 @@ public class OFChannelHandlerTest {
         swImplBase.setFeaturesReply(featuresReply);
         expectLastCall().once();
         swImplBase.setPortDescReply((OFPortDescStatsReply)null );
+        swImplBase.setPortDescReplies((List<OFPortDescStatsReply>)null );
         replay(swImplBase);
 
         // send the description stats reply

@@ -412,6 +412,7 @@ public class TopologyPublisher implements IOFSwitchListener,
             // FIXME should be merging, with existing attrs, etc..
             // TODO define attr name as constant somewhere.
             // TODO populate appropriate attributes.
+            //portData.
             portData.createStringAttribute("name", port.getName());
             portData.createStringAttribute(TopologyElement.TYPE,
                     TopologyElement.TYPE_PACKET_LAYER);

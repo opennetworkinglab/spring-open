@@ -474,6 +474,25 @@ public class OFSwitchImplBase implements IOFSwitch {
             return;
         }
 
+        /*
+
+        for (OFPortDescStatsReply portDesc: portDescList) {
+            for (OFPortDesc port: portDesc.getEntries()) {
+                boolean up = false;
+                for (OFPortConfig state: port.getConfig()) {
+                    if (state != OFPortConfig.PORT_DOWN) {
+                        up = true;
+                        break;
+                    }
+                }
+
+                if (up) {
+                    portManager.updatePorts(portDesc.getEntries());
+                }
+            }
+        }
+        */
+
         for (OFPortDescStatsReply portDesc: portDescList) {
             portManager.updatePorts(portDesc.getEntries());
         }
@@ -1022,14 +1041,31 @@ public class OFSwitchImplBase implements IOFSwitch {
                 }
 
                 if (doUpdate) {
-                    portsByName = Collections.unmodifiableMap(newPortsByName);
-                    portsByNumber =
-                            Collections.unmodifiableMap(newPortsByNumber);
-                    enabledPortList =
-                            Collections.unmodifiableList(newEnabledPortList);
-                    enabledPortNumbers =
-                            Collections.unmodifiableList(newEnabledPortNumbers);
-                    portList = Collections.unmodifiableList(newPortsList);
+                    if (enabledPortList.isEmpty() ) {
+                        //portsByName = new HashMap<String, OFPortDesc>(newPortsByName);
+                        portsByName = newPortsByName;
+                        portsByNumber = newPortsByNumber;
+                        enabledPortList = newEnabledPortList;
+                        enabledPortNumbers = newEnabledPortNumbers;
+                        portList = newPortsList;
+                        /*
+                        portsByNumber = Collections
+                                Collections.unmodifiableMap(newPortsByNumber);
+                        enabledPortList =
+                                Collections.unmodifiableList(newEnabledPortList);
+                        enabledPortNumbers =
+                                Collections.unmodifiableList(newEnabledPortNumbers);
+                        portList = Collections.unmodifiableList(newPortsList);
+                        */
+                    }
+                    else {
+                        portsByName.putAll(newPortsByName);
+                        portsByNumber.putAll(newPortsByNumber);
+                        enabledPortList.addAll(newEnabledPortList);
+                        enabledPortNumbers.addAll(newEnabledPortNumbers);
+                        portList.addAll(newPortsList);
+
+                    }
                 }
                 return events;
             } finally {

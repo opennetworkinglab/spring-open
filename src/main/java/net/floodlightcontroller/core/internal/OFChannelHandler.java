@@ -145,6 +145,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         this.roleChanger = new RoleChanger(DEFAULT_ROLE_TIMEOUT_MS);
         this.state = ChannelState.INIT;
         this.pendingPortStatusMsg = new CopyOnWriteArrayList<OFPortStatus>();
+        this.portDescReplies = new ArrayList<OFPortDescStatsReply>();
         factory13 = controller.getOFMessageFactory_13();
         factory10 = controller.getOFMessageFactory_10();
         controlRequested = Boolean.FALSE;
@@ -723,8 +724,8 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                             h.channel.getRemoteAddress());
                     return;
                 }
-                if (h.portDescReplies == null) {
-                    h.portDescReplies = new ArrayList<OFPortDescStatsReply>();
+                if (h.portDescReplies.isEmpty()) {
+                    //h.portDescReplies = new ArrayList<OFPortDescStatsReply>();
                     h.portDescReplies.add((OFPortDescStatsReply) m);
                     if (m.getFlags().contains(OFStatsReplyFlags.REPLY_MORE)) {
                         log.warn("Stats reply indicates more stats from sw {} for "

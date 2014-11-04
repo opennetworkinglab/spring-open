@@ -1087,6 +1087,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             bldr.setActions(actions);
             if (ecmpInfo.groupType == OFGroupType.SELECT)
                 bldr.setWeight(1);
+            bldr.setWatchGroup(OFGroup.ANY);
+            bldr.setWatchPort(OFPort.ANY);
             OFBucket ofb = bldr.build();
             buckets.add(ofb);
         }
