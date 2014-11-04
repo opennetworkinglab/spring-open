@@ -103,9 +103,11 @@ public class SwitchResourceBase extends ServerResource {
                 try {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
-                    for (OFFlowStatsEntry entry : ((OFFlowStatsReply)values.get(0)).getEntries()) {
-                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry, sw);
-                        flowStats.add(entryMod);
+                    for(OFStatsReply value : values){
+                        for (OFFlowStatsEntry entry : ((OFFlowStatsReply)value).getEntries()) {
+                            OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry, sw);
+                            flowStats.add(entryMod);
+                        }
                     }
                     log.debug("Switch flow Stats Entries from switch {} are {}",
                             sw.getStringId(), flowStats);
@@ -126,9 +128,11 @@ public class SwitchResourceBase extends ServerResource {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
                     portStats = new ArrayList<OFPortStatsEntryMod>();
-                    for (OFPortStatsEntry entry : ((OFPortStatsReply)values.get(0)).getEntries()) {
-                        OFPortStatsEntryMod entryMod = new OFPortStatsEntryMod(entry);
-                        portStats.add(entryMod);
+                    for(OFStatsReply value : values){
+                        for (OFPortStatsEntry entry : ((OFPortStatsReply)value).getEntries()) {
+                            OFPortStatsEntryMod entryMod = new OFPortStatsEntryMod(entry);
+                            portStats.add(entryMod);
+                        }
                     }
                     log.debug("Switch Port Stats Entries from switch {} are {}",
                             sw.getStringId(), portStats);
@@ -146,9 +150,11 @@ public class SwitchResourceBase extends ServerResource {
                 try {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
-                    for (OFGroupStatsEntry entry : ((OFGroupStatsReply)values.get(0)).getEntries()) {
-                        OFGroupStatsEntryMod entryMod = new OFGroupStatsEntryMod(entry);
-                        groupStats.add(entryMod);
+                    for(OFStatsReply value : values){
+                        for (OFGroupStatsEntry entry : ((OFGroupStatsReply)value).getEntries()) {
+                            OFGroupStatsEntryMod entryMod = new OFGroupStatsEntryMod(entry);
+                            groupStats.add(entryMod);
+                        }
                     }
                     log.debug("Switch Group Stats Entries from switch {} are {}",
                             sw.getStringId(), groupStats);
@@ -166,9 +172,11 @@ public class SwitchResourceBase extends ServerResource {
                 try {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
-                    for (OFGroupDescStatsEntry entry : ((OFGroupDescStatsReply)values.get(0)).getEntries()) {
-                        OFGroupDescStatsEntryMod entryMod = new OFGroupDescStatsEntryMod(entry);
-                        GroupDescStats.add(entryMod);
+                    for(OFStatsReply value : values){
+                        for (OFGroupDescStatsEntry entry : ((OFGroupDescStatsReply)value).getEntries()) {
+                            OFGroupDescStatsEntryMod entryMod = new OFGroupDescStatsEntryMod(entry);
+                            GroupDescStats.add(entryMod);
+                        }
                     }
                     log.debug("Switch Group_Desc Stats Entries from switch {} are {}",
                             sw.getStringId(), GroupDescStats);
@@ -235,9 +243,11 @@ public class SwitchResourceBase extends ServerResource {
                     log.warn("group with groupId {} not found", groupId);
                     return null;
                 }
-                for (OFGroupStatsEntry entry : ((OFGroupStatsReply)values.get(0)).getEntries()) {
-                    OFGroupStatsEntryMod entryMod = new OFGroupStatsEntryMod(entry);
-                    groupStats.add(entryMod);
+                for(OFStatsReply value : values){
+                    for (OFGroupStatsEntry entry : ((OFGroupStatsReply)value).getEntries()) {
+                        OFGroupStatsEntryMod entryMod = new OFGroupStatsEntryMod(entry);
+                        groupStats.add(entryMod);
+                    }
                 }
                 log.debug("Switch Group Stats Entries from switch {} are {}",
                         sw.getStringId(), groupStats);
@@ -281,9 +291,11 @@ public class SwitchResourceBase extends ServerResource {
                 try {
                     future = sw.getStatistics(req);
                     values = future.get(10, TimeUnit.SECONDS);
-                    for (OFFlowStatsEntry entry : ((OFFlowStatsReply)values.get(0)).getEntries()) {
-                        OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry, sw);
-                        flowStats.add(entryMod);
+                    for(OFStatsReply value : values){
+                        for (OFFlowStatsEntry entry : ((OFFlowStatsReply)value).getEntries()) {
+                            OFFlowStatsEntryMod entryMod = new OFFlowStatsEntryMod(entry, sw);
+                            flowStats.add(entryMod);
+                        }
                     }
                     log.debug("Switch flow Stats Entries for table {} from switch {} are {}",
                             tableType, sw.getStringId(), flowStats);
