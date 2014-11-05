@@ -130,7 +130,7 @@ public class SwitchResourceBase extends ServerResource {
                     portStats = new ArrayList<OFPortStatsEntryMod>();
                     for(OFStatsReply value : values){
                         for (OFPortStatsEntry entry : ((OFPortStatsReply)value).getEntries()) {
-                            OFPortStatsEntryMod entryMod = new OFPortStatsEntryMod(entry);
+                            OFPortStatsEntryMod entryMod = new OFPortStatsEntryMod(entry, sw);
                             portStats.add(entryMod);
                         }
                     }

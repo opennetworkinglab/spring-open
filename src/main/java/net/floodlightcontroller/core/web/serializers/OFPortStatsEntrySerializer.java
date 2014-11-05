@@ -2,6 +2,8 @@ package net.floodlightcontroller.core.web.serializers;
 
 import java.io.IOException;
 
+import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.internal.OFSwitchImplBase;
 import net.floodlightcontroller.core.web.OFPortStatsEntryMod;
 
 import org.codehaus.jackson.JsonGenerationException;
@@ -20,9 +22,12 @@ public class OFPortStatsEntrySerializer extends SerializerBase<OFPortStatsEntryM
     public void serialize(OFPortStatsEntryMod portStatModEntry, JsonGenerator jGen,
             SerializerProvider sp) throws IOException, JsonGenerationException {
 
+        IOFSwitch sw = portStatModEntry.getSwitch();
         OFPortStatsEntry portStatEntry = portStatModEntry.getPortStatsEntry();
         jGen.writeStartObject();
         jGen.writeNumberField("portNumber", portStatEntry.getPortNo().getPortNumber());
+        jGen.writeStringField("portStatus", ((OFSwitchImplBase) sw).portEnabled(
+                portStatEntry.getPortNo().getPortNumber()) ? "up" : "down");
         jGen.writeNumberField("receivePackets", portStatEntry.getRxPackets().getValue());
         jGen.writeNumberField("transmitPackets", portStatEntry.getTxPackets().getValue());
         jGen.writeNumberField("receiveBytes", portStatEntry.getRxBytes().getValue());

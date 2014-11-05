@@ -2232,25 +2232,25 @@ REALTIME_DESC_FORMAT = {
 REALTIME_PORT_FORMAT = {
     'realtime_port' : {
         'field-orderings' : {
-            'default' : [ 'Idx', 'switch', 'portNumber', 'receiveBytes',
+            'default' : [ 'Idx', 'switch', 'portNumber','portStatus', 'receiveBytes',
                           'receivePackets', 'receiveErrors', 'receiveDropped',
                           'receiveCRCErrors', 'receiveOverrunErrors',
                           'receiveFrameErrors', 'transmitBytes',
                           'transmitPackets', 'transmitErrors',
                           'transmitDropped', 'collisions' ],
-            'details' : [ 'Idx', 'switch', 'portNumber', 'receiveBytes',
+            'details' : [ 'Idx', 'switch', 'portNumber','portStatus', 'receiveBytes',
                           'receivePackets', 'receiveErrors', 'receiveDropped',
                           'receiveCRCErrors', 'receiveOverrunErrors',
                           'receiveFrameErrors', 'transmitBytes',
                           'transmitPackets', 'transmitErrors',
                           'transmitDropped', 'collisions' ],
-            'scoped'  : [ 'Idx', 'portNumber', 'receiveBytes',
+            'scoped'  : [ 'Idx', 'portNumber','portStatus', 'receiveBytes',
                           'receivePackets', 'receiveErrors', 'receiveDropped',
                           'receiveCRCErrors', 'receiveOverrunErrors',
                           'receiveFrameErrors', 'transmitBytes',
                           'transmitPackets', 'transmitErrors',
                           'transmitDropped', 'collisions' ],
-            'brief' :  [ 'Idx', 'switch', 'portNumber',
+            'brief' :  [ 'Idx', 'switch', 'portNumber','portStatus',
                          'receiveBytes', 'receivePackets', 'receiveErrors',
                          'transmitBytes', 'transmitPackets', 'transmitErrors',
                        ]
@@ -2300,7 +2300,10 @@ REALTIME_PORT_FORMAT = {
                                      },
             'length'               : { 'verbose-name' : 'Length'
                                      },
+            'portStatus'           : { 'verbose-name' : 'Status'
+                                     },
             }
+                       
         },
 }
 
