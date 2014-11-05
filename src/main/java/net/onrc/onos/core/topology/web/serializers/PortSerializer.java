@@ -43,7 +43,14 @@ public class PortSerializer extends SerializerBase<Port> {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField(TopologyElement.TYPE, port.getType());
         jsonGenerator.writeStringField(TopologyElement.ELEMENT_TYPE, port.getPortType().toString());
-        jsonGenerator.writeStringField("state", "ACTIVE");
+        if (port.getStringAttribute("state") != null &&
+                port.getStringAttribute("state").equals("ACTIVE")) {
+            jsonGenerator.writeStringField("state", "ACTIVE");
+        }
+        else {
+            jsonGenerator.writeStringField("state", "INACTIVE");
+        }
+        //jsonGenerator.writeStringField("state", "ACTIVE");
         jsonGenerator.writeStringField("dpid", port.getDpid().toString());
         jsonGenerator.writeNumberField("portNumber",
                                        port.getNumber().value());

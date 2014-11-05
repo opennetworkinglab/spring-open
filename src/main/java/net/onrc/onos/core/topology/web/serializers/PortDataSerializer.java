@@ -42,7 +42,14 @@ public class PortDataSerializer extends SerializerBase<PortData> {
 
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField(TopologyElement.TYPE, portData.getType());
-        jsonGenerator.writeStringField("state", "ACTIVE");
+
+        if (portData.getStringAttribute("state") != null &&
+                portData.getStringAttribute("state").equals("ACTIVE")) {
+            jsonGenerator.writeStringField("state", "ACTIVE");
+        }
+        else {
+            jsonGenerator.writeStringField("state", "INACTIVE");
+        }
         jsonGenerator.writeStringField("dpid", portData.getDpid().toString());
         jsonGenerator.writeNumberField("portNumber",
                                        portData.getPortNumber().value());
@@ -55,4 +62,9 @@ public class PortDataSerializer extends SerializerBase<PortData> {
         jsonGenerator.writeEndObject();         // stringAttributes
         jsonGenerator.writeEndObject();
     }
+
+    private boolean isEnabled(PortData p) {
+        return true;
+    }
+
 }

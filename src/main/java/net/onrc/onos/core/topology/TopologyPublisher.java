@@ -49,7 +49,9 @@ import net.onrc.onos.core.util.PortNumberUtils;
 import net.onrc.onos.core.util.SwitchPort;
 
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+import org.projectfloodlight.openflow.protocol.OFPortConfig;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFPortState;
 import org.projectfloodlight.openflow.util.HexString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -413,6 +415,14 @@ public class TopologyPublisher implements IOFSwitchListener,
             // TODO define attr name as constant somewhere.
             // TODO populate appropriate attributes.
             //portData.
+
+            if (isEnabled(port)) {
+                portData.createStringAttribute("state", "ACTIVE");
+            }
+            else {
+                portData.createStringAttribute("state", "INACTIVE");
+            }
+
             portData.createStringAttribute("name", port.getName());
             portData.createStringAttribute(TopologyElement.TYPE,
                     TopologyElement.TYPE_PACKET_LAYER);
@@ -425,6 +435,13 @@ public class TopologyPublisher implements IOFSwitchListener,
             portDataEntries.add(portData);
         }
         publishAddSwitchEvent(switchData, portDataEntries);
+    }
+
+    private boolean isEnabled(OFPortDesc p) {
+        return (p != null &&
+                !p.getState().contains(OFPortState.LINK_DOWN) &&
+                !p.getState().contains(OFPortState.BLOCKED) && !p.getConfig().contains(
+                OFPortConfig.PORT_DOWN));
     }
 
     @Override
