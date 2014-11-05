@@ -156,11 +156,11 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     /* Set the default values. These variables will get
      * overwritten based on the switch vendor type
      */
-    private int vlanTableId = TABLE_VLAN;
-    private int tmacTableId = TABLE_TMAC;
-    private int ipv4UnicastTableId = TABLE_IPv4_UNICAST;
-    private int mplsTableId = TABLE_MPLS;
-    private int aclTableId = TABLE_ACL;
+    protected int vlanTableId = TABLE_VLAN;
+    protected int tmacTableId = TABLE_TMAC;
+    protected int ipv4UnicastTableId = TABLE_IPv4_UNICAST;
+    protected int mplsTableId = TABLE_MPLS;
+    protected int aclTableId = TABLE_ACL;
 
     public OFSwitchImplSpringOpenTTP(OFDescStatsReply desc, boolean usePipeline13) {
         super();
@@ -549,7 +549,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     // Utility methods
     // *****************************
 
-    void setTableMissEntries() throws IOException {
+    protected void setTableMissEntries() throws IOException {
         // set all table-miss-entries
         populateTableMissEntry(vlanTableId, true, false, false, -1);
         populateTableMissEntry(tmacTableId, true, false, false, -1);
@@ -590,7 +590,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private void populateTableMissEntry(int tableToAdd, boolean toControllerNow,
+    protected void populateTableMissEntry(int tableToAdd, boolean toControllerNow,
             boolean toControllerWrite,
             boolean toTable, int tableToSend) throws IOException {
         OFOxmList oxmList = OFOxmList.EMPTY;

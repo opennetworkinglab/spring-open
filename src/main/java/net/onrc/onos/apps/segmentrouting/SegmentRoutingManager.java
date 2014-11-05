@@ -388,10 +388,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
             for (Link link: sw.getOutgoingLinks()) {
                 Port dstPort = link.getDstPort();
                 IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                        getSwId(dstPort.getDpid().toString()));
+                        dstPort.getDpid().value());
                 if (dstSw != null) {
                     dstSw.removePortFromGroups(dstPort.getNumber());
-                    log.debug("MasterSwitch {} is gone: remove port {}", sw.getDpid(), dstPort);
+                    log.debug("MasterSwitch {} is gone: remove port {}",
+                            sw.getDpid(), dstPort);
                 }
             }
             // Flush the groupId table for adjacencySid;
@@ -423,7 +424,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             Dpid dpid = port.getDpid();
 
             IOF13Switch sw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(port.getDpid().toString()));
+                    port.getDpid().value());
             if (sw != null) {
                 sw.addPortToGroups(port.getPortNumber());
                 //log.debug("Add port {} to switch {}", port, dpid);
@@ -468,9 +469,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
 
             IOF13Switch srcSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(srcPort.getDpid().toString()));
+                    srcPort.getDpid().value());
             IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(dstPort.getDpid().toString()));
+                    dstPort.getDpid().value());
 
             if ((srcSw == null) || (dstSw == null))
                 continue;
@@ -502,9 +503,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             SwitchPort dstPort = link.getDst();
 
             IOF13Switch srcSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(srcPort.getDpid().toString()));
+                    srcPort.getDpid().value());
             IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(dstPort.getDpid().toString()));
+                    dstPort.getDpid().value());
             if ((srcSw == null) || (dstSw == null))
                 /* If this link is not between two switches, ignore it */
                 continue;
@@ -550,7 +551,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             Dpid dpid = port.getDpid();
 
             IOF13Switch sw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(port.getDpid().toString()));
+                    port.getDpid().value());
             if (sw != null) {
                 sw.removePortFromGroups(port.getPortNumber());
                 log.debug("Remove port {} from switch {}", port, dpid);
@@ -644,10 +645,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param adjId Adjacency ID
      * @param ports List of ports assigned to the Adjacency ID
      */
-    private void setAdjacencyRuleOfGroup(Switch sw, Integer adjId, List<Integer> ports) {
+    private void setAdjacencyRuleOfGroup(Switch sw, Integer adjId,
+            List<Integer> ports) {
 
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(sw.getDpid().toString()));
+                sw.getDpid().value());
 
         Integer groupId = -1;
         if (sw13 != null) {
@@ -787,7 +789,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 new MatchActionOperationEntry(operator, matchAction);
 
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(sw.getDpid().toString()));
+                sw.getDpid().value());
 
         if (sw13 != null) {
             try {
@@ -935,7 +937,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         if (!entries.isEmpty()) {
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                    getSwId(targetSw.getDpid().toString()));
+                    targetSw.getDpid().value());
 
             if (sw13 != null) {
                 try {
@@ -1018,8 +1020,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(operator, matchAction);
 
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(sw.getDpid().toString()));
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(sw.getDpid().value());
+        //        getSwId(sw.getDpid().toString()));
 
         if (sw13 != null) {
             try {
@@ -1071,7 +1073,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, false));
         }
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(sw.getDpid().toString()));
+                sw.getDpid().value());
 
         if (sw13 != null) {
             try {
@@ -1393,7 +1395,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     private OFBarrierReplyFuture sendBarrier(Switch sw) {
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(sw.getDpid().toString()));
+                sw.getDpid().value());
         OFBarrierReplyFuture replyFuture = null;
         if (sw13 != null) {
             try {
@@ -1502,7 +1504,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(sw.getDpid().toString()));
+                sw.getDpid().value());
         if ((sw13 instanceof OFSwitchImplDellOSR) && isTransitRouter(sw) && !php) {
             PortNumber port = pickOnePort(sw, fwdSws);
             if (port == null) {
@@ -1611,7 +1613,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                             Dpid firstVia = via.get(via.size()-1);
                             fwdSws.add(firstVia);
                             IOF13Switch targetSw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
-                                    getSwId(targetSw.getDpid().toString()));
+                                    targetSw.getDpid().value());
                             if (targetSw13 instanceof OFSwitchImplDellOSR &&
                                 isTransitRouter(targetSw) &&
                                 isTransitRouter(mutableTopology.getSwitch(firstVia))) {
@@ -1642,23 +1644,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         return null;
-    }
-
-    /**
-     * Convert a string DPID to its Switch Id (integer)
-     *
-     * @param dpid
-     * @return
-     */
-    private long getSwId(String dpid) {
-
-        long swId = 0;
-
-        String swIdHexStr = "0x"+dpid.substring(dpid.lastIndexOf(":") + 1);
-        if (swIdHexStr != null)
-            swId = Integer.decode(swIdHexStr);
-
-        return swId;
     }
 
     /**
@@ -1859,10 +1844,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param dpid Switch DPID
      * @return IOF13Switch object
      */
-    public IOF13Switch getIOF13Switch(String dpid) {
+    public IOF13Switch getIOF13Switch(String dpidStr) {
 
+        Dpid dpid = new Dpid(dpidStr);
         IOF13Switch targetSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                getSwId(dpid));
+                dpid.value());
 
         return targetSw;
     }

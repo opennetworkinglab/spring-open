@@ -1,5 +1,7 @@
 package net.onrc.onos.core.drivermanager;
 
+import java.io.IOException;
+
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.util.IPv4Net;
@@ -55,6 +57,18 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
         OFOxmList oxmList = OFOxmList.of(ethTypeIp, dmac, ipPrefix);
 
         return oxmList;
+    }
+
+    @Override
+    protected void setTableMissEntries() throws IOException {
+        // set all table-miss-entries
+        populateTableMissEntry(vlanTableId, true, false, false, -1);
+        populateTableMissEntry(tmacTableId, true, false, false, -1);
+        populateTableMissEntry(ipv4UnicastTableId, false, true, true,
+                aclTableId);
+        populateTableMissEntry(mplsTableId, false, true, true,
+                aclTableId);
+        populateTableMissEntry(aclTableId, true, false, false, -1);
     }
 
 }
