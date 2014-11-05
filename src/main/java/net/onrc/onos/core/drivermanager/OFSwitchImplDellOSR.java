@@ -21,8 +21,8 @@ import org.projectfloodlight.openflow.types.IPv4Address;
 public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
 
     /* Table IDs to be used for Dell Open Segment Routers*/
-    private static final int DELL_TABLE_VLAN = 10;
-    private static final int DELL_TABLE_TMAC = 20;
+    private static final int DELL_TABLE_VLAN = 17;
+    private static final int DELL_TABLE_TMAC = 18;
     private static final int DELL_TABLE_IPv4_UNICAST = 30;
     private static final int DELL_TABLE_MPLS = 25;
     private static final int DELL_TABLE_ACL = 40;
