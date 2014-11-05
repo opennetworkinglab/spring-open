@@ -143,10 +143,14 @@ public interface IOF13Switch extends IOFSwitch {
     public void removePortFromGroups(PortNumber port);
 
     /**
-     * Add the OFBucket to groups that have reachability through the given port.
-     * This API can be used by applications, when a port is operational again,
-     * to add that port to all the relevant groups
-     *
+     * Add the OFBucket to groups that have new reachability through the given
+     * port. This API can be used by applications, when a port is operational
+     * again, to add that port to all the relevant groups NOTE1: This API will
+     * add the specified port to any existing groups only if it is in Active
+     * state. NOTE2: If there were never any groups existing with the neighbor
+     * dpid that is reachable through this port, then this method performs
+     * no-operation
+     * 
      * @param port Port Number to be added to groups
      * @return None
      */
