@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
 
+import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.TableId;
 
 import com.google.common.primitives.Longs;
@@ -150,7 +152,7 @@ public interface IOF13Switch extends IOFSwitch {
      * state. NOTE2: If there were never any groups existing with the neighbor
      * dpid that is reachable through this port, then this method performs
      * no-operation
-     * 
+     *
      * @param port Port Number to be added to groups
      * @return None
      */
@@ -189,4 +191,20 @@ public interface IOF13Switch extends IOFSwitch {
     public boolean removeGroup(int groupId);
 
     public Map<String, String> getPublishAttributes();
+
+    /**
+     * Get the specified Router's MAC address to be used for IP flows
+     *
+     * @param dpid Dpid of the router
+     * @return MacAddress of specified router
+     */
+    public MacAddress getRouterIPMac(Dpid dpid);
+
+    /**
+     * Get the specified Router's MAC address to be used for MPLS flows
+     *
+     * @param dpid Dpid of the router
+     * @return MacAddress of specified router
+     */
+    public MacAddress getRouterMPLSMac(Dpid dpid);
 }

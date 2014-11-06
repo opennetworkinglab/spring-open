@@ -800,6 +800,22 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
     }
 
+    /* Default implementation of this interface.
+     * Gets the specified Router's MAC address to be used for IP flows
+     * To be overridden depending on the underlying switch type 
+     */
+    public MacAddress getRouterIPMac(Dpid dpid) {
+        return getNeighborRouterMacAddress(dpid);
+    }
+
+    /* Default implementation of this interface.
+     * Gets the specified Router's MAC address to be used for MPLS flows
+     * To be overridden depending on the underlying switch type 
+     */
+    public MacAddress getRouterMPLSMac(Dpid dpid) {
+        return getNeighborRouterMacAddress(dpid);
+    }
+
     private void setNeighbors(List<LinkConfig> linkConfigList) {
         for (LinkConfig lg : linkConfigList) {
             if (!lg.getType().equals(NetworkConfigManager.PKT_LINK)) {

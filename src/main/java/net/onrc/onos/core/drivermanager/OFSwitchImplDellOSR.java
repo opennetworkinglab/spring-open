@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
+import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
 
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
@@ -14,6 +15,7 @@ import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 /**
  * OFDescriptionStatistics Vendor (Manufacturer Desc.): Dell Make (Hardware
@@ -69,6 +71,15 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
         populateTableMissEntry(mplsTableId, false, true, true,
                 aclTableId);
         populateTableMissEntry(aclTableId, true, false, false, -1);
+    }
+
+    /* Dell Open Segment Router specific Implementation .
+     * Gets the specified Router's MAC address to be used for MPLS flows
+     * For Dell OSR, the MPLS MAC is IP MAC + 1
+     */
+    @Override
+    public MacAddress getRouterMPLSMac(Dpid dpid) {
+        return MacAddress.of(super.getRouterIPMac(dpid).getLong() + 1);
     }
 
 }
