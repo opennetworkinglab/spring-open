@@ -50,8 +50,6 @@ import net.onrc.onos.core.matchaction.action.CopyTtlOutAction;
 import net.onrc.onos.core.matchaction.action.DecMplsTtlAction;
 import net.onrc.onos.core.matchaction.action.DecNwTtlAction;
 import net.onrc.onos.core.matchaction.action.GroupAction;
-import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
-import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
 import net.onrc.onos.core.matchaction.action.PushMplsAction;
@@ -767,8 +765,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         // Output action
         if (srcMac != null && dstMac != null) {
-            ModifyDstMacAction setDstAction = new ModifyDstMacAction(MACAddress.valueOf(dstMac));
-            ModifySrcMacAction setSrcAction = new ModifySrcMacAction(MACAddress.valueOf(srcMac));
+            SetDAAction setDstAction = new SetDAAction(MacAddress.of(dstMac));
+            SetSAAction setSrcAction = new SetSAAction(MacAddress.of(srcMac));
             OutputAction outportAction = new OutputAction(PortNumber.uint32(num));
 
             actions.add(setDstAction);

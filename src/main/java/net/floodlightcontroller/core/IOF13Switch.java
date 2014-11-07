@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
@@ -62,8 +61,14 @@ public interface IOF13Switch extends IOFSwitch {
      * neighbors in this set.
      */
     public class NeighborSet {
+        public enum groupPktType {
+            IP_OUTGOING,
+            MPLS_OUTGOING
+        };
+
         Set<Dpid> dpids;
         int edgeLabel;
+        groupPktType outPktType;
 
         /**
          * Constructor
@@ -73,6 +78,7 @@ public interface IOF13Switch extends IOFSwitch {
          */
         public NeighborSet(Dpid... dpids) {
             this.edgeLabel = -1;
+            this.outPktType = groupPktType.IP_OUTGOING;
             this.dpids = new HashSet<Dpid>();
             for (Dpid d : dpids) {
                 this.dpids.add(d);
@@ -89,6 +95,8 @@ public interface IOF13Switch extends IOFSwitch {
 
         public void setEdgeLabel(int edgeLabel) {
             this.edgeLabel = edgeLabel;
+            if (edgeLabel > 0)
+                this.outPktType = groupPktType.MPLS_OUTGOING;
         }
 
         public Set<Dpid> getDpids() {
@@ -99,13 +107,22 @@ public interface IOF13Switch extends IOFSwitch {
             return edgeLabel;
         }
 
+        public groupPktType getOutPktType() {
+            return outPktType;
+        }
+
+        public void setOutPktType(groupPktType outPktType) {
+            this.outPktType = outPktType;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof NeighborSet)) {
                 return false;
             }
             NeighborSet that = (NeighborSet) o;
-            return (this.dpids.equals(that.dpids) && (this.edgeLabel == that.edgeLabel));
+            return (this.dpids.equals(that.dpids) &&
+                    (this.edgeLabel == that.edgeLabel) && (this.outPktType == that.outPktType));
         }
 
         @Override
@@ -115,6 +132,7 @@ public interface IOF13Switch extends IOFSwitch {
                 result = 31 * result + Longs.hashCode(d.value());
             }
             result = 31 * result + Longs.hashCode(edgeLabel);
+            result = 31 * result + outPktType.hashCode();
             return result;
         }
 

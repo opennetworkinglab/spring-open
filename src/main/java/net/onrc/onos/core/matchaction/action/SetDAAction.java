@@ -12,4 +12,8 @@ public class SetDAAction implements Action {
     public MacAddress getAddress() {
         return this.macAddress;
     }
+
+    public void setAddress(MacAddress macAddress) {
+        this.macAddress = macAddress;
+    }
 }

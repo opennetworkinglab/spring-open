@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.core.IOF13Switch;
+import net.floodlightcontroller.core.IOF13Switch.NeighborSet.groupPktType;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.SwitchDriverSubHandshakeAlreadyStarted;
 import net.floodlightcontroller.core.SwitchDriverSubHandshakeCompleted;
@@ -112,7 +113,7 @@ import org.projectfloodlight.openflow.util.HexString;
 public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13Switch {
     private AtomicBoolean driverHandshakeComplete;
     private AtomicBoolean haltStateMachine;
-    private OFFactory factory;
+    protected OFFactory factory;
     private static final int OFPCML_NO_BUFFER = 0xffff;
     // Configuration of asynch messages to controller. We need different
     // asynch messages depending on role-equal or role-master.
@@ -143,8 +144,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     private DriverState driverState;
     private final boolean usePipeline13;
     private SegmentRouterConfig srConfig;
-    private ConcurrentMap<Dpid, Set<PortNumber>> neighbors;
-    private ConcurrentMap<PortNumber, Dpid> portToNeighbors;
+    protected ConcurrentMap<Dpid, Set<PortNumber>> neighbors;
+    protected ConcurrentMap<PortNumber, Dpid> portToNeighbors;
     private List<Integer> segmentIds;
     private boolean isEdgeRouter;
     private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
@@ -347,7 +348,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             }
             BucketInfo b = new BucketInfo(neighborDpid,
                     MacAddress.of(srConfig.getRouterMac()),
-                    getNeighborRouterMacAddress(neighborDpid),
+                    getNeighborRouterMacAddress(neighborDpid, ns.getOutPktType()),
                     port,
                     ns.getEdgeLabel(), true, -1);
             buckets.add(b);
@@ -800,9 +801,15 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
     }
 
+    /* Base implementation returns the configured router MAC only */
+    protected MacAddress getNeighborRouterMacAddress(Dpid ndpid,
+            groupPktType outPktType) {
+        return getNeighborRouterMacAddress(ndpid);
+    }
+
     /* Default implementation of this interface.
      * Gets the specified Router's MAC address to be used for IP flows
-     * To be overridden depending on the underlying switch type 
+     * To be overridden depending on the underlying switch type
      */
     public MacAddress getRouterIPMac(Dpid dpid) {
         return getNeighborRouterMacAddress(dpid);
@@ -810,7 +817,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
     /* Default implementation of this interface.
      * Gets the specified Router's MAC address to be used for MPLS flows
-     * To be overridden depending on the underlying switch type 
+     * To be overridden depending on the underlying switch type
      */
     public MacAddress getRouterMPLSMac(Dpid dpid) {
         return getNeighborRouterMacAddress(dpid);
@@ -873,7 +880,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
     }
 
-    private Set<Set<Dpid>> getAllNeighborSets(Set<Dpid> neighbors) {
+    protected Set<Set<Dpid>> getPowerSetOfNeighbors(Set<Dpid> neighbors) {
         List<Dpid> list = new ArrayList<Dpid>(neighbors);
         Set<Set<Dpid>> sets = new HashSet<Set<Dpid>>();
         /* get the number of elements in the neighbors */
@@ -893,27 +900,43 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                     dpidSubSet.add(list.get(j));
                 }
             }
-            /* NOTE: Avoid any pairings of edge routers only
-             * at a backbone router */
-            boolean avoidEdgeRouterPairing = true;
-            if ((!isEdgeRouter) && (dpidSubSet.size() > 1)) {
+            sets.add(dpidSubSet);
+        }
+        return sets;
+    }
+
+    protected Set<Set<Dpid>> filterEdgeRouterOnlyPairings(Set<Set<Dpid>> sets) {
+        Set<Set<Dpid>> fiteredSets = new HashSet<Set<Dpid>>();
+        for (Set<Dpid> dpidSubSet : sets) {
+            if (dpidSubSet.size() > 1) {
+                boolean avoidEdgeRouterPairing = true;
                 for (Dpid dpid : dpidSubSet) {
                     if (!isEdgeRouter(dpid)) {
                         avoidEdgeRouterPairing = false;
                         break;
                     }
                 }
+                if (!avoidEdgeRouterPairing)
+                    fiteredSets.add(dpidSubSet);
             }
             else
-                avoidEdgeRouterPairing = false;
+                fiteredSets.add(dpidSubSet);
 
-            if (!avoidEdgeRouterPairing)
-                sets.add(dpidSubSet);
+        }
+        return fiteredSets;
+    }
+
+    private Set<Set<Dpid>> getAllNeighborSets(Set<Dpid> neighbors) {
+        Set<Set<Dpid>> sets = getPowerSetOfNeighbors(neighbors);
+        if (!isEdgeRouter) {
+            /* NOTE: Avoid any pairings of edge routers only
+             * at a backbone router */
+            sets = filterEdgeRouterOnlyPairings(sets);
         }
         return sets;
     }
 
-    private int createGroupForANeighborSet(NeighborSet ns) {
+    protected int createGroupForANeighborSet(NeighborSet ns) {
         int groupId = -1;
         List<BucketInfo> buckets = new ArrayList<BucketInfo>();
         for (Dpid d : ns.getDpids()) {
@@ -921,8 +944,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 if (portEnabled((int) sp.value())) {
                     BucketInfo b = new BucketInfo(d,
                             MacAddress.of(srConfig.getRouterMac()),
-                            getNeighborRouterMacAddress(d), sp,
-                            ns.getEdgeLabel(), true, -1);
+                            getNeighborRouterMacAddress(d, ns.getOutPktType()),
+                            sp, ns.getEdgeLabel(), true, -1);
                     buckets.add(b);
                 }
             }
@@ -964,6 +987,107 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
     }
 
+    protected List<Integer> getSegmentIdsTobePairedWithNeighborSet(
+            Set<Dpid> dpids) {
+
+        List<Integer> nsSegmentIds = new ArrayList<Integer>();
+
+        /* Add one entry for "no label" (-1) to the list if
+         * dpid list has not more than one node/neighbor as
+         * there will never be a case a packet going to more than one
+         * neighbor without a label at an edge router
+         */
+        if (dpids.size() == 1) {
+            nsSegmentIds.add(-1);
+        }
+        if (!segmentIds.isEmpty()) {
+            /* Filter out SegmentIds matching with the
+             * nodes in the combo
+             */
+            for (Integer sId : segmentIds) {
+                boolean filterOut = false;
+                /* Check if the edge label being set is of
+                 * any node in the Neighbor set
+                 */
+                for (Dpid dpid : dpids) {
+                    if (isSegmentIdSameAsNodeSegmentId(dpid, sId)) {
+                        filterOut = true;
+                        break;
+                    }
+                }
+                if (!filterOut)
+                    nsSegmentIds.add(sId);
+            }
+        }
+
+        return nsSegmentIds;
+    }
+
+    protected void createGroupsAtEdgeRouter(Set<Dpid> dpids) {
+        /* Create all possible Neighbor sets from this router
+         */
+        Set<Set<Dpid>> powerSet = getPowerSetOfNeighbors(dpids);
+        log.debug("createGroupsAtEdgeRouter: The size of neighbor powerset "
+                + "for sw {} is {}", getStringId(), powerSet.size());
+        Set<NeighborSet> nsSet = new HashSet<NeighborSet>();
+        for (Set<Dpid> combo : powerSet) {
+            if (combo.isEmpty())
+                continue;
+            List<Integer> groupSegmentIds =
+                    getSegmentIdsTobePairedWithNeighborSet(combo);
+            if (!groupSegmentIds.isEmpty()) {
+                for (Integer sId : groupSegmentIds) {
+                    NeighborSet ns = new NeighborSet();
+                    ns.addDpids(combo);
+                    ns.setEdgeLabel(sId);
+                    log.debug("createGroupsAtEdgeRouter: sw {} combo {} sId {} ns {}",
+                            getStringId(), combo, sId, ns);
+                    nsSet.add(ns);
+                }
+            }
+        }
+        log.debug("createGroupsAtEdgeRouter: The neighborset with label for sw {} is {}",
+                getStringId(), nsSet);
+
+        for (NeighborSet ns : nsSet) {
+            updatePortNeighborSetMap(ns);
+            int gid = createGroupForANeighborSet(ns);
+            if (gid == -1) {
+                log.warn("Create Group failed with -1");
+            }
+        }
+    }
+
+    protected void createGroupsAtTransitRouter(Set<Dpid> dpids) {
+        /* Create all possible Neighbor sets from this router
+         * NOTE: Avoid any pairings of edge routers only
+         */
+        Set<Set<Dpid>> sets = getPowerSetOfNeighbors(dpids);
+        sets = filterEdgeRouterOnlyPairings(sets);
+        log.debug("createGroupsAtTransitRouter: The size of neighbor powerset "
+                + "for sw {} is {}", getStringId(), sets.size());
+        Set<NeighborSet> nsSet = new HashSet<NeighborSet>();
+        for (Set<Dpid> combo : sets) {
+            if (combo.isEmpty())
+                continue;
+            NeighborSet ns = new NeighborSet();
+            ns.addDpids(combo);
+            log.debug("createGroupsAtTransitRouter: sw {} combo {} ns {}",
+                    getStringId(), combo, ns);
+            nsSet.add(ns);
+        }
+        log.debug("createGroupsAtTransitRouter: The neighborset with label "
+                + "for sw {} is {}", getStringId(), nsSet);
+
+        for (NeighborSet ns : nsSet) {
+            updatePortNeighborSetMap(ns);
+            int gid = createGroupForANeighborSet(ns);
+            if (gid == -1) {
+                log.warn("Create Group failed with -1");
+            }
+        }
+    }
+
     /**
      * createGroups creates ECMP groups for all ports on this router connected
      * to other routers (in the OF network). The information for ports is
@@ -991,63 +1115,12 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         if (dpids == null || dpids.isEmpty()) {
             return;
         }
-        /* Create all possible Neighbor sets from this router
-         * NOTE: Avoid any pairings of edge routers only
-         */
-        Set<Set<Dpid>> powerSet = getAllNeighborSets(dpids);
-        log.debug("createGroups: The size of neighbor powerset for sw {} is {}",
-                getStringId(), powerSet.size());
-        Set<NeighborSet> nsSet = new HashSet<NeighborSet>();
-        for (Set<Dpid> combo : powerSet) {
-            if (combo.isEmpty())
-                continue;
-            if (isEdgeRouter && !segmentIds.isEmpty()) {
-                /* Filter out SegmentIds matching with the
-                 * nodes in the combo
-                 * Add one entry for "no label" (-1) to the list
-                 */
-                List<Integer> groupSegmentIds = new ArrayList<Integer>();
-                groupSegmentIds.add(-1);
-                for (Integer sId : segmentIds) {
-                    boolean filterOut = false;
-                    /* Check if the edge label being set is of
-                     * any node in the Neighbor set
-                     */
-                    for (Dpid dpid : combo) {
-                        if (isSegmentIdSameAsNodeSegmentId(dpid, sId)) {
-                            filterOut = true;
-                            break;
-                        }
-                    }
-                    if (!filterOut)
-                        groupSegmentIds.add(sId);
-                }
-                for (Integer sId : groupSegmentIds) {
-                    NeighborSet ns = new NeighborSet();
-                    ns.addDpids(combo);
-                    ns.setEdgeLabel(sId);
-                    log.debug("createGroups: sw {} combo {} sId {} ns {}",
-                            getStringId(), combo, sId, ns);
-                    nsSet.add(ns);
-                }
-            } else {
-                NeighborSet ns = new NeighborSet();
-                ns.addDpids(combo);
-                log.debug("createGroups: sw {} combo {} ns {}",
-                        getStringId(), combo, ns);
-                nsSet.add(ns);
-            }
-        }
-        log.debug("createGroups: The neighborset with label for sw {} is {}",
-                getStringId(), nsSet);
 
-        for (NeighborSet ns : nsSet) {
-            updatePortNeighborSetMap(ns);
-            int gid = createGroupForANeighborSet(ns);
-            if (gid == -1) {
-                log.warn("Create Group failed with -1");
-            }
+        if (isEdgeRouter) {
+            createGroupsAtEdgeRouter(dpids);
         }
+        else
+            createGroupsAtTransitRouter(dpids);
     }
 
     private class EcmpInfo {
@@ -1528,7 +1601,16 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         return ipFlow;
     }
 
+    protected void analyzeAndUpdateMplsActions(
+            MatchActionOperationEntry mao) {
+        /* For base switch implementation, use the MPLS actions
+         * as specified by the application
+         */
+        return;
+    }
+
     private OFMessage getMplsEntry(MatchActionOperationEntry mao) {
+        analyzeAndUpdateMplsActions(mao);
         MatchAction ma = mao.getTarget();
         Operator op = mao.getOperator();
         MplsMatch mplsm = (MplsMatch) ma.getMatch();

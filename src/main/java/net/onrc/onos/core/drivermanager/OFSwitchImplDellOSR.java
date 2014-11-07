@@ -1,11 +1,23 @@
 package net.onrc.onos.core.drivermanager;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
+import net.floodlightcontroller.core.IOF13Switch.NeighborSet.groupPktType;
+import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.action.GroupAction;
+import net.onrc.onos.core.matchaction.action.OutputAction;
+import net.onrc.onos.core.matchaction.action.PopMplsAction;
+import net.onrc.onos.core.matchaction.action.SetDAAction;
+import net.onrc.onos.core.matchaction.action.SetMplsBosAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
+import net.onrc.onos.core.util.PortNumber;
 
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFFactory;
@@ -30,6 +42,10 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
     private static final int DELL_TABLE_IPv4_UNICAST = 30;
     private static final int DELL_TABLE_MPLS = 25;
     private static final int DELL_TABLE_ACL = 40;
+
+    private static final int MPLS_SWAP_FLOW = 0x00;
+    private static final int MPLS_POP_NO_BOS_FLOW = 0x10;
+    private static final int MPLS_POP_BOS_FLOW = 0x11;
 
     public OFSwitchImplDellOSR(OFDescStatsReply desc, boolean usePipeline13) {
         super(desc, usePipeline13);
@@ -73,6 +89,14 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
         populateTableMissEntry(aclTableId, true, false, false, -1);
     }
 
+    protected MacAddress getNeighborRouterMacAddress(Dpid ndpid,
+            groupPktType outPktType) {
+        if (outPktType == groupPktType.MPLS_OUTGOING)
+            return getRouterMPLSMac(ndpid);
+        else
+            return super.getNeighborRouterMacAddress(ndpid,
+                    groupPktType.IP_OUTGOING);
+    }
     /* Dell Open Segment Router specific Implementation .
      * Gets the specified Router's MAC address to be used for MPLS flows
      * For Dell OSR, the MPLS MAC is IP MAC + 1
@@ -82,4 +106,71 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
         return MacAddress.of(super.getRouterIPMac(dpid).getLong() + 1);
     }
 
+    protected void createGroupsAtTransitRouter(Set<Dpid> dpids) {
+        /* Create all possible Neighbor sets from this router
+         * NOTE: Avoid any pairings of edge routers only
+         */
+        Set<Set<Dpid>> sets = getPowerSetOfNeighbors(dpids);
+        sets = filterEdgeRouterOnlyPairings(sets);
+        log.debug("createGroupsAtTransitRouter: The size of neighbor powerset "
+                + "for sw {} is {}", getStringId(), sets.size());
+        Set<NeighborSet> nsSet = new HashSet<NeighborSet>();
+        for (Set<Dpid> combo : sets) {
+            if (combo.isEmpty())
+                continue;
+            for (groupPktType gType : groupPktType.values()) {
+                NeighborSet ns = new NeighborSet();
+                ns.addDpids(combo);
+                ns.setOutPktType(gType);
+                log.debug("createGroupsAtTransitRouter: sw {} combo {} ns {}",
+                        getStringId(), combo, ns);
+                nsSet.add(ns);
+            }
+        }
+        log.debug("createGroupsAtTransitRouter: The neighborset with label "
+                + "for sw {} is {}", getStringId(), nsSet);
+
+        for (NeighborSet ns : nsSet) {
+            updatePortNeighborSetMap(ns);
+            int gid = createGroupForANeighborSet(ns);
+            if (gid == -1) {
+                log.warn("Create Group failed with -1");
+            }
+        }
+    }
+
+    protected void analyzeAndUpdateMplsActions(
+            MatchActionOperationEntry mao) {
+        MatchAction ma = mao.getTarget();
+        int flowType = 0x00;
+        PortNumber outPort = null;
+        for (Action action : ma.getActions()) {
+            if (action instanceof PopMplsAction)
+                flowType |= 0x10;
+            else if (action instanceof SetMplsBosAction)
+                flowType |= 0x01;
+            else if (action instanceof OutputAction)
+                outPort = ((OutputAction) action).getPortNumber();
+        }
+
+        groupPktType outPktType = groupPktType.IP_OUTGOING;
+        if ((flowType == MPLS_SWAP_FLOW) ||
+                (flowType == MPLS_POP_NO_BOS_FLOW))
+            outPktType = groupPktType.MPLS_OUTGOING;
+
+        for (Action action : ma.getActions()) {
+            if ((action instanceof GroupAction)
+                    && (((GroupAction) action).getGroupId() == -1)) {
+                ((GroupAction) action).getDpids().setOutPktType(outPktType);
+            }
+            else if (action instanceof SetDAAction) {
+                if ((outPort != null) &&
+                        (portToNeighbors.get(outPort) != null)) {
+                    Dpid neighborDpid = portToNeighbors.get(outPort);
+                    ((SetDAAction) action).setAddress(
+                            getNeighborRouterMacAddress(neighborDpid, outPktType));
+                }
+            }
+        }
+    }
 }
