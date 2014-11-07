@@ -14,6 +14,7 @@ import java.util.List;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
+import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.ICMP;
@@ -39,6 +40,7 @@ import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.OFVlanVidMatch;
@@ -300,6 +302,22 @@ public class IcmpHandler {
                     actions.add(pushlabel);
                     actions.add(setlabelid);
                     actions.add(copyTtlOut);
+
+                    //If the next hop is the DELL switch, then we need to set
+                    // MPLS MAC as the destination MAC
+                    IOFSwitch sw13 = this.floodlightProvider.getMasterSwitch(
+                            sw.getDpid().value());
+                    if (sw13 == null) {
+                        log.debug("Failed to get the IOFSwitch object for {}", sw);
+                        return;
+                    }
+                    if (sw13 instanceof OFSwitchImplDellOSR) {
+                        MacAddress mplsDstMac =
+                                MacAddress.of(packet.getDestinationMAC().toLong()+1);
+                        OFAction setDAAction = factory.actions().setDlDst(mplsDstMac);
+                        actions.add(setDAAction);
+                    }
+
                 }
             }
 

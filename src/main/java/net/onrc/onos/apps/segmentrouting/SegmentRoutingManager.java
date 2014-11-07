@@ -1861,6 +1861,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return mutableTopology.getSwitch(new Dpid(dpid));
     }
 
+    public MatchActionId getMatchActionId() {
+        return new MatchActionId(matchActionId++);
+    }
 
     // ************************************
     // Test functions

@@ -1,36 +1,32 @@
 package net.onrc.onos.apps.segmentrouting;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.IOF13Switch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
+import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
+import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.action.OutputAction;
+import net.onrc.onos.core.matchaction.action.SetDAAction;
+import net.onrc.onos.core.matchaction.action.SetSAAction;
+import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.IPv4;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MutableTopology;
 import net.onrc.onos.core.topology.Port;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.SwitchPort;
 
-import org.projectfloodlight.openflow.protocol.OFFactory;
-import org.projectfloodlight.openflow.protocol.OFMatchV3;
-import org.projectfloodlight.openflow.protocol.OFMessage;
-import org.projectfloodlight.openflow.protocol.OFOxmList;
-import org.projectfloodlight.openflow.protocol.action.OFAction;
-import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthSrc;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
-import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.MacAddress;
-import org.projectfloodlight.openflow.types.OFBufferId;
-import org.projectfloodlight.openflow.types.OFPort;
-import org.projectfloodlight.openflow.types.TableId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,12 +93,66 @@ public class GenericIpHandler {
         return true;
     }
 
+
+
+    /**
+     */
+    public void addRouteToHost(Switch sw, int destinationAddress,
+            byte[] destinationMacAddress) {
+
+        // If we do not know the host, then we cannot set the forwarding rule
+        net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress
+                .valueOf(destinationMacAddress));
+        if (host == null) {
+            return;
+        }
+
+        IPv4Address destIpAddress = IPv4Address.of(destinationAddress);
+        Ipv4Match ipMatch = new Ipv4Match(destIpAddress.toString()+"/32");
+        List<Action> actions = new ArrayList<>();
+
+        MacAddress destMacAddress = MacAddress.of(destinationMacAddress);
+        SetDAAction setDAAction = new SetDAAction(destMacAddress);
+
+        String routerMacAddress = sw.getStringAttribute("routerMac");
+        MacAddress srcMacAddress = MacAddress.of(routerMacAddress);
+        SetSAAction setSAAction = new SetSAAction(srcMacAddress);
+
+        actions.add(setDAAction);
+        actions.add(setSAAction);
+
+        for (Port port : host.getAttachmentPoints()) {
+            OutputAction outputAction = new OutputAction(port.getPortNumber());
+            actions.add(outputAction);
+        }
+
+        MatchAction matchAction = new MatchAction(srManager.getMatchActionId(),
+                new SwitchPort((long) 0, (short) 0), ipMatch, actions);
+
+        net.onrc.onos.core.matchaction.MatchActionOperations.Operator operator =  Operator.ADD;
+
+        MatchActionOperationEntry maEntry =
+                new MatchActionOperationEntry(operator, matchAction);
+
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                sw.getDpid().value());
+
+        if (sw13 != null) {
+            try {
+                sw13.pushFlow(maEntry);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+
     /**
      * Add routing rules to forward packets to known hosts
-     * 
+     *
      * @param sw Switch
      * @param hostIp Host IP address to forwards packets to
-     */
     public void addRouteToHost(Switch sw, int destinationAddress,
             byte[] destinationMacAddress) {
 
@@ -122,9 +172,13 @@ public class GenericIpHandler {
                 .ipv4DstMasked(
                         IPv4Address.of(destinationAddress),
                         IPv4Address.NO_MASK); // host addr should be /32
+
+
         OFOxmList oxmListSlash32 = OFOxmList.of(ethTypeIp, ipPrefix);
         OFMatchV3 match = factory.buildMatchV3()
                 .setOxmList(oxmListSlash32).build();
+
+
         OFAction setDmac = null;
         OFOxmEthDst dmac = factory.oxms()
                 .ethDst(MacAddress.of(destinationMacAddress));
@@ -143,26 +197,6 @@ public class GenericIpHandler {
         actionList.add(setDmac);
         actionList.add(decTtl);
         actionList.add(setSA);
-
-        /* TODO : need to check the config file for all packets
-        String subnets = sw.getStringAttribute("subnets");
-        try {
-            JSONArray arry = new JSONArray(subnets);
-            for (int i = 0; i < arry.length(); i++) {
-                String subnetIp = (String) arry.getJSONObject(i).get("subnetIp");
-                int portNo = (int) arry.getJSONObject(i).get("portNo");
-
-                if (netMatch(subnetIp, IPv4Address.of(hostIp.getDestinationAddress()).toString())) {
-                    OFAction out = factory.actions().buildOutput()
-                            .setPort(OFPort.of(portNo)).build();
-                    actionList.add(out);
-                }
-            }
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        */
 
         // Set output port
         for (Port port : host.getAttachmentPoints()) {
@@ -194,5 +228,6 @@ public class GenericIpHandler {
         flowPusher.add(sw.getDpid(), myIpEntry);
 
     }
+    */
 
 }
