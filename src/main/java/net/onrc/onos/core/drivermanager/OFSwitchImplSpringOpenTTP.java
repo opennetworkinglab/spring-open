@@ -185,7 +185,6 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     // OFSwitchImplBase
     // *****************************
 
-
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
@@ -238,139 +237,6 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         return driverState.toString();
     }
 
-    public void removePortFromGroups(PortNumber port) {
-        log.debug("removePortFromGroups: Remove port {} from Switch {}",
-                port, getStringId());
-        HashSet<NeighborSet> portNSSet = portNeighborSetMap.get(port);
-        if (portNSSet == null)
-        {
-            /* No Groups are created with this port yet */
-            log.warn("removePortFromGroups: No groups exist with Switch {} port {}",
-                            getStringId(), port);
-            return;
-        }
-        log.debug("removePortFromGroups: Neighborsets that the port {} is part"
-                + "of on Switch {} are {}",
-                port, getStringId(), portNSSet);
-
-        for (NeighborSet ns : portNSSet) {
-            /* Delete the first matched bucket */
-            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
-            if (portEcmpInfo == null) {
-                /* No groups present for this neighbor set */
-                continue;
-            }
-            Iterator<BucketInfo> it = portEcmpInfo.buckets.iterator();
-            log.debug("removePortFromGroups: Group {} on Switch {} has {} buckets",
-                    portEcmpInfo.groupId, getStringId(),
-                    portEcmpInfo.buckets.size());
-            while (it.hasNext()) {
-                BucketInfo bucket = it.next();
-                if (bucket.outport.equals(port)) {
-                    it.remove();
-                }
-            }
-            log.debug("removePortFromGroups: Modifying Group on Switch {} "
-                    + "and Neighborset {} with {}",
-                    getStringId(), ns, portEcmpInfo);
-            modifyEcmpGroup(portEcmpInfo);
-        }
-        /* Don't delete the entry from portNeighborSetMap because
-          * when the port is up again this info is needed
-          */
-        return;
-    }
-
-    public void addPortToGroups(PortNumber port) {
-        log.debug("addPortToGroups: Add port {} to Switch {}",
-                port, getStringId());
-        if (!portEnabled((int) (port.value())))
-        {
-            log.warn("addPortToGroups: Switch {} port {} is not ACTIVE",
-                    getStringId(), port);
-            return;
-        }
-        HashSet<NeighborSet> portNSSet = portNeighborSetMap.get(port);
-        if (portNSSet == null) {
-            /* Unknown Port  */
-            log.warn("addPortToGroups: Switch {} port {} is unknown or "
-                    + "there were no groups existing with the neighbor dpid"
-                    + "that it is reachable through this port",
-                    getStringId(), port);
-            return;
-        }
-        log.debug("addPortToGroups: Neighborsets that the port {} is part"
-                + "of on Switch {} are {}",
-                port, getStringId(), portNSSet);
-
-        Dpid neighborDpid = portToNeighbors.get(port);
-        for (NeighborSet ns : portNSSet) {
-            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
-            /* Find if this port is already part of any bucket
-             * in this group
-             * NOTE: This is needed because in some cases
-             * (such as for configured network nodes), both driver and
-             * application detect the network elements and creates the
-             * buckets in the same group. This check is to avoid
-             * duplicate bucket creation in such scenarios
-             */
-            List<BucketInfo> buckets = null;
-
-            if (portEcmpInfo != null) {
-                buckets = portEcmpInfo.buckets;
-                if (buckets == null) {
-                    buckets = new ArrayList<BucketInfo>();
-                    portEcmpInfo.buckets = buckets;
-                } else {
-                    Iterator<BucketInfo> it = buckets.iterator();
-                    boolean matchingBucketExist = false;
-                    while (it.hasNext()) {
-                        BucketInfo bucket = it.next();
-                        if (bucket.outport.equals(port)) {
-                            matchingBucketExist = true;
-                            break;
-                        }
-                    }
-                    if (matchingBucketExist) {
-                        log.warn("addPortToGroups: On Switch {} duplicate "
-                                + "portAdd is called for port {} with buckets {}",
-                                getStringId(), port, buckets);
-                        continue;
-                    }
-                }
-            }
-            else
-            {
-                /* The group is getting created for the first time
-                 * for this neighborset
-                 */
-                buckets = new ArrayList<BucketInfo>();
-            }
-            BucketInfo b = new BucketInfo(neighborDpid,
-                    MacAddress.of(srConfig.getRouterMac()),
-                    getNeighborRouterMacAddress(neighborDpid, ns.getOutPktType()),
-                    port,
-                    ns.getEdgeLabel(), true, -1);
-            buckets.add(b);
-            if (portEcmpInfo != null) {
-                log.debug("addPortToGroups: Modifying Group on Switch {} "
-                        + "and Neighborset {} with {}",
-                        getStringId(), ns, portEcmpInfo);
-                modifyEcmpGroup(portEcmpInfo);
-            }
-            else {
-                int groupId = groupid.incrementAndGet();
-                portEcmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
-                log.debug("addPortToGroups: Creating Group on Switch {} "
-                        + "and Neighborset {} with {}",
-                        getStringId(), ns, portEcmpInfo);
-                setEcmpGroup(portEcmpInfo);
-            }
-
-        }
-        return;
-    }
-
     @Override
     public OrderedCollection<PortChangeEvent> processOFPortStatus(OFPortStatus ps) {
         OrderedCollection<PortChangeEvent> events = super.processOFPortStatus(ps);
@@ -420,7 +286,10 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             break;
         case SET_TABLE_MISS_ENTRIES:
             driverState = DriverState.SET_TABLE_VLAN_TMAC;
-            getNetworkConfig();
+            boolean isConfigured = getNetworkConfig();
+            if (!isConfigured) {
+                return; // this will result in a handshake timeout
+            }
             populateTableVlan();
             populateTableTMac();
             sendHandshakeBarrier();
@@ -651,16 +520,20 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         write(tableMissEntry, null);
     }
 
-    private void getNetworkConfig() {
+    private boolean getNetworkConfig() {
         INetworkConfigService ncs = floodlightProvider.getNetworkConfigService();
         SwitchConfigStatus scs = ncs.checkSwitchConfig(new Dpid(getId()));
-        if (scs.getConfigState() == NetworkConfigState.ACCEPT_ADD) {
-            srConfig = (SegmentRouterConfig) scs.getSwitchConfig();
-            isEdgeRouter = srConfig.isEdgeRouter();
-        } else {
-            log.error("Switch not configured as Segment-Router");
+        if (scs.getConfigState() != NetworkConfigState.ACCEPT_ADD) {
+            log.error("Switch {} is not configured as Segment-Router.. aborting",
+                    getStringId());
+            return false;
         }
-
+        srConfig = (SegmentRouterConfig) scs.getSwitchConfig();
+        if (srConfig == null) {
+            log.error("Switch {} configuration is null.. aborting", getStringId());
+            return false;
+        }
+        isEdgeRouter = srConfig.isEdgeRouter();
         List<LinkConfig> linkConfigList = ncs.getConfiguredAllowedLinks();
         setNeighbors(linkConfigList);
 
@@ -668,6 +541,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             List<SwitchConfig> switchList = ncs.getConfiguredAllowedSwitches();
             getAllNodeSegmentIds(switchList);
         }
+        return true;
     }
 
     private void populateTableVlan() throws IOException {
@@ -2047,6 +1921,139 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     @Override
     public Map<String, String> getPublishAttributes() {
         return publishAttributes;
+    }
+
+    public void removePortFromGroups(PortNumber port) {
+        log.debug("removePortFromGroups: Remove port {} from Switch {}",
+                port, getStringId());
+        HashSet<NeighborSet> portNSSet = portNeighborSetMap.get(port);
+        if (portNSSet == null)
+        {
+            /* No Groups are created with this port yet */
+            log.warn("removePortFromGroups: No groups exist with Switch {} port {}",
+                    getStringId(), port);
+            return;
+        }
+        log.debug("removePortFromGroups: Neighborsets that the port {} is part"
+                + "of on Switch {} are {}",
+                port, getStringId(), portNSSet);
+
+        for (NeighborSet ns : portNSSet) {
+            /* Delete the first matched bucket */
+            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+            if (portEcmpInfo == null) {
+                /* No groups present for this neighbor set */
+                continue;
+            }
+            Iterator<BucketInfo> it = portEcmpInfo.buckets.iterator();
+            log.debug("removePortFromGroups: Group {} on Switch {} has {} buckets",
+                    portEcmpInfo.groupId, getStringId(),
+                    portEcmpInfo.buckets.size());
+            while (it.hasNext()) {
+                BucketInfo bucket = it.next();
+                if (bucket.outport.equals(port)) {
+                    it.remove();
+                }
+            }
+            log.debug("removePortFromGroups: Modifying Group on Switch {} "
+                    + "and Neighborset {} with {}",
+                    getStringId(), ns, portEcmpInfo);
+            modifyEcmpGroup(portEcmpInfo);
+        }
+        /* Don't delete the entry from portNeighborSetMap because
+          * when the port is up again this info is needed
+          */
+        return;
+    }
+
+    public void addPortToGroups(PortNumber port) {
+        log.debug("addPortToGroups: Add port {} to Switch {}",
+                port, getStringId());
+        if (!portEnabled((int) (port.value())))
+        {
+            log.warn("addPortToGroups: Switch {} port {} is not ACTIVE",
+                    getStringId(), port);
+            return;
+        }
+        HashSet<NeighborSet> portNSSet = portNeighborSetMap.get(port);
+        if (portNSSet == null) {
+            /* Unknown Port  */
+            log.warn("addPortToGroups: Switch {} port {} is unknown or "
+                    + "there were no groups existing with the neighbor dpid"
+                    + "that it is reachable through this port",
+                    getStringId(), port);
+            return;
+        }
+        log.debug("addPortToGroups: Neighborsets that the port {} is part"
+                + "of on Switch {} are {}",
+                port, getStringId(), portNSSet);
+
+        Dpid neighborDpid = portToNeighbors.get(port);
+        for (NeighborSet ns : portNSSet) {
+            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+            /* Find if this port is already part of any bucket
+             * in this group
+             * NOTE: This is needed because in some cases
+             * (such as for configured network nodes), both driver and
+             * application detect the network elements and creates the
+             * buckets in the same group. This check is to avoid
+             * duplicate bucket creation in such scenarios
+             */
+            List<BucketInfo> buckets = null;
+
+            if (portEcmpInfo != null) {
+                buckets = portEcmpInfo.buckets;
+                if (buckets == null) {
+                    buckets = new ArrayList<BucketInfo>();
+                    portEcmpInfo.buckets = buckets;
+                } else {
+                    Iterator<BucketInfo> it = buckets.iterator();
+                    boolean matchingBucketExist = false;
+                    while (it.hasNext()) {
+                        BucketInfo bucket = it.next();
+                        if (bucket.outport.equals(port)) {
+                            matchingBucketExist = true;
+                            break;
+                        }
+                    }
+                    if (matchingBucketExist) {
+                        log.warn("addPortToGroups: On Switch {} duplicate "
+                                + "portAdd is called for port {} with buckets {}",
+                                getStringId(), port, buckets);
+                        continue;
+                    }
+                }
+            }
+            else
+            {
+                /* The group is getting created for the first time
+                 * for this neighborset
+                 */
+                buckets = new ArrayList<BucketInfo>();
+            }
+            BucketInfo b = new BucketInfo(neighborDpid,
+                    MacAddress.of(srConfig.getRouterMac()),
+                    getNeighborRouterMacAddress(neighborDpid, ns.getOutPktType()),
+                    port,
+                    ns.getEdgeLabel(), true, -1);
+            buckets.add(b);
+            if (portEcmpInfo != null) {
+                log.debug("addPortToGroups: Modifying Group on Switch {} "
+                        + "and Neighborset {} with {}",
+                        getStringId(), ns, portEcmpInfo);
+                modifyEcmpGroup(portEcmpInfo);
+            }
+            else {
+                int groupId = groupid.incrementAndGet();
+                portEcmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
+                log.debug("addPortToGroups: Creating Group on Switch {} "
+                        + "and Neighborset {} with {}",
+                        getStringId(), ns, portEcmpInfo);
+                setEcmpGroup(portEcmpInfo);
+            }
+
+        }
+        return;
     }
 
     // *****************************
