@@ -12,9 +12,9 @@ import net.onrc.onos.core.matchaction.action.GroupAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.PopMplsAction;
 import net.onrc.onos.core.matchaction.action.SetDAAction;
-import net.onrc.onos.core.matchaction.action.SetMplsBosAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
+import net.onrc.onos.core.matchaction.match.MplsMatch;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.PortNumber;
@@ -142,13 +142,16 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
     protected void analyzeAndUpdateMplsActions(
             MatchActionOperationEntry mao) {
         MatchAction ma = mao.getTarget();
+        MplsMatch mplsm = (MplsMatch) ma.getMatch();
+
         int flowType = 0x00;
         PortNumber outPort = null;
+        if (mplsm.isBos()) {
+            flowType |= 0x01;
+        }
         for (Action action : ma.getActions()) {
             if (action instanceof PopMplsAction)
                 flowType |= 0x10;
-            else if (action instanceof SetMplsBosAction)
-                flowType |= 0x01;
             else if (action instanceof OutputAction)
                 outPort = ((OutputAction) action).getPortNumber();
         }
