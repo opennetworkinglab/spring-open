@@ -2548,7 +2548,7 @@ ROUTER_FORMAT = {
             },
         'fields': {
             'dpid'               : { 'verbose-name' : 'Router DPID',
-                                        #'formatter' : fmtcnv.replace_switch_with_alias
+                                    #'formatter' : fmtcnv.eprint_switch_and_alias,
                                         },
             'name'                 : { 'verbose-name' : 'Router Name',
                                        #'formatter' : fmtcnv.decode_port_counter

@@ -1722,6 +1722,7 @@ def command_query_rest(data,
                 print result
         else:
             result = []
+            import fmtcnv
             if (onos == 1) and (url == 'links'):
                 for entry in entries:
                     src = entry.get('src')
@@ -1731,10 +1732,10 @@ def command_query_rest(data,
                             if cmp(dst, tempEntry.get('src')) == 0:
                                 entries.remove(tempEntry)
                     result.append({
-                       'src-switch'          : entry['src']['dpid'],
+                       'src-switch'          : fmtcnv.print_switch_and_alias(entry['src']['dpid']),
                        'src-port'            : entry['src']['portNumber'],
                        'src-port-state'      : 0,
-                       'dst-switch'          : entry['dst']['dpid'],
+                       'dst-switch'          : fmtcnv.print_switch_and_alias(entry['dst']['dpid']),
                        'dst-port'            : entry['dst']['portNumber'],
                        'dst-port-state'      : 0,
                        'type'                : entry['type'],

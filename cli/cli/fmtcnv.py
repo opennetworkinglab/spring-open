@@ -16,6 +16,9 @@
 
 #  sdnsh - The Controller Shell
 
+import urllib
+import urllib2
+
 import base64
 import struct
 import time
@@ -26,6 +29,8 @@ from timesince import timesince, timesince_sec
 import doctest
 import traceback
 import utif
+import command
+import json
 
 
 # Timezone constants
@@ -50,6 +55,25 @@ PST = Pst()
 
 
 alias_dicts = {}
+
+
+def get_switches_names(object, data =None):
+    """
+    return the switches name (for ONOS)
+    """
+    switches_dpid_name ={}
+    url = "http://127.0.0.1:8000/rest/v1/switches"
+    result = urllib2.urlopen(url).read()
+    #result = command.sdnsh.store.rest_simple_request(query_url)
+    entries = result
+    entries = json.loads(result)
+    #eprint entries
+    for switch in entries:
+        #print switch
+        switches_dpid_name[switch.get("dpid")] = switch.get("stringAttributes").get('name')
+        #print switch.get("dpid")
+        #print switch.get("stringAttributes").get('name')
+    return switches_dpid_name
 
 
 def update_alias_dict(obj_type, dict):
@@ -999,7 +1023,9 @@ def print_host_attachment_point(i, data=None):
     if len(i) == 1:
         if_name = decode_openflow_port(i[0]['ingress-port'],
                                        data['attachment-points'][0])
-        return replace_switch_with_alias(i[0]['switch']) + '/' + if_name
+        dpid =  str(i[0]['switch'])
+        #print print_switch_and_alias(dpid, data)
+        return print_switch_and_alias(i[0]['switch']) + '/' + if_name
     if len(i) == 0:
         return ""
     first = i[0]
@@ -1125,7 +1151,12 @@ def print_switch_and_alias(i, data=None):
     dpid = str(i)
     alias = replace_switch_with_alias(i, data)
     if dpid == alias:
-        return dpid
+        dpid_name = get_switches_names(object, data)
+        if i in dpid_name:
+            alias =  dpid_name[i]
+            return dpid + ' (' + alias + ')'
+        else:
+            return dpid
     else:
         return dpid + ' (' + alias + ')'
 
