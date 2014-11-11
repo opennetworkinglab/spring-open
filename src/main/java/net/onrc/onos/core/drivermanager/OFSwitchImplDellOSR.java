@@ -146,12 +146,13 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
 
         int flowType = 0x00;
         PortNumber outPort = null;
-        if (mplsm.isBos()) {
-            flowType |= 0x01;
-        }
         for (Action action : ma.getActions()) {
-            if (action instanceof PopMplsAction)
+            if (action instanceof PopMplsAction) {
                 flowType |= 0x10;
+                if (mplsm.isBos()) {
+                    flowType |= 0x01;
+                }
+            }
             else if (action instanceof OutputAction)
                 outPort = ((OutputAction) action).getPortNumber();
         }
