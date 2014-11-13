@@ -190,7 +190,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
      */
     @Override
     public String toString() {
-        return "OFSwitchImplCPqD13 [" + ((channel != null)
+        return "OFSwitchImplSpringOpenTTP [" + ((channel != null)
                 ? channel.getRemoteAddress() : "?")
                 + " DPID[" + ((stringId != null) ? stringId : "?") + "]]";
     }

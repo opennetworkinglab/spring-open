@@ -35,6 +35,7 @@ import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.OFPacketOut;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
+import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmInPort;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
@@ -313,8 +314,11 @@ public class IcmpHandler {
                     }
                     if (sw13 instanceof OFSwitchImplDellOSR) {
                         MacAddress mplsDstMac =
-                                MacAddress.of(packet.getDestinationMAC().toLong()+1);
-                        OFAction setDAAction = factory.actions().setDlDst(mplsDstMac);
+                                MacAddress.of(packet.getDestinationMAC().toLong());
+                        OFOxmEthDst dmac = factory.oxms().ethDst(mplsDstMac);
+                        OFAction setDAAction = factory.actions().buildSetField()
+                                .setField(dmac).build();
+
                         actions.add(setDAAction);
                     }
 

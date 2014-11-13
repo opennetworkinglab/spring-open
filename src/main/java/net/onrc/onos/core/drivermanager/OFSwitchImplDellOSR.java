@@ -1,23 +1,8 @@
 package net.onrc.onos.core.drivermanager;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
-import net.floodlightcontroller.core.IOF13Switch.NeighborSet.groupPktType;
-import net.onrc.onos.core.matchaction.MatchAction;
-import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
-import net.onrc.onos.core.matchaction.action.Action;
-import net.onrc.onos.core.matchaction.action.GroupAction;
-import net.onrc.onos.core.matchaction.action.OutputAction;
-import net.onrc.onos.core.matchaction.action.PopMplsAction;
-import net.onrc.onos.core.matchaction.action.SetDAAction;
 import net.onrc.onos.core.matchaction.match.Ipv4Match;
 import net.onrc.onos.core.matchaction.match.Match;
-import net.onrc.onos.core.matchaction.match.MplsMatch;
-import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
-import net.onrc.onos.core.util.PortNumber;
 
 import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFFactory;
@@ -27,7 +12,6 @@ import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthType;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmIpv4DstMasked;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
-import org.projectfloodlight.openflow.types.MacAddress;
 
 /**
  * OFDescriptionStatistics Vendor (Manufacturer Desc.): Dell Make (Hardware
@@ -77,7 +61,8 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
         return oxmList;
     }
 
-    @Override
+
+    /*
     protected void setTableMissEntries() throws IOException {
         // set all table-miss-entries
         populateTableMissEntry(vlanTableId, true, false, false, -1);
@@ -88,7 +73,9 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
                 aclTableId);
         populateTableMissEntry(aclTableId, true, false, false, -1);
     }
+    */
 
+    /*
     protected MacAddress getNeighborRouterMacAddress(Dpid ndpid,
             groupPktType outPktType) {
         if (outPktType == groupPktType.MPLS_OUTGOING)
@@ -97,19 +84,23 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
             return super.getNeighborRouterMacAddress(ndpid,
                     groupPktType.IP_OUTGOING);
     }
+    */
     /* Dell Open Segment Router specific Implementation .
      * Gets the specified Router's MAC address to be used for MPLS flows
      * For Dell OSR, the MPLS MAC is IP MAC + 1
      */
-    @Override
+    /*
     public MacAddress getRouterMPLSMac(Dpid dpid) {
-        return MacAddress.of(super.getRouterIPMac(dpid).getLong() + 1);
+        //return MacAddress.of(super.getRouterIPMac(dpid).getLong() + 1);
+        return MacAddress.of(super.getRouterIPMac(dpid).getLong());
     }
+    */
 
+    /*
     protected void createGroupsAtTransitRouter(Set<Dpid> dpids) {
-        /* Create all possible Neighbor sets from this router
-         * NOTE: Avoid any pairings of edge routers only
-         */
+        // Create all possible Neighbor sets from this router
+        //NOTE: Avoid any pairings of edge routers only
+
         Set<Set<Dpid>> sets = getPowerSetOfNeighbors(dpids);
         sets = filterEdgeRouterOnlyPairings(sets);
         log.debug("createGroupsAtTransitRouter: The size of neighbor powerset "
@@ -138,7 +129,9 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
             }
         }
     }
+   */
 
+    /*
     protected void analyzeAndUpdateMplsActions(
             MatchActionOperationEntry mao) {
         MatchAction ma = mao.getTarget();
@@ -177,4 +170,5 @@ public class OFSwitchImplDellOSR extends OFSwitchImplSpringOpenTTP {
             }
         }
     }
+    */
 }

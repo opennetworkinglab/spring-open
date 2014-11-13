@@ -119,6 +119,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
     private HashMap<String, HashMap<Integer, Integer>> adjcencyGroupIdTable;
 
+    private int operationMode = 0;
 
     // Flag whether transit router supports ECMP or not
     // private boolean supportTransitECMP = true;
@@ -262,8 +263,21 @@ public class SegmentRoutingManager implements IFloodlightModule,
      */
     public void topologyEvents(TopologyEvents topologyEvents)
     {
-        topologyEventQueue.add(topologyEvents);
-        discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
+
+        if (operationMode == 0) {
+            discoveryTask.reschedule(20, TimeUnit.SECONDS);
+            operationMode = 1; // Wait until all switches are up ..
+        }
+        else if (operationMode == 1){ // waiting for all switches to be up
+            // Do nothing
+        }
+        else if (operationMode == 2) { // all switches are up and we need to handle events quickly.
+            topologyEventQueue.add(topologyEvents);
+            discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
+        }
+
+        //discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
+        //log.debug("A task is scheduled to handle events {}", topologyEvents);
     }
 
     /**
@@ -271,6 +285,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      */
     private void handleTopologyChangeEvents() {
+        operationMode = 2;  // all switches are up now..
+
+        if (topologyEventQueue.isEmpty()) {
+            populateEcmpRoutingRules(false);
+            return;
+        }
+
         numOfEventProcess ++;
 
         Collection<LinkData> linkEntriesAddedAll = new ArrayList<LinkData>();
@@ -714,7 +735,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         }
         if (dstDpid == null) {
-            log.debug("Cannot find the destination switch for the adjacency ID {}", adjId);
+            //log.debug("Cannot find the destination switch for the adjacency ID {}", adjId);
             return;
         }
         Switch dstSw = mutableTopology.getSwitch(dstDpid);
@@ -1064,11 +1085,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
         //If the next hop is the destination router, do PHP
         if (fwdSws.size() == 1 && mplsLabel.equals(getMplsLabel(fwdSw1))) {
             maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, true));
-            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, false));
+            //maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, false));
         }
         else {
             maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, true));
-            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, false));
+            //maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, false));
         }
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 sw.getDpid().value());
@@ -1412,7 +1433,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         for (OFBarrierReplyFuture replyFuture: replies) {
             OFBarrierReply br = null;
             try {
-                br = replyFuture.get(2, TimeUnit.SECONDS);
+                br = replyFuture.get(5, TimeUnit.SECONDS);
             } catch (TimeoutException | InterruptedException | ExecutionException e) {
                 // XXX for some reason these exceptions are not being thrown
             }
@@ -1477,7 +1498,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private MatchActionOperationEntry buildMAEntry(Switch sw,
             String mplsLabel, List<String> fwdSws, boolean php,
             boolean Bos) {
+        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                sw.getDpid().value());
+        if (sw13 == null) {
+            return null;
+        }
         MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), Bos);
+        /*
+        if (sw13 instanceof OFSwitchImplDellOSR && !Bos) {
+            mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel) * 10, Bos);
+        }
+        else {
+            mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), Bos);
+        }
+        */
         List<Action> actions = new ArrayList<Action>();
 
         PopMplsAction popActionBos = new PopMplsAction(EthType.IPv4);
@@ -1501,8 +1535,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(decMplsTtlAction);
         }
 
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                sw.getDpid().value());
         if ((sw13 instanceof OFSwitchImplDellOSR) && isTransitRouter(sw) && !php) {
             PortNumber port = pickOnePort(sw, fwdSws);
             if (port == null) {
