@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.floodlightcontroller.core.web.OFFlowStatsEntryMod;
+import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.drivermanager.OFSwitchImplSpringOpenTTP;
 import net.onrc.onos.core.packet.IPv4;
 
@@ -56,12 +57,25 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         while(match.hasNext()){
             OFOxm<?> matchGeneric = match.next();
             if (matchGeneric.getMatchField().id == MatchFields.IPV4_DST){
-                jGen.writeStringField("networkDestination", matchGeneric.getValue().toString()
-                        +"/"
-                        +(matchGeneric.isMasked() ?
-                                OFFlowStatsEntryModSerializer.covertToMask(
-                                        IPv4.toIPv4Address(
-                                                matchGeneric.getMask().toString())):"32"));
+                /*
+                 * Current Implementation for mask sof CPQD switches and DELL is opposite
+                 */
+                if(sw instanceof  OFSwitchImplDellOSR){
+                    jGen.writeStringField("networkDestination", matchGeneric.getValue().toString()
+                            +"/"
+                            +(matchGeneric.isMasked() ?
+                                    OFFlowStatsEntryModSerializer.covertToMask(
+                                            IPv4.toIPv4Address(
+                                                    matchGeneric.getMask().toString())):"0"));
+                }
+                else if(sw instanceof OFSwitchImplSpringOpenTTP){
+                    jGen.writeStringField("networkDestination", matchGeneric.getValue().toString()
+                            +"/"
+                            +(matchGeneric.isMasked() ?
+                                    (32 -OFFlowStatsEntryModSerializer.covertToMask(
+                                            IPv4.toIPv4Address(
+                                                    matchGeneric.getMask().toString()))):"32"));
+                }
             }
             else if (matchGeneric.getMatchField().id == MatchFields.IPV4_SRC){
                 jGen.writeStringField("networkSource", matchGeneric.getValue().toString()
@@ -69,7 +83,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                         +(matchGeneric.isMasked() ?
                                 OFFlowStatsEntryModSerializer.covertToMask(
                                         IPv4.toIPv4Address(
-                                                matchGeneric.getMask().toString())):"32"));
+                                                matchGeneric.getMask().toString())):"0"));
             }
             else if (matchGeneric.getMatchField().id == MatchFields.ETH_DST){
                 jGen.writeStringField("dataLayerDestination", matchGeneric.getValue().toString());
@@ -216,7 +230,11 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         x = (x + (x >>> 4)) & 0x0F0F0F0F;
         x = x + (x >>> 8);
         x = x + (x >>> 16);
-        return 32 - (x & 0x0000003F);
+        /*
+         * For current implementation of CPQD we have to return
+         * 32 - (x & 0x0000003F) 
+         */
+        return (x & 0x0000003F);
     } 
 
 }
