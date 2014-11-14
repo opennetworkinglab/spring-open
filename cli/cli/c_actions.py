@@ -2483,6 +2483,16 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
                             return c
                 return 0
             entries = sorted(entries,  cmp=sort_cmp, reverse=reverse )
+        if 'realtimestats' in data and data['realtimestats'] == 'group':
+            repeatGroupId = -1
+            length = len(entries)
+            for i in range(0, length):
+                entry = entries[i]
+                groupId = entry.get('groupid')
+                if groupId == repeatGroupId:
+                    entries[i]['groupid'] = ''
+                else:
+                    repeatGroupId = groupId
 
         display = sdnsh.pp.format_table(entries, table_format % data, detail)
     else:
