@@ -3,31 +3,35 @@ package net.floodlightcontroller.core.web.serializers;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import net.floodlightcontroller.core.web.OFFlowStatsEntryMod;
 import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.drivermanager.OFSwitchImplSpringOpenTTP;
 import net.onrc.onos.core.packet.IPv4;
 
-import org.projectfloodlight.openflow.protocol.action.*;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 import org.projectfloodlight.openflow.protocol.OFActionType;
-import org.projectfloodlight.openflow.protocol.OFFlowModFlags;
 import org.projectfloodlight.openflow.protocol.OFFlowStatsEntry;
 import org.projectfloodlight.openflow.protocol.OFInstructionType;
 import org.projectfloodlight.openflow.protocol.OFMatchV3;
 import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
-import org.projectfloodlight.openflow.protocol.instruction.*;
+import org.projectfloodlight.openflow.protocol.action.OFActionGroup;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.action.OFActionPopMpls;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetField;
+import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
+import org.projectfloodlight.openflow.protocol.instruction.OFInstructionApplyActions;
+import org.projectfloodlight.openflow.protocol.instruction.OFInstructionGotoTable;
+import org.projectfloodlight.openflow.protocol.instruction.OFInstructionWriteActions;
 import org.projectfloodlight.openflow.protocol.match.MatchFields;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxm;
 
 public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEntryMod> {
-    
+
     protected OFFlowStatsEntryModSerializer(){
         super(OFFlowStatsEntryMod.class);
     }
@@ -39,7 +43,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         OFFlowStatsEntry flowStatsEntry = FlowStatsEntryMod.getFlowStatsEntry();
         OFOxmList matches = ((OFMatchV3)flowStatsEntry.getMatch()).getOxmList();
         OFSwitchImplSpringOpenTTP sw = (OFSwitchImplSpringOpenTTP)FlowStatsEntryMod.getSwitch();
-        
+
         List<OFInstruction> instructions = flowStatsEntry.getInstructions();
         jGen.writeStartObject();
         jGen.writeNumberField("byteCount", flowStatsEntry.getByteCount().getValue());
@@ -66,7 +70,8 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                             +(matchGeneric.isMasked() ?
                                     OFFlowStatsEntryModSerializer.covertToMask(
                                             IPv4.toIPv4Address(
-                                                    matchGeneric.getMask().toString())):"0"));
+                                                    matchGeneric.getMask().toString()))
+                                    : "32"));
                 }
                 else if(sw instanceof OFSwitchImplSpringOpenTTP){
                     jGen.writeStringField("networkDestination", matchGeneric.getValue().toString()
@@ -107,7 +112,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                 jGen.writeNumberField("mplsLabel", Integer.decode(matchGeneric.getValue().toString()));
             }
             else if (matchGeneric.getMatchField().id == MatchFields.IP_PROTO){
-                jGen.writeNumberField("networkProtocol", Integer.parseInt(matchGeneric.getValue().toString())); 
+                jGen.writeNumberField("networkProtocol", Integer.parseInt(matchGeneric.getValue().toString()));
             }
             //TODO: Ask Saurav about the implementation of tcp and udp.
             else if (matchGeneric.getMatchField().id == MatchFields.TCP_DST
@@ -120,7 +125,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
             }
         }
         jGen.writeEndObject();
-        
+
         jGen.writeFieldName("instructions");
         jGen.writeStartArray();
         jGen.writeStartObject();
@@ -140,7 +145,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                 continue;
             }
             else if(instruction.getType().equals(OFInstructionType.GOTO_TABLE)){
-                
+
                 jGen.writeFieldName(instruction.getType().name());
                 jGen.writeStartObject();
                 if(((OFInstructionGotoTable)instruction).getTableId().getValue()==
@@ -232,9 +237,9 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
         x = x + (x >>> 16);
         /*
          * For current implementation of CPQD we have to return
-         * 32 - (x & 0x0000003F) 
+         * 32 - (x & 0x0000003F)
          */
         return (x & 0x0000003F);
-    } 
+    }
 
 }
