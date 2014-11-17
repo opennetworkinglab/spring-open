@@ -329,14 +329,17 @@ public class SegmentRoutingManager implements IFloodlightModule,
             numOfEvents++;
 
             if (!portEntriesRemoved.isEmpty()) {
+                log.debug("handleTopologyChangeEvents: portEntriesRemoved are {}",portEntriesRemoved);
                 processPortRemoval(portEntriesRemoved);
             }
 
             if (!linkEntriesRemoved.isEmpty()) {
+                log.debug("handleTopologyChangeEvents: linkEntriesRemoved are {}",linkEntriesRemoved);
                 processLinkRemoval(linkEntriesRemoved);
             }
 
             if (!switchRemoved.isEmpty()) {
+                log.debug("handleTopologyChangeEvents: switchRemoved are {}",switchRemoved);
                 processSwitchRemoved(switchRemoved);
             }
 
@@ -345,14 +348,17 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
 
             if (!linkEntriesAdded.isEmpty()) {
+                log.debug("handleTopologyChangeEvents: linkEntriesAdded are {}",linkEntriesAdded);
                 processLinkAdd(linkEntriesAdded, false);
             }
 
             if (!portEntriesAdded.isEmpty()) {
+                log.debug("handleTopologyChangeEvents: portEntriesAdded are {}",portEntriesAdded);
                 processPortAdd(portEntriesAdded);
             }
 
             if (!switchAdded.isEmpty()) {
+                log.debug("handleTopologyChangeEvents: switchAdded are {}",switchAdded);
                 processSwitchAdd(switchAdded);
             }
 
@@ -1433,7 +1439,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         for (OFBarrierReplyFuture replyFuture: replies) {
             OFBarrierReply br = null;
             try {
-                br = replyFuture.get(5, TimeUnit.SECONDS);
+                br = replyFuture.get(2, TimeUnit.SECONDS);
             } catch (TimeoutException | InterruptedException | ExecutionException e) {
                 // XXX for some reason these exceptions are not being thrown
             }
@@ -1504,14 +1510,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
             return null;
         }
         MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), Bos);
-        /*
-        if (sw13 instanceof OFSwitchImplDellOSR && !Bos) {
-            mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel) * 10, Bos);
-        }
-        else {
-            mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), Bos);
-        }
-        */
         List<Action> actions = new ArrayList<Action>();
 
         PopMplsAction popActionBos = new PopMplsAction(EthType.IPv4);
