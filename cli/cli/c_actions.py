@@ -2395,60 +2395,82 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
             if groupDescEntry is '':
                 print "command_display_rest: missing group desc for group id %s" % (groupId)
                 continue
-            for bucketId in range(len(groupStatEntry['bucketStats'])):
-                setsrcmac = ''
-                if 'SET_DL_SRC' in groupDescEntry['bucketsActions'][bucketId]:
-                    setsrcmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_SRC']
-                setdstmac = ''
-                if 'SET_DL_DST' in groupDescEntry['bucketsActions'][bucketId]:
-                    setdstmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_DST']
-                pushmpls = ''
-                if 'PUSH_MPLS_LABEL' in groupDescEntry['bucketsActions'][bucketId]:
-                    pushmpls = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_LABEL']
-                popmpls = ''
-                if 'POP_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
-                    popmpls = groupDescEntry['bucketsActions'][bucketId]['POP_MPLS']
-                outport = ''
-                if 'OUTPUT' in groupDescEntry['bucketsActions'][bucketId]:
-                    outport = groupDescEntry['bucketsActions'][bucketId]['OUTPUT']
-                goToGroup = ''
-                if 'goToGroup' in groupDescEntry['bucketsActions'][bucketId]:
-                    goToGroup = groupDescEntry['bucketsActions'][bucketId]['goToGroup']
-                setBos= ''
-                if 'PUSH_MPLS_BOS' in groupDescEntry['bucketsActions'][bucketId]:
-                    setBos = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_BOS']
-                COPY_TTL_IN= ''
-                if 'COPY_TTL_IN' in groupDescEntry['bucketsActions'][bucketId]:
-                    COPY_TTL_IN = groupDescEntry['bucketsActions'][bucketId]['COPY_TTL_IN']
-                COPY_TTL_OUT= ''
-                if 'COPY_TTL_OUT' in groupDescEntry['bucketsActions'][bucketId]:
-                    COPY_TTL_OUT = groupDescEntry['bucketsActions'][bucketId]['COPY_TTL_OUT']
-                DEC_MPLS_TTL= ''
-                if 'DEC_MPLS_TTL' in groupDescEntry['bucketsActions'][bucketId]:
-                    DEC_MPLS_TTL = groupDescEntry['bucketsActions'][bucketId]['DEC_MPLS_TTL']
-                DEC_NW_TTL= ''
-                if 'DEC_NW_TTL' in groupDescEntry['bucketsActions'][bucketId]:
-                    DEC_NW_TTL = groupDescEntry['bucketsActions'][bucketId]['DEC_NW_TTL']
-
+            
+            if (len(groupStatEntry['bucketStats']) > 0):
+                for bucketId in range(len(groupStatEntry['bucketStats'])):
+                    setsrcmac = ''
+                    if 'SET_DL_SRC' in groupDescEntry['bucketsActions'][bucketId]:
+                        setsrcmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_SRC']
+                    setdstmac = ''
+                    if 'SET_DL_DST' in groupDescEntry['bucketsActions'][bucketId]:
+                        setdstmac = groupDescEntry['bucketsActions'][bucketId]['SET_DL_DST']
+                    pushmpls = ''
+                    if 'PUSH_MPLS_LABEL' in groupDescEntry['bucketsActions'][bucketId]:
+                        pushmpls = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_LABEL']
+                    popmpls = ''
+                    if 'POP_MPLS' in groupDescEntry['bucketsActions'][bucketId]:
+                        popmpls = groupDescEntry['bucketsActions'][bucketId]['POP_MPLS']
+                    outport = ''
+                    if 'OUTPUT' in groupDescEntry['bucketsActions'][bucketId]:
+                        outport = groupDescEntry['bucketsActions'][bucketId]['OUTPUT']
+                    goToGroup = ''
+                    if 'goToGroup' in groupDescEntry['bucketsActions'][bucketId]:
+                        goToGroup = groupDescEntry['bucketsActions'][bucketId]['goToGroup']
+                    setBos= ''
+                    if 'PUSH_MPLS_BOS' in groupDescEntry['bucketsActions'][bucketId]:
+                        setBos = groupDescEntry['bucketsActions'][bucketId]['PUSH_MPLS_BOS']
+                    COPY_TTL_IN= ''
+                    if 'COPY_TTL_IN' in groupDescEntry['bucketsActions'][bucketId]:
+                        COPY_TTL_IN = groupDescEntry['bucketsActions'][bucketId]['COPY_TTL_IN']
+                    COPY_TTL_OUT= ''
+                    if 'COPY_TTL_OUT' in groupDescEntry['bucketsActions'][bucketId]:
+                        COPY_TTL_OUT = groupDescEntry['bucketsActions'][bucketId]['COPY_TTL_OUT']
+                    DEC_MPLS_TTL= ''
+                    if 'DEC_MPLS_TTL' in groupDescEntry['bucketsActions'][bucketId]:
+                        DEC_MPLS_TTL = groupDescEntry['bucketsActions'][bucketId]['DEC_MPLS_TTL']
+                    DEC_NW_TTL= ''
+                    if 'DEC_NW_TTL' in groupDescEntry['bucketsActions'][bucketId]:
+                        DEC_NW_TTL = groupDescEntry['bucketsActions'][bucketId]['DEC_NW_TTL']
+    
+                    combResult.append({
+                           'groupid'       : groupId,
+                           'grouptype'     : groupDescEntry['groupType'],
+                           'totalpktcnt'   : groupStatEntry['packetCount'],
+                           'totalbytecnt'  : groupStatEntry['byteCount'],
+                           'bucketpktcnt'  : groupStatEntry['bucketStats'][bucketId]['pktCount'],
+                           'bucketbytecnt' : groupStatEntry['bucketStats'][bucketId]['byteCount'],
+                           'setsrcmac'     : setsrcmac,
+                           'setdstmac'     : setdstmac,
+                           'pushMplsLabel' : pushmpls,
+                           'popmpls'       : popmpls,
+                           'outport'       : outport,
+                           'goToGroup'     : goToGroup,
+                           'setBos'        : setBos,
+                           'COPY_TTL_IN'   : COPY_TTL_IN,
+                           'COPY_TTL_OUT'  : COPY_TTL_OUT,
+                           'DEC_MPLS_TTL'  : DEC_MPLS_TTL,
+                           'DEC_NW_TTL'    : DEC_NW_TTL,
+                        })
+            else:
                 combResult.append({
-                       'groupid'       : groupId,
-                       'grouptype'     : groupDescEntry['groupType'],
-                       'totalpktcnt'   : groupStatEntry['packetCount'],
-                       'totalbytecnt'  : groupStatEntry['byteCount'],
-                       'bucketpktcnt'  : groupStatEntry['bucketStats'][bucketId]['pktCount'],
-                       'bucketbytecnt' : groupStatEntry['bucketStats'][bucketId]['byteCount'],
-                       'setsrcmac'     : setsrcmac,
-                       'setdstmac'     : setdstmac,
-                       'pushMplsLabel' : pushmpls,
-                       'popmpls'       : popmpls,
-                       'outport'       : outport,
-                       'goToGroup'     : goToGroup,
-                       'setBos'        : setBos,
-                       'COPY_TTL_IN'   : COPY_TTL_IN,
-                       'COPY_TTL_OUT'  : COPY_TTL_OUT,
-                       'DEC_MPLS_TTL'  : DEC_MPLS_TTL,
-                       'DEC_NW_TTL'    : DEC_NW_TTL,
-                    })
+                           'groupid'       : groupId,
+                           'grouptype'     : groupDescEntry['groupType'],
+                           'totalpktcnt'   : groupStatEntry['packetCount'],
+                           'totalbytecnt'  : groupStatEntry['byteCount'],
+                           'bucketpktcnt'  : '',
+                           'bucketbytecnt' : '',
+                           'setsrcmac'     : '',
+                           'setdstmac'     : '',
+                           'pushMplsLabel' : '',
+                           'popmpls'       : '',
+                           'outport'       : '',
+                           'goToGroup'     : '',
+                           'setBos'        : '',
+                           'COPY_TTL_IN'   : '',
+                           'COPY_TTL_OUT'  : '',
+                           'DEC_MPLS_TTL'  : '',
+                           'DEC_NW_TTL'    : '',
+                        })
         entries = combResult
     #
     if format:

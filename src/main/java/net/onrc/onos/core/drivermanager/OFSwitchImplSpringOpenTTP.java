@@ -62,6 +62,7 @@ import net.onrc.onos.core.util.IPv4Net;
 import net.onrc.onos.core.util.PortNumber;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFAsyncGetReply;
 import org.projectfloodlight.openflow.protocol.OFBarrierRequest;
 import org.projectfloodlight.openflow.protocol.OFBucket;
@@ -69,6 +70,7 @@ import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFErrorMsg;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
+import org.projectfloodlight.openflow.protocol.OFGroupDescStatsEntry;
 import org.projectfloodlight.openflow.protocol.OFGroupDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFGroupFeaturesStatsReply;
 import org.projectfloodlight.openflow.protocol.OFGroupType;
@@ -79,6 +81,9 @@ import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFPortStatus;
 import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionGroup;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetField;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
 import org.projectfloodlight.openflow.protocol.match.Match.Builder;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
@@ -103,6 +108,8 @@ import org.projectfloodlight.openflow.types.TableId;
 import org.projectfloodlight.openflow.types.TransportPort;
 import org.projectfloodlight.openflow.types.U32;
 import org.projectfloodlight.openflow.util.HexString;
+
+import com.google.common.primitives.Longs;
 
 /**
  * OFDescriptionStatistics Vendor (Manufacturer Desc.): Stanford University,
@@ -148,9 +155,11 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     protected ConcurrentMap<PortNumber, Dpid> portToNeighbors;
     private List<Integer> segmentIds;
     private boolean isEdgeRouter;
-    private ConcurrentMap<NeighborSet, EcmpInfo> ecmpGroups;
+    private ConcurrentMap<NeighborSet, EcmpInfo> nsToGroups;
     private ConcurrentMap<Integer, EcmpInfo> userDefinedGroups;
     private ConcurrentMap<PortNumber, HashSet<NeighborSet>> portNeighborSetMap;
+    private ConcurrentMap<List<BucketInfo>, List<Integer>> auditBucketToGroupIds;
+    private ConcurrentMap<Integer, EcmpInfo> ecmpGroups;
     private AtomicInteger groupid;
     private Map<String, String> publishAttributes;
 
@@ -171,7 +180,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         setSwitchDescription(desc);
         neighbors = new ConcurrentHashMap<Dpid, Set<PortNumber>>();
         portToNeighbors = new ConcurrentHashMap<PortNumber, Dpid>();
-        ecmpGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
+        nsToGroups = new ConcurrentHashMap<NeighborSet, EcmpInfo>();
+        ecmpGroups = new ConcurrentHashMap<Integer, EcmpInfo>();
         userDefinedGroups = new ConcurrentHashMap<Integer, EcmpInfo>();
         portNeighborSetMap =
                 new ConcurrentHashMap<PortNumber, HashSet<NeighborSet>>();
@@ -267,6 +277,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         INIT,
         SET_TABLE_MISS_ENTRIES,
         SET_TABLE_VLAN_TMAC,
+        AUDIT_GROUPS,
         SET_GROUPS,
         VERIFY_GROUPS,
         SET_ADJACENCY_LABELS,
@@ -295,6 +306,10 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             sendHandshakeBarrier();
             break;
         case SET_TABLE_VLAN_TMAC:
+            driverState = DriverState.AUDIT_GROUPS;
+            verifyGroups();
+            break;
+        case AUDIT_GROUPS:
             driverState = DriverState.SET_GROUPS;
             createGroups();
             sendHandshakeBarrier();
@@ -404,9 +419,81 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
     }
 
+    private BucketInfo getDriverBucketFromOFBucket(OFBucket bucket) {
+        List<OFAction> actions = bucket.getActions();
+        int bucketPort = -1;
+        int bucketLabel = -1;
+        int bucketToGroup = -1;
+        MacAddress dlSrc = null;
+        MacAddress dlDst = null;
+        for (OFAction action : actions) {
+            if (action.getType().compareTo(OFActionType.OUTPUT) == 0) {
+                bucketPort = ((OFActionOutput) action).getPort()
+                        .getPortNumber();
+            }
+            else if (action.getType().compareTo(OFActionType.GROUP) == 0) {
+                bucketToGroup = ((OFActionGroup) action).getGroup()
+                        .getGroupNumber();
+            }
+            else if (action.getType().compareTo(OFActionType.SET_FIELD) == 0) {
+                if (((OFActionSetField) action).getField().toString()
+                        .contains("OFOxmMplsLabelVer13")) {
+                    bucketLabel = Integer.decode(
+                            ((OFActionSetField) action).
+                                    getField().getValue().toString());
+                }
+                else if (((OFActionSetField) action).getField().toString()
+                        .contains("OFOxmEthSrcVer13")) {
+                    dlSrc = MacAddress.of(((OFActionSetField) action)
+                            .getField().getValue().toString());
+                }
+                else if (((OFActionSetField) action).getField().toString()
+                        .contains("OFOxmEthDstVer13")) {
+                    dlDst = MacAddress.of(((OFActionSetField) action)
+                            .getField().getValue().toString());
+                }
+            }
+        }
+
+        if ((bucketPort == -1) && (bucketLabel == -1)
+                && (bucketToGroup == -1)) {
+            log.warn("processGroupDesc: A group with no port, no label, no to group");
+        }
+        BucketInfo driverBucket = new BucketInfo(null, dlSrc, dlDst,
+                PortNumber.uint32(bucketPort), bucketLabel, true,
+                bucketToGroup);
+
+        return driverBucket;
+    }
+
     private void processGroupDesc(OFGroupDescStatsReply gdsr) {
-        log.info("Sw: {} Group Desc {}", getStringId(), gdsr);
-        // TODO -- actually do verification
+        log.info("Sw: {} Group Desc {} in driverState {} ", getStringId(), gdsr,
+                driverState);
+
+        if (driverState == DriverState.AUDIT_GROUPS)
+        {
+            auditBucketToGroupIds = new ConcurrentHashMap<List<BucketInfo>, List<Integer>>();
+            for (OFGroupDescStatsEntry entry : gdsr.getEntries()) {
+                int groupId = entry.getGroup().getGroupNumber();
+                OFGroupType groupType = entry.getGroupType();
+                List<OFBucket> buckets = entry.getBuckets();
+                List<BucketInfo> driverBuckets = new ArrayList<BucketInfo>();
+                for (OFBucket bucket : buckets) {
+                    driverBuckets.add(getDriverBucketFromOFBucket(bucket));
+                }
+                List<Integer> groupIds = auditBucketToGroupIds.get(driverBuckets);
+                if (groupIds == null)
+                    groupIds = new ArrayList<Integer>();
+                groupIds.add(groupId);
+                auditBucketToGroupIds.put(driverBuckets, groupIds);
+                ecmpGroups.put(groupId, new EcmpInfo(groupId, groupType, driverBuckets));
+            }
+            log.debug("processGroupDesc: Groups that are present in "
+                    + "switch {} are {} ", getStringId(), ecmpGroups);
+        }
+        else {
+            // TODO -- actually do verification
+        }
         try {
             nextDriverState();
         } catch (IOException e) {
@@ -829,13 +916,13 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                     "createGroupForANeighborSet: No group created "
                             + "in sw {} for neighbor set {} "
                             + "as there are no buckets",
-                    groupId, getStringId(), ns);
+                    getStringId(), ns);
         }
         else {
-            groupId = groupid.incrementAndGet();
+            groupId = getNextFreeGroupId();
             EcmpInfo ecmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
             setEcmpGroup(ecmpInfo);
-            ecmpGroups.put(ns, ecmpInfo);
+            nsToGroups.put(ns, ecmpInfo);
             log.debug(
                     "createGroupForANeighborSet: Creating ecmp group {} in sw {} "
                             + "for neighbor set {} with: {}",
@@ -897,6 +984,16 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         return nsSegmentIds;
     }
 
+    private int getNextFreeGroupId() {
+        int groupId = groupid.incrementAndGet();
+
+        while (ecmpGroups.get(groupId) != null) {
+            groupId = groupid.incrementAndGet();
+        }
+
+        return groupId;
+    }
+
     protected void createGroupsAtEdgeRouter(Set<Dpid> dpids) {
         /* Create all possible Neighbor sets from this router
          */
@@ -925,11 +1022,84 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
         for (NeighborSet ns : nsSet) {
             updatePortNeighborSetMap(ns);
-            int gid = createGroupForANeighborSet(ns);
-            if (gid == -1) {
-                log.warn("Create Group failed with -1");
+            // synchronizeGroupsBwControllerAndSwitch();
+
+            /* Create the bucket array from the neighbor set */
+            List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+            for (Dpid d : ns.getDpids()) {
+                for (PortNumber sp : neighbors.get(d)) {
+                    if (portEnabled((int) sp.value())) {
+                        BucketInfo b = new BucketInfo(d,
+                                MacAddress.of(srConfig.getRouterMac()),
+                                getNeighborRouterMacAddress(d, ns.getOutPktType()),
+                                sp, ns.getEdgeLabel(), true, -1);
+                        buckets.add(b);
+                    }
+                    else
+                    {
+                        log.debug("createGroupsAtEdgeRouter: Sw {} "
+                                + "Port {} to Neighbor {} is not "
+                                + "enabled and hence not including in buckets",
+                                getStringId(), sp, d);
+                    }
+                }
+            }
+
+            /* Check if switch already had a group with the same list of
+             * buckets. If so, knock off that group from auditBucketToGroupIds
+             * database and insert into nsToGroups database
+             */
+            log.debug(
+                    "createGroupsAtEdgeRouter: Sw {} auditBucketToGroupIds {} ",
+                    getStringId(), auditBucketToGroupIds);
+            log.debug(
+                    "createGroupsAtEdgeRouter: Sw {} Search buckets {} in auditBucketToGroupIds",
+                    getStringId(), buckets);
+            List<Integer> groupIds = auditBucketToGroupIds.get(buckets);
+            int groupId;
+            if (groupIds != null) {
+                /* Pop the top most group Ids for this list of buckets */
+                groupId = groupIds.get(0);
+                groupIds.remove(0);
+                if (groupIds.isEmpty())
+                    auditBucketToGroupIds.remove(buckets);
+                EcmpInfo ecmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
+                nsToGroups.put(ns, ecmpInfo);
+                log.debug(
+                        "createGroupsAtEdgeRouter: No group created in sw {} "
+                                + "for neighborset {} as group already "
+                                + "exists with groupId {}",
+                        getStringId(), ns, groupId);
+            }
+            else
+            {
+                if (buckets.isEmpty()) {
+                    log.warn(
+                            "createGroupsAtEdgeRouter: No group created "
+                                    + "in sw {} for neighbor set {} "
+                                    + "as there are no buckets",
+                            getStringId(), ns);
+                }
+                else {
+                    groupId = getNextFreeGroupId();
+                    EcmpInfo ecmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
+                    setEcmpGroup(ecmpInfo);
+                    nsToGroups.put(ns, ecmpInfo);
+                    ecmpGroups.put(groupId, ecmpInfo);
+                    log.debug(
+                            "createGroupsAtEdgeRouter: Creating ecmp group {} in sw {} "
+                                    + "for neighbor set {} with: {}",
+                            groupId, getStringId(), ns, ecmpInfo);
+                }
             }
         }
+
+        /* Handle rest of the entries in the auditBucketToGroupIds
+         * (if any left over) NOTE: These may be user defined groups
+         * or run time created groups
+         */
+        auditBucketToGroupIds.
+        for
     }
 
     protected void createGroupsAtTransitRouter(Set<Dpid> dpids) {
@@ -955,9 +1125,62 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
         for (NeighborSet ns : nsSet) {
             updatePortNeighborSetMap(ns);
-            int gid = createGroupForANeighborSet(ns);
-            if (gid == -1) {
-                log.warn("Create Group failed with -1");
+            // synchronizeGroupsBwControllerAndSwitch();
+
+            /* Create the bucket array from the neighbor set */
+            List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+            for (Dpid d : ns.getDpids()) {
+                for (PortNumber sp : neighbors.get(d)) {
+                    if (portEnabled((int) sp.value())) {
+                        BucketInfo b = new BucketInfo(d,
+                                MacAddress.of(srConfig.getRouterMac()),
+                                getNeighborRouterMacAddress(d, ns.getOutPktType()),
+                                sp, ns.getEdgeLabel(), true, -1);
+                        buckets.add(b);
+                    }
+                }
+            }
+
+            /* Check if switch already had a group with the same list of
+             * buckets. If so, knock off that group from auditBucketToGroupIds
+             * database and insert into nsToGroups database
+             */
+            List<Integer> groupIds = auditBucketToGroupIds.get(buckets);
+            int groupId;
+            if (groupIds != null) {
+                /* Pop the top most group Ids for this list of buckets */
+                groupId = groupIds.get(0);
+                groupIds.remove(0);
+                if (groupIds.isEmpty())
+                    auditBucketToGroupIds.remove(buckets);
+                EcmpInfo ecmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
+                nsToGroups.put(ns, ecmpInfo);
+                log.debug(
+                        "createGroupsAtTransitRouter: No group created in sw {} "
+                                + "for neighborset {} as group already "
+                                + "exists with groupId {}",
+                        getStringId(), ns, groupId);
+            }
+            else
+            {
+                if (buckets.isEmpty()) {
+                    log.warn(
+                            "createGroupsAtTransitRouter: No group created "
+                                    + "in sw {} for neighbor set {} "
+                                    + "as there are no buckets",
+                            getStringId(), ns);
+                }
+                else {
+                    groupId = getNextFreeGroupId();
+                    EcmpInfo ecmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
+                    setEcmpGroup(ecmpInfo);
+                    nsToGroups.put(ns, ecmpInfo);
+                    ecmpGroups.put(groupId, ecmpInfo);
+                    log.debug(
+                            "createGroupsAtTransitRouter: Creating ecmp group {} in sw {} "
+                                    + "for neighbor set {} with: {}",
+                            groupId, getStringId(), ns, ecmpInfo);
+                }
             }
         }
     }
@@ -1019,7 +1242,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         MacAddress srcMac;
         MacAddress dstMac;
         PortNumber outport;
-        int groupNo;
+        int togroupNo;
         int mplsLabel;
         boolean bos;
 
@@ -1031,7 +1254,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             outport = p;
             mplsLabel = label;
             this.bos = bos;
-            groupNo = gotoGroupNo;
+            togroupNo = gotoGroupNo;
         }
 
 
@@ -1039,8 +1262,28 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         public String toString() {
             return " {neighborDpid: " + neighborDpid + ", dstMac: " + dstMac +
                     ", srcMac: " + srcMac + ", outport: " + outport +
-                    ", groupNo: " + groupNo +
+                    ", togroupNo: " + togroupNo +
                     ", mplsLabel: " + mplsLabel + "}";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof BucketInfo)) {
+                return false;
+            }
+            BucketInfo that = (BucketInfo) o;
+            return ((this.outport.value() == that.outport.value()) &&
+                    (this.mplsLabel == that.mplsLabel) &&
+                    (this.togroupNo == that.togroupNo));
+        }
+
+        @Override
+        public int hashCode() {
+            int result = 17;
+            result = 31 * result + Longs.hashCode(outport.value());
+            result = 31 * result + Longs.hashCode(mplsLabel);
+            result = 31 * result + Longs.hashCode(togroupNo);
+            return result;
         }
     }
 
@@ -1104,9 +1347,9 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 if (b.bos)
                     actions.add(decrTtl);
             }
-            if (b.groupNo > 0) {
+            if (b.togroupNo > 0) {
                 OFAction groupTo = factory.actions().buildGroup()
-                        .setGroup(OFGroup.of(b.groupNo))
+                        .setGroup(OFGroup.of(b.togroupNo))
                         .build();
                 actions.add(groupTo);
             }
@@ -1213,9 +1456,9 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 if (b.bos)
                     actions.add(decrTtl);
             }
-            if (b.groupNo > 0) {
+            if (b.togroupNo > 0) {
                 OFAction groupTo = factory.actions().buildGroup()
-                        .setGroup(OFGroup.of(b.groupNo))
+                        .setGroup(OFGroup.of(b.togroupNo))
                         .build();
                 actions.add(groupTo);
             }
@@ -1331,7 +1574,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             }
             else {
                 NeighborSet ns = ((GroupAction) action).getDpids();
-                EcmpInfo ei = ecmpGroups.get(ns);
+                EcmpInfo ei = nsToGroups.get(ns);
                 if (ei == null) {
                     log.debug("Unable to find ecmp group for neighbors {} at "
                             + "switch {} and hence creating it", ns, getStringId());
@@ -1695,7 +1938,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
     @Override
     public int getEcmpGroupId(NeighborSet ns) {
-        EcmpInfo ei = ecmpGroups.get(ns);
+        EcmpInfo ei = nsToGroups.get(ns);
         if (ei == null) {
             return -1;
         } else {
@@ -1822,7 +2065,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                         sp, curLabel, bos, -1);
                 buckets.add(b);
             }
-            innermostGroupId = groupid.incrementAndGet();
+            innermostGroupId = getNextFreeGroupId();
             EcmpInfo ecmpInfo = new EcmpInfo(innermostGroupId,
                     OFGroupType.SELECT, buckets);
             setEcmpGroup(ecmpInfo);
@@ -1847,7 +2090,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             for (PortNumber sp : activePorts) {
                 if (i == 0) {
                     /* Outermost label processing */
-                    int currGroupId = groupid.incrementAndGet();
+                    int currGroupId = getNextFreeGroupId();
                     EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
                             null, null, sp, -1,
                             labelStack.get(i).intValue(), false);
@@ -1856,7 +2099,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 }
                 else if (i == (labelStackSize - 1)) {
                     /* Innermost label processing */
-                    innermostGroupId = groupid.incrementAndGet();
+                    innermostGroupId = getNextFreeGroupId();
                     EcmpInfo topLevelGroup = createInnermostLabelGroup(
                             innermostGroupId,
                             activePorts,
@@ -1868,7 +2111,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 }
                 else {
                     /* Middle label processing */
-                    int currGroupId = groupid.incrementAndGet();
+                    int currGroupId = getNextFreeGroupId();
                     EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
                             null, null, null,
                             lastSetOfGroupIds.get(sp),
@@ -1898,12 +2141,12 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
         deleteGroup(group);
         for (BucketInfo bucket : group.buckets) {
-            int currGroupIdToBeDeleted = bucket.groupNo;
+            int currGroupIdToBeDeleted = bucket.togroupNo;
             while (currGroupIdToBeDeleted != -1) {
                 /* Assuming indirect groups with single buckets */
                 int nextGroupIdToBeDeleted =
                         userDefinedGroups.get(currGroupIdToBeDeleted).
-                        buckets.get(0).groupNo;
+                        buckets.get(0).togroupNo;
                 EcmpInfo groupToBeDeleted =
                         userDefinedGroups.get(currGroupIdToBeDeleted);
                 deleteGroup(groupToBeDeleted);
@@ -1940,7 +2183,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
         for (NeighborSet ns : portNSSet) {
             /* Delete the first matched bucket */
-            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+            EcmpInfo portEcmpInfo = nsToGroups.get(ns);
             if (portEcmpInfo == null) {
                 /* No groups present for this neighbor set */
                 continue;
@@ -1990,7 +2233,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
         Dpid neighborDpid = portToNeighbors.get(port);
         for (NeighborSet ns : portNSSet) {
-            EcmpInfo portEcmpInfo = ecmpGroups.get(ns);
+            EcmpInfo portEcmpInfo = nsToGroups.get(ns);
             /* Find if this port is already part of any bucket
              * in this group
              * NOTE: This is needed because in some cases
@@ -2044,7 +2287,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 modifyEcmpGroup(portEcmpInfo);
             }
             else {
-                int groupId = groupid.incrementAndGet();
+                int groupId = getNextFreeGroupId();
                 portEcmpInfo = new EcmpInfo(groupId, OFGroupType.SELECT, buckets);
                 log.debug("addPortToGroups: Creating Group on Switch {} "
                         + "and Neighborset {} with {}",
