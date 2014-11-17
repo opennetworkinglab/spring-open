@@ -1535,7 +1535,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(decMplsTtlAction);
         }
 
-        if ((sw13 instanceof OFSwitchImplDellOSR) && isTransitRouter(sw) && !php) {
+        if ((sw13 instanceof OFSwitchImplDellOSR) && isTransitRouter(sw)) {
             PortNumber port = pickOnePort(sw, fwdSws);
             if (port == null) {
                 log.warn("Failed to get a port from NeightborSet");
@@ -1553,8 +1553,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(outputAction);
             actions.add(setSAAction);
             actions.add(setDAAction);
-        }
-        else {
+        } else {
             GroupAction groupAction = new GroupAction();
             for (String dpid: fwdSws)
                 groupAction.addSwitch(new Dpid(dpid));
