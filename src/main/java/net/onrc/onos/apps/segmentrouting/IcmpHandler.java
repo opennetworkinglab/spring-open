@@ -14,11 +14,11 @@ import java.util.List;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
-import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.packet.Ethernet;
 import net.onrc.onos.core.packet.ICMP;
 import net.onrc.onos.core.packet.IPv4;
+import net.onrc.onos.core.packet.MPLS;
 import net.onrc.onos.core.topology.Host;
 import net.onrc.onos.core.topology.ITopologyService;
 import net.onrc.onos.core.topology.MutableTopology;
@@ -35,18 +35,13 @@ import org.projectfloodlight.openflow.protocol.OFOxmList;
 import org.projectfloodlight.openflow.protocol.OFPacketOut;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmEthDst;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmInPort;
-import org.projectfloodlight.openflow.protocol.oxm.OFOxmMplsLabel;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
-import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
-import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.OFVlanVidMatch;
 import org.projectfloodlight.openflow.types.TableId;
-import org.projectfloodlight.openflow.types.U32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -294,19 +289,17 @@ public class IcmpHandler {
             if (!sameSubnet && !targetMac.equals(destMacAddress)) {
                 int mplsLabel = getMplsLabelFromConfig(targetAddress);
                 if (mplsLabel > 0) {
-                    OFAction pushlabel = factory.actions().pushMpls(EthType.MPLS_UNICAST);
-                    OFOxmMplsLabel l = factory.oxms()
-                            .mplsLabel(U32.of(mplsLabel));
-                    OFAction setlabelid = factory.actions().buildSetField()
-                            .setField(l).build();
-                    OFAction copyTtlOut = factory.actions().copyTtlOut();
-                    actions.add(pushlabel);
-                    actions.add(setlabelid);
-                    actions.add(copyTtlOut);
+                    packet.setEtherType(Ethernet.TYPE_MPLS_UNICAST);
+                    MPLS mplsPkt = new MPLS();
+                    mplsPkt.setLabel(mplsLabel);
+                    mplsPkt.setBos((byte)1);
+                    mplsPkt.setTtl(((IPv4) packet.getPayload()).getTtl());
+                    mplsPkt.setPayload(((IPv4) packet.getPayload()));
+                    packet.setPayload(mplsPkt);
 
                     //If the next hop is the DELL switch, then we need to set
                     // MPLS MAC as the destination MAC
-                    IOFSwitch sw13 = this.floodlightProvider.getMasterSwitch(
+                    /*IOFSwitch sw13 = this.floodlightProvider.getMasterSwitch(
                             sw.getDpid().value());
                     if (sw13 == null) {
                         log.debug("Failed to get the IOFSwitch object for {}", sw);
@@ -320,7 +313,7 @@ public class IcmpHandler {
                                 .setField(dmac).build();
 
                         actions.add(setDAAction);
-                    }
+                    }*/
 
                 }
             }

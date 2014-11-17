@@ -35,6 +35,7 @@ public class Ethernet extends BasePacket {
     public static final short TYPE_ARP = 0x0806;
     public static final short TYPE_RARP = (short) 0x8035;
     public static final short TYPE_IPV4 = 0x0800;
+    public static final short TYPE_MPLS_UNICAST = (short)0x8847;
     public static final short TYPE_LLDP = (short) 0x88cc;
     public static final short TYPE_BSN = (short) 0x8942;
     public static final short VLAN_UNTAGGED = (short) 0xffff;
@@ -46,6 +47,7 @@ public class Ethernet extends BasePacket {
         ETHER_TYPE_CLASS_MAP.put(TYPE_ARP, ARP.class);
         ETHER_TYPE_CLASS_MAP.put(TYPE_RARP, ARP.class);
         ETHER_TYPE_CLASS_MAP.put(TYPE_IPV4, IPv4.class);
+        ETHER_TYPE_CLASS_MAP.put(TYPE_MPLS_UNICAST, MPLS.class);
         ETHER_TYPE_CLASS_MAP.put(TYPE_LLDP, LLDP.class);
     }
 
