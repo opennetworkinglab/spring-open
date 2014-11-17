@@ -49,6 +49,9 @@ public class HostImpl extends TopologyObject implements Host {
 
     @Override
     public Iterable<Port> getAttachmentPoints() {
+        if (getHostData() == null) {
+            return null;
+        }
         List<Port> ports = new ArrayList<>();
         final BaseTopologyAdaptor topo = new BaseTopologyAdaptor(topology);
         for (SwitchPort swp : getHostData().getAttachmentPoints()) {
@@ -62,7 +65,7 @@ public class HostImpl extends TopologyObject implements Host {
 
     @Override
     public long getLastSeenTime() {
-        return this.topology.getHostData(id).getLastSeenTime();
+        return (getHostData() != null) ? getHostData().getLastSeenTime() : 0;
     }
 
     @Override

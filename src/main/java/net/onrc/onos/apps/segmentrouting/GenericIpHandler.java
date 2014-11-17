@@ -103,7 +103,8 @@ public class GenericIpHandler {
         // If we do not know the host, then we cannot set the forwarding rule
         net.onrc.onos.core.topology.Host host = mutableTopology.getHostByMac(MACAddress
                 .valueOf(destinationMacAddress));
-        if (host == null) {
+        if ((host == null) || (host.getAttachmentPoints()==null)) {
+            log.error("addRouteToHost: Invalid Host object");
             return;
         }
 
