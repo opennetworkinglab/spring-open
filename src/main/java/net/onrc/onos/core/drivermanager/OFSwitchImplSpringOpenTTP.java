@@ -1098,8 +1098,8 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
          * (if any left over) NOTE: These may be user defined groups
          * or run time created groups
          */
-        auditBucketToGroupIds.
-        for
+        //auditBucketToGroupIds.
+        // for
     }
 
     protected void createGroupsAtTransitRouter(Set<Dpid> dpids) {
