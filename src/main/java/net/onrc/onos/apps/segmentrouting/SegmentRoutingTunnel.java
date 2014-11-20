@@ -24,7 +24,7 @@ public class SegmentRoutingTunnel {
     private List<TunnelRouteInfo> routes;
     private SegmentRoutingManager srManager;
 
-    private final int MAX_NUM_LABELS = 3;
+    private final int MAX_NUM_LABELS = 2;
 
     /**
      * Constructor

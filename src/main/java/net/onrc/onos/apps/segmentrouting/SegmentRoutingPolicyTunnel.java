@@ -11,11 +11,17 @@ import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
 import net.onrc.onos.core.matchaction.action.Action;
-import net.onrc.onos.core.matchaction.action.DecNwTtlAction;
 import net.onrc.onos.core.matchaction.action.GroupAction;
+import net.onrc.onos.core.matchaction.action.OutputAction;
+import net.onrc.onos.core.matchaction.action.SetDAAction;
+import net.onrc.onos.core.matchaction.action.SetSAAction;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.Dpid;
+import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
+import org.projectfloodlight.openflow.types.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +52,36 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
 
             // Check PHP was done by stitching
             // If no MPLS label is added, then NW TTL needs to be decremented
-            if (route.getRoute().isEmpty()) {
-                DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
-                actions.add(decNwTtlAction);
-            }
 
-            GroupAction groupAction = new GroupAction();
-            groupAction.setGroupId(route.getGroupId());
-            actions.add(groupAction);
+            if (route.getRoute().isEmpty()) {
+                // XXX
+                //DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
+                //actions.add(decNwTtlAction);
+
+                Switch srcSw = srManager.getSwitch(route.getSrcSwDpid());
+                Switch destSwitch = srManager.getSwitch(route.getFwdSwDpid().get(0).toString());
+                MacAddress srcMac =
+                        MacAddress.of(srcSw.getStringAttribute("routerMac"));
+                MacAddress dstMac =
+                        MacAddress.of(destSwitch.getStringAttribute("routerMac"));
+                SetSAAction setSAAction = new SetSAAction(srcMac);
+                SetDAAction setDAAction = new SetDAAction(dstMac);
+                actions.add(setSAAction);
+                actions.add(setDAAction);
+
+                List<String> fwdSwDpids = new ArrayList<String>();
+                for (Dpid dpid: route.getFwdSwDpid()) {
+                    fwdSwDpids.add(dpid.toString());
+                }
+                PortNumber port = srManager.pickOnePort(srcSw, fwdSwDpids);
+                OutputAction outputAction = new OutputAction(port);
+                actions.add(outputAction);
+            }
+            else {
+                GroupAction groupAction = new GroupAction();
+                groupAction.setGroupId(route.getGroupId());
+                actions.add(groupAction);
+            }
 
             MatchAction matchAction = new MatchAction(new MatchActionId(
                     srManager.getNextMatchActionID()),

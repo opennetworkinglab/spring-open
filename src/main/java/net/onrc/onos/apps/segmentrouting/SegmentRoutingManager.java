@@ -1548,9 +1548,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     MacAddress.of(destSwitch.getStringAttribute("routerMac"));
             SetSAAction setSAAction = new SetSAAction(srcMac);
             SetDAAction setDAAction = new SetDAAction(dstMac);
-            actions.add(outputAction);
             actions.add(setSAAction);
             actions.add(setDAAction);
+            actions.add(outputAction);
         } else {
             GroupAction groupAction = new GroupAction();
             for (String dpid: fwdSws)
@@ -1575,7 +1575,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
      * @param fwdSwDpids neighbor set of the switch
      * @return PortNumber connected to one of the neighbors
      */
-    private PortNumber pickOnePort(Switch sw, List<String> fwdSwDpids) {
+    public PortNumber pickOnePort(Switch sw, List<String> fwdSwDpids) {
         for (Link link: sw.getOutgoingLinks()) {
             if (link.getDstSwitch().getDpid().toString().equals(fwdSwDpids.get(0)))
                 return link.getSrcPort().getNumber();
