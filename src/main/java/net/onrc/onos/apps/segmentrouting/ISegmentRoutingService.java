@@ -11,8 +11,8 @@ import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
 import net.onrc.onos.core.util.IPv4Net;
 
 /**
- * The API exported by the main SDN-IP class. This is the interface between the
- * REST handlers and the SDN-IP module.
+ * The API exported by the main Segment Routing class. This is the interface between the
+ * REST handlers and the vs module.
  */
 public interface ISegmentRoutingService extends IFloodlightService {
 
@@ -117,4 +117,11 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * @return Collection of Adjacency ID
      */
     public Collection<Integer> getAdjacencyIds(int nodeSid);
+    /**
+     * Get MPLS label reading the config file
+     *
+     * @param dipid DPID of the switch
+     * @return MPLS label for the switch
+     */
+    public String getMplsLabel(String dpid);
 }

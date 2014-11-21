@@ -109,7 +109,10 @@ public class SegmentRouterTunnelResource extends ServerResource {
                labelStack.add(label.getRoute());
                Integer gId = segmentRoutingService.getTunnelGroupId(tunnelId,
                        label.getSrcSwDpid());
-               dpidGroup.add(label.getSrcSwDpid() + "/"+ gId);
+               dpidGroup.add(label.getSrcSwDpid()+"("
+                       + segmentRoutingService.getMplsLabel(label.getSrcSwDpid())+ ")" 
+                       + "/"+ gId
+                       );
            }
            SegmentRouterTunnelInfo info = new SegmentRouterTunnelInfo(tunnelId,
                     labelStack, dpidGroup, tunnelPath, policiesId );
