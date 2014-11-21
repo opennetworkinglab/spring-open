@@ -139,9 +139,16 @@ public class SegmentRoutingTunnel {
         String newStitchingRouterId =
                 lastToSecond.getRoute().get(lastToSecond.getRoute().size()-2);
 
+        // Needs to convert any adjacency Sid to node Sid
         if (srManager.isAdjacencySid(newStitchingRouterId)) {
             String orgNodeSid =
                     lastToSecond.getRoute().get(lastToSecond.getRoute().size()-3);
+            if (srManager.isAdjacencySid(orgNodeSid)) {
+                String firstLabelOrgNodeSid =
+                        srManager.getMplsLabel(lastToSecond.getFwdSwDpid().get(0).toString());
+                List<Switch> destNodes = getAdjacencyDestinationNode(firstLabelOrgNodeSid, orgNodeSid);
+                orgNodeSid = srManager.getMplsLabel(destNodes.get(0).getDpid().toString());
+            }
             List<Switch> destNodes = getAdjacencyDestinationNode(orgNodeSid, newStitchingRouterId);
             newStitchingRouterId = srManager.getMplsLabel(destNodes.get(0).getDpid().toString());
         }
