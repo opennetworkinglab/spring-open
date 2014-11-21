@@ -11,6 +11,7 @@ import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
 import net.onrc.onos.core.matchaction.action.Action;
+import net.onrc.onos.core.matchaction.action.DecNwTtlAction;
 import net.onrc.onos.core.matchaction.action.GroupAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
 import net.onrc.onos.core.matchaction.action.SetDAAction;
@@ -54,9 +55,9 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
             // If no MPLS label is added, then NW TTL needs to be decremented
 
             if (route.getRoute().isEmpty()) {
-                // XXX
-                //DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
-                //actions.add(decNwTtlAction);
+
+                DecNwTtlAction decNwTtlAction = new DecNwTtlAction(1);
+                actions.add(decNwTtlAction);
 
                 Switch srcSw = srManager.getSwitch(route.getSrcSwDpid());
                 Switch destSwitch = srManager.getSwitch(route.getFwdSwDpid().get(0).toString());

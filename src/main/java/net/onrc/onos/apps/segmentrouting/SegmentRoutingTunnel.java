@@ -24,7 +24,7 @@ public class SegmentRoutingTunnel {
     private List<TunnelRouteInfo> routes;
     private SegmentRoutingManager srManager;
 
-    private final int MAX_NUM_LABELS = 2;
+    private final int MAX_NUM_LABELS = 3;
 
     /**
      * Constructor
@@ -92,6 +92,11 @@ public class SegmentRoutingTunnel {
             return false;
         }
 
+        // Rearrange the tunnels if the last subtunnel does not have any label
+        // NOTE: this is only for DELL switches because all ACL rule needs PUSH
+        // Label Action.
+        checkAndSplitLabels(stitchingRule);
+
         for (TunnelRouteInfo route: stitchingRule) {
             NeighborSet ns = new NeighborSet();
             for (Dpid dpid: route.getFwdSwDpid())
@@ -109,6 +114,64 @@ public class SegmentRoutingTunnel {
         this.routes = stitchingRule;
 
         return true;
+    }
+
+    /**
+     * Check if last sub tunnel rule label stack is empty.
+     * If so, move a label of previous tunnel to the last sub-tunnel.
+     * It directly updates the tunnel information (stitchingRule) given.
+     * NOTE: This workaroud is required only for Dell Switch restriction.
+     *
+     * @param stitchingRule tunnel information
+     */
+    private void checkAndSplitLabels(List<TunnelRouteInfo> stitchingRule) {
+
+        TunnelRouteInfo lastSubTunnel = stitchingRule.get(stitchingRule.size()-1);
+        if (!lastSubTunnel.getRoute().isEmpty()) {
+            return;
+        }
+        TunnelRouteInfo lastToSecond = stitchingRule.get(stitchingRule.size()-2);
+        if (lastToSecond == null) {
+            return; // Something wrong here
+        }
+        String lastLabelId =
+                lastToSecond.getRoute().get(lastToSecond.getRoute().size()-1);
+        String newStitchingRouterId =
+                lastToSecond.getRoute().get(lastToSecond.getRoute().size()-2);
+
+        if (srManager.isAdjacencySid(newStitchingRouterId)) {
+            String orgNodeSid =
+                    lastToSecond.getRoute().get(lastToSecond.getRoute().size()-3);
+            List<Switch> destNodes = getAdjacencyDestinationNode(orgNodeSid, newStitchingRouterId);
+            newStitchingRouterId = srManager.getMplsLabel(destNodes.get(0).getDpid().toString());
+        }
+        Switch newSitchingSwitch = srManager.getSwitchFromNodeId(newStitchingRouterId);
+        // In this case, # of fwd Sws must be only one
+        String newLabelId =
+                srManager.getMplsLabel(lastSubTunnel.getFwdSwDpid().get(0).toString());
+        List<Dpid> newFwdSws = null;
+        if (srManager.isAdjacencySid(lastLabelId)) {
+            List<Switch> destSwitches = getAdjacencyDestinationNode(newStitchingRouterId, lastLabelId);
+            String orgLastLabelId = srManager.getMplsLabel(destSwitches.get(0).toString());
+            newFwdSws =
+                    srManager.getForwardingSwitchForNodeId(newSitchingSwitch, orgLastLabelId);
+        }
+        else {
+            newFwdSws =
+                srManager.getForwardingSwitchForNodeId(newSitchingSwitch, lastLabelId);
+        }
+
+        // Remove the last ID from the last-to-second sub-tunnel
+        lastToSecond.getRoute().remove(lastLabelId);
+
+        // Reset the src switch
+        lastSubTunnel.setSrcDpid(srManager.getSwitchFromNodeId(
+                newStitchingRouterId).getDpid().toString());
+        // Reset the fwd nodes
+        lastSubTunnel.setFwdSwDpid(newFwdSws);
+        // Add the new Label Id
+        lastSubTunnel.addRoute(newLabelId);
+
     }
 
     /**
@@ -206,6 +269,17 @@ public class SegmentRoutingTunnel {
             }
             // if this is the first node ID to put the label stack..
             else if (i == 1) {
+                // If the adjacency SID is pushed and the next SID is the destination
+                // of the adjacency SID, then do not add the SID.
+                if (prevAdjacencySid != null) {
+                    if (isAdjacencySidNeighborOf(prevNodeId, prevAdjacencySid, nodeId)) {
+                        prevAdjacencySid = null;
+                        prevNodeId = nodeId;
+                        continue;
+                    }
+                    prevAdjacencySid = null;
+                }
+
                 if (checkNeighbor) {
                     List<Dpid> fwdSws = getDpidIfNeighborOf(nodeId, srcSw);
                     // if nodeId is NOT the neighbor of srcSw..

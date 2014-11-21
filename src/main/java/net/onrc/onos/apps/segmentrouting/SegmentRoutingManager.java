@@ -1091,11 +1091,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
         //If the next hop is the destination router, do PHP
         if (fwdSws.size() == 1 && mplsLabel.equals(getMplsLabel(fwdSw1))) {
             maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, true));
-            //maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, false));
+            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, true, false));
         }
         else {
             maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, true));
-            //maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, false));
+            maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, false));
         }
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 sw.getDpid().value());
