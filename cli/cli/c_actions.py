@@ -2205,15 +2205,18 @@ def command_display_rest(data, url = None, sort = None, rest_type = None,
         tunnelList = entries
         for tunnel in tunnelList:
             labelStackList = (tunnel.get('labelStack'))
-            labelStackString ='['
-            for labelSack in labelStackList:
-                for label in labelSack:
-                    labelStackString += (label + ',')
-            if labelStackString == '[':
-                labelStackString = ''
-            else:
-                labelStackString = labelStackString[:-1]
-                labelStackString += ']'
+            labelStackString = str(labelStackList)
+            labelStackString = remove_unicodes(labelStackString)
+            #labelStackList = (tunnel.get('labelStack'))
+            #labelStackString ='['
+            #for labelSack in labelStackList:
+            #    for label in labelSack:
+            #        labelStackString += (label + ',')
+            #if labelStackString == '[':
+            #    labelStackString = ''
+            #else:
+            #    labelStackString = labelStackString[:-1]
+            #    labelStackString += ']'
             tunnelId = tunnel.get('tunnelId')
             tunnelPath = tunnel.get('tunnelPath')
             dpidGroup = str(tunnel.get('dpidGroup'))
