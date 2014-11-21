@@ -2405,7 +2405,7 @@ SHOW_TUNNEL_FORMAT = {
         'fields': {
             'tunnelId'         : { 'verbose-name' : 'Id',
                                },
-            'dpidGroup'         : { 'verbose-name' : 'dpid/Group',
+            'dpidGroup'         : { 'verbose-name' : 'Dpid(Node Id)/Group',
                                },
             'labelStack'         : { 'verbose-name' : 'Label Stack [Outer-->Inner]',
                                },
