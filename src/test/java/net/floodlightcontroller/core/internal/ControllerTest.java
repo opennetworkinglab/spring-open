@@ -523,10 +523,10 @@ public class ControllerTest extends FloodlightTestCase {
         IOFSwitchListener listener = createStrictMock(IOFSwitchListener.class);
         controller.addOFSwitchListener(listener);
 
-        listener.switchActivatedEqual(dpid);
+        listener.switchActivatedSlave(dpid);
         replay(sw, listener); // nothing recorded
         controller.addConnectedSwitch(dpid, new OFChannelHandler(controller));
-        controller.addActivatedEqualSwitch(dpid, sw);
+        controller.addActivatedSlaveSwitch(dpid, sw);
         verify(sw);
         controller.processUpdateQueueForTesting();
         verify(listener);
@@ -594,10 +594,10 @@ public class ControllerTest extends FloodlightTestCase {
 
         // Add switch to controller as EQUAL
         controller.addConnectedSwitch(dpid, new OFChannelHandler(controller));
-        controller.addActivatedEqualSwitch(dpid, sw);
+        controller.addActivatedSlaveSwitch(dpid, sw);
 
         // Check the switch is in the controller's lists
-        assertEquals(sw, controller.getEqualSwitch(dpid));
+        assertEquals(sw, controller.getSlaveSwitch(dpid));
 
         IOFSwitchListener listener = createStrictMock(IOFSwitchListener.class);
         listener.switchDisconnected(dpid);
@@ -618,7 +618,7 @@ public class ControllerTest extends FloodlightTestCase {
         // Disconnect switch
         controller.removeConnectedSwitch(dpid);
 
-        assertNull(controller.getEqualSwitch(dpid));
+        assertNull(controller.getSlaveSwitch(dpid));
 
         controller.processUpdateQueueForTesting();
         verify(listener, sw);
@@ -739,20 +739,20 @@ public class ControllerTest extends FloodlightTestCase {
         }
 
         @Override
-        public synchronized void switchActivatedEqual(long swId) {
-            updateCount.add(SwitchUpdateType.ACTIVATED_EQUAL);
+        public synchronized void switchActivatedSlave(long swId) {
+            updateCount.add(SwitchUpdateType.ACTIVATED_SLAVE);
             notifyAll();
         }
 
         @Override
-        public synchronized void switchMasterToEqual(long swId) {
-            updateCount.add(SwitchUpdateType.MASTER_TO_EQUAL);
+        public synchronized void switchMasterToSlave(long swId) {
+            updateCount.add(SwitchUpdateType.MASTER_TO_SLAVE);
             notifyAll();
         }
 
         @Override
-        public synchronized void switchEqualToMaster(long swId) {
-            updateCount.add(SwitchUpdateType.EQUAL_TO_MASTER);
+        public synchronized void switchSlaveToMaster(long swId) {
+            updateCount.add(SwitchUpdateType.SLAVE_TO_MASTER);
             notifyAll();
         }
 
@@ -795,11 +795,11 @@ public class ControllerTest extends FloodlightTestCase {
         // Switch updates
         doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.ACTIVATED_MASTER,
                 switchListener);
-        doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.ACTIVATED_EQUAL,
+        doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.ACTIVATED_SLAVE,
                 switchListener);
-        doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.EQUAL_TO_MASTER,
+        doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.SLAVE_TO_MASTER,
                 switchListener);
-        doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.MASTER_TO_EQUAL,
+        doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.MASTER_TO_SLAVE,
                 switchListener);
         doTestUpdateQueueWithUpdate(dpid, SwitchUpdateType.DISCONNECTED,
                 switchListener);

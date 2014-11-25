@@ -445,19 +445,19 @@ public class TopologyPublisher implements IOFSwitchListener,
     }
 
     @Override
-    public void switchActivatedEqual(long swId) {
+    public void switchActivatedSlave(long swId) {
         final Dpid dpid = new Dpid(swId);
-        controllerRoleChanged(dpid, Role.EQUAL);
+        controllerRoleChanged(dpid, Role.SLAVE);
     }
 
     @Override
-    public void switchMasterToEqual(long swId) {
+    public void switchMasterToSlave(long swId) {
         final Dpid dpid = new Dpid(swId);
-        controllerRoleChanged(dpid, Role.EQUAL);
+        controllerRoleChanged(dpid, Role.SLAVE);
     }
 
     @Override
-    public void switchEqualToMaster(long swId) {
+    public void switchSlaveToMaster(long swId) {
         // for now treat as switchActivatedMaster
         switchActivatedMaster(swId);
     }

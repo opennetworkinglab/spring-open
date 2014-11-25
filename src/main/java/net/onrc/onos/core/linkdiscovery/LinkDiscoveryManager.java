@@ -817,19 +817,19 @@ public class LinkDiscoveryManager implements IOFMessageListener, IOFSwitchListen
     }
 
     @Override
-    public void switchActivatedEqual(long swId) {
+    public void switchActivatedSlave(long swId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void switchMasterToEqual(long swId) {
+    public void switchMasterToSlave(long swId) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void switchEqualToMaster(long swId) {
+    public void switchSlaveToMaster(long swId) {
         // for now treat as switchActivatedMaster
         switchActivatedMaster(swId);
     }

@@ -1033,16 +1033,16 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                         h.setState(MASTER);
                     } else {
                         log.info("Switch-driver sub-handshake complete. "
-                                + "Activating switch {} with Role: EQUAL",
+                                + "Activating switch {} with Role: SLAVE",
                                 h.getSwitchInfoString());
                         handlePendingPortStatusMessages(h); // before activation
-                        boolean success = h.controller.addActivatedEqualSwitch(
+                        boolean success = h.controller.addActivatedSlaveSwitch(
                                 h.sw.getId(), h.sw);
                         if (!success) {
                             disconnectDuplicate(h);
                             return;
                         }
-                        h.setState(EQUAL);
+                        h.setState(SLAVE);
                     }
                 } else {
                     h.setState(WAIT_SWITCH_DRIVER_SUB_HANDSHAKE);
@@ -1053,9 +1053,9 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             public void handleTimedOutHandshake(OFChannelHandler h,
                     ChannelHandlerContext ctx) throws IOException {
                 log.info("Handshake timed out waiting to hear back from registry "
-                        + "service. Moving to Role EQUAL for switch {}",
+                        + "service. Moving to Role SLAVE for switch {}",
                         h.getSwitchInfoString());
-                setRoleAndStartDriverHandshake(h, Role.EQUAL);
+                setRoleAndStartDriverHandshake(h, Role.SLAVE);
             }
 
             @Override
@@ -1084,7 +1084,7 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * main switch-controller handshake. But we do consider it as a step
          * that comes before we declare the switch as available to the
          * controller. Next State: depends on the role of this controller for
-         * this switch - either MASTER or EQUAL.
+         * this switch - either MASTER or SLAVE.
          */
         WAIT_SWITCH_DRIVER_SUB_HANDSHAKE(false) {
 
@@ -1120,17 +1120,17 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
                             h.setState(MASTER);
                         } else {
                             log.info("Switch-driver sub-handshake complete. "
-                                    + "Activating switch {} with Role: EQUAL",
+                                    + "Activating switch {} with Role: SLAVE",
                                     h.getSwitchInfoString());
                             handlePendingPortStatusMessages(h); // before
                                                                 // activation
-                            boolean success = h.controller.addActivatedEqualSwitch(
+                            boolean success = h.controller.addActivatedSlaveSwitch(
                                     h.sw.getId(), h.sw);
                             if (!success) {
                                 disconnectDuplicate(h);
                                 return;
                             }
-                            h.setState(EQUAL);
+                            h.setState(SLAVE);
                         }
                     }
                 }
@@ -1265,23 +1265,20 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
         },
 
         /**
-         * This controller is in EQUAL role for this switch. We enter this state
+         * This controller is in SLAVE role for this switch. We enter this state
          * after some /other/ controller instance wins mastership-role over this
-         * switch. The EQUAL role can be considered the same as the SLAVE role
-         * if this controller does NOT send commands or packets to the switch.
-         * This should always be true for OF1.0 switches. XXX S need to enforce.
+         * switch.
          *
-         * For OF1.3 switches, choosing this state as EQUAL instead of SLAVE,
-         * gives us the flexibility that if an app wants to send
-         * commands/packets to switches, it can, even thought it is running on a
-         * controller instance that is not in a MASTER role for this switch. Of
-         * course, it is the job of the app to ensure that commands/packets sent
-         * by this (EQUAL) controller instance does not clash/conflict with
-         * commands/packets sent by the MASTER controller for this switch.
-         * Neither the controller instances, nor the switch provides any kind of
-         * resolution mechanism should conflicts occur.
+         * A note about role EQUAL: can be considered the same as the SLAVE role
+         * if this controller does NOT send commands or packets to the switch.
+         * However an EQUAL controller will also get packet-in and flow-removed
+         * messages just like a MASTER controller. And so if one wishes to avoid
+         * such messages in this role, then we need to configure OFPT_ASYNC
+         * messages on the switch. ONOS does not currently implement the role
+         * EQUAL.
+         *
          */
-        EQUAL(true) {
+        SLAVE(true) {
             @Override
             void processOFError(OFChannelHandler h, OFErrorMsg m)
                     throws IOException, SwitchStateException {
@@ -1588,12 +1585,12 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
 
         /**
          * Handles all pending port status messages before a switch is declared
-         * activated in MASTER or EQUAL role. Note that since this handling
+         * activated in MASTER or SLAVE role. Note that since this handling
          * precedes the activation (and therefore notification to
          * IOFSwitchListerners) the changes to ports will already be visible
          * once the switch is activated. As a result, no notifications are sent
          * out for these pending portStatus messages.
-         *
+         * 
          * @param h
          * @throws SwitchStateException
          */
@@ -1679,23 +1676,18 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
             // possible that the role of this controller instance for
             // this switch has changed:
             // for 1.0 switch: from MASTER to SLAVE
-            // for 1.3 switch: from MASTER to EQUAL
+            // for 1.3 switch: from MASTER to EQUAL/SLAVE
             if ((h.sw.getRole() == Role.MASTER && role == Role.SLAVE) ||
                     (h.sw.getRole() == Role.MASTER && role == Role.EQUAL)) {
                 // the mastership has changed
-                if (role == Role.SLAVE) {
-                    role = Role.EQUAL;
-                }
                 h.sw.setRole(role);
-                h.setState(EQUAL);
-                h.controller.transitionToEqualSwitch(h.sw.getId());
+                h.setState(SLAVE);
+                h.controller.transitionToSlaveSwitch(h.sw.getId());
                 return;
             }
 
-            // or for both 1.0 and 1.3 switches from EQUAL to MASTER.
-            // note that for 1.0, even though we mean SLAVE,
-            // internally we call the role EQUAL.
-            if (h.sw.getRole() == Role.EQUAL && role == Role.MASTER) {
+            // or for both 1.0 and 1.3 switches from EQUAL/SLAVE to MASTER.
+            if (h.sw.getRole() == Role.SLAVE && role == Role.MASTER) {
                 // the mastership has changed
                 h.sw.setRole(role);
                 h.setState(MASTER);
@@ -1945,15 +1937,15 @@ class OFChannelHandler extends IdleStateAwareChannelHandler {
          * If the switch is in WAIT_INITIAL_ROLE state, when the handshake
          * timeout is triggered, then it's because we have not heard back from
          * the registry service regarding switch mastership. In this case, we
-         * move to EQUAL (or SLAVE) state. See override for this method in
+         * move to SLAVE state. See override for this method in
          * WAIT_INITIAL_ROLE state.
          * <p>
          * XXX: This is required today as the registry service does not reply
          * with role.slave to a mastership request, i.e it only replies to the
          * controller that wins mastership. Once the registry API changes to
          * reply to every request, we would not need to wait for a timeout to
-         * move to Role.EQUAL (or SLAVE).
-         *
+         * move to Role.SLAVE.
+         * 
          * @param h the channel handler for this switch
          * @param ctx the netty channel handler context for the channel 'h'
          * @throws IOException

@@ -356,7 +356,7 @@ public class MockFloodlightProvider implements IFloodlightModule,
     }
 
     @Override
-    public Set<Long> getAllEqualSwitchDpids() {
+    public Set<Long> getAllSlaveSwitchDpids() {
         return this.activeEqualSwitches.keySet();
     }
 
@@ -366,7 +366,7 @@ public class MockFloodlightProvider implements IFloodlightModule,
     }
 
     @Override
-    public IOFSwitch getEqualSwitch(long dpid) {
+    public IOFSwitch getSlaveSwitch(long dpid) {
         return this.activeEqualSwitches.get(dpid);
     }
 

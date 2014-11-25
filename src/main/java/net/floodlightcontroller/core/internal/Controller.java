@@ -117,7 +117,7 @@ public class Controller implements IFloodlightProviderService {
     protected ConcurrentHashMap<Long, OFChannelHandler> connectedSwitches;
     // These caches contains only those switches that are active
     protected ConcurrentHashMap<Long, IOFSwitch> activeMasterSwitches;
-    protected ConcurrentHashMap<Long, IOFSwitch> activeEqualSwitches;
+    protected ConcurrentHashMap<Long, IOFSwitch> activeSlaveSwitches;
     // lock to synchronize on, when manipulating multiple caches above
     private Object multiCacheLock;
 
@@ -178,13 +178,11 @@ public class Controller implements IFloodlightProviderService {
      * available for updates.
      *
      * In ONOS, each controller instance can simultaneously serve in a MASTER
-     * role for some connected switches, and in a EQUAL role for other connected
-     * switches. The EQUAL role can be treated as a SLAVE role, by ensuring that
-     * the controller instance never sends packets or commands out to the
-     * switch. Activated switches, either with Controller Role MASTER or EQUAL
-     * are announced as updates. We also support announcements of controller
-     * role transitions from MASTER --> EQUAL, and EQUAL --> MASTER, for an
-     * individual switch.
+     * role for some connected switches, and in a SLAVE role for other connected
+     * switches. It does not support role EQUAL. Activated switches, either with
+     * Controller Role MASTER or SLAVE are announced as updates. We also support
+     * announcements of controller role transitions from MASTER --> SLAVE, and
+     * SLAVE --> MASTER, for an individual switch.
      *
      * Disconnection of only activated switches are announced. Finally, changes
      * to switch ports are announced with a portChangeType (see @IOFSwitch)
@@ -195,15 +193,14 @@ public class Controller implements IFloodlightProviderService {
         /** switch activated with this controller's role as MASTER */
         ACTIVATED_MASTER,
         /**
-         * switch activated with this controller's role as EQUAL. listener can
-         * treat this controller's role as SLAVE by not sending packets or
-         * commands to the switch
+         * switch activated with this controller's role as SLAVE. listener
+         * cannot send packets or commands to the switch
          */
-        ACTIVATED_EQUAL,
-        /** this controller's role for this switch changed from Master to Equal */
-        MASTER_TO_EQUAL,
-        /** this controller's role for this switch changed form Equal to Master */
-        EQUAL_TO_MASTER,
+        ACTIVATED_SLAVE,
+        /** this controller's role for this switch changed from Master to Slave */
+        MASTER_TO_SLAVE,
+        /** this controller's role for this switch changed form Slave to Master */
+        SLAVE_TO_MASTER,
         /** A previously activated switch disconnected */
         DISCONNECTED,
         /** Port changed on a previously activated switch */
@@ -276,16 +273,16 @@ public class Controller implements IFloodlightProviderService {
                         // counters before the update is created
                         listener.switchActivatedMaster(swId);
                         break;
-                    case ACTIVATED_EQUAL:
+                    case ACTIVATED_SLAVE:
                         // don't count here. We have more specific
                         // counters before the update is created
-                        listener.switchActivatedEqual(swId);
+                        listener.switchActivatedSlave(swId);
                         break;
-                    case MASTER_TO_EQUAL:
-                        listener.switchMasterToEqual(swId);
+                    case MASTER_TO_SLAVE:
+                        listener.switchMasterToSlave(swId);
                         break;
-                    case EQUAL_TO_MASTER:
-                        listener.switchEqualToMaster(swId);
+                    case SLAVE_TO_MASTER:
+                        listener.switchSlaveToMaster(swId);
                         break;
                     case DISCONNECTED:
                         // don't count here. We have more specific
@@ -333,13 +330,13 @@ public class Controller implements IFloodlightProviderService {
             return false;
         }
         if (activeMasterSwitches.get(dpid) != null ||
-                activeEqualSwitches.get(dpid) != null) {
+                activeSlaveSwitches.get(dpid) != null) {
             log.error("Trying to activate switch but it is already "
                     + "activated: dpid {}. Found in activeMaster: {} "
                     + "Found in activeEqual: {}. Aborting ..", new Object[] {
                     HexString.toHexString(dpid),
                     (activeMasterSwitches.get(dpid) == null) ? 'Y' : 'N',
-                    (activeEqualSwitches.get(dpid) == null) ? 'Y' : 'N'});
+                    (activeSlaveSwitches.get(dpid) == null) ? 'Y' : 'N'});
             counters.switchWithSameDpidActivated.updateCounterWithFlush();
             return false;
         }
@@ -365,30 +362,29 @@ public class Controller implements IFloodlightProviderService {
     }
 
     /**
-     * Called when a switch is activated, with this controller's role as EQUAL
+     * Called when a switch is activated, with this controller's role as SLAVE
      */
-    protected boolean addActivatedEqualSwitch(long dpid, IOFSwitch sw) {
+    protected boolean addActivatedSlaveSwitch(long dpid, IOFSwitch sw) {
         synchronized (multiCacheLock) {
             if (!validActivation(dpid))
                 return false;
-            activeEqualSwitches.put(dpid, sw);
+            activeSlaveSwitches.put(dpid, sw);
         }
         // update counters and events
         counters.switchActivated.updateCounterWithFlush();
         evSwitch.updateEventWithFlush(new SwitchEvent(dpid, "activeEqual"));
         addUpdateToQueue(new SwitchUpdate(dpid,
-                SwitchUpdateType.ACTIVATED_EQUAL));
+                SwitchUpdateType.ACTIVATED_SLAVE));
         return true;
     }
 
     /**
-     * Called when this controller's role for a switch transitions from equal to
-     * master. For 1.0 switches, we internally refer to the role 'slave' as
-     * 'equal' - so this transition is equivalent to 'addActivatedMasterSwitch'.
+     * Called when this controller's role for a switch transitions from slave to
+     * master.
      */
     protected void transitionToMasterSwitch(long dpid) {
         synchronized (multiCacheLock) {
-            IOFSwitch sw = activeEqualSwitches.remove(dpid);
+            IOFSwitch sw = activeSlaveSwitches.remove(dpid);
             if (sw == null) {
                 log.error("Transition to master called on sw {}, but switch "
                         + "was not found in controller-cache", dpid);
@@ -397,25 +393,24 @@ public class Controller implements IFloodlightProviderService {
             activeMasterSwitches.put(dpid, sw);
         }
         addUpdateToQueue(new SwitchUpdate(dpid,
-                SwitchUpdateType.EQUAL_TO_MASTER));
+                SwitchUpdateType.SLAVE_TO_MASTER));
     }
 
     /**
-     * Called when this controller's role for a switch transitions to equal. For
-     * 1.0 switches, we internally refer to the role 'slave' as 'equal'.
+     * Called when this controller's role for a switch transitions to slave.
      */
-    protected void transitionToEqualSwitch(long dpid) {
+    protected void transitionToSlaveSwitch(long dpid) {
         synchronized (multiCacheLock) {
             IOFSwitch sw = activeMasterSwitches.remove(dpid);
             if (sw == null) {
-                log.error("Transition to equal called on sw {}, but switch "
+                log.error("Transition to slave called on sw {}, but switch "
                         + "was not found in controller-cache", dpid);
                 return;
             }
-            activeEqualSwitches.put(dpid, sw);
+            activeSlaveSwitches.put(dpid, sw);
         }
         addUpdateToQueue(new SwitchUpdate(dpid,
-                SwitchUpdateType.MASTER_TO_EQUAL));
+                SwitchUpdateType.MASTER_TO_SLAVE));
     }
 
     /**
@@ -428,7 +423,7 @@ public class Controller implements IFloodlightProviderService {
         OFChannelHandler ch = connectedSwitches.remove(dpid);
         IOFSwitch sw = activeMasterSwitches.remove(dpid);
         if (sw == null) {
-            sw = activeEqualSwitches.remove(dpid);
+            sw = activeSlaveSwitches.remove(dpid);
         }
         if (sw != null) {
             sw.cancelAllStatisticsReplies();
@@ -527,7 +522,7 @@ public class Controller implements IFloodlightProviderService {
             if (hasControl) {
                 role = Role.MASTER;
             } else {
-                role = Role.EQUAL; // treat the same as Role.SLAVE
+                role = Role.SLAVE;
             }
 
             OFChannelHandler swCh = connectedSwitches.get(dpid.value());
@@ -536,7 +531,6 @@ public class Controller implements IFloodlightProviderService {
                 return;
             }
 
-            log.debug("Sending role request {} msg to {}", role, dpid);
             swCh.sendRoleRequest(role, RoleRecvStatus.MATCHED_SET_ROLE);
         }
     }
@@ -749,7 +743,7 @@ public class Controller implements IFloodlightProviderService {
     public Set<Long> getAllSwitchDpids() {
         Set<Long> dpids = new HashSet<Long>();
         dpids.addAll(activeMasterSwitches.keySet());
-        dpids.addAll(activeEqualSwitches.keySet());
+        dpids.addAll(activeSlaveSwitches.keySet());
         return dpids;
     }
 
@@ -761,9 +755,9 @@ public class Controller implements IFloodlightProviderService {
     }
 
     @Override
-    public Set<Long> getAllEqualSwitchDpids() {
+    public Set<Long> getAllSlaveSwitchDpids() {
         Set<Long> dpids = new HashSet<Long>();
-        dpids.addAll(activeEqualSwitches.keySet());
+        dpids.addAll(activeSlaveSwitches.keySet());
         return dpids;
     }
 
@@ -772,7 +766,7 @@ public class Controller implements IFloodlightProviderService {
         IOFSwitch sw = null;
         if ((sw = activeMasterSwitches.get(dpid)) != null)
             return sw;
-        if ((sw = activeEqualSwitches.get(dpid)) != null)
+        if ((sw = activeSlaveSwitches.get(dpid)) != null)
             return sw;
         return sw;
     }
@@ -783,8 +777,8 @@ public class Controller implements IFloodlightProviderService {
     }
 
     @Override
-    public IOFSwitch getEqualSwitch(long dpid) {
-        return activeEqualSwitches.get(dpid);
+    public IOFSwitch getSlaveSwitch(long dpid) {
+        return activeSlaveSwitches.get(dpid);
     }
 
     @Override
@@ -1202,7 +1196,7 @@ public class Controller implements IFloodlightProviderService {
                 IOFMessageListener>>();
         this.switchListeners = new CopyOnWriteArraySet<IOFSwitchListener>();
         this.activeMasterSwitches = new ConcurrentHashMap<Long, IOFSwitch>();
-        this.activeEqualSwitches = new ConcurrentHashMap<Long, IOFSwitch>();
+        this.activeSlaveSwitches = new ConcurrentHashMap<Long, IOFSwitch>();
         this.connectedSwitches = new ConcurrentHashMap<Long, OFChannelHandler>();
         this.controllerNodeIPsCache = new HashMap<String, String>();
         this.updates = new LinkedBlockingQueue<IUpdate>();

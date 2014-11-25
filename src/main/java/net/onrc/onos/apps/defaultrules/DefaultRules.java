@@ -148,15 +148,15 @@ public class DefaultRules implements IFloodlightModule, IOFSwitchListener {
     }
 
     @Override
-    public void switchActivatedEqual(long swId) {
+    public void switchActivatedSlave(long swId) {
     }
 
     @Override
-    public void switchMasterToEqual(long swId) {
+    public void switchMasterToSlave(long swId) {
     }
 
     @Override
-    public void switchEqualToMaster(long swId) {
+    public void switchSlaveToMaster(long swId) {
     }
 
     @Override

@@ -58,26 +58,29 @@ public interface IOFSwitchListener {
      */
 	public void switchActivatedMaster(long swId);
 
-	/**
+	    /**
      * Fired when switch becomes active on the controller cluster and this
-     * controller instance has acquired EQUAL role for this switch
+     * controller instance has acquired SLAVE role for this switch
+     * 
      * @param switchId the datapath Id of the new switch
      */
-	public void switchActivatedEqual(long swId);
+    public void switchActivatedSlave(long swId);
 
-	/**
-     * Fired when the role of this controller for this switch, transitions
-     * from MASTER role to EQUAL role
+	    /**
+     * Fired when the role of this controller for this switch, transitions from
+     * MASTER role to SLAVE role
+     * 
      * @param switchId the datapath Id of the new switch
      */
-	public void switchMasterToEqual(long swId);
+    public void switchMasterToSlave(long swId);
 
-	/**
-     * Fired when the role of this controller for this switch, transitions
-     * from EQUAL role to MASTER role
+	    /**
+     * Fired when the role of this controller for this switch, transitions from
+     * SLAVE role to MASTER role
+     * 
      * @param switchId the datapath Id of the new switch
      */
-	public void switchEqualToMaster(long swId);
+    public void switchSlaveToMaster(long swId);
 
 	/**
 	 * Fired when this switch has disconnected at this controller. It does NOT

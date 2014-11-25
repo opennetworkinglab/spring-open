@@ -193,7 +193,7 @@ public interface IFloodlightProviderService extends IFloodlightService {
 
     /**
      * Record a switch event in in-memory debug-event
-     * 
+     *
      * @param switchDPID
      * @param reason Reason for this event
      * @param flushNow see debug-event flushing in IDebugEventService
@@ -202,11 +202,11 @@ public interface IFloodlightProviderService extends IFloodlightService {
 
     Set<Long> getAllMasterSwitchDpids();
 
-    Set<Long> getAllEqualSwitchDpids();
+    Set<Long> getAllSlaveSwitchDpids();
 
     IOFSwitch getMasterSwitch(long dpid);
 
-    IOFSwitch getEqualSwitch(long dpid);
+    IOFSwitch getSlaveSwitch(long dpid);
 
     void setAlwaysClearFlowsOnSwActivate(boolean value);
 

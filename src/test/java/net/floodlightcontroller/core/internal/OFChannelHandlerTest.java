@@ -584,8 +584,8 @@ public class OFChannelHandlerTest {
         ExceptionEvent eeMock = createMock(ExceptionEvent.class);
         expect(eeMock.getCause()).andReturn(new HandshakeTimeoutException())
                 .atLeastOnce();
-        // controller should move to role EQUAL via the driver handshake
-        swImplBase.setRole(Role.EQUAL);
+        // controller should move to role SLAVE via the driver handshake
+        swImplBase.setRole(Role.SLAVE);
         expectLastCall().once();
         swImplBase.startDriverHandshake();
         expectLastCall().once();
@@ -593,10 +593,10 @@ public class OFChannelHandlerTest {
         // immediately
         expect(swImplBase.isDriverHandshakeComplete())
                 .andReturn(true).once();
-        expect(swImplBase.getRole()).andReturn(Role.EQUAL).once();
+        expect(swImplBase.getRole()).andReturn(Role.SLAVE).once();
         expect(swImplBase.getId())
                 .andReturn(1L).anyTimes();
-        expect(controller.addActivatedEqualSwitch(1L, swImplBase))
+        expect(controller.addActivatedSlaveSwitch(1L, swImplBase))
                 .andReturn(true).once();
 
         replay(channel);
@@ -604,7 +604,7 @@ public class OFChannelHandlerTest {
         replay(swImplBase);
         replay(eeMock);
         handler.exceptionCaught(ctx, eeMock);
-        assertEquals(OFChannelHandler.ChannelState.EQUAL,
+        assertEquals(OFChannelHandler.ChannelState.SLAVE,
                 handler.getStateForTesting());
     }
 
@@ -653,7 +653,7 @@ public class OFChannelHandlerTest {
 
         controller.flushAll();
         expectLastCall().once();
-        expect(controller.addActivatedEqualSwitch(1000, swImplBase))
+        expect(controller.addActivatedSlaveSwitch(1000, swImplBase))
         .andReturn(true).once();
         replay(controller);
 
@@ -686,7 +686,7 @@ public class OFChannelHandlerTest {
         // send the description stats reply
         handler.messageReceived(ctx, messageEvent);
 
-        assertEquals(OFChannelHandler.ChannelState.EQUAL,
+        assertEquals(OFChannelHandler.ChannelState.SLAVE,
                 handler.getStateForTesting());
     }
 
@@ -795,7 +795,7 @@ public class OFChannelHandlerTest {
 
         controller.flushAll();
         expectLastCall().once();
-        expect(controller.addActivatedEqualSwitch(1000, swImplBase))
+        expect(controller.addActivatedSlaveSwitch(1000, swImplBase))
         .andReturn(true).once();
         replay(controller);
 
@@ -817,7 +817,7 @@ public class OFChannelHandlerTest {
         // send the description stats reply
         handler.messageReceived(ctx, messageEvent);
 
-        assertEquals(OFChannelHandler.ChannelState.EQUAL,
+        assertEquals(OFChannelHandler.ChannelState.SLAVE,
                 handler.getStateForTesting());
     }
 
@@ -1306,7 +1306,7 @@ public class OFChannelHandlerTest {
 
         expect(swImplBase.getStringId())
         .andReturn(null).anyTimes();
-        expect(swImplBase.getRole()).andReturn(Role.EQUAL).atLeastOnce();
+        expect(swImplBase.getRole()).andReturn(Role.SLAVE).atLeastOnce();
         expect(swImplBase.getNextTransactionId())
         .andReturn(xid).anyTimes();
         expect(swImplBase.getId())
@@ -1371,7 +1371,7 @@ public class OFChannelHandlerTest {
         reset(controller);
         reset(swImplBase);
 
-        controller.transitionToEqualSwitch(1000);
+        controller.transitionToSlaveSwitch(1000);
         expectLastCall().once();
         expect(controller.getOFSwitchInstance((OFDescStatsReply)sr, ofVersion))
         .andReturn(swImplBase).anyTimes();
@@ -1391,7 +1391,7 @@ public class OFChannelHandlerTest {
         .andReturn(xid).anyTimes();
 
         // prepare mocks and inject the role reply message
-        swImplBase.setRole(Role.EQUAL);
+        swImplBase.setRole(Role.SLAVE);
         expectLastCall().once();
         expect(swImplBase.getId())
         .andReturn(1000L).once();
@@ -1399,7 +1399,7 @@ public class OFChannelHandlerTest {
 
         handler.messageReceived(ctx, messageEvent);
 
-        assertEquals(OFChannelHandler.ChannelState.EQUAL,
+        assertEquals(OFChannelHandler.ChannelState.SLAVE,
                 handler.getStateForTesting());
     }
 
