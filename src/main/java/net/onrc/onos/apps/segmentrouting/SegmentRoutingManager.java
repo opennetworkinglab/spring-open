@@ -138,6 +138,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // private long matchActionId = 0L;
     private IdGenerator<MatchActionId> maIdGenerator;
     private IdGenerator<MatchActionOperationsId> maoIdGenerator;
+    private List<String> switchDpidListWithMastership;
 
     private final int DELAY_TO_ADD_LINK = 10;
     private final int MAX_NUM_LABELS = 3;
@@ -209,6 +210,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         tunnelTable = new HashMap<String, SegmentRoutingTunnel>();
         adjacencySidTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
         adjcencyGroupIdTable = new HashMap<String, HashMap<Integer, Integer>>();
+        switchDpidListWithMastership = new ArrayList<String>();
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -278,20 +280,36 @@ public class SegmentRoutingManager implements IFloodlightModule,
     public void topologyEvents(TopologyEvents topologyEvents)
     {
 
-        if (operationMode == 0) {
-            discoveryTask.reschedule(20, TimeUnit.SECONDS);
-            operationMode = 1; // Wait until all switches are up ..
+        if (!topologyEvents.getAddedMastershipDataEntries().isEmpty()) {
+            processMastershipAdded(topologyEvents.getAddedMastershipDataEntries());
         }
-        else if (operationMode == 1){ // waiting for all switches to be up
-            // Do nothing
-        }
-        else if (operationMode == 2) { // all switches are up and we need to handle events quickly.
-            topologyEventQueue.add(topologyEvents);
-            discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
-        }
+        else {
+            if (operationMode == 0) {
+                discoveryTask.reschedule(20, TimeUnit.SECONDS);
+                operationMode = 1; // Wait until all switches are up ..
+            }
+            else if (operationMode == 1) { // waiting for all switches to be up
+                // Do nothing
+            }
+            else if (operationMode == 2) { // all switches are up and we need to
+                                           // handle events quickly.
+                topologyEventQueue.add(topologyEvents);
+                discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
+            }
 
-        //discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
-        //log.debug("A task is scheduled to handle events {}", topologyEvents);
+            // discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
+            // log.debug("A task is scheduled to handle events {}",
+            // topologyEvents);
+        }
+    }
+
+    private void processMastershipAdded(
+            Collection<MastershipData> mastershipAdded) {
+        for (MastershipData mastershipData : mastershipAdded) {
+            String dpid = mastershipData.getDpid().toString();
+            if (!switchDpidListWithMastership.contains(dpid))
+                switchDpidListWithMastership.add(dpid);
+        }
     }
 
     /**
@@ -623,18 +641,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
         graphs.clear();
         Iterable<Switch> switches = mutableTopology.getSwitches();
         for (Switch sw : switches) {
-            ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
-            graphs.put(sw, ecmpSPG);
-            //log.debug("ECMPShortestPathGraph is computed for switch {}",
-            //        HexString.toHexString(sw.getDpid().value()));
-            populateEcmpRoutingRulesForPath(sw, ecmpSPG, modified);
+            if (switchDpidListWithMastership.contains(sw.getDpid().toString())) {
+                ECMPShortestPathGraph ecmpSPG = new ECMPShortestPathGraph(sw);
+                graphs.put(sw, ecmpSPG);
+                // log.debug("ECMPShortestPathGraph is computed for switch {}",
+                // HexString.toHexString(sw.getDpid().value()));
+                populateEcmpRoutingRulesForPath(sw, ecmpSPG, modified);
 
-            // Set adjacency routing rule for all switches
-            try {
-                populateAdjacencyncyRule(sw);
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                // Set adjacency routing rule for all switches
+                try {
+                    populateAdjacencyncyRule(sw);
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         }
         numOfPopulation++;
