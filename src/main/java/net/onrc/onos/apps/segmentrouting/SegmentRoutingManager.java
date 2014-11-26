@@ -41,9 +41,13 @@ import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
 import net.onrc.onos.core.matchaction.MatchAction;
+import net.onrc.onos.core.matchaction.MatchActionFloodlightService;
 import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
+import net.onrc.onos.core.matchaction.MatchActionOperationsId;
+import net.onrc.onos.core.matchaction.MatchActionService;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.CopyTtlInAction;
 import net.onrc.onos.core.matchaction.action.CopyTtlOutAction;
@@ -77,6 +81,7 @@ import net.onrc.onos.core.topology.SwitchData;
 import net.onrc.onos.core.topology.TopologyEvents;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.IPv4Net;
+import net.onrc.onos.core.util.IdGenerator;
 import net.onrc.onos.core.util.PortNumber;
 import net.onrc.onos.core.util.SwitchPort;
 
@@ -97,6 +102,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     private ITopologyService topologyService;
     private IPacketService packetService;
+    private MatchActionService matchActionService;
     private MutableTopology mutableTopology;
     private ConcurrentLinkedQueue<IPv4> ipPacketQueue;
     private IRestApiService restApi;
@@ -129,7 +135,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private int numOfEvents = 0;
     private int numOfEventProcess = 0;
     private int numOfPopulation = 0;
-    private long matchActionId = 0L;
+    // private long matchActionId = 0L;
+    private IdGenerator<MatchActionId> maIdGenerator;
+    private IdGenerator<MatchActionOperationsId> maoIdGenerator;
 
     private final int DELAY_TO_ADD_LINK = 10;
     private final int MAX_NUM_LABELS = 3;
@@ -171,6 +179,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         l.add(IFlowPusherService.class);
         l.add(ITopologyService.class);
         l.add(IRestApiService.class);
+        // l.add(MatchActionModule.class);
+        // l.add(MatchActionComponent.class);
+        l.add(MatchActionFloodlightService.class);
 
         return l;
 
@@ -192,6 +203,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         linksToAdd = new HashMap<String, LinkData>();
         topologyEventQueue = new ConcurrentLinkedQueue<TopologyEvents>();
         packetService = context.getServiceImpl(IPacketService.class);
+        matchActionService = context.getServiceImpl(MatchActionFloodlightService.class);
         restApi = context.getServiceImpl(IRestApiService.class);
         policyTable = new HashMap<String, SegmentRoutingPolicy>();
         tunnelTable = new HashMap<String, SegmentRoutingTunnel>();
@@ -201,11 +213,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
 
-
     }
 
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
+        maIdGenerator = matchActionService.getMatchActionIdGenerator();
+        maoIdGenerator = matchActionService.getMatchActionOperationsIdGenerator();
+
         ScheduledExecutorService ses = threadPool.getScheduledExecutor();
         restApi.addRestletRoutable(new SegmentRoutingWebRoutable());
 
@@ -759,6 +773,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     }
 
+    public void executeMatchActionOpEntry(MatchActionOperationEntry maEntry) {
+        MatchActionOperations mao = new MatchActionOperations(maoIdGenerator.getNewId());
+        mao.addOperation(maEntry);
+        matchActionService.executeOperations(mao);
+    }
+
     /**
      * Push the MPLS rule for Adjacency ID
      *
@@ -807,23 +827,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(groupAction);
         }
 
-        MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
-                new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
+        MatchAction matchAction = new MatchAction(maIdGenerator.getNewId(),
+                new SwitchPort(sw.getDpid().value(), (short) 0), mplsMatch, actions);
         Operator operator = Operator.ADD;
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(operator, matchAction);
+        executeMatchActionOpEntry(maEntry);
 
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                sw.getDpid().value());
+        /* IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+                 sw.getDpid().value());
 
-        if (sw13 != null) {
-            try {
-                //printMatchActionOperationEntry(sw, maEntry);
-                sw13.pushFlow(maEntry);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+         if (sw13 != null) {
+             try {
+                 //printMatchActionOperationEntry(sw, maEntry);
+                 sw13.pushFlow(maEntry);
+             } catch (IOException e) {
+                 e.printStackTrace();
+             }
+         }*/
     }
 
     /**
@@ -961,6 +982,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         if (!entries.isEmpty()) {
+            MatchActionOperations mao = new MatchActionOperations(
+                    maoIdGenerator.getNewId());
+            for (MatchActionOperationEntry maEntry : entries)
+                mao.addOperation(maEntry);
+            matchActionService.executeOperations(mao);
+        }
+
+        /*if (!entries.isEmpty()) {
             IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     targetSw.getDpid().value());
 
@@ -971,7 +1000,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     e.printStackTrace();
                 }
             }
-        }
+        }*/
 
     }
 
@@ -1033,8 +1062,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
         actions.add(groupAction);
 
-        MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
-                new SwitchPort((long) 0, (short) 0), ipMatch, actions);
+        MatchAction matchAction = new MatchAction(maIdGenerator.getNewId(),
+                new SwitchPort(sw.getDpid().value(), (short) 0), ipMatch, actions);
 
         Operator operator = null;
         if (modified)
@@ -1045,21 +1074,22 @@ public class SegmentRoutingManager implements IFloodlightModule,
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(operator, matchAction);
 
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(sw.getDpid().value());
         //        getSwId(sw.getDpid().toString()));
 
-        if (sw13 != null) {
-            try {
-                //printMatchActionOperationEntry(sw, maEntry);
-                if (entries != null)
-                    entries.add(maEntry);
-                else
+        if (entries != null)
+            entries.add(maEntry);
+        else {
+            executeMatchActionOpEntry(maEntry);
+            /*IOF13Switch sw13 = (IOF13Switch)
+                    floodlightProvider.getMasterSwitch(sw.getDpid().value());
+            if (sw13 != null) {
+                try {
                     sw13.pushFlow(maEntry);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }*/
         }
-
     }
 
     /**
@@ -1097,7 +1127,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
             maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, true));
             maEntries.add(buildMAEntry(sw, mplsLabel, fwdSws, false, false));
         }
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+        MatchActionOperations mao = new MatchActionOperations(
+                maoIdGenerator.getNewId());
+        for (MatchActionOperationEntry maEntry : maEntries)
+            mao.addOperation(maEntry);
+        matchActionService.executeOperations(mao);
+        /*IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 sw.getDpid().value());
 
         if (sw13 != null) {
@@ -1107,7 +1142,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 
 
@@ -1362,9 +1397,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
      *
      * @return MatchAction ID
      */
-    public long getNextMatchActionID() {
-        return this.matchActionId++;
-    }
+    // public long getNextMatchActionID() {
+    // return this.matchActionId++;
+    // }
 
     /**
      * Get ports for the adjacency SID given
@@ -1558,8 +1593,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(groupAction);
         }
 
-        MatchAction matchAction = new MatchAction(new MatchActionId(matchActionId++),
-                new SwitchPort((long) 0, (short) 0), mplsMatch, actions);
+        MatchAction matchAction = new MatchAction(maIdGenerator.getNewId(),
+                new SwitchPort(sw.getDpid().value(), (short) 0), mplsMatch, actions);
         Operator operator = Operator.ADD;
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(operator, matchAction);
@@ -1891,7 +1926,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     public MatchActionId getMatchActionId() {
-        return new MatchActionId(matchActionId++);
+        return maIdGenerator.getNewId();
     }
 
     // ************************************

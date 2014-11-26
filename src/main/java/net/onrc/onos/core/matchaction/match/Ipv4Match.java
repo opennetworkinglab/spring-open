@@ -7,6 +7,14 @@ public class Ipv4Match implements Match {
 
     IPv4Net dstIp;
 
+    /**
+     * Default constructor for Kryo deserialization.
+     */
+    @Deprecated
+    public Ipv4Match() {
+        this.dstIp = null;
+    }
+
     public Ipv4Match(String ipAddressSlash) {
         this.dstIp = new IPv4Net(ipAddressSlash);
 

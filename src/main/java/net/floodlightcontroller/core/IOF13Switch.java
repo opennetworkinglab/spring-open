@@ -63,12 +63,27 @@ public interface IOF13Switch extends IOFSwitch {
     public class NeighborSet {
         public enum groupPktType {
             IP_OUTGOING,
-            MPLS_OUTGOING
+            MPLS_OUTGOING;
+
+            /**
+             * Default constructor for Kryo deserialization.
+             */
+            @Deprecated
+            groupPktType(){}
         };
 
         Set<Dpid> dpids;
         int edgeLabel;
         groupPktType outPktType;
+
+        /**
+         * Default constructor for Kryo deserialization.
+         */
+        public NeighborSet() {
+            this.edgeLabel = -1;
+            this.outPktType = groupPktType.IP_OUTGOING;
+            this.dpids = new HashSet<Dpid>();
+        }
 
         /**
          * Constructor

@@ -1,5 +1,6 @@
 package net.onrc.onos.core.matchaction;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -14,6 +15,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOF13Switch;
+import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.internal.OFMessageFuture;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.onrc.onos.api.flowmanager.ConflictDetectionPolicy;
@@ -354,15 +357,32 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
                 }
             }
 
-            // push flow entries to switches
-            pusher.pushMatchActions(installSet);
-
             // insert a barrier after each phase on each modifiedSwitch
             // wait for confirmation messages before proceeding
             List<Pair<Dpid, OFMessageFuture<OFBarrierReply>>> barriers = new ArrayList<>();
+            int i=0;
             for (Dpid dpid : modifiedSwitches) {
-                barriers.add(Pair.of(dpid, pusher.barrierAsync(dpid)));
+                IOFSwitch sw = provider.getMasterSwitch(dpid.value());
+                if ((sw != null) && (sw instanceof IOF13Switch)) {
+                    try {
+                        ((IOF13Switch) sw).pushFlows(installSet);
+                        barriers.add(Pair.of(dpid,
+                                (OFMessageFuture<OFBarrierReply>) sw.sendBarrier()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
+                    if (i == 0) {
+                        // push flow entries to switches
+                        pusher.pushMatchActions(installSet);
+                        i = 1;
+                    }
+
+                    barriers.add(Pair.of(dpid, pusher.barrierAsync(dpid)));
+                }
             }
+
             List<SwitchResult> switchResults = new ArrayList<>();
             for (Pair<Dpid, OFMessageFuture<OFBarrierReply>> pair : barriers) {
                 Dpid dpid = pair.getLeft();
