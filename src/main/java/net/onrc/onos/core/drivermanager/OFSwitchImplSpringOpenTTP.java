@@ -189,6 +189,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         isEdgeRouter = false;
         groupid = new AtomicInteger(0);
         this.usePipeline13 = usePipeline13;
+        publishAttributes = null;
     }
 
     // *****************************

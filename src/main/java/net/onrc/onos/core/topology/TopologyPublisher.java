@@ -393,7 +393,8 @@ public class TopologyPublisher implements IOFSwitchListener,
             for (Entry<String, String> e : attr.entrySet()) {
                 switchData.createStringAttribute(e.getKey(), e.getValue());
             }
-            if (sw instanceof IOF13Switch) {
+            if ((sw instanceof IOF13Switch) &&
+                    (((IOF13Switch) sw).getPublishAttributes() != null)) {
                 Map<String, String> pa = ((IOF13Switch) sw).getPublishAttributes();
                 for (Entry<String, String> e : pa.entrySet()) {
                     switchData.createStringAttribute(e.getKey(), e.getValue());
