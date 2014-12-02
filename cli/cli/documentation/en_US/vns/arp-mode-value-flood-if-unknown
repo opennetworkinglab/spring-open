@@ -1,2 +1,0 @@
-Flood ARP packets if the destination is unknown. Might leak packets
-across VNS.

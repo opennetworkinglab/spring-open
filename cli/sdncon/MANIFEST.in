@@ -1,7 +1,0 @@
-graft */templates
-graft */img
-graft */static
-graft apps/*/templates
-graft apps/*/img
-graft apps/*/static
-global-exclude tests.py

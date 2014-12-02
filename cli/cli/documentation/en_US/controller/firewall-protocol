@@ -1,2 +1,0 @@
-Specify the ip protocol for the firewall rule. The value can be
-either 'udp', 'tcp', or 'vrrp'.

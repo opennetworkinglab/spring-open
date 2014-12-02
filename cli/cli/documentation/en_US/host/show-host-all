@@ -1,3 +1,0 @@
-The 'all' keyword is a positional parameter replacement
-which allows additional parameters to be included.  
-'all' may not be used as a host alias.

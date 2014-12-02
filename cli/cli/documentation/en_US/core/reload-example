@@ -1,3 +1,0 @@
-Reboot the controller
-    node1(config)# reload 
-    Confirm Reload (yes to continue) yes

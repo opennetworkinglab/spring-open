@@ -1,3 +1,0 @@
-The priority of this interface-rule. Higher numeric values represent
-higher priority. The highest priority interface-rule that matches a
-given packet will be choosen. 

@@ -1,5 +1,0 @@
-interface Ethernet1
-  Configure a specific port on this switch
-
-no interface Ethernet1
-  Delete a switch interface configuration

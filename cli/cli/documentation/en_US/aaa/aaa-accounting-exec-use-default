@@ -1,5 +1,0 @@
-Configure accounting services while connecting via the default channel
-(currently SSH).
-
-Reset the accounting services (currently to native /var/log logging)
-with the 'no' version of this command.
