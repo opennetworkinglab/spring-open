@@ -219,6 +219,7 @@ public class SegmentRoutingTunnel {
             NeighborSet ns) {
 
         IOF13Switch targetSw = srManager.getIOF13Switch(routeInfo.srcSwDpid);
+        int groupId = -1;
 
         if (targetSw == null) {
             log.debug("Switch {} is gone.", routeInfo.srcSwDpid);
@@ -229,8 +230,20 @@ public class SegmentRoutingTunnel {
         for (String IdStr: routeInfo.route)
             Ids.add(Integer.parseInt(IdStr));
 
-        List<PortNumber> ports = getPortsFromNeighborSet(routeInfo.srcSwDpid, ns);
-        int groupId = targetSw.createGroup(Ids, ports);
+        List<PortNumber> portNumbers = new ArrayList<PortNumber>();
+        if (routeInfo.getSrcAdjanceySid() != null) {
+            String nodeSid = srManager.getMplsLabel(routeInfo.getSrcSwDpid());
+            List<Integer> ports = srManager.getAdacencyPorts(Integer.parseInt(nodeSid),
+                    Integer.parseInt(routeInfo.getSrcAdjanceySid()));
+            for (int port: ports) {
+                portNumbers.add(PortNumber.uint32(port));
+            }
+        }
+        else {
+            portNumbers = getPortsFromNeighborSet(routeInfo.srcSwDpid, ns);
+        }
+
+        groupId = targetSw.createGroup(Ids, portNumbers);
 
         return groupId;
     }
@@ -299,6 +312,9 @@ public class SegmentRoutingTunnel {
                         }
                         routeInfo.addRoute(nodeId);
                         i++;
+                    }
+                    else if (srManager.isAdjacencySid(nodeId)) {
+                        routeInfo.setSrcAdjacencySid(nodeId);
                     }
                     routeInfo.setFwdSwDpid(fwdSws);
                     // we check only the next node ID of the source router
@@ -573,10 +589,15 @@ public class SegmentRoutingTunnel {
         private List<Dpid> fwdSwDpids;
         private List<String> route;
         private int gropuId;
+        private String srcAdjSid;
 
         public TunnelRouteInfo() {
             fwdSwDpids = new ArrayList<Dpid>();
             route = new ArrayList<String>();
+        }
+
+        public void setSrcAdjacencySid(String nodeId) {
+            this.srcAdjSid = nodeId;
         }
 
         private void setSrcDpid(String dpid) {
@@ -595,6 +616,10 @@ public class SegmentRoutingTunnel {
             this.gropuId = groupId;
         }
 
+        private String getSrcAdjanceySid() {
+            return this.srcAdjSid;
+        }
+
         public String getSrcSwDpid() {
             return this.srcSwDpid;
         }
@@ -610,6 +635,7 @@ public class SegmentRoutingTunnel {
         public int getGroupId() {
             return this.gropuId;
         }
+
     }
 
 }

@@ -1409,6 +1409,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return adjecencyInfo.keySet();
     }
 
+
     /**
      * Send a Barrier request message and wait for the reply.
      * It waits for the reply for 2 seconds and it cause exception when timer
