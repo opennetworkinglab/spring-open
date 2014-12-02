@@ -41,6 +41,12 @@ public class SegmentRoutingTunnel {
         this.routes = new ArrayList<TunnelRouteInfo>();
     }
 
+    public SegmentRoutingTunnel(TunnelNotification tunnelNotification) {
+        this.tunnelId = tunnelNotification.getTunnelId();
+        this.labelIds = tunnelNotification.getLabelIds();
+        this.routes = tunnelNotification.getRouteInfo();
+    }
+
     /**
      * Get tunnel ID
      *
@@ -567,49 +573,5 @@ public class SegmentRoutingTunnel {
 
     }
 
-    public class TunnelRouteInfo {
-
-        private String srcSwDpid;
-        private List<Dpid> fwdSwDpids;
-        private List<String> route;
-        private int gropuId;
-
-        public TunnelRouteInfo() {
-            fwdSwDpids = new ArrayList<Dpid>();
-            route = new ArrayList<String>();
-        }
-
-        private void setSrcDpid(String dpid) {
-            this.srcSwDpid = dpid;
-        }
-
-        private void setFwdSwDpid(List<Dpid> dpid) {
-            this.fwdSwDpids = dpid;
-        }
-
-        private void addRoute(String id) {
-            route.add(id);
-        }
-
-        private void setGroupId(int groupId) {
-            this.gropuId = groupId;
-        }
-
-        public String getSrcSwDpid() {
-            return this.srcSwDpid;
-        }
-
-        public List<Dpid> getFwdSwDpid() {
-            return this.fwdSwDpids;
-        }
-
-        public List<String> getRoute() {
-            return this.route;
-        }
-
-        public int getGroupId() {
-            return this.gropuId;
-        }
-    }
 
 }

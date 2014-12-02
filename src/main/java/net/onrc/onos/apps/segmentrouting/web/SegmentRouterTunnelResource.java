@@ -12,7 +12,7 @@ import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicyTunnel;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingTunnel;
-import net.onrc.onos.apps.segmentrouting.SegmentRoutingTunnel.TunnelRouteInfo;
+import net.onrc.onos.apps.segmentrouting.TunnelRouteInfo;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.resource.Delete;
@@ -110,7 +110,7 @@ public class SegmentRouterTunnelResource extends ServerResource {
                Integer gId = segmentRoutingService.getTunnelGroupId(tunnelId,
                        label.getSrcSwDpid());
                dpidGroup.add(label.getSrcSwDpid()+"("
-                       + segmentRoutingService.getMplsLabel(label.getSrcSwDpid())+ ")" 
+                       + segmentRoutingService.getMplsLabel(label.getSrcSwDpid())+ ")"
                        + "/"+ gId
                        );
            }

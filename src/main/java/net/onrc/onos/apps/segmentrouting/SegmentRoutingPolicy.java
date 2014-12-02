@@ -39,6 +39,14 @@ public class SegmentRoutingPolicy {
         this.type = type;
     }
 
+    public SegmentRoutingPolicy(
+            PolicyNotification policyNotication) {
+        this.policyId = policyNotication.getPolicyId();
+        this.match = policyNotication.getPacketMatch();
+        this.priority = policyNotication.getPriority();
+        this.type = PolicyType.valueOf(policyNotication.getPolicyType());
+    }
+
     /**
      * Get the policy ID
      *
