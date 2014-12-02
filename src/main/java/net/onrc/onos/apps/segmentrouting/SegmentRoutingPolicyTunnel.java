@@ -6,7 +6,6 @@ import java.util.List;
 
 import net.floodlightcontroller.core.IOF13Switch;
 import net.onrc.onos.core.matchaction.MatchAction;
-import net.onrc.onos.core.matchaction.MatchActionId;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
 import net.onrc.onos.core.matchaction.action.Action;
@@ -88,8 +87,8 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
                 actions.add(groupAction);
             }
 
-            MatchAction matchAction = new MatchAction(new MatchActionId(
-                    srManager.getNextMatchActionID()),
+            MatchAction matchAction = new MatchAction(
+                    srManager.getMatchActionId(),
                     new SwitchPort((long) 0, (short) 0), match, priority,
                     actions);
             MatchActionOperationEntry maEntry =
@@ -124,8 +123,8 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
         groupAction.setGroupId(gropuId);
         actions.add(groupAction);
 
-        MatchAction matchAction = new MatchAction(new MatchActionId(
-                srManager.getNextMatchActionID()),
+        MatchAction matchAction = new MatchAction(
+                srManager.getMatchActionId(),
                 new SwitchPort((long) 0, (short) 0), match, priority,
                 actions);
         MatchActionOperationEntry maEntry =
