@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.annotation.concurrent.ThreadSafe;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
+import net.floodlightcontroller.core.IOF13Switch.NeighborSet;
+import net.floodlightcontroller.core.IOF13Switch.NeighborSet.groupPktType;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.batchoperation.BatchOperationEntry;
 import net.onrc.onos.api.flowmanager.FlowBatchOperation;
@@ -58,10 +60,23 @@ import net.onrc.onos.core.matchaction.MatchActionOperationsId;
 import net.onrc.onos.core.matchaction.MatchActionOperationsState;
 import net.onrc.onos.core.matchaction.SwitchResult;
 import net.onrc.onos.core.matchaction.SwitchResultList;
+import net.onrc.onos.core.matchaction.action.CopyTtlInAction;
+import net.onrc.onos.core.matchaction.action.CopyTtlOutAction;
+import net.onrc.onos.core.matchaction.action.DecMplsTtlAction;
+import net.onrc.onos.core.matchaction.action.DecNwTtlAction;
+import net.onrc.onos.core.matchaction.action.GroupAction;
 import net.onrc.onos.core.matchaction.action.ModifyDstMacAction;
 import net.onrc.onos.core.matchaction.action.ModifySrcMacAction;
 import net.onrc.onos.core.matchaction.action.NullAction;
 import net.onrc.onos.core.matchaction.action.OutputAction;
+import net.onrc.onos.core.matchaction.action.PopMplsAction;
+import net.onrc.onos.core.matchaction.action.PushMplsAction;
+import net.onrc.onos.core.matchaction.action.SetDAAction;
+import net.onrc.onos.core.matchaction.action.SetMplsBosAction;
+import net.onrc.onos.core.matchaction.action.SetMplsIdAction;
+import net.onrc.onos.core.matchaction.action.SetSAAction;
+import net.onrc.onos.core.matchaction.match.Ipv4Match;
+import net.onrc.onos.core.matchaction.match.MplsMatch;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
 import net.onrc.onos.core.newintent.IntentCompilationResult;
 import net.onrc.onos.core.newintent.PathFlowIntent;
@@ -69,6 +84,7 @@ import net.onrc.onos.core.newintent.SingleDstTreeFlowIntent;
 import net.onrc.onos.core.newintent.SingleSrcTreeFlowIntent;
 import net.onrc.onos.core.newintent.TestIntent;
 import net.onrc.onos.core.newintent.TestSubclassIntent;
+import net.onrc.onos.core.packet.MPLS;
 import net.onrc.onos.core.packetservice.BroadcastPacketOutNotification;
 import net.onrc.onos.core.packetservice.PacketOutNotification;
 import net.onrc.onos.core.packetservice.SinglePacketOutNotification;
@@ -199,6 +215,7 @@ public class KryoFactory {
         // FlowPath and related classes
         kryo.register(Dpid.class);
         kryo.register(IPv4.class);
+        kryo.register(MPLS.class);
         kryo.register(IPv4Net.class);
         kryo.register(IPv6.class);
         kryo.register(IPv6Net.class);
@@ -282,9 +299,22 @@ public class KryoFactory {
         kryo.register(MatchAction.class);
         kryo.register(MatchActionId.class);
         kryo.register(PacketMatch.class);
+        kryo.register(Ipv4Match.class);
+        kryo.register(MplsMatch.class);
         kryo.register(OutputAction.class);
         kryo.register(ModifyDstMacAction.class);
         kryo.register(ModifySrcMacAction.class);
+        kryo.register(CopyTtlInAction.class);
+        kryo.register(CopyTtlOutAction.class);
+        kryo.register(DecMplsTtlAction.class);
+        kryo.register(DecNwTtlAction.class);
+        kryo.register(GroupAction.class);
+        kryo.register(PopMplsAction.class);
+        kryo.register(PushMplsAction.class);
+        kryo.register(SetDAAction.class);
+        kryo.register(SetSAAction.class);
+        kryo.register(SetMplsBosAction.class);
+        kryo.register(SetMplsIdAction.class);
         kryo.register(MatchActionOperations.class);
         kryo.register(MatchActionOperations.Operator.class);
         kryo.register(MatchActionOperationsId.class);
@@ -315,6 +345,9 @@ public class KryoFactory {
         kryo.register(PolicyNotification.class);
         kryo.register(TunnelNotification.class);
         kryo.register(TunnelRouteInfo.class);
+        kryo.register(NeighborSet.class);
+        kryo.register(groupPktType.class);
+
 
         return kryo;
     }

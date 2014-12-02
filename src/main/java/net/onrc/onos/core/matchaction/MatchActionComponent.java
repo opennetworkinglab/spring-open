@@ -267,15 +267,22 @@ public class MatchActionComponent implements MatchActionService, IFloodlightServ
 
             // apply updates from results list
             Map<Dpid, SwitchResult> resultMap = pendingMatchActionOperations.get(matchSetId);
-            for (SwitchResult result : results) {
-                SwitchResult resultToUpdate = resultMap.get(result.getSwitch());
-                if (resultToUpdate != null) {
-                    resultToUpdate.setStatus(result.getStatus());
+            if (resultMap != null) {
+                for (SwitchResult result : results) {
+                    SwitchResult resultToUpdate = resultMap.get(result.getSwitch());
+                    if (resultToUpdate != null) {
+                        resultToUpdate.setStatus(result.getStatus());
+                    }
+                    // else {
+                    // TODO error!
+                    // }
                 }
-                // else {
-                // TODO error!
-                // }
             }
+            else {
+                log.warn("No pendingMatchActionOperations for {} ", matchSetId);
+                return;
+            }
+
 
             // check to see the overall outcome of the install operation
             SwitchResult.Status setResult = SwitchResult.Status.SUCCESS;

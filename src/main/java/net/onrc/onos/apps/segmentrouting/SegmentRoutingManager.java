@@ -361,24 +361,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
         if (!topologyEvents.getAddedMastershipDataEntries().isEmpty()) {
             processMastershipAdded(topologyEvents.getAddedMastershipDataEntries());
         }
-        else {
-            if (operationMode == 0) {
-                discoveryTask.reschedule(20, TimeUnit.SECONDS);
-                operationMode = 1; // Wait until all switches are up ..
-            }
-            else if (operationMode == 1) { // waiting for all switches to be up
-                // Do nothing
-            }
-            else if (operationMode == 2) { // all switches are up and we need to
-                                           // handle events quickly.
-                topologyEventQueue.add(topologyEvents);
-                discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
-            }
 
-            // discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
-            // log.debug("A task is scheduled to handle events {}",
-            // topologyEvents);
+        if (operationMode == 0) {
+            discoveryTask.reschedule(20, TimeUnit.SECONDS);
+            operationMode = 1; // Wait until all switches are up ..
         }
+        else if (operationMode == 1) { // waiting for all switches to be up
+            // Do nothing
+        }
+        else if (operationMode == 2) { // all switches are up and we need to
+            // handle events quickly.
+            topologyEventQueue.add(topologyEvents);
+            discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
+        }
+
+        // discoveryTask.reschedule(100, TimeUnit.MILLISECONDS);
+        // log.debug("A task is scheduled to handle events {}",
+        // topologyEvents);
+
     }
 
     private void processMastershipAdded(
