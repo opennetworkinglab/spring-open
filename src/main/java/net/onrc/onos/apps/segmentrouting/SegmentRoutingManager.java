@@ -478,8 +478,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 numOfPopulation);
     }
 
-
-
+    /**
+     * Process the MastershipAdded events.
+     * It maintains the list of switch list with mastership.
+     * The list is used when populating the routing rules for only the switch
+     * with mastership.
+     *
+     * @param mastershipAdded
+     */
     private void processMastershipAdded(
             Collection<MastershipData> mastershipAdded) {
         for (MastershipData mastershipData: mastershipAdded) {
@@ -1282,7 +1288,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             tunnelTable.put(tunnelId, srTunnel);
             TunnelNotification tunnelNotification =
                     new TunnelNotification(srTunnel);
-            tunnelEventChannel.addTransientEntry(Long.valueOf(1),
+            tunnelEventChannel.addTransientEntry(Long.valueOf(tunnelId),
                     tunnelNotification);
             return true;
         }
@@ -1351,7 +1357,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 policyTable.put(pid, srPolicy);
                 PolicyNotification policyNotification =
                         new PolicyNotification(srPolicy);
-                policyEventChannel.addTransientEntry(Long.valueOf(1),
+                policyEventChannel.addTransientEntry(Long.valueOf(pid),
                         policyNotification);
                 return true;
             }
@@ -1428,6 +1434,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
     }
+
     /**
      * Remove a tunnel
      * It removes all groups for the tunnel if the tunnel is not used for any
@@ -1548,6 +1555,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return replyFuture;
     }
 
+    /**
+     * Check whether all replies are received for the barrier requests sent.
+     * It waits for replies for two seconds at most and returns as soon as all
+     * replies are received.
+     *
+     * @param replies
+     * @return
+     */
     private boolean checkBarrierReplies(List<OFBarrierReplyFuture> replies) {
 
         for (OFBarrierReplyFuture replyFuture: replies) {
@@ -2004,6 +2019,11 @@ public class SegmentRoutingManager implements IFloodlightModule,
         return mutableTopology.getSwitch(new Dpid(dpid));
     }
 
+    /**
+     * Get the next MatchAction ID
+     *
+     * @return MatchActionId
+     */
     public MatchActionId getMatchActionId() {
         return new MatchActionId(matchActionId++);
     }
