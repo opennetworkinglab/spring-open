@@ -1,3 +1,0 @@
-Configure authentication (user password validation).  Users are
-authenticated for a specific task and via a specific channel, using one
-or more authentication sources.

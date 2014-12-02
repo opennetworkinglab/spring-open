@@ -1,3 +1,0 @@
-Configure a DNS server for the controller. The priority of the DNS
-servers is in the order they were entered, i.e. the first one
-entered is the primary DNS server.

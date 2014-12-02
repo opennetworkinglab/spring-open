@@ -1,2 +1,0 @@
-Flood DHCP packets if the DHCP server location is unknown. DHCP server
-location will be discovered.

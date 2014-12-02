@@ -1,2 +1,0 @@
-match ip-subnet 10.10.10.10
-match ip-subnet 10.42.10.0/24

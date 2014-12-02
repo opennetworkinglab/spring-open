@@ -1,2 +1,0 @@
-Configure authorization (user privileges).  Users are authorized for a specific role
-and via a specific channel, using one or more authorization sources.

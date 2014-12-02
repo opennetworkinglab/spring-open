@@ -1,3 +1,0 @@
-Configure accounting (logging for user CLI events).
-Accounting is configured for a specific role, via a specific channel,
-for specific events, using one or more accounting services.

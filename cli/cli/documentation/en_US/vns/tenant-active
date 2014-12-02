@@ -1,2 +1,0 @@
-Set the tenant active. If a tenant is inactive the controller will not use it
-or its rules.

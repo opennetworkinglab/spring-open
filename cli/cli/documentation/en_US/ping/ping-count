@@ -1,2 +1,0 @@
-This integer field identifies the number of ping requests
-sent to the target before exiting.  The default value is '5'.

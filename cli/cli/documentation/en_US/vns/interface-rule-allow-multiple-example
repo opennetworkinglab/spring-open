@@ -1,6 +1,0 @@
-allow-multiple
-  Devices matching this rule can be in more than one VNS
-
-no allow-multiple
-  Devices matching this rule can be in a single VNS
-
