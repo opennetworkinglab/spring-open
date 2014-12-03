@@ -225,8 +225,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         adjacencySidTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
         adjcencyGroupIdTable = new HashMap<String, HashMap<Integer, Integer>>();
         switchDpidListWithMastership = new ArrayList<String>();
-        policyEventHandler = new PolicyEventHandler();
-        tunnelEventHandler = new TunnelEventHandler();
+        policyEventHandler = new PolicyEventHandler(this);
+        tunnelEventHandler = new TunnelEventHandler(this);
 
         packetService.registerPacketListener(this);
         topologyService.addListener(this, false);
@@ -295,13 +295,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private class PolicyEventHandler implements
     IEventChannelListener<Long, PolicyNotification> {
 
+        SegmentRoutingManager srManager;
+
+        public PolicyEventHandler(SegmentRoutingManager srm) {
+            this.srManager = srm;
+        }
+
         @Override
         public void entryAdded(PolicyNotification policyNotication) {
             log.debug("Policy entry {} was added", policyNotication);
             if (PolicyType.valueOf(policyNotication.getPolicyType()) ==
                     PolicyType.TUNNEL_FLOW) {
                 SegmentRoutingPolicyTunnel srPolicy =
-                        new SegmentRoutingPolicyTunnel(policyNotication);
+                        new SegmentRoutingPolicyTunnel(srManager, policyNotication);
                 policyTable.put(srPolicy.getPolicyId(), srPolicy);
             }
         }
@@ -322,11 +328,23 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     private class TunnelEventHandler implements
     IEventChannelListener<Long, TunnelNotification> {
+        SegmentRoutingManager srManager;
+
+        public TunnelEventHandler(SegmentRoutingManager srm) {
+            super();
+            this.srManager = srm;
+        }
 
         @Override
         public void entryAdded(TunnelNotification tunnelNotification) {
             SegmentRoutingTunnel srTunnel =
-                    new SegmentRoutingTunnel(tunnelNotification);
+                    new SegmentRoutingTunnel(srManager, tunnelNotification);
+            if (srTunnel.checkAndCreateTunnel()) {
+                TunnelNotification tunnelNotificationBack =
+                        new TunnelNotification(srTunnel);
+                tunnelEventChannel.updateEntry(Long.valueOf(srTunnel.getTunnelId()),
+                        tunnelNotificationBack);
+            }
             tunnelTable.put(srTunnel.getTunnelId(), srTunnel);
         }
 
@@ -337,9 +355,10 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         @Override
-        public void entryUpdated(TunnelNotification value) {
-            // TODO Auto-generated method stub
-
+        public void entryUpdated(TunnelNotification tunnelNotification) {
+            SegmentRoutingTunnel srTunnel =
+                    new SegmentRoutingTunnel(srManager, tunnelNotification);
+            tunnelTable.put(srTunnel.getTunnelId(), srTunnel);
         }
 
     }
@@ -1649,9 +1668,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
             boolean Bos) {
         IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
                 sw.getDpid().value());
-        if (sw13 == null) {
-            return null;
-        }
+        //if (sw13 == null) {
+        //    return null;
+        //}
         MplsMatch mplsMatch = new MplsMatch(Integer.parseInt(mplsLabel), Bos);
         List<Action> actions = new ArrayList<Action>();
 

@@ -1,10 +1,8 @@
 package net.onrc.onos.apps.segmentrouting;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.floodlightcontroller.core.IOF13Switch;
 import net.onrc.onos.core.matchaction.MatchAction;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
@@ -24,8 +22,6 @@ import org.projectfloodlight.openflow.types.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.esotericsoftware.minlog.Log;
-
 public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
 
     private static final Logger log = LoggerFactory
@@ -39,8 +35,9 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
         this.tunnelId = tid;
     }
 
-    public SegmentRoutingPolicyTunnel(PolicyNotification policyNotication) {
+    public SegmentRoutingPolicyTunnel(SegmentRoutingManager srm, PolicyNotification policyNotication) {
         super(policyNotication);
+        this.srManager = srm;
         this.tunnelId = policyNotication.getTunnelId();
     }
 
@@ -89,11 +86,14 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
 
             MatchAction matchAction = new MatchAction(
                     srManager.getMatchActionId(),
-                    new SwitchPort((long) 0, (short) 0), match, priority,
+                    new SwitchPort((new Dpid(route.getSrcSwDpid())).value(), (long)0), match, priority,
                     actions);
             MatchActionOperationEntry maEntry =
                     new MatchActionOperationEntry(Operator.ADD, matchAction);
 
+            srManager.executeMatchActionOpEntry(maEntry);
+
+            /*
             IOF13Switch sw13 = srManager.getIOF13Switch(route.getSrcSwDpid());
 
             if (sw13 != null) {
@@ -109,6 +109,7 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
                 Log.warn("Cannot find the target switch {}", route.getSrcSwDpid());
                 return false;
             }
+            */
         }
 
         return true;
@@ -123,12 +124,14 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
         groupAction.setGroupId(gropuId);
         actions.add(groupAction);
 
+        /*
         MatchAction matchAction = new MatchAction(
                 srManager.getMatchActionId(),
                 new SwitchPort((long) 0, (short) 0), match, priority,
                 actions);
         MatchActionOperationEntry maEntry =
                 new MatchActionOperationEntry(Operator.REMOVE, matchAction);
+        */
 
         SegmentRoutingTunnel tunnel = srManager.getTunnelInfo(tunnelId);
         if (tunnel == null) {
@@ -139,6 +142,17 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
         List<TunnelRouteInfo> routes = tunnel.getRoutes();
 
         for (TunnelRouteInfo route : routes) {
+
+            MatchAction matchAction = new MatchAction(
+                    srManager.getMatchActionId(),
+                    new SwitchPort((new Dpid(route.getSrcSwDpid())).value(), (long)0), match, priority,
+                    actions);
+            MatchActionOperationEntry maEntry =
+                    new MatchActionOperationEntry(Operator.REMOVE, matchAction);
+
+            srManager.executeMatchActionOpEntry(maEntry);
+
+            /*
             IOF13Switch sw13 = srManager.getIOF13Switch(route.getSrcSwDpid());
             if (sw13 == null) {
                 log.warn("Cannt find the switch {}", route.getSrcSwDpid());
@@ -154,6 +168,7 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
                     return false;
                 }
             }
+            */
         }
 
         return true;

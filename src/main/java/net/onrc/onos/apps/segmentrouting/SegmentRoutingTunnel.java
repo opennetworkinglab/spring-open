@@ -41,10 +41,36 @@ public class SegmentRoutingTunnel {
         this.routes = new ArrayList<TunnelRouteInfo>();
     }
 
-    public SegmentRoutingTunnel(TunnelNotification tunnelNotification) {
+    public SegmentRoutingTunnel(SegmentRoutingManager srm, TunnelNotification tunnelNotification) {
+        this.srManager = srm;
         this.tunnelId = tunnelNotification.getTunnelId();
         this.labelIds = tunnelNotification.getLabelIds();
         this.routes = tunnelNotification.getRouteInfo();
+    }
+
+    public boolean checkAndCreateTunnel() {
+
+        boolean modified = false;
+        for (TunnelRouteInfo route: routes) {
+            if (srManager.getIOF13Switch(route.getSrcSwDpid()) != null) {
+                if (route.getGroupId() == -1) {
+                    NeighborSet ns = new NeighborSet();
+                    for (Dpid dpid: route.getFwdSwDpid())
+                        ns.addDpid(dpid);
+
+                    printTunnelInfo(route.srcSwDpid, tunnelId, route.getRoute(), ns);
+                    int groupId = -1;
+                    if ((groupId =createGroupsForTunnel(tunnelId, route, ns)) < 0) {
+                        log.debug("Failed to create a tunnel at driver.");
+                        return false;
+                    }
+                    route.setGroupId(groupId);
+                    modified = true;
+                }
+            }
+        }
+
+        return modified;
     }
 
     /**
@@ -104,17 +130,23 @@ public class SegmentRoutingTunnel {
         checkAndSplitLabels(stitchingRule);
 
         for (TunnelRouteInfo route: stitchingRule) {
-            NeighborSet ns = new NeighborSet();
-            for (Dpid dpid: route.getFwdSwDpid())
-                ns.addDpid(dpid);
 
-            printTunnelInfo(route.srcSwDpid, tunnelId, route.getRoute(), ns);
-            int groupId = -1;
-            if ((groupId =createGroupsForTunnel(tunnelId, route, ns)) < 0) {
-                log.debug("Failed to create a tunnel at driver.");
-                return false;
+            if (srManager.getIOF13Switch(route.getSrcSwDpid()) != null) {
+                NeighborSet ns = new NeighborSet();
+                for (Dpid dpid: route.getFwdSwDpid())
+                    ns.addDpid(dpid);
+
+                printTunnelInfo(route.srcSwDpid, tunnelId, route.getRoute(), ns);
+                int groupId = -1;
+                if ((groupId =createGroupsForTunnel(tunnelId, route, ns)) < 0) {
+                    log.debug("Failed to create a tunnel at driver.");
+                    return false;
+                }
+                route.setGroupId(groupId);
             }
-            route.setGroupId(groupId);
+            else {
+                route.setGroupId(-1);
+            }
         }
 
         this.routes = stitchingRule;
@@ -197,11 +229,7 @@ public class SegmentRoutingTunnel {
 
         for (TunnelRouteInfo route: routes) {
             IOF13Switch sw13 = srManager.getIOF13Switch(route.srcSwDpid);
-            if (sw13 == null) {
-                log.warn("Cannot find the switch", route.srcSwDpid);
-                return false;
-            }
-            else {
+            if (sw13 != null) {
                 if (!sw13.removeGroup(route.getGroupId())) {
                     log.warn("Faied to remove the tunnel {} at driver",
                             tunnelId);
