@@ -107,8 +107,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private IPacketService packetService;
     private IDatagridService datagridService;
     private IControllerRegistryService registryService;
-    private IEventChannel<Long, PolicyNotification> policyEventChannel;
-    private IEventChannel<Long, TunnelNotification> tunnelEventChannel;
+    private IEventChannel<String, PolicyNotification> policyEventChannel;
+    private IEventChannel<String, TunnelNotification> tunnelEventChannel;
     private MatchActionService matchActionService;
     private MutableTopology mutableTopology;
     private ConcurrentLinkedQueue<IPv4> ipPacketQueue;
@@ -243,12 +243,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         policyEventChannel = datagridService.addListener(SR_POLICY_CHANNEL_NAME,
                 policyEventHandler,
-                Long.class,
+                String.class,
                 PolicyNotification.class);
 
         tunnelEventChannel = datagridService.addListener(SR_TUNNEL_CHANNEL_NAME,
                 tunnelEventHandler,
-                Long.class,
+                String.class,
                 TunnelNotification.class);
 
         discoveryTask = new SingletonTask(ses, new Runnable() {
@@ -293,7 +293,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     private class PolicyEventHandler implements
-    IEventChannelListener<Long, PolicyNotification> {
+    IEventChannelListener<String, PolicyNotification> {
 
         SegmentRoutingManager srManager;
 
@@ -313,9 +313,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         @Override
-        public void entryRemoved(PolicyNotification value) {
-            log.debug("Policy entry {} was removed", value);
-
+        public void entryRemoved(PolicyNotification policyNotication) {
+            log.debug("Policy entry {} was removed", policyNotication);
+            policyTable.remove(policyNotication.getPolicyId());
         }
 
        @Override
@@ -327,7 +327,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     private class TunnelEventHandler implements
-    IEventChannelListener<Long, TunnelNotification> {
+    IEventChannelListener<String, TunnelNotification> {
         SegmentRoutingManager srManager;
 
         public TunnelEventHandler(SegmentRoutingManager srm) {
@@ -342,16 +342,15 @@ public class SegmentRoutingManager implements IFloodlightModule,
             if (srTunnel.checkAndCreateTunnel()) {
                 TunnelNotification tunnelNotificationBack =
                         new TunnelNotification(srTunnel);
-                tunnelEventChannel.updateEntry(Long.valueOf(srTunnel.getTunnelId()),
+                tunnelEventChannel.updateEntry(srTunnel.getTunnelId(),
                         tunnelNotificationBack);
             }
             tunnelTable.put(srTunnel.getTunnelId(), srTunnel);
         }
 
         @Override
-        public void entryRemoved(TunnelNotification value) {
-            // TODO Auto-generated method stub
-
+        public void entryRemoved(TunnelNotification tunnelNotification) {
+            tunnelTable.remove(tunnelNotification.getTunnelId());
         }
 
         @Override
@@ -1329,8 +1328,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             tunnelTable.put(tunnelId, srTunnel);
             TunnelNotification tunnelNotification =
                     new TunnelNotification(srTunnel);
-            tunnelEventChannel.addTransientEntry(Long.valueOf(1),
-                    tunnelNotification);
+            tunnelEventChannel.addEntry(tunnelId, tunnelNotification);
             return true;
         }
         else {
@@ -1399,7 +1397,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 policyTable.put(pid, srPolicy);
                 PolicyNotification policyNotification =
                         new PolicyNotification(srPolicy);
-                policyEventChannel.addTransientEntry(Long.valueOf(1),
+                policyEventChannel.addEntry(pid,
                         policyNotification);
                 return true;
             }
@@ -1437,7 +1435,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
         if (policy.removePolicy()) {
             policyTable.remove(pid);
+            policyEventChannel.removeEntry(pid);
             log.debug("Policy {} is removed.", pid);
+
             return true;
         }
         else {
@@ -1506,6 +1506,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             if (tunnel.removeTunnel()) {
                 tunnelTable.remove(tunnelId);
                 log.debug("Tunnel {} was removed successfully.", tunnelId);
+                tunnelEventChannel.removeEntry(tunnelId);
                 return removeTunnelMessages.SUCCESS;
             }
             else {
