@@ -525,7 +525,7 @@ public class PathCalcRuntimeModule implements IFloodlightModule,
         opEventChannel = datagridService.createChannel(
                 INTENT_OP_EVENT_CHANNEL_NAME, Long.class, IntentOperationList.class);
         datagridService.addListener(INTENT_STATE_EVENT_CHANNEL_NAME, this, Long.class, IntentStateList.class);
-        topologyService.addListener(this, false);
+        //topologyService.addListener(this, false);
         persistIntent = new PersistIntent(controllerRegistry);
         restApi.addRestletRoutable(new IntentWebRoutable());
     }
