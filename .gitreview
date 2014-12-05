@@ -1,6 +1,6 @@
 [gerrit]
-host=gerrit.onlab.us
+host=gerrit.onosproject.org
 port=29418
-project=ONOS.git
+project=spring-open.git
 defaultremote=origin
-defaultbranch=master
+defaultbranch=multi-instance
