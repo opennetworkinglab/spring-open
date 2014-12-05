@@ -213,7 +213,7 @@ public interface IOF13Switch extends IOFSwitch {
      *        the labelStack
      * @return group identifier
      */
-    public int createGroup(List<Integer> labelStack, List<PortNumber> ports);
+    public List<Integer> createGroup(List<Integer> labelStack, List<PortNumber> ports);
 
     /**
      * Remove the specified group

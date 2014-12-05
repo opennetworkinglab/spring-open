@@ -10,7 +10,7 @@ public class TunnelRouteInfo {
     public String srcSwDpid;
     public List<Dpid> fwdSwDpids;
     public List<String> route;
-    public int gropuId;
+    public List<Integer> groupIdList;
 
     /**
      * Constructor
@@ -48,14 +48,12 @@ public class TunnelRouteInfo {
     }
 
     /**
-     * Set the group ID for the sub tunnel
-     * The group pushes all the IDs in label stack and forward to the next
-     * router.
+     * Set the group ID list for the tunnel
      *
-     * @param groupId
+     * @param gidLIst List of group ID
      */
-    public void setGroupId(int groupId) {
-        this.gropuId = groupId;
+    public void setGroupIdList(List<Integer> gidLIst) {
+        this.groupIdList = gidLIst;
     }
 
     /**
@@ -91,6 +89,16 @@ public class TunnelRouteInfo {
      * @return Group ID
      */
     public int getGroupId() {
-        return this.gropuId;
+        return groupIdList.get(groupIdList.size()-1);
     }
+
+    /**
+     * Get the group ID list pushing IDs in the label stack for the tunnel
+     *
+     * @return List of the group ID
+     */
+    public List<Integer> getGroupIdList() {
+        return this.groupIdList;
+    }
+
 }

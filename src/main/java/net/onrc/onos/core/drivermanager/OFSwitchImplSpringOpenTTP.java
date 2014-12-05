@@ -1438,7 +1438,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
 
         OFMessage gm = factory.buildGroupDelete()
                 .setGroup(group)
-                // .setGroupType(groupInfo.groupType) /* Due to a bug in CPqD
+                //.setGroupType(groupInfo.groupType) /* Due to a bug in CPqD
                 // switch */
                 .setGroupType(OFGroupType.SELECT)
                 .setXid(getNextTransactionId())
@@ -2068,13 +2068,13 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
      *        the labelStack
      * @return group identifier
      */
-    public int createGroup(List<Integer> labelStack, List<PortNumber> ports) {
+    public List<Integer> createGroup(List<Integer> labelStack, List<PortNumber> ports) {
 
         log.debug("createGroup in sw {} with labelStack {} and ports {}",
                 getStringId(), labelStack, ports);
         if (ports == null) {
             log.warn("createGroup in sw {} with wrong input parameters", getStringId());
-            return -1;
+            return null;
         }
 
         List<PortNumber> activePorts = new ArrayList<PortNumber>();
@@ -2084,10 +2084,11 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         }
         if (activePorts.isEmpty()) {
             log.warn("createGroup in sw {} with no active ports", getStringId());
-            return -1;
+            return null;
         }
 
         int labelStackSize = (labelStack != null) ? labelStack.size() : 0;
+        List<Integer> groupIdList = new ArrayList<Integer>();
 
         /* Filter out disabled ports */
 
@@ -2121,7 +2122,9 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                     OFGroupType.SELECT, buckets);
             setEcmpGroup(ecmpInfo);
             userDefinedGroups.put(innermostGroupId, ecmpInfo);
-            return innermostGroupId;
+
+            groupIdList.add(innermostGroupId);
+            return groupIdList;
         }
 
         /* If the label stack has two or more labels, then a chain of groups
@@ -2147,6 +2150,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                             labelStack.get(i).intValue(), false);
                     lastSetOfGroupIds.put(sp, currGroupId);
                     userDefinedGroups.put(currGroupId, indirectGroup);
+                    groupIdList.add(currGroupId);
                 }
                 else if (i == (labelStackSize - 1)) {
                     /* Innermost label processing */
@@ -2158,6 +2162,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                             lastSetOfGroupIds);
                     userDefinedGroups.put(
                             innermostGroupId, topLevelGroup);
+                    groupIdList.add(innermostGroupId);
                     break;
                 }
                 else {
@@ -2170,12 +2175,13 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                     /* Overwrite with this iteration's group IDs */
                     lastSetOfGroupIds.put(sp, currGroupId);
                     userDefinedGroups.put(currGroupId, indirectGroup);
+                    groupIdList.add(currGroupId);
                 }
             }
         }
         log.debug("createGroup in sw{}: group created with innermost group id {}",
                 getStringId(), innermostGroupId);
-        return innermostGroupId;
+        return groupIdList;
     }
 
     /**
@@ -2191,10 +2197,11 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             return false;
         }
         deleteGroup(group);
+        /*
         for (BucketInfo bucket : group.buckets) {
             int currGroupIdToBeDeleted = bucket.togroupNo;
             while (currGroupIdToBeDeleted != -1) {
-                /* Assuming indirect groups with single buckets */
+                // Assuming indirect groups with single buckets
                 int nextGroupIdToBeDeleted =
                         userDefinedGroups.get(currGroupIdToBeDeleted).
                         buckets.get(0).togroupNo;
@@ -2205,6 +2212,7 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
                 currGroupIdToBeDeleted = nextGroupIdToBeDeleted;
             }
         }
+        */
 
         userDefinedGroups.remove(groupId);
         log.debug("removeGroup in sw {}: removed group with group id {}",

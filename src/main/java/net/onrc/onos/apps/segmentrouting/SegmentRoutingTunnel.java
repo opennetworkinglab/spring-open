@@ -41,30 +41,45 @@ public class SegmentRoutingTunnel {
         this.routes = new ArrayList<TunnelRouteInfo>();
     }
 
-    public SegmentRoutingTunnel(SegmentRoutingManager srm, TunnelNotification tunnelNotification) {
+    /**
+     * Constructor
+     *
+     * @param srm SegmentRoutingManager objeect
+     * @param tunnelNotification tunnel information published by other controllers
+     */
+    public SegmentRoutingTunnel(SegmentRoutingManager srm,
+            TunnelNotification tunnelNotification) {
         this.srManager = srm;
         this.tunnelId = tunnelNotification.getTunnelId();
         this.labelIds = tunnelNotification.getLabelIds();
         this.routes = tunnelNotification.getRouteInfo();
     }
 
+    /**
+     * Check if there is any sub tunnel that starts with the router managed by
+     * the controller. If so, create groups for the sub tunnel and set the
+     * group Id list. Then, set modified flag to true so that the tunnel
+     * information is published again with the new group ID list.
+     *
+     * @return true if any new group is created, otherwise false.
+     */
     public boolean checkAndCreateTunnel() {
 
         boolean modified = false;
         for (TunnelRouteInfo route: routes) {
             if (srManager.getIOF13Switch(route.getSrcSwDpid()) != null) {
-                if (route.getGroupId() == -1) {
+                if (route.getGroupIdList() == null) {
                     NeighborSet ns = new NeighborSet();
                     for (Dpid dpid: route.getFwdSwDpid())
                         ns.addDpid(dpid);
 
                     printTunnelInfo(route.srcSwDpid, tunnelId, route.getRoute(), ns);
-                    int groupId = -1;
-                    if ((groupId =createGroupsForTunnel(tunnelId, route, ns)) < 0) {
+                    List<Integer> groupIdList = createGroupsForTunnel(tunnelId, route, ns);
+                    if (groupIdList == null) {
                         log.debug("Failed to create a tunnel at driver.");
                         return false;
                     }
-                    route.setGroupId(groupId);
+                    route.setGroupIdList(groupIdList);
                     modified = true;
                 }
             }
@@ -137,15 +152,15 @@ public class SegmentRoutingTunnel {
                     ns.addDpid(dpid);
 
                 printTunnelInfo(route.srcSwDpid, tunnelId, route.getRoute(), ns);
-                int groupId = -1;
-                if ((groupId =createGroupsForTunnel(tunnelId, route, ns)) < 0) {
+                List<Integer> groupIdList = null;
+                if ((groupIdList =createGroupsForTunnel(tunnelId, route, ns)) == null) {
                     log.debug("Failed to create a tunnel at driver.");
                     return false;
                 }
-                route.setGroupId(groupId);
+                route.setGroupIdList(groupIdList);
             }
             else {
-                route.setGroupId(-1);
+                route.setGroupIdList(null);
             }
         }
 
@@ -230,10 +245,15 @@ public class SegmentRoutingTunnel {
         for (TunnelRouteInfo route: routes) {
             IOF13Switch sw13 = srManager.getIOF13Switch(route.srcSwDpid);
             if (sw13 != null) {
-                if (!sw13.removeGroup(route.getGroupId())) {
-                    log.warn("Faied to remove the tunnel {} at driver",
-                            tunnelId);
-                    return false;
+                // Group needs to be removed in reverse order because
+                // the group being pointed by any other group cannot be removed
+                for (int i = route.getGroupIdList().size()-1; i >= 0; i--) {
+                    int groupId = route.getGroupIdList().get(i);
+                    if (!sw13.removeGroup(groupId)) {
+                        log.warn("Faied to remove the tunnel {} at driver",
+                                tunnelId);
+                        return false;
+                    }
                 }
             }
         }
@@ -249,14 +269,14 @@ public class SegmentRoutingTunnel {
      * @param ns NeighborSet to forward packets
      * @return group ID, return -1 if it fails
      */
-    private int createGroupsForTunnel(String tunnelId, TunnelRouteInfo routeInfo,
+    private List<Integer> createGroupsForTunnel(String tunnelId, TunnelRouteInfo routeInfo,
             NeighborSet ns) {
 
         IOF13Switch targetSw = srManager.getIOF13Switch(routeInfo.srcSwDpid);
 
         if (targetSw == null) {
             log.debug("Switch {} is gone.", routeInfo.srcSwDpid);
-            return -1;
+            return null;
         }
 
         List<Integer> Ids = new ArrayList<Integer>();
@@ -264,9 +284,9 @@ public class SegmentRoutingTunnel {
             Ids.add(Integer.parseInt(IdStr));
 
         List<PortNumber> ports = getPortsFromNeighborSet(routeInfo.srcSwDpid, ns);
-        int groupId = targetSw.createGroup(Ids, ports);
+        List<Integer> groupIdList = targetSw.createGroup(Ids, ports);
 
-        return groupId;
+        return groupIdList;
     }
 
     /**

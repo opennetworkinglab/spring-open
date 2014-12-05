@@ -8,7 +8,7 @@ public class SegmentRoutingPolicy {
      * Enums for policy type
      *
      */
-    public enum PolicyType{
+    public enum PolicyType {
         TUNNEL_FLOW,
         LOADBALANCE,
         AVOID,
@@ -52,7 +52,7 @@ public class SegmentRoutingPolicy {
      *
      * @return policy ID
      */
-    public String getPolicyId(){
+    public String getPolicyId() {
         return this.policyId;
     }
 
@@ -61,7 +61,7 @@ public class SegmentRoutingPolicy {
      *
      * @return PacketMatch object
      */
-    public PacketMatch getMatch(){
+    public PacketMatch getMatch() {
         return this.match;
     }
 
@@ -70,7 +70,7 @@ public class SegmentRoutingPolicy {
      *
      * @return priority
      */
-    public int getPriority(){
+    public int getPriority() {
         return this.priority;
     }
 
@@ -79,7 +79,7 @@ public class SegmentRoutingPolicy {
      *
      * @return policy type
      */
-    public PolicyType getType(){
+    public PolicyType getType() {
         return this.type;
     }
 

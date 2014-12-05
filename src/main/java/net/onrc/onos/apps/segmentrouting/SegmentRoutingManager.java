@@ -350,7 +350,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         @Override
         public void entryRemoved(TunnelNotification tunnelNotification) {
-            tunnelTable.remove(tunnelNotification.getTunnelId());
+            if (tunnelTable.containsKey(tunnelNotification.getTunnelId())) {
+                srManager.removeTunnel(tunnelNotification.getTunnelId());
+            }
         }
 
         @Override
@@ -822,26 +824,29 @@ public class SegmentRoutingManager implements IFloodlightModule,
             if (adjGroupIdMap != null) {
                 groupId = adjGroupIdMap.get(key);
                 if (groupId == null) {
-                    groupId = sw13.createGroup(new ArrayList<Integer>(),
-                            portList);
-                    if (groupId < 0) {
+                    List<Integer> groupIdList = sw13.createGroup(
+                            new ArrayList<Integer>(), portList);
+                    if (groupIdList == null || groupIdList.isEmpty()) {
                         log.debug("Failed to create a group at driver for "
                                 + "adj ID {}", adjId);
                         return;
                     }
                     else {
+                        groupId = groupIdList.get(0);
                         adjGroupIdMap.put(key, groupId);
                     }
                 }
             }
             else {
-                groupId = sw13.createGroup(new ArrayList<Integer>(), portList);
-                if (groupId < 0) {
+                List<Integer> groupIdList = sw13.createGroup(
+                        new ArrayList<Integer>(), portList);
+                if (groupIdList == null || groupIdList.isEmpty()) {
                     log.debug("Failed to create a group at driver for adj ID {}",
                             adjId);
                     return;
                 }
                 else {
+                    groupId = groupIdList.get(0);
                     adjGroupIdMap = new HashMap<Integer, Integer>();
                     adjGroupIdMap.put(key, groupId);
                     adjcencyGroupIdTable.put(sw.getDpid().toString(),
