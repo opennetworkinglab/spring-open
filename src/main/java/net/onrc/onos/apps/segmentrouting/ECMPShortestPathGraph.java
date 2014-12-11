@@ -41,6 +41,11 @@ public class ECMPShortestPathGraph {
         calcECMPShortestPathGraph();
     }
 
+    public ECMPShortestPathGraph(Switch rootSw, Switch swToAvoid) {
+        this.rootSwitch = rootSw;
+        calcECMPShortestPathGraph(swToAvoid.getDpid());
+    }
+
     /**
      * Calculates the BFS tree using any provided constraints and Intents.
      */
@@ -121,6 +126,90 @@ public class ECMPShortestPathGraph {
                 }
         }*/
     }
+
+    /**
+     * Calculates the BFS tree using any provided constraints and Intents.
+     */
+    private void calcECMPShortestPathGraph(Dpid avoid) {
+        switchQueue.add(rootSwitch);
+        int currDistance = 0;
+        distanceQueue.add(currDistance);
+        switchSearched.put(rootSwitch.getDpid(), currDistance);
+        while (!switchQueue.isEmpty()) {
+            Switch sw = switchQueue.poll();
+            Switch prevSw = null;
+            currDistance = distanceQueue.poll();
+            for (Link link : sw.getOutgoingLinks()) {
+                Switch reachedSwitch = link.getDstPort().getSwitch();
+                if (reachedSwitch.getDpid().equals(avoid))
+                    continue;
+                if ((prevSw != null)
+                        && (prevSw.getDpid().equals(reachedSwitch.getDpid())))
+                {
+                    /* Ignore LAG links between the same set of switches */
+                    continue;
+                }
+                else
+                {
+                    prevSw = reachedSwitch;
+                }
+
+                Integer distance = switchSearched.get(reachedSwitch.getDpid());
+                if ((distance != null) && (distance.intValue() < (currDistance + 1))) {
+                    continue;
+                }
+                if (distance == null) {
+                    /* First time visiting this switch node */
+                    switchQueue.add(reachedSwitch);
+                    distanceQueue.add(currDistance + 1);
+                    switchSearched.put(reachedSwitch.getDpid(), currDistance + 1);
+
+                    ArrayList<Switch> distanceSwArray = distanceSwitchMap
+                            .get(currDistance + 1);
+                    if (distanceSwArray == null)
+                    {
+                        distanceSwArray = new ArrayList<Switch>();
+                        distanceSwArray.add(reachedSwitch);
+                        distanceSwitchMap.put(currDistance + 1, distanceSwArray);
+                    }
+                    else
+                        distanceSwArray.add(reachedSwitch);
+                }
+
+                ArrayList<LinkData> upstreamLinkArray =
+                        upstreamLinks.get(reachedSwitch.getDpid());
+                if (upstreamLinkArray == null)
+                {
+                    upstreamLinkArray = new ArrayList<LinkData>();
+                    upstreamLinkArray.add(new LinkData(link));
+                    upstreamLinks.put(reachedSwitch.getDpid(), upstreamLinkArray);
+                }
+                else
+                    /* ECMP links */
+                    upstreamLinkArray.add(new LinkData(link));
+            }
+        }
+
+        /*
+        log.debug("ECMPShortestPathGraph:switchSearched for switch {} is {}",
+                HexString.toHexString(rootSwitch.getDpid().value()), switchSearched);
+        log.debug("ECMPShortestPathGraph:upstreamLinks for switch {} is {}",
+                HexString.toHexString(rootSwitch.getDpid().value()), upstreamLinks);
+        log.debug("ECMPShortestPathGraph:distanceSwitchMap for switch {} is {}",
+                HexString.toHexString(rootSwitch.getDpid().value()), distanceSwitchMap);
+        */
+        /*
+        for (Integer distance: distanceSwitchMap.keySet()){
+                for (Switch sw: distanceSwitchMap.get(distance)){
+                        ArrayList<Path> path = getPath(sw);
+                        log.debug("ECMPShortestPathGraph:Paths in Pass{} from switch {} to switch {} is {}",
+                                        distance,
+                                        HexString.toHexString(rootSwitch.getDpid().value()),
+                                        HexString.toHexString(sw.getDpid().value()), path);
+                }
+        }*/
+    }
+
 
     private void getDFSPaths(Dpid dstSwitchDpid, Path path, ArrayList<Path> paths) {
         Dpid rootSwitchDpid = rootSwitch.getDpid();

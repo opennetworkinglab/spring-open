@@ -139,8 +139,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // Flag whether transit router supports ECMP or not
     // private boolean supportTransitECMP = true;
 
-    private int testMode = 0;
-
     private int numOfEvents = 0;
     private int numOfEventProcess = 0;
     private int numOfPopulation = 0;
@@ -153,15 +151,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private static final String SR_TUNNEL_CHANNEL_NAME = "onos.sr_tunnel";
 
     private final int DELAY_TO_ADD_LINK = 10;
-    private final int MAX_NUM_LABELS = 3;
 
-    private final int POLICY_ADD1 = 1;
-    private final int POLICY_ADD2 = 2;
-    private final int POLICY_REMOVE1 = 3;
-    private final int POLICY_REMOVE2 = 4;
-    private final int TUNNEL_REMOVE1 = 5;
-    private final int TUNNEL_REMOVE2 = 6;
+    private enum TEST_MODE {
+        NO_TEST,
+        POLICY_ADD1,
+        POLICY_ADD2,
+        POLICY_REMOVE1,
+        POLICY_REMOVE2,
+        TUNNEL_REMOVE1,
+        TUNNEL_REMOVE2,
+        POLICY_AVOID
+    }
 
+    private TEST_MODE testMode = TEST_MODE.NO_TEST;
 
     // ************************************
     // IFloodlightModule implementation
@@ -272,7 +274,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         });
 
-        testMode = POLICY_ADD1;
+        //testMode = TEST_MODE.POLICY_AVOID;
         //testTask.reschedule(20, TimeUnit.SECONDS);
     }
 
@@ -1343,27 +1345,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
-     *  Create a policy
-     *  TODO: To be removed
+     *  Create a policy with tunnel type
      */
     @Override
     public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
             Short srcPort, Short dstPort, int priority, String tid) {
-
-        return createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
-                srcPort, dstPort, priority, tid, PolicyType.TUNNEL_FLOW);
-    }
-
-    /**
-     * Create a policy
-     *
-     */
-    @Override
-    public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
-            Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
-            Short srcTcpPort, Short dstTcpPort, int priority, String tid,
-            PolicyType type) {
 
         // Sanity check
         SegmentRoutingTunnel tunnelInfo = tunnelTable.get(tid);
@@ -1372,65 +1359,68 @@ public class SegmentRoutingManager implements IFloodlightModule,
             return false;
         }
 
-        PacketMatchBuilder packetBuilder = new PacketMatchBuilder();
+        PacketMatch policyMatch = buildPacketMatch(srcMac, dstMac, etherType,
+                srcIp, dstIp, ipProto, srcPort, dstPort);
 
-        if (srcMac != null)
-            packetBuilder.setSrcMac(srcMac);
-        if (dstMac != null)
-            packetBuilder.setDstMac(dstMac);
-        if (etherType == null) // Cqpd requires the type of IPV4
-            packetBuilder.setEtherType(Ethernet.TYPE_IPV4);
-        else
-            packetBuilder.setEtherType(etherType);
-        if (srcIp != null)
-            packetBuilder.setSrcIp(srcIp.address(), srcIp.prefixLen());
-        if (dstIp != null)
-            packetBuilder.setDstIp(dstIp.address(), dstIp.prefixLen());
-        if (ipProto != null)
-            packetBuilder.setIpProto(ipProto);
-        if (srcTcpPort > 0)
-            packetBuilder.setSrcTcpPort(srcTcpPort);
-        if (dstTcpPort > 0)
-            packetBuilder.setDstTcpPort(dstTcpPort);
-        PacketMatch policyMatch = packetBuilder.build();
-
-        if (type == PolicyType.TUNNEL_FLOW) {
-            SegmentRoutingPolicy srPolicy =
-                    new SegmentRoutingPolicyTunnel(this,pid, type, policyMatch,
-                           priority, tid);
-            if (srPolicy.createPolicy()) {
-                policyTable.put(pid, srPolicy);
-                PolicyNotification policyNotification =
-                        new PolicyNotification(srPolicy);
-                policyEventChannel.addEntry(pid,
-                        policyNotification);
-                return true;
-            }
-            else {
-                log.warn("Failed to create a policy");
-                return false;
-            }
+        SegmentRoutingPolicy srPolicy =
+                new SegmentRoutingPolicyTunnel(this,pid, PolicyType.TUNNEL_FLOW,
+                        policyMatch, priority, tid);
+        if (srPolicy.createPolicy()) {
+            policyTable.put(pid, srPolicy);
+            PolicyNotification policyNotification =
+                    new PolicyNotification(srPolicy);
+            policyEventChannel.addEntry(pid,
+                    policyNotification);
+            return true;
         }
         else {
-            log.warn("No other policy is supported yet.");
+            log.warn("Failed to create a policy");
+            return false;
+        }
+    }
+
+    /**
+     * Create a policy with avoid type
+     */
+    @Override
+    public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
+            Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
+            Short srcPort, Short dstPort, int priority, int srcNode, int dstNode,
+            List<Integer> nodesToAvoid, List<Link> linksToAvoid) {
+
+        PacketMatch policyMatch = buildPacketMatch(srcMac, dstMac, etherType,
+                srcIp, dstIp, ipProto, srcPort, dstPort);
+
+        Switch srcSwitch = mutableTopology.getSwitch(new Dpid(srcNode));
+        Switch dstSwitch = mutableTopology.getSwitch(new Dpid(dstNode));
+        Switch swToAvoid =
+                mutableTopology.getSwitch(new Dpid(nodesToAvoid.get(0)));
+        if (srcSwitch == null || dstSwitch == null || swToAvoid == null) {
+            log.warn("Switches are not found!");
+            return false;
+        }
+
+        SegmentRoutingPolicy avoidPolicy = new SegmentRoutingPolicyAvoid(this,
+                pid, policyMatch, priority, srcSwitch, dstSwitch, swToAvoid);
+        if (avoidPolicy.createPolicy()) {
+            policyTable.put(pid, avoidPolicy);
+            // TODO: handle multi-instance
+            //PolicyNotification policyNotification =
+            //        new PolicyNotification(avoidPolicy);
+            //policyEventChannel.addEntry(pid,
+            //        policyNotification);
+            return true;
+        }
+        else {
+            log.warn("Error in creating an avoid policy");
             return false;
         }
     }
 
     /**
      * Remove all policies applied to specific tunnel.
-     *
-     * @param srcMac
-     * @param dstMac
-     * @param etherType
-     * @param srcIp
-     * @param dstIp
-     * @param ipProto
-     * @param srcTcpPort
-     * @param dstTcpPort
-     * @param tid
-     * @return
      */
+    @Override
     public boolean removePolicy(String pid) {
         //Sanity check
         SegmentRoutingPolicy policy =  policyTable.get(pid);
@@ -1533,6 +1523,34 @@ public class SegmentRoutingManager implements IFloodlightModule,
     // public long getNextMatchActionID() {
     // return this.matchActionId++;
     // }
+
+    private PacketMatch buildPacketMatch(MACAddress srcMac, MACAddress dstMac,
+            Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
+            Short srcPort, Short dstPort) {
+
+        PacketMatchBuilder packetBuilder = new PacketMatchBuilder();
+
+        if (srcMac != null)
+            packetBuilder.setSrcMac(srcMac);
+        if (dstMac != null)
+            packetBuilder.setDstMac(dstMac);
+        if (etherType == null) // Cqpd requires the type of IPV4
+            packetBuilder.setEtherType(Ethernet.TYPE_IPV4);
+        else
+            packetBuilder.setEtherType(etherType);
+        if (srcIp != null)
+            packetBuilder.setSrcIp(srcIp.address(), srcIp.prefixLen());
+        if (dstIp != null)
+            packetBuilder.setDstIp(dstIp.address(), dstIp.prefixLen());
+        if (ipProto != null)
+            packetBuilder.setIpProto(ipProto);
+        if (srcPort > 0)
+            packetBuilder.setSrcTcpPort(srcPort);
+        if (dstPort > 0)
+            packetBuilder.setDstTcpPort(dstPort);
+
+        return packetBuilder.build();
+    }
 
     /**
      * Get ports for the adjacency SID given
@@ -2068,7 +2086,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
     private void runTest() {
 
-        if (testMode == POLICY_ADD1) {
+        if (testMode == TEST_MODE.POLICY_ADD1) {
             Integer[] routeArray = {101, 105, 110};
             /*List<Dpid> routeList = new ArrayList<Dpid>();
             for (int i = 0; i < routeArray.length; i++) {
@@ -2084,7 +2102,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 this.createPolicy("1", null, null, Ethernet.TYPE_IPV4, srcIp,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 10000,
                         "1");
-                testMode = POLICY_ADD2;
+                testMode = TEST_MODE.POLICY_ADD2;
                 testTask.reschedule(5, TimeUnit.SECONDS);
             }
             else {
@@ -2092,7 +2110,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 testTask.reschedule(5, TimeUnit.SECONDS);
             }
         }
-        else if (testMode == POLICY_ADD2) {
+        else if (testMode == TEST_MODE.POLICY_ADD2) {
             Integer[] routeArray = {101, 102, 103, 104, 105, 108, 110};
 
             if (createTunnel("2", Arrays.asList(routeArray))) {
@@ -2111,30 +2129,78 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 testTask.reschedule(5, TimeUnit.SECONDS);
             }
         }
-        else if (testMode == POLICY_REMOVE2){
+        else if (testMode == TEST_MODE.POLICY_REMOVE2){
             log.debug("Remove the policy 2");
             this.removePolicy("2");
-            testMode = POLICY_REMOVE1;
+            testMode = TEST_MODE.POLICY_REMOVE1;
             testTask.reschedule(5, TimeUnit.SECONDS);
         }
-        else if (testMode == POLICY_REMOVE1){
+        else if (testMode == TEST_MODE.POLICY_REMOVE1){
             log.debug("Remove the policy 1");
             this.removePolicy("1");
 
-            testMode = TUNNEL_REMOVE1;
+            testMode = TEST_MODE.TUNNEL_REMOVE1;
             testTask.reschedule(5, TimeUnit.SECONDS);
         }
-        else if (testMode == TUNNEL_REMOVE1) {
+        else if (testMode == TEST_MODE.TUNNEL_REMOVE1) {
             log.debug("Remove the tunnel 1");
             this.removeTunnel("1");
 
-            testMode = TUNNEL_REMOVE2;
+            testMode = TEST_MODE.TUNNEL_REMOVE2;
             testTask.reschedule(5, TimeUnit.SECONDS);
         }
-        else if (testMode == TUNNEL_REMOVE2) {
+        else if (testMode == TEST_MODE.TUNNEL_REMOVE2) {
             log.debug("Remove the tunnel 2");
             this.removeTunnel("2");
             log.debug("The end of test");
+        }
+        else if (testMode == TEST_MODE.POLICY_AVOID) {
+            /*
+            Switch rootSw = mutableTopology.getSwitch(new Dpid(1));
+            Switch swToAvoid = mutableTopology.getSwitch(new Dpid(5));
+            Switch targetSw = mutableTopology.getSwitch(new Dpid(6));
+            ECMPShortestPathGraph graph = new ECMPShortestPathGraph(rootSw, swToAvoid);
+            List<Path> ecmpPaths = graph.getECMPPaths(targetSw);
+            log.debug("Path from {} to {} avoiding {}", rootSw, targetSw, swToAvoid);
+            printEcmpPaths(ecmpPaths);
+
+
+            Switch rootSw2 = mutableTopology.getSwitch(new Dpid(1));
+            Switch swToAvoid2 = mutableTopology.getSwitch(new Dpid(3));
+            Switch targetSw2 = mutableTopology.getSwitch(new Dpid(6));
+            ECMPShortestPathGraph graph2 = new ECMPShortestPathGraph(rootSw2, swToAvoid2);
+            List<Path> ecmpPaths2 = graph2.getECMPPaths(targetSw2);
+            log.debug("Path from {} to {} avoiding {}", rootSw2, targetSw2, swToAvoid2);
+            printEcmpPaths(ecmpPaths2);
+            */
+
+            String pid = "p1";
+            MACAddress srcMac = null;
+            MACAddress dstMac = null;
+            Short etherType = Ethernet.TYPE_IPV4;
+            IPv4Net srcIp = new IPv4Net("10.0.1.1/32");
+            IPv4Net dstIp = new IPv4Net("7.7.7.7/32");
+            Byte ipProto = IPv4.PROTOCOL_ICMP;
+            Short srcPort = 0;
+            Short dstPort = 0;
+            int priority = 10000;
+            int srcNode = 1;
+            int dstNode = 6;
+            List<Integer> nodesToAvoid = new ArrayList<Integer>();
+            nodesToAvoid.add(5);
+            List<Link> linksToAvoid = null;
+            createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
+                    srcPort, dstPort, priority, srcNode, dstNode, nodesToAvoid, linksToAvoid);
+
+        }
+    }
+
+    private void printEcmpPaths(List<Path> ecmpPaths) {
+        for (Path path: ecmpPaths) {
+            for (LinkData link: path) {
+                log.debug("{} - {}", link.getSrc().getDpid(), link.getDst().getDpid());
+            }
+            log.debug("----------------------------------");
         }
     }
 
@@ -2397,7 +2463,6 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         return false;
     }
-
 
 
 }
