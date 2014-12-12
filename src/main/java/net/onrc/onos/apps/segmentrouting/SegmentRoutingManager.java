@@ -274,8 +274,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         });
 
-        //testMode = TEST_MODE.POLICY_AVOID;
-        //testTask.reschedule(20, TimeUnit.SECONDS);
+        testMode = TEST_MODE.POLICY_AVOID;
+        testTask.reschedule(20, TimeUnit.SECONDS);
     }
 
     @Override

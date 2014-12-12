@@ -89,19 +89,36 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
 
         Switch srcNode = srManager.getSwitchFromNodeId(
                 labelStack.get(0).toString());
-        Switch dstNode = srManager.getSwitchFromNodeId(
-                labelStack.get(labelStack.size()-1).toString());
+
+        int i = 2;
+        boolean violated = false;
         Switch nodeToCheck = srManager.getSwitchFromNodeId(
-                labelStack.get(labelStack.size()-2).toString());
-
+                labelStack.get(labelStack.size()-i).toString());
+        ECMPShortestPathGraph ecmpGraph = new ECMPShortestPathGraph(srcNode);
         while (!nodeToCheck.getDpid().equals(srcNode)) {
-
-
+            List<Path> paths = ecmpGraph.getECMPPaths(nodeToCheck);
+            for (Path path: paths) {
+                for (LinkData link: path) {
+                    if (link.getSrc().getDpid().equals(switchToAvoid.getDpid())) {
+                        violated = true;
+                        break;
+                    }
+                }
+                if (violated)
+                    break;
+            }
+            if (violated) {
+                i++;
+                nodeToCheck = srManager.getSwitchFromNodeId(
+                        labelStack.get(labelStack.size()-i).toString());
+            }
+            // remove the rest of the label Ids and stop here
+            else {
+                for (int j=1; j<i; j++) {
+                    labelStack.remove(j);
+                    return;
+                }
+            }
         }
-
-
-
-
     }
-
 }
