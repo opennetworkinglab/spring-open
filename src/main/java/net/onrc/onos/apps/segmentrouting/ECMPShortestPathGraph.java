@@ -3,6 +3,7 @@ package net.onrc.onos.apps.segmentrouting;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.topology.Link;
@@ -35,15 +36,22 @@ public class ECMPShortestPathGraph {
      * Constructor
      *
      * @param rootSwitch root of the BFS tree
+     * @param linkListToAvoid
+     * @param dpidListToAvoid
+     */
+    public ECMPShortestPathGraph(Switch rootSwitch, List<String> dpidListToAvoid, List<Link> linkListToAvoid) {
+        this.rootSwitch = rootSwitch;
+        calcECMPShortestPathGraph(dpidListToAvoid, linkListToAvoid);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param rootSwitch root of the BFS tree
      */
     public ECMPShortestPathGraph(Switch rootSwitch) {
         this.rootSwitch = rootSwitch;
         calcECMPShortestPathGraph();
-    }
-
-    public ECMPShortestPathGraph(Switch rootSw, Switch swToAvoid) {
-        this.rootSwitch = rootSw;
-        calcECMPShortestPathGraph(swToAvoid.getDpid());
     }
 
     /**
@@ -130,18 +138,31 @@ public class ECMPShortestPathGraph {
     /**
      * Calculates the BFS tree using any provided constraints and Intents.
      */
-    private void calcECMPShortestPathGraph(Dpid avoid) {
+    private void calcECMPShortestPathGraph(List<String> dpidListToAvoid, List<Link> linksToAvoid) {
         switchQueue.add(rootSwitch);
         int currDistance = 0;
         distanceQueue.add(currDistance);
         switchSearched.put(rootSwitch.getDpid(), currDistance);
+        boolean foundLinkToAvoid = false;
         while (!switchQueue.isEmpty()) {
             Switch sw = switchQueue.poll();
             Switch prevSw = null;
             currDistance = distanceQueue.poll();
             for (Link link : sw.getOutgoingLinks()) {
+                for (Link linkToAvoid: linksToAvoid) {
+                    // TODO: equls should work
+                    //if (link.equals(linkToAvoid)) {
+                    if (linkContains(link, linksToAvoid)) {
+                        foundLinkToAvoid = true;
+                        break;
+                    }
+                }
+                if (foundLinkToAvoid) {
+                    foundLinkToAvoid = false;
+                    continue;
+                }
                 Switch reachedSwitch = link.getDstPort().getSwitch();
-                if (reachedSwitch.getDpid().equals(avoid))
+                if (dpidListToAvoid.contains(reachedSwitch.getDpid().toString()))
                     continue;
                 if ((prevSw != null)
                         && (prevSw.getDpid().equals(reachedSwitch.getDpid())))
@@ -210,6 +231,28 @@ public class ECMPShortestPathGraph {
         }*/
     }
 
+
+    private boolean linkContains(Link link, List<Link> links) {
+
+        Switch srcSwitch1 = link.getSrcSwitch();
+        Switch dstSwitch1 = link.getDstSwitch();
+        long srcPort1 = link.getSrcPort().getPortNumber().value();
+        long dstPort1 = link.getDstPort().getPortNumber().value();
+
+        for (Link link2: links) {
+            Switch srcSwitch2 = link2.getSrcSwitch();
+            Switch dstSwitch2 = link2.getDstSwitch();
+            long srcPort2 = link2.getSrcPort().getPortNumber().value();
+            long dstPort2 = link2.getDstPort().getPortNumber().value();
+
+            if (srcSwitch1.getDpid().toString().equals(srcSwitch2.getDpid().toString())
+             && dstSwitch1.getDpid().toString().equals(dstSwitch2.getDpid().toString())
+             && srcPort1 == srcPort2 && dstPort1 == dstPort2)
+                return true;
+        }
+
+        return false;
+    }
 
     private void getDFSPaths(Dpid dstSwitchDpid, Path path, ArrayList<Path> paths) {
         Dpid rootSwitchDpid = rootSwitch.getDpid();

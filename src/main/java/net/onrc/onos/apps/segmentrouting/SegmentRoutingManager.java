@@ -274,8 +274,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         });
 
-        testMode = TEST_MODE.POLICY_AVOID;
-        testTask.reschedule(20, TimeUnit.SECONDS);
+        //testMode = TEST_MODE.POLICY_AVOID;
+        //testTask.reschedule(20, TimeUnit.SECONDS);
     }
 
     @Override
@@ -1393,15 +1393,20 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         Switch srcSwitch = mutableTopology.getSwitch(new Dpid(srcNode));
         Switch dstSwitch = mutableTopology.getSwitch(new Dpid(dstNode));
-        Switch swToAvoid =
-                mutableTopology.getSwitch(new Dpid(nodesToAvoid.get(0)));
-        if (srcSwitch == null || dstSwitch == null || swToAvoid == null) {
+        if (srcSwitch == null || dstSwitch == null) {
             log.warn("Switches are not found!");
             return false;
         }
+        List<String> dpidListToAvoid = new ArrayList<String>();
+        for (int nodeId: nodesToAvoid) {
+            Switch swToAvoid =
+                    mutableTopology.getSwitch(new Dpid(nodeId));
+            dpidListToAvoid.add(swToAvoid.getDpid().toString());
+        }
 
         SegmentRoutingPolicy avoidPolicy = new SegmentRoutingPolicyAvoid(this,
-                pid, policyMatch, priority, srcSwitch, dstSwitch, swToAvoid);
+                pid, policyMatch, priority, srcSwitch, dstSwitch,
+                dpidListToAvoid, linksToAvoid);
         if (avoidPolicy.createPolicy()) {
             policyTable.put(pid, avoidPolicy);
             // TODO: handle multi-instance
@@ -2174,6 +2179,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             printEcmpPaths(ecmpPaths2);
             */
 
+            /*
             String pid = "p1";
             MACAddress srcMac = null;
             MACAddress dstMac = null;
@@ -2191,6 +2197,37 @@ public class SegmentRoutingManager implements IFloodlightModule,
             List<Link> linksToAvoid = null;
             createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
                     srcPort, dstPort, priority, srcNode, dstNode, nodesToAvoid, linksToAvoid);
+            */
+
+            String pid = "p1";
+            MACAddress srcMac = null;
+            MACAddress dstMac = null;
+            Short etherType = Ethernet.TYPE_IPV4;
+            IPv4Net srcIp = new IPv4Net("10.0.1.1/32");
+            IPv4Net dstIp = new IPv4Net("7.7.7.7/32");
+            Byte ipProto = IPv4.PROTOCOL_ICMP;
+            Short srcPort = 0;
+            Short dstPort = 0;
+            int priority = 10000;
+            int srcNode = 1;
+            int dstNode = 6;
+            List<Integer> nodesToAvoid = new ArrayList<Integer>();
+            //nodesToAvoid.add(5);
+            List<Link> linksToAvoid = new ArrayList<Link>();
+
+            Switch sw = mutableTopology.getSwitch(new Dpid(2));
+            Link link = sw.getLinkToNeighbor(new Dpid(5));
+            Switch sw2 = mutableTopology.getSwitch(new Dpid(4));
+            Link link2 = sw2.getLinkToNeighbor(new Dpid(6));
+            Switch sw3 = mutableTopology.getSwitch(new Dpid(1));
+            Link link3 = sw3.getLinkToNeighbor(new Dpid(3));
+            linksToAvoid.add(link);
+            linksToAvoid.add(link2);
+            linksToAvoid.add(link3);
+
+            createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
+                    srcPort, dstPort, priority, srcNode, dstNode, nodesToAvoid, linksToAvoid);
+
 
         }
     }

@@ -5,8 +5,10 @@ import java.util.List;
 
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.matchaction.match.PacketMatch;
+import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.topology.LinkData;
 import net.onrc.onos.core.topology.Switch;
+import net.onrc.onos.core.util.Dpid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,8 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
 
     private Switch srcSwitch;
     private Switch dstSwitch;
-    private Switch switchToAvoid;
+    private List<String> dpidListToAvoid;
+    private List<Link> linkListToAvoid;
 
     public SegmentRoutingPolicyAvoid(PolicyNotification policyNotication) {
         super(policyNotication);
@@ -26,18 +29,21 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
     }
 
     public SegmentRoutingPolicyAvoid(SegmentRoutingManager srm, String pid,
-            PacketMatch match, int priority, Switch from, Switch to, Switch swToAvoid) {
+            PacketMatch match, int priority, Switch from, Switch to,
+            List<String> dpidList, List<net.onrc.onos.core.topology.Link> linksToAvoid) {
         super(srm, pid, PolicyType.AVOID, match, priority);
         this.srcSwitch = from;
         this.dstSwitch = to;
-        this.switchToAvoid = swToAvoid;
+        this.dpidListToAvoid = dpidList;
+        this.linkListToAvoid = linksToAvoid;
     }
 
     @Override
     public boolean createPolicy() {
 
         //Create a tunnel from srcSwitch to dstSwitch avoiding swToAvoid;
-        ECMPShortestPathGraph graph = new ECMPShortestPathGraph(srcSwitch, switchToAvoid);
+        ECMPShortestPathGraph graph = new ECMPShortestPathGraph(srcSwitch,
+                dpidListToAvoid, linkListToAvoid);
         List<Path> ecmpPaths = graph.getECMPPaths(dstSwitch);
 
         for (Path path: ecmpPaths) {
@@ -49,8 +55,8 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
             }
             String dstDpid = path.get(0).getDst().getDpid().toString();
             labelStack.add(Integer.valueOf(srManager.getMplsLabel(dstDpid)));
-            String nodeToAvoid = srManager.getMplsLabel(switchToAvoid.getDpid().toString());
-            OptimizeLabelStack(labelStack, switchToAvoid);
+            //String nodeToAvoid = srManager.getMplsLabel(switchToAvoid.getDpid().toString());
+            OptimizeLabelStack(labelStack);
             SegmentRoutingTunnel avoidTunnel = new SegmentRoutingTunnel(
                     srManager, "avoid-0", labelStack);
             if (avoidTunnel.createTunnel()) {
@@ -75,7 +81,7 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
      *
      * @param labelStack List of label IDs
      */
-    private void OptimizeLabelStack(List<Integer> labelStack, Switch nodeToAvoid) {
+    private void OptimizeLabelStack(List<Integer> labelStack) {
 
         // {101, 103, 104, 106}
         // source = 101
@@ -95,11 +101,13 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
         Switch nodeToCheck = srManager.getSwitchFromNodeId(
                 labelStack.get(labelStack.size()-i).toString());
         ECMPShortestPathGraph ecmpGraph = new ECMPShortestPathGraph(srcNode);
-        while (!nodeToCheck.getDpid().equals(srcNode)) {
+        while (!nodeToCheck.getDpid().toString().equals(srcNode.getDpid().toString())) {
             List<Path> paths = ecmpGraph.getECMPPaths(nodeToCheck);
             for (Path path: paths) {
                 for (LinkData link: path) {
-                    if (link.getSrc().getDpid().equals(switchToAvoid.getDpid())) {
+                    if (dpidListToAvoid.contains(
+                            link.getSrc().getDpid().toString())
+                            || linkContains(link, linkListToAvoid)) {
                         violated = true;
                         break;
                     }
@@ -120,5 +128,27 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
                 }
             }
         }
+    }
+
+    private boolean linkContains(LinkData link, List<Link> links) {
+
+        Dpid srcSwitch1 = link.getSrc().getDpid();
+        Dpid dstSwitch1 = link.getDst().getDpid();
+        long srcPort1 = link.getSrc().getPortNumber().value();
+        long dstPort1 = link.getDst().getPortNumber().value();
+
+        for (Link link2: links) {
+            Switch srcSwitch2 = link2.getSrcSwitch();
+            Switch dstSwitch2 = link2.getDstSwitch();
+            long srcPort2 = link2.getSrcPort().getPortNumber().value();
+            long dstPort2 = link2.getDstPort().getPortNumber().value();
+
+            if (srcSwitch1.toString().equals(srcSwitch2.getDpid().toString())
+             && dstSwitch1.toString().equals(dstSwitch2.getDpid().toString())
+             && srcPort1 == srcPort2 && dstPort1 == dstPort2)
+                return true;
+        }
+
+        return false;
     }
 }
