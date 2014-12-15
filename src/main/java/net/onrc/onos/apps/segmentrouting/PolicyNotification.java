@@ -12,6 +12,7 @@ public class PolicyNotification implements Serializable {
     private int priority;
     private PacketMatch match;
     private String tunnelId;  // XXX need to define PolicyTunnelNotification
+    private boolean isSetId;
     /**
      *
      */
@@ -34,6 +35,7 @@ public class PolicyNotification implements Serializable {
         // XXX need to be processed in PolicyTunnelNotification
         if (PolicyType.valueOf(policyType) == PolicyType.TUNNEL_FLOW) {
             this.tunnelId = ((SegmentRoutingPolicyTunnel)srPolicy).getTunnelId();
+            this.isSetId = ((SegmentRoutingPolicyTunnel)srPolicy).isTunnelsetId();
         }
     }
 
@@ -61,10 +63,20 @@ public class PolicyNotification implements Serializable {
 
     public void setTunnelId(String tid) {
         this.tunnelId = tid;
+        this.isSetId = false;
+    }
+
+    public void setTunnelId(String tid, boolean isSetId) {
+        this.tunnelId = tid;
+        this.isSetId = isSetId;
     }
 
     public String getTunnelId() {
         return tunnelId;
+    }
+    
+    public boolean isTunnelsetId() {
+    	return this.isSetId;
     }
 
 }

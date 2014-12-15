@@ -88,7 +88,7 @@ public class OFFlowStatsEntryModSerializer extends SerializerBase<OFFlowStatsEnt
                         +(matchGeneric.isMasked() ?
                                 OFFlowStatsEntryModSerializer.covertToMask(
                                         IPv4.toIPv4Address(
-                                                matchGeneric.getMask().toString())):"0"));
+                                                matchGeneric.getMask().toString())):"32"));
             }
             else if (matchGeneric.getMatchField().id == MatchFields.ETH_DST){
                 jGen.writeStringField("dataLayerDestination", matchGeneric.getValue().toString());

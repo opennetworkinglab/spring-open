@@ -34,6 +34,8 @@ import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.api.packet.IPacketListener;
 import net.onrc.onos.api.packet.IPacketService;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
+import net.onrc.onos.apps.segmentrouting.web.SegmentRouterTunnelRESTParams;
+import net.onrc.onos.apps.segmentrouting.web.SegmentRouterTunnelsetRESTParams;
 import net.onrc.onos.apps.segmentrouting.web.SegmentRoutingWebRoutable;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
@@ -129,6 +131,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private ConcurrentLinkedQueue<TopologyEvents> topologyEventQueue;
     private HashMap<String, SegmentRoutingPolicy> policyTable;
     private HashMap<String, SegmentRoutingTunnel> tunnelTable;
+    private HashMap<String, SegmentRoutingTunnelset> tunnelsetTable;
     private HashMap<Integer, HashMap<Integer, List<Integer>>> adjacencySidTable;
     private HashMap<String, HashMap<Integer, Integer>> adjcencyGroupIdTable;
     private PolicyEventHandler policyEventHandler;
@@ -225,6 +228,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         restApi = context.getServiceImpl(IRestApiService.class);
         policyTable = new HashMap<String, SegmentRoutingPolicy>();
         tunnelTable = new HashMap<String, SegmentRoutingTunnel>();
+        tunnelsetTable = new HashMap<String, SegmentRoutingTunnelset>();
         adjacencySidTable = new HashMap<Integer,HashMap<Integer, List<Integer>>>();
         adjcencyGroupIdTable = new HashMap<String, HashMap<Integer, Integer>>();
         switchDpidListWithMastership = new ArrayList<String>();
@@ -1288,6 +1292,19 @@ public class SegmentRoutingManager implements IFloodlightModule,
     }
 
     /**
+     * Return the Tunnel table
+     *
+     * @return collection of TunnelInfo
+     */
+    public Collection<SegmentRoutingTunnelset> getTunnelsetTable() {
+        return this.tunnelsetTable.values();
+    }
+
+    public SegmentRoutingTunnelset getTunnelsetInfo(String tsid) {
+        return tunnelsetTable.get(tsid);
+    }
+
+    /**
      * Return the Policy Table
      */
     public Collection<SegmentRoutingPolicy> getPoclicyTable() {
@@ -1348,6 +1365,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
             return false;
         }
     }
+    
+    public boolean createTunnelset(String tunnelsetId, 
+			SegmentRouterTunnelsetRESTParams tunnelsetParams) {
+        SegmentRoutingTunnelset srTunnelset =
+                new SegmentRoutingTunnelset(this, tunnelsetParams);
+        if (srTunnelset.createTunnelSet()) {
+        	tunnelsetTable.put(tunnelsetId, srTunnelset);
+        	HashMap<String,SegmentRoutingTunnel> tunnelsetTunnels = 
+        						srTunnelset.getTunnels();
+        	for (String tunnelId:tunnelsetTunnels.keySet())
+        		tunnelTable.put(tunnelId, tunnelsetTunnels.get(tunnelId));
+            return true;
+        }
+        else {
+            log.warn("Failed to create a tunnel");
+            return false;
+        }
+    }
 
     /**
      *  Create a policy with tunnel type
@@ -1355,14 +1390,32 @@ public class SegmentRoutingManager implements IFloodlightModule,
     @Override
     public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
-            Short srcPort, Short dstPort, int priority, String tid) {
+            Short srcPort, Short dstPort, int priority, String tid, boolean isTunnelsetId) {
 
         // Sanity check
-        SegmentRoutingTunnel tunnelInfo = tunnelTable.get(tid);
-        if (tunnelInfo == null) {
-            log.warn("Tunnel {} is not defined", tid);
-            return false;
-        }
+    	if (isTunnelsetId) {
+    		SegmentRoutingTunnelset tunnelsetInfo = tunnelsetTable.get(tid);
+	        if (tunnelsetInfo == null) {
+	            log.warn("Tunnelset {} is not defined", tid);
+	            return false;
+	        }
+    	}
+    	else {
+	        SegmentRoutingTunnel tunnelInfo = tunnelTable.get(tid);
+	        if (tunnelInfo == null) {
+	            log.warn("Tunnel {} is not defined", tid);
+	            return false;
+	        }
+	        else {
+	        	/* Check if the tunnel is part of a tunnelset, 
+	        	 * if so decline the request */
+	        	if (tunnelInfo.getTunnelsetId() != null) {
+		            log.warn("Tunnel {} is part of a tunnelset, "
+		            		+ "a policy can not point to such tunnels", tid);
+		            return false;
+		        }
+	        }
+    	}
 
         PacketMatch policyMatch = buildPacketMatch(srcMac, dstMac, etherType,
                 srcIp, dstIp, ipProto, srcPort, dstPort);
@@ -1370,6 +1423,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         SegmentRoutingPolicy srPolicy =
                 new SegmentRoutingPolicyTunnel(this,pid, PolicyType.TUNNEL_FLOW,
                         policyMatch, priority, tid);
+        ((SegmentRoutingPolicyTunnel)srPolicy).setIsTunnelsetId(isTunnelsetId);
         if (srPolicy.createPolicy()) {
             policyTable.put(pid, srPolicy);
             PolicyNotification policyNotification =
@@ -2121,7 +2175,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 log.debug("Set the policy 1");
                 this.createPolicy("1", null, null, Ethernet.TYPE_IPV4, srcIp,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 10000,
-                        "1");
+                        "1", false);
                 testMode = TEST_MODE.POLICY_ADD2;
                 testTask.reschedule(5, TimeUnit.SECONDS);
             }
@@ -2140,7 +2194,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 log.debug("Set the policy 2");
                 this.createPolicy("2", null, null, Ethernet.TYPE_IPV4, srcIp,
                         dstIp, IPv4.PROTOCOL_ICMP, (short)-1, (short)-1, 20000,
-                        "2");
+                        "2", false);
                 //testMode = POLICY_REMOVE2;
                 //testTask.reschedule(5, TimeUnit.SECONDS);
             }

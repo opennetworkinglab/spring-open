@@ -7,6 +7,8 @@ import java.util.List;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.util.MACAddress;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingManager.removeTunnelMessages;
+import net.onrc.onos.apps.segmentrouting.web.SegmentRouterTunnelRESTParams;
+import net.onrc.onos.apps.segmentrouting.web.SegmentRouterTunnelsetRESTParams;
 import net.onrc.onos.core.topology.Link;
 import net.onrc.onos.core.util.IPv4Net;
 
@@ -25,6 +27,17 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * @return "true/false" depending tunnel creation status
      */
     public boolean createTunnel(String tunnelId, List<Integer> labelIds);
+
+    /**
+     * Create a tunnelset for policy routing.
+     *
+     * @param tunnelId ID for the tunnel
+     * @param labelIds Node label IDs for the tunnel
+     *
+     * @return "true/false" depending tunnel creation status
+     */
+    public boolean createTunnelset(String tunnelsetId, 
+    			SegmentRouterTunnelsetRESTParams tunnelsetParams);
 
     /**
      * Remove a Segment Routing tunnel given a tunnel Id.
@@ -51,7 +64,7 @@ public interface ISegmentRoutingService extends IFloodlightService {
      */
     public boolean createPolicy(String pid, MACAddress srcMac, MACAddress dstMac,
             Short etherType, IPv4Net srcIp, IPv4Net dstIp, Byte ipProto,
-            Short srcPort, Short dstPort, int priority, String tid);
+            Short srcPort, Short dstPort, int priority, String tid, boolean isTunnelsetId);
 
 
     /**
@@ -93,6 +106,7 @@ public interface ISegmentRoutingService extends IFloodlightService {
      */
 
     public Collection<SegmentRoutingTunnel> getTunnelTable();
+    public Collection<SegmentRoutingTunnelset> getTunnelsetTable();
     /**
      * Get the first group ID for the tunnel for specific source router
      * If Segment Stitching was required to create the tunnel, there are

@@ -47,14 +47,21 @@ public class SegmentRouterPolicyResource extends ServerResource {
             log.error("Exception occurred parsing inbound JSON", ex);
             return "fail";
         }
+        
+        String tunnelId = createParams.getTunnel_id();
+        boolean isTunnelsetId = false;
+        if (createParams.getTunnelset_id() != null) {
+        	tunnelId = createParams.getTunnelset_id();
+        	isTunnelsetId = true;
+        }
 
         log.debug("createPolicy of type {} with params id {} src_ip {} dst_ip {}"
-                + "proto {} src_port {} dst_port {} priority {} tunnel_id {}",
+                + "proto {} src_port {} dst_port {} priority {} tunnel_id {} isSet {}",
                 createParams.getPolicy_type(),
                 createParams.getPolicy_id(), createParams.getSrc_ip(),
                 createParams.getDst_ip(), createParams.getProto_type(),
                 createParams.getSrc_tp_port(), createParams.getDst_tp_port(),
-                createParams.getPriority(), createParams.getTunnel_id());
+                createParams.getPriority(), tunnelId, isTunnelsetId);
 
         IPv4Net src_ip = (createParams.getSrc_ip() != null) ?
                 new IPv4Net(createParams.getSrc_ip()) : null;
@@ -68,7 +75,7 @@ public class SegmentRouterPolicyResource extends ServerResource {
                 createParams.getSrc_tp_port(),
                 createParams.getDst_tp_port(),
                 createParams.getPriority(),
-                createParams.getTunnel_id());
+                tunnelId, isTunnelsetId);
         return (result == true) ? "success" : "fail";
     }
 

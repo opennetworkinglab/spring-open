@@ -1,7 +1,9 @@
 package net.floodlightcontroller.core;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -214,6 +216,89 @@ public interface IOF13Switch extends IOFSwitch {
      * @return group identifier
      */
     public List<Integer> createGroup(List<Integer> labelStack, List<PortNumber> ports);
+    
+    public class GroupChainParams {
+    	private String id;
+    	private List<PortNumber> ports;
+    	private List<Integer> labelStack;
+    	
+    	public GroupChainParams(String id, List<Integer> labelStack, 
+    			List<PortNumber> ports) {
+    		this.setId(id);
+    		this.setPorts(ports);
+    		this.setLabelStack(labelStack);
+    	}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public List<PortNumber> getPorts() {
+			return ports;
+		}
+
+		public void setPorts(List<PortNumber> ports) {
+			this.ports = ports;
+		}
+
+		public List<Integer> getLabelStack() {
+			return labelStack;
+		}
+
+		public void setLabelStack(List<Integer> labelStack) {
+			this.labelStack = labelStack;
+		}
+    }
+    
+    public class GroupChain {
+    	private String id;
+    	private HashMap<PortNumber, List<Integer>> groupChain;
+    	private int innermostGroupId;
+    	
+    	public GroupChain(String id) {
+    		this.setId(id);
+    		groupChain = new HashMap<PortNumber,List<Integer>>();
+    	}
+    	
+    	public void addGroupChain(PortNumber port, List<Integer> chain) {
+    		this.groupChain.put(port, chain);
+    	}
+    	
+    	public void addGroupToChain(PortNumber port, int groupId) {
+    		List<Integer> chain = groupChain.get(port);
+    		if (chain == null) {
+    			chain = new ArrayList<Integer>();
+    			groupChain.put(port, chain);
+    		}
+    		chain.add(groupId);
+    	}
+    	
+    	public HashMap<PortNumber, List<Integer>> getGroupChain() {
+    		return groupChain;
+    	}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public int getInnermostGroupId() {
+			return innermostGroupId;
+		}
+
+		public void setInnermostGroupId(int innermostGroupId) {
+			this.innermostGroupId = innermostGroupId;
+		}
+    }
+    
+    public List<GroupChain> createGroupChain(List<GroupChainParams> groupChainParams);
 
     /**
      * Remove the specified group

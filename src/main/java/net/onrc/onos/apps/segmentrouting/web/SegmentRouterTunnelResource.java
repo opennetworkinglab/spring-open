@@ -12,6 +12,7 @@ import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicy.PolicyType;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingPolicyTunnel;
 import net.onrc.onos.apps.segmentrouting.SegmentRoutingTunnel;
+import net.onrc.onos.apps.segmentrouting.SegmentRoutingTunnelset;
 import net.onrc.onos.apps.segmentrouting.TunnelRouteInfo;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -88,6 +89,7 @@ public class SegmentRouterTunnelResource extends ServerResource {
            SegmentRoutingTunnel tunnelInfo = ttI.next();
            List<Integer> tunnelPath = tunnelInfo.getLabelids();
            String tunnelId = tunnelInfo.getTunnelId();
+           String tunnelsetId = tunnelInfo.getTunnelsetId();
            Collection<SegmentRoutingPolicy> policies = segmentRoutingService.getPoclicyTable();
            Iterator<SegmentRoutingPolicy> piI = policies.iterator();
            String policiesId = "";
@@ -107,15 +109,31 @@ public class SegmentRouterTunnelResource extends ServerResource {
            while(trI.hasNext()){
                TunnelRouteInfo label = trI.next();
                labelStack.add(label.getRoute());
-               Integer gId = segmentRoutingService.getTunnelGroupId(tunnelId,
-                       label.getSrcSwDpid());
+               Integer gId = -1;
+               if (tunnelsetId != null) {
+                   Iterator<SegmentRoutingTunnelset> tstI = 
+                		   segmentRoutingService.getTunnelsetTable().iterator();
+                   while(tstI.hasNext()){
+                	   SegmentRoutingTunnelset parentTunnelset = tstI.next();
+                	   if (parentTunnelset.getTunnelsetId() == tunnelsetId) {
+                		   gId = parentTunnelset.getTunnelGroupChain(
+                				   tunnelId).get(label.getSrcSwDpid()).
+                				   getInnermostGroupId();
+                		   break;
+                	   }
+                   }
+               }
+               else {
+	               gId = segmentRoutingService.getTunnelGroupId(tunnelId,
+	                       label.getSrcSwDpid());
+               }
                dpidGroup.add(label.getSrcSwDpid()+"("
                        + segmentRoutingService.getMplsLabel(label.getSrcSwDpid())+ ")"
                        + "/"+ gId
                        );
            }
            SegmentRouterTunnelInfo info = new SegmentRouterTunnelInfo(tunnelId,
-                    labelStack, dpidGroup, tunnelPath, policiesId );
+                    labelStack, dpidGroup, tunnelPath, policiesId, tunnelsetId );
            infoList.add(info);
         }
         log.debug("getTunnel with params");

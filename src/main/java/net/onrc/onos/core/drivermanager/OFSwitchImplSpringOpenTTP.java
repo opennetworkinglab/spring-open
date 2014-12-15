@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.core.IOF13Switch;
+import net.floodlightcontroller.core.IOF13Switch.GroupChain;
+import net.floodlightcontroller.core.IOF13Switch.GroupChainParams;
 import net.floodlightcontroller.core.IOF13Switch.NeighborSet.groupPktType;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.SwitchDriverSubHandshakeAlreadyStarted;
@@ -2182,6 +2184,90 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
         log.debug("createGroup in sw{}: group created with innermost group id {}",
                 getStringId(), innermostGroupId);
         return groupIdList;
+    }
+    
+    public List<GroupChain> createGroupChain(List<GroupChainParams> groupChainParams) {
+    	List<GroupChain> groupChains = new ArrayList<GroupChain>();
+    	
+        List<BucketInfo> buckets = new ArrayList<BucketInfo>();
+    	for (GroupChainParams i: groupChainParams) {
+    		List<PortNumber> ports = i.getPorts();
+    		if (ports == null) {
+                log.warn("createGroupChain in sw {} with wrong "
+                		+ "input parameters", getStringId());
+    			return null;
+    		}
+
+    		List<PortNumber> activePorts = new ArrayList<PortNumber>();
+            for (PortNumber port : ports) {
+                if (portEnabled((int) port.value()))
+                    activePorts.add(port);
+            }
+            if (activePorts.isEmpty()) {
+                log.warn("createGroupChain in sw {} with no "
+                		+ "active ports for groupChainParams id {}", 
+                		getStringId(), i.getId());
+                continue;
+            }
+            
+            int labelStackSize = (i.getLabelStack() != null) ? 
+            		i.getLabelStack().size() : 0;
+            GroupChain groupChain = new GroupChain(i.getId());
+            groupChains.add(groupChain);
+            
+    		if (labelStackSize > 0) {
+				for (PortNumber sp : activePorts) {
+					int previousGroupId = -1;
+	    			for (int idx=0; idx < i.getLabelStack().size(); idx++) {
+	    				if (idx == (labelStackSize - 1)) {
+	                        int label = i.getLabelStack().get(idx).intValue();
+	                        Dpid neighborDpid = portToNeighbors.get(sp);
+	                        BucketInfo b = new BucketInfo(neighborDpid,
+	                                MacAddress.of(srConfig.getRouterMac()),
+	                                getNeighborRouterMacAddress(neighborDpid),
+	                                sp, label, true, previousGroupId);
+	                        buckets.add(b);
+	    				}
+	    				else {
+							int currGroupId = getNextFreeGroupId();
+							EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
+									null, null, sp, previousGroupId,
+									i.getLabelStack().get(idx).intValue(), false);
+							previousGroupId = currGroupId;
+							userDefinedGroups.put(currGroupId, indirectGroup);
+							groupChain.addGroupToChain(sp, currGroupId);
+	    				}
+    				}
+    			}
+    		}
+    		else
+    		{
+                for (PortNumber sp : activePorts) {
+                    Dpid neighborDpid = portToNeighbors.get(sp);
+                    BucketInfo b = new BucketInfo(neighborDpid,
+                            MacAddress.of(srConfig.getRouterMac()),
+                            getNeighborRouterMacAddress(neighborDpid),
+                            sp, -1, false, -1);
+                    buckets.add(b);
+                }
+    		}
+    	}
+    	
+    	if (!buckets.isEmpty()) {
+            int innermostGroupId = getNextFreeGroupId();
+    		EcmpInfo ecmpInfo = new EcmpInfo(innermostGroupId,
+    				OFGroupType.SELECT, buckets);
+    		setEcmpGroup(ecmpInfo);
+            userDefinedGroups.put(innermostGroupId, ecmpInfo);
+            for (GroupChain groupChain:groupChains) {
+            	groupChain.setInnermostGroupId(innermostGroupId);
+            }
+    		log.debug(
+    				"createInnermostLabelGroup: Creating select group {} in sw {} "
+    						+ "with: {}", innermostGroupId, getStringId(), ecmpInfo);
+    	}
+    	
+    	return groupChains;
     }
 
     /**

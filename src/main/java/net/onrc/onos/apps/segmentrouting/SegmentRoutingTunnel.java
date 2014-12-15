@@ -1,9 +1,11 @@
 package net.onrc.onos.apps.segmentrouting;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import net.floodlightcontroller.core.IOF13Switch;
+import net.floodlightcontroller.core.IOF13Switch.GroupChainParams;
 import net.floodlightcontroller.core.IOF13Switch.NeighborSet;
 import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.topology.Link;
@@ -23,6 +25,7 @@ public class SegmentRoutingTunnel {
     private List<Integer> labelIds;
     private List<TunnelRouteInfo> routes;
     private SegmentRoutingManager srManager;
+    private String tunnelsetId;
 
     private final int MAX_NUM_LABELS = 3;
 
@@ -38,6 +41,16 @@ public class SegmentRoutingTunnel {
         this.srManager = srm;
         this.tunnelId = tid;
         this.labelIds = labelIds;
+        this.setTunnelsetId(null);
+        this.routes = new ArrayList<TunnelRouteInfo>();
+    }
+
+    public SegmentRoutingTunnel(SegmentRoutingManager srm, String tid,
+            List<Integer> labelIds, String tunnelsetId) {
+        this.srManager = srm;
+        this.tunnelId = tid;
+        this.labelIds = labelIds;
+        this.setTunnelsetId(tunnelsetId);
         this.routes = new ArrayList<TunnelRouteInfo>();
     }
 
@@ -114,7 +127,24 @@ public class SegmentRoutingTunnel {
     public List<TunnelRouteInfo> getRoutes(){
         return this.routes;
     }
-
+    
+    public HashMap<String, GroupChainParams> getGroupChainParams() {
+    	HashMap<String, GroupChainParams> groupChainParamList = 
+    			new HashMap<String, GroupChainParams>();
+        for (TunnelRouteInfo route: routes) {
+            List<Integer> Ids = new ArrayList<Integer>();
+            for (String IdStr: route.route)
+                Ids.add(Integer.parseInt(IdStr));
+            NeighborSet ns = new NeighborSet();
+            for (Dpid dpid: route.getFwdSwDpid())
+                ns.addDpid(dpid);
+            List<PortNumber> ports = getPortsFromNeighborSet(route.srcSwDpid, ns);
+        	GroupChainParams groupChainParams = new GroupChainParams(tunnelId, Ids, ports);
+        	groupChainParamList.put(route.srcSwDpid, groupChainParams);
+        }
+        
+        return groupChainParamList;
+    }
     /**
      * Create a tunnel
      * It requests the driver to create a group chaining for the tunnel.
@@ -162,6 +192,38 @@ public class SegmentRoutingTunnel {
             else {
                 route.setGroupIdList(null);
             }
+        }
+
+        this.routes = stitchingRule;
+
+        return true;
+    }
+
+    public boolean computeTunnelLabelStack() {
+
+        if (labelIds.isEmpty() || labelIds.size() < 2) {
+            log.debug("Wrong tunnel information");
+            return false;
+        }
+
+        List<String> Ids = new ArrayList<String>();
+        for (Integer label : labelIds) {
+            Ids.add(label.toString());
+        }
+
+        List<TunnelRouteInfo> stitchingRule = getStitchingRule(Ids);
+        if (stitchingRule == null) {
+            log.debug("Failed to get a tunnel rule.");
+            return false;
+        }
+
+        // Rearrange the tunnels if the last subtunnel does not have any label
+        // NOTE: this is only for DELL switches because all ACL rule needs PUSH
+        // Label Action.
+        checkAndSplitLabels(stitchingRule);
+
+        for (TunnelRouteInfo route: stitchingRule) {
+        	route.setGroupIdList(null);
         }
 
         this.routes = stitchingRule;
@@ -620,6 +682,14 @@ public class SegmentRoutingTunnel {
         log.debug(logStr.toString());
 
     }
+
+	public String getTunnelsetId() {
+		return tunnelsetId;
+	}
+
+	public void setTunnelsetId(String tunnelsetId) {
+		this.tunnelsetId = tunnelsetId;
+	}
 
 
 }

@@ -6,6 +6,7 @@ public class SegmentRouterPolicyRESTParams {
     private String policy_type;
     private int priority;
     private String tunnel_id;
+    private String tunnelset_id;
     private String proto_type;
     private String src_ip;
     private String src_tp_port_op;
@@ -19,6 +20,7 @@ public class SegmentRouterPolicyRESTParams {
         this.policy_type = null;
         this.priority = 0;
         this.tunnel_id = null;
+        this.setTunnelset_id(null);
         this.proto_type = null;
         this.src_ip = null;
         this.src_tp_port_op = null;
@@ -115,4 +117,12 @@ public class SegmentRouterPolicyRESTParams {
     public short getDst_tp_port() {
         return this.dst_tp_port;
     }
+
+	public String getTunnelset_id() {
+		return tunnelset_id;
+	}
+
+	public void setTunnelset_id(String tunnelset_id) {
+		this.tunnelset_id = tunnelset_id;
+	}
 }
