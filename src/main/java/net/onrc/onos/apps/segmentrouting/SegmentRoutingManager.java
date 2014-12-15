@@ -160,7 +160,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
         POLICY_REMOVE2,
         TUNNEL_REMOVE1,
         TUNNEL_REMOVE2,
-        POLICY_AVOID
+        POLICY_AVOID,
+        POLICY_REMOVE3
     }
 
     private TEST_MODE testMode = TEST_MODE.NO_TEST;
@@ -274,8 +275,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         });
 
-        //testMode = TEST_MODE.POLICY_AVOID;
-        //testTask.reschedule(20, TimeUnit.SECONDS);
+        testMode = TEST_MODE.POLICY_AVOID;
+        testTask.reschedule(30, TimeUnit.SECONDS);
     }
 
     @Override
@@ -2228,7 +2229,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
             createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
                     srcPort, dstPort, priority, srcNode, dstNode, nodesToAvoid, linksToAvoid);
 
+            testMode = TEST_MODE.POLICY_REMOVE3;
+            testTask.reschedule(10, TimeUnit.SECONDS);
 
+        }
+        else if (testMode == TEST_MODE.POLICY_REMOVE3) {
+            String pid = "p1";
+            removePolicy(pid);
         }
     }
 

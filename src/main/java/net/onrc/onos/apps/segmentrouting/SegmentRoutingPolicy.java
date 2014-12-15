@@ -115,6 +115,32 @@ public class SegmentRoutingPolicy {
     }
 
     /**
+     * Remove rules from the ACL table
+     *
+     * @param routes ACL rule information
+     */
+    protected void removeAclRules(List<TunnelRouteInfo> routes) {
+        List<Action> actions = new ArrayList<>();
+        int gropuId = 0; // dummy group ID
+        GroupAction groupAction = new GroupAction();
+        groupAction.setGroupId(gropuId);
+        actions.add(groupAction);
+
+        for (TunnelRouteInfo route : routes) {
+
+            MatchAction matchAction = new MatchAction(
+                    srManager.getMatchActionId(),
+                    new SwitchPort((new Dpid(route.getSrcSwDpid())).value(), (long)0), match, priority,
+                    actions);
+            MatchActionOperationEntry maEntry =
+                    new MatchActionOperationEntry(Operator.REMOVE, matchAction);
+
+            srManager.executeMatchActionOpEntry(maEntry);
+        }
+    }
+
+
+    /**
      * Get the policy ID
      *
      * @return policy ID

@@ -22,6 +22,7 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
     private Switch dstSwitch;
     private List<String> dpidListToAvoid;
     private List<Link> linkListToAvoid;
+    private SegmentRoutingTunnel tunnel;
 
     public SegmentRoutingPolicyAvoid(PolicyNotification policyNotication) {
         super(policyNotication);
@@ -57,14 +58,14 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
             labelStack.add(Integer.valueOf(srManager.getMplsLabel(dstDpid)));
             //String nodeToAvoid = srManager.getMplsLabel(switchToAvoid.getDpid().toString());
             OptimizeLabelStack(labelStack);
-            SegmentRoutingTunnel avoidTunnel = new SegmentRoutingTunnel(
+            tunnel = new SegmentRoutingTunnel(
                     srManager, "avoid-0", labelStack);
-            if (avoidTunnel.createTunnel()) {
+            if (tunnel.createTunnel()) {
                 //tunnelTable.put(tunnelId, srTunnel);
                 //TunnelNotification tunnelNotification =
                 //        new TunnelNotification(srTunnel);
                 //tunnelEventChannel.addEntry(tunnelId, tunnelNotification);
-                populateAclRule(avoidTunnel.getRoutes());
+                populateAclRule(tunnel.getRoutes());
             }
             else {
                 log.warn("Failed to create a tunnel for Policy Avoid");
@@ -73,6 +74,18 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean removePolicy() {
+        if (tunnel.removeTunnel()) {
+            removeAclRules(tunnel.getRoutes());
+            return true;
+        }
+        else {
+            log.warn("Error in removing an avoid policy");
+            return false;
+        }
     }
 
     /**
