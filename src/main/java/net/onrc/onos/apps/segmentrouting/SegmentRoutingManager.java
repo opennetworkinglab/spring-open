@@ -275,8 +275,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
         });
 
-        testMode = TEST_MODE.POLICY_AVOID;
-        testTask.reschedule(30, TimeUnit.SECONDS);
+        //testMode = TEST_MODE.POLICY_AVOID;
+        //testTask.reschedule(30, TimeUnit.SECONDS);
     }
 
     @Override
@@ -758,8 +758,12 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 }
             }
         }
+
+        UpdatePolicyRules();
+
         numOfPopulation++;
     }
+
 
     /**
      * populate the MPLS rules to handle Adjacency IDs
@@ -1517,6 +1521,16 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
 
+
+    private void UpdatePolicyRules() {
+
+        for (SegmentRoutingPolicy policy: policyTable.values()) {
+            if (policy.getType() == SegmentRoutingPolicy.PolicyType.AVOID) {
+                policy.updatePolicy();
+            }
+        }
+    }
+
     // ************************************
     // Utility functions
     // ************************************
@@ -2216,6 +2230,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             //nodesToAvoid.add(5);
             List<Link> linksToAvoid = new ArrayList<Link>();
 
+            /*
             Switch sw = mutableTopology.getSwitch(new Dpid(2));
             Link link = sw.getLinkToNeighbor(new Dpid(5));
             Switch sw2 = mutableTopology.getSwitch(new Dpid(4));
@@ -2225,12 +2240,17 @@ public class SegmentRoutingManager implements IFloodlightModule,
             linksToAvoid.add(link);
             linksToAvoid.add(link2);
             linksToAvoid.add(link3);
+            */
+
+            Switch sw = mutableTopology.getSwitch(new Dpid(5));
+            Link link = sw.getLinkToNeighbor(new Dpid(6));
+            linksToAvoid.add(link);
 
             createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
                     srcPort, dstPort, priority, srcNode, dstNode, nodesToAvoid, linksToAvoid);
 
-            testMode = TEST_MODE.POLICY_REMOVE3;
-            testTask.reschedule(10, TimeUnit.SECONDS);
+            //testMode = TEST_MODE.POLICY_REMOVE3;
+            //testTask.reschedule(10, TimeUnit.SECONDS);
 
         }
         else if (testMode == TEST_MODE.POLICY_REMOVE3) {

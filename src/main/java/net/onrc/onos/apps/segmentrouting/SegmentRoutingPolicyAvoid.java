@@ -22,7 +22,7 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
     private Switch dstSwitch;
     private List<String> dpidListToAvoid;
     private List<Link> linkListToAvoid;
-    private SegmentRoutingTunnel tunnel;
+    private List<SegmentRoutingTunnel> tunnels;
 
     public SegmentRoutingPolicyAvoid(PolicyNotification policyNotication) {
         super(policyNotication);
@@ -37,6 +37,7 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
         this.dstSwitch = to;
         this.dpidListToAvoid = dpidList;
         this.linkListToAvoid = linksToAvoid;
+        this.tunnels = new ArrayList<SegmentRoutingTunnel>();
     }
 
     @Override
@@ -58,8 +59,9 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
             labelStack.add(Integer.valueOf(srManager.getMplsLabel(dstDpid)));
             //String nodeToAvoid = srManager.getMplsLabel(switchToAvoid.getDpid().toString());
             OptimizeLabelStack(labelStack);
-            tunnel = new SegmentRoutingTunnel(
+            SegmentRoutingTunnel tunnel = new SegmentRoutingTunnel(
                     srManager, "avoid-0", labelStack);
+            tunnels.add(tunnel);
             if (tunnel.createTunnel()) {
                 //tunnelTable.put(tunnelId, srTunnel);
                 //TunnelNotification tunnelNotification =
@@ -78,14 +80,76 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
 
     @Override
     public boolean removePolicy() {
-        if (tunnel.removeTunnel()) {
-            removeAclRules(tunnel.getRoutes());
-            return true;
+        for (SegmentRoutingTunnel tunnel: tunnels) {
+            if (tunnel.removeTunnel()) {
+                removeAclRules(tunnel.getRoutes());
+            }
+            else {
+                log.warn("Error in removing an avoid policy");
+                return false;
+            }
+        }
+
+        tunnels.removeAll(tunnels);
+        return true;
+    }
+
+    @Override
+    public void updatePolicy() {
+        ECMPShortestPathGraph graph = new ECMPShortestPathGraph(srcSwitch,
+                dpidListToAvoid, linkListToAvoid);
+        List<Path> ecmpPaths = graph.getECMPPaths(dstSwitch);
+
+        // Check if it needs update or not
+        boolean needUpdate = false;
+        for (Path path: ecmpPaths) {
+            List<Integer> labelStack = new ArrayList<Integer>();
+            for (int i=path.size()-1; i >=0; i--) {
+                LinkData link = path.get(i);
+                String dpid = link.getSrc().getDpid().toString();
+                labelStack.add(Integer.valueOf(srManager.getMplsLabel(dpid)));
+            }
+            String dstDpid = path.get(0).getDst().getDpid().toString();
+            labelStack.add(Integer.valueOf(srManager.getMplsLabel(dstDpid)));
+            OptimizeLabelStack(labelStack);
+            if (!checkIfIncluded(labelStack)) {
+                needUpdate = true;
+                break;
+            }
+        }
+
+        if (needUpdate) {
+            log.debug("Need to update the policy {}", policyId);
+            removePolicy();
+            createPolicy();
         }
         else {
-            log.warn("Error in removing an avoid policy");
-            return false;
+            log.debug("No need to update the policy {}, policyId");
         }
+    }
+
+    private boolean checkIfIncluded(List<Integer> labelStack) {
+
+        for (SegmentRoutingTunnel tunnel: tunnels) {
+            if (tunnel.getLabelids().size() != labelStack.size())
+                continue;
+
+            int i = 0;
+            boolean identical = true;
+            for (Integer id: tunnel.getLabelids()) {
+                if (id != labelStack.get(i++)) {
+                    identical = false;
+                    break;
+                }
+            }
+            if (!identical)
+                continue;
+            else {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
