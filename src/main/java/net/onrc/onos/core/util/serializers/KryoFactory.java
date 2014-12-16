@@ -347,8 +347,6 @@ public class KryoFactory {
         kryo.register(TunnelRouteInfo.class);
         kryo.register(NeighborSet.class);
         kryo.register(groupPktType.class);
-
-
         return kryo;
     }
 

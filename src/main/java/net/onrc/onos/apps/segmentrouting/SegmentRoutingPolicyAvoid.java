@@ -18,8 +18,8 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
     private static final Logger log = LoggerFactory
             .getLogger(SegmentRoutingPolicyTunnel.class);
 
-    private Switch srcSwitch;
-    private Switch dstSwitch;
+    private String srcDpid;
+    private String dstDpid;
     private List<String> dpidListToAvoid;
     private List<Link> linkListToAvoid;
     private List<SegmentRoutingTunnel> tunnels;
@@ -30,20 +30,43 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
     }
 
     public SegmentRoutingPolicyAvoid(SegmentRoutingManager srm, String pid,
-            PacketMatch match, int priority, Switch from, Switch to,
-            List<String> dpidList, List<net.onrc.onos.core.topology.Link> linksToAvoid) {
+            PacketMatch match, int priority, String from, String to,
+            List<String> dpidList, List<Link> linksToAvoid) {
         super(srm, pid, PolicyType.AVOID, match, priority);
-        this.srcSwitch = from;
-        this.dstSwitch = to;
+        this.srcDpid = from;
+        this.dstDpid = to;
         this.dpidListToAvoid = dpidList;
         this.linkListToAvoid = linksToAvoid;
         this.tunnels = new ArrayList<SegmentRoutingTunnel>();
+    }
+
+    public SegmentRoutingPolicyAvoid(SegmentRoutingManager srm,
+            PolicyNotification pn) {
+        super(srm, pn.getPolicyId(), PolicyType.AVOID, pn.getPacketMatch(),
+                pn.getPriority());
+        this.srcDpid = pn.getSource();
+        this.srcDpid     = pn.getDestination();
+        this.dpidListToAvoid = pn.getDpidListToAvoid();
+        this.linkListToAvoid = new ArrayList<Link>();
+        for (LinkData linkData: pn.getLinkListToAvoid()) {
+            Switch sw =
+                    srManager.getSwitch(linkData.getSrc().getDpid().toString());
+            Link link = sw.getLinkToNeighbor(linkData.getDst().getDpid());
+            linkListToAvoid.add(link);
+        }
+        this.tunnels = new ArrayList<SegmentRoutingTunnel>();
+        for (TunnelNotification tn: pn.getTunnels()) {
+            SegmentRoutingTunnel srTunnel = new SegmentRoutingTunnel(srm, tn);
+            tunnels.add(srTunnel);
+        }
     }
 
     @Override
     public boolean createPolicy() {
 
         //Create a tunnel from srcSwitch to dstSwitch avoiding swToAvoid;
+        Switch srcSwitch = srManager.getSwitch(srcDpid);
+        Switch dstSwitch = srManager.getSwitch(dstDpid);
         ECMPShortestPathGraph graph = new ECMPShortestPathGraph(srcSwitch,
                 dpidListToAvoid, linkListToAvoid);
         List<Path> ecmpPaths = graph.getECMPPaths(dstSwitch);
@@ -63,10 +86,6 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
                     srManager, "avoid-0", labelStack);
             tunnels.add(tunnel);
             if (tunnel.createTunnel()) {
-                //tunnelTable.put(tunnelId, srTunnel);
-                //TunnelNotification tunnelNotification =
-                //        new TunnelNotification(srTunnel);
-                //tunnelEventChannel.addEntry(tunnelId, tunnelNotification);
                 populateAclRule(tunnel.getRoutes());
             }
             else {
@@ -96,6 +115,8 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
 
     @Override
     public void updatePolicy() {
+        Switch srcSwitch = srManager.getSwitch(srcDpid);
+        Switch dstSwitch = srManager.getSwitch(dstDpid);
         ECMPShortestPathGraph graph = new ECMPShortestPathGraph(srcSwitch,
                 dpidListToAvoid, linkListToAvoid);
         List<Path> ecmpPaths = graph.getECMPPaths(dstSwitch);
@@ -227,5 +248,25 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
         }
 
         return false;
+    }
+
+    public String getSource() {
+        return this.srcDpid;
+    }
+
+    public String getDestination() {
+        return this.dstDpid;
+    }
+
+    public List<String> getDpidListToAvoid() {
+        return this.dpidListToAvoid;
+    }
+
+    public List<Link> getLinkListToAvoid() {
+        return this.linkListToAvoid;
+    }
+
+    public List<SegmentRoutingTunnel> getTunnels() {
+        return this.tunnels;
     }
 }

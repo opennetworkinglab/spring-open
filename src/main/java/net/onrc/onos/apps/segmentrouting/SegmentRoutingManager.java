@@ -280,7 +280,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
         });
 
         //testMode = TEST_MODE.POLICY_AVOID;
-        //testTask.reschedule(30, TimeUnit.SECONDS);
+        //testTask.reschedule(40, TimeUnit.SECONDS);
     }
 
     @Override
@@ -310,13 +310,24 @@ public class SegmentRoutingManager implements IFloodlightModule,
 
         @Override
         public void entryAdded(PolicyNotification policyNotication) {
-            log.debug("Policy entry {} was added", policyNotication);
+            SegmentRoutingPolicy srPolicy = null;
             if (PolicyType.valueOf(policyNotication.getPolicyType()) ==
                     PolicyType.TUNNEL_FLOW) {
-                SegmentRoutingPolicyTunnel srPolicy =
-                        new SegmentRoutingPolicyTunnel(srManager, policyNotication);
+                srPolicy = new SegmentRoutingPolicyTunnel(srManager,
+                        policyNotication);
+            }
+            else if (PolicyType.valueOf(policyNotication.getPolicyType()) ==
+                    PolicyType.AVOID) {
+                srPolicy = new SegmentRoutingPolicyAvoid(srManager,
+                        policyNotication);
                 policyTable.put(srPolicy.getPolicyId(), srPolicy);
             }
+            else {
+                log.warn("Other policy is not supported yet");
+                return;
+            }
+            policyTable.put(srPolicy.getPolicyId(), srPolicy);
+            log.debug("Policy entry {} was added", policyNotication);
         }
 
         @Override
@@ -388,6 +399,9 @@ public class SegmentRoutingManager implements IFloodlightModule,
         if (!topologyEvents.getAddedMastershipDataEntries().isEmpty()) {
             processMastershipAdded(topologyEvents.getAddedMastershipDataEntries());
         }
+
+        if (discoveryTask == null)
+            return;
 
         if (operationMode == 0) {
             discoveryTask.reschedule(20, TimeUnit.SECONDS);
@@ -1464,15 +1478,14 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
 
         SegmentRoutingPolicy avoidPolicy = new SegmentRoutingPolicyAvoid(this,
-                pid, policyMatch, priority, srcSwitch, dstSwitch,
-                dpidListToAvoid, linksToAvoid);
+                pid, policyMatch, priority, srcSwitch.getDpid().toString(),
+                dstSwitch.getDpid().toString(), dpidListToAvoid, linksToAvoid);
         if (avoidPolicy.createPolicy()) {
             policyTable.put(pid, avoidPolicy);
-            // TODO: handle multi-instance
-            //PolicyNotification policyNotification =
-            //        new PolicyNotification(avoidPolicy);
-            //policyEventChannel.addEntry(pid,
-            //        policyNotification);
+            PolicyNotification policyNotification =
+                    new PolicyNotification(avoidPolicy);
+            policyEventChannel.addEntry(pid,
+                    policyNotification);
             return true;
         }
         else {
@@ -2303,8 +2316,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             createPolicy(pid, srcMac, dstMac, etherType, srcIp, dstIp, ipProto,
                     srcPort, dstPort, priority, srcNode, dstNode, nodesToAvoid, linksToAvoid);
 
-            //testMode = TEST_MODE.POLICY_REMOVE3;
-            //testTask.reschedule(10, TimeUnit.SECONDS);
+            testMode = TEST_MODE.POLICY_REMOVE3;
+            testTask.reschedule(20, TimeUnit.SECONDS);
 
         }
         else if (testMode == TEST_MODE.POLICY_REMOVE3) {
