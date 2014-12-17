@@ -1,18 +1,26 @@
-ONOS
+ONOS for SPRING-OPEN
 ====
 
-ONOS (Open Networking Operating System) is an experimental distributed
-SDN OS. Currently, it is under active development. ONOS was announced
-and demonstrated at ONS'13, '14.
+ONOS (Open Networking Operating System) was release publicly Dec 5th -- ONOS Avocet.
+For details see here:
+
+https://wiki.onosproject.org/display/ONOS/Downloads
+
+The segment routing use case is built on an older internal release of ONOS (Sept 2014). The following instructions do not apply to ONOS 1.0.0 (Avocet), and are meant only for the SPRING-OPEN project.
 
 
-Getting Started with ONOS
+Getting Started with SPRING-OPEN
 -------------------------
 
-Following URL has the instructions how to get started with ONOS, starting from 
-downloading the development VM:
+Following URL has the instructions how to get started with ONOS for spring-open, starting from 
+downloading the pre-built VM:
 
-https://wiki.onlab.us/display/onosdocs/Getting+Started+with+ONOS
+https://wiki.onosproject.org/display/ONOS/Installation+Guide
+
+Using the instructions on the wiki is recommended. 
+
+The instructions below are kept only for historical purposes.
+
 
 Building ONOS
 -------------
@@ -44,13 +52,7 @@ External Dependencies
     
     See Configuration for details about `./onos.sh setup`.
 
-3. RAMCloud
 
-    Run setup-ramcloud.sh to download and install RAMCloud to `~/ramcloud`.  
-    Installation path can be changed by specifing `RAMCLOUD_HOME` environment variable.
-
-        $ cd ${ONOS_HOME}/
-        $ ./setup-ramcloud.sh
     
 Configuration
 -------------
@@ -59,7 +61,7 @@ This script read configuration from "${ONOS_CONF_DIR}/onos_node.\`hostname\`.con
 
 Copy the file "${ONOS_HOME}/conf/onos_node.conf" to match the hostname and configure 
 the content appropriately.  
- e.g., To use RAMCloud as data store change `host.backend` to `ramcloud`
+
 
 Once you're done with required configuration run following to generate configuration files.
 
@@ -69,18 +71,16 @@ Once you're done with required configuration run following to generate configura
 
 Running ONOS and required components
 ------------------------------------
-To start ZooKeeper, RAMCloud (if enabled in configuration) and ONOS core.
+To start ZooKeeper,  and ONOS core.
 
         $ cd ${ONOS_HOME}/
-        $ ./onos.sh start single-node
+        $ ./onos.sh start 
 
 To stop all the above
 
         $ cd ${ONOS_HOME}/
         $ ./onos.sh stop
 
-If you need to use the REST APIs, follow the instruction for
-"Start ONOS REST API server" in next section.
 
 Running ONOS components one by one
 ----------------------------------
@@ -94,23 +94,8 @@ You can manually start/stop individual ONOS components as follows:
         ## Confirm Zookeeper is running:
         $ ./onos.sh zk status
 
-2. Start RAMCloud Coordinator (only on one of the node in cluster)
 
-        $ cd ${ONOS_HOME}/
-        $ ./onos.sh rc-coord start
-
-        ## Confirm RAMCloud Coordinator is running:
-        $ ./onos.sh rc-coord status
-
-3. Start RAMCloud Server
-
-        $ cd ${ONOS_HOME}/
-        $ ./onos.sh rc-server start
-
-        ## Confirm RAMCloud Server is running:
-        $ ./onos.sh rc-server status
-
-4. Start ONOS
+2. Start ONOS
 
         $ cd ${ONOS_HOME}/
         $ ./onos.sh core start
@@ -118,13 +103,6 @@ You can manually start/stop individual ONOS components as follows:
         ## Confirm ONOS is running:
         $ ./onos.sh core status
 
-5. Start ONOS REST API server
-
-        $ cd ${ONOS_HOME}/
-        $ ./start-rest.sh start
-
-        ## Confirm the REST API server is running:
-        $ ./start-rest.sh status
 
 Running unit tests
 ------------------
