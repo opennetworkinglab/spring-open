@@ -2263,11 +2263,138 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             	groupChain.setInnermostGroupId(innermostGroupId);
             }
     		log.debug(
-    				"createInnermostLabelGroup: Creating select group {} in sw {} "
+    				"createGroupChain: Creating select group {} in sw {} "
     						+ "with: {}", innermostGroupId, getStringId(), ecmpInfo);
     	}
     	
     	return groupChains;
+    }
+
+    public List<GroupChain> addNewEntryToGroupChain(List<GroupChain> currentGroupChainList, 
+    		List<GroupChainParams> groupChainParams) {
+
+    	int innermostGroupId = currentGroupChainList.get(0).getInnermostGroupId();
+    	EcmpInfo innermostGroupInfo = userDefinedGroups.get(innermostGroupId);
+    	
+    	if (innermostGroupInfo == null) {
+            log.warn("addNewEntryToGroupChain in sw {} with wrong "
+            		+ "input parameters", getStringId());
+			return null;
+    	}
+    	
+    	List<BucketInfo> buckets = innermostGroupInfo.buckets;
+    	List<GroupChain> newGroupChainList = new ArrayList<IOF13Switch.GroupChain>();
+        boolean groupUpdated = false;
+    	for (GroupChainParams i: groupChainParams) {
+    		List<PortNumber> ports = i.getPorts();
+    		if (ports == null) {
+                log.warn("createGroupChain in sw {} with wrong "
+                		+ "input parameters", getStringId());
+    			return null;
+    		}
+
+    		List<PortNumber> activePorts = new ArrayList<PortNumber>();
+            for (PortNumber port : ports) {
+                if (portEnabled((int) port.value()))
+                    activePorts.add(port);
+            }
+            if (activePorts.isEmpty()) {
+                log.warn("addNewEntryToGroupChain in sw {} with no "
+                		+ "active ports for groupChainParams id {}", 
+                		getStringId(), i.getId());
+                continue;
+            }
+            
+            int labelStackSize = (i.getLabelStack() != null) ? 
+            		i.getLabelStack().size() : 0;
+            GroupChain groupChain = new GroupChain(i.getId());
+            newGroupChainList.add(groupChain);
+            
+    		if (labelStackSize > 0) {
+				for (PortNumber sp : activePorts) {
+					int previousGroupId = -1;
+	    			for (int idx=0; idx < i.getLabelStack().size(); idx++) {
+	    				if (idx == (labelStackSize - 1)) {
+	                        int label = i.getLabelStack().get(idx).intValue();
+	                        Dpid neighborDpid = portToNeighbors.get(sp);
+	                        BucketInfo b = new BucketInfo(neighborDpid,
+	                                MacAddress.of(srConfig.getRouterMac()),
+	                                getNeighborRouterMacAddress(neighborDpid),
+	                                sp, label, true, previousGroupId);
+	                        buckets.add(b);
+	                        groupUpdated = true;
+	    				}
+	    				else {
+							int currGroupId = getNextFreeGroupId();
+							EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
+									null, null, sp, previousGroupId,
+									i.getLabelStack().get(idx).intValue(), false);
+							previousGroupId = currGroupId;
+							userDefinedGroups.put(currGroupId, indirectGroup);
+							groupChain.addGroupToChain(sp, currGroupId);
+	    				}
+    				}
+    			}
+    		}
+    		else
+    		{
+                for (PortNumber sp : activePorts) {
+                    Dpid neighborDpid = portToNeighbors.get(sp);
+                    BucketInfo b = new BucketInfo(neighborDpid,
+                            MacAddress.of(srConfig.getRouterMac()),
+                            getNeighborRouterMacAddress(neighborDpid),
+                            sp, -1, false, -1);
+                    buckets.add(b);
+                    groupUpdated = true;
+                }
+    		}
+    	}
+    	
+    	if (groupUpdated) {
+    		modifyEcmpGroup(innermostGroupInfo);
+            for (GroupChain groupChain:newGroupChainList) {
+            	groupChain.setInnermostGroupId(innermostGroupId);
+            	currentGroupChainList.add(groupChain);
+            }
+    		log.debug(
+    				"addNewEntryToGroupChain: Updating select group {} in sw {} "
+    						+ "with: {}", innermostGroupId, getStringId(), innermostGroupInfo);
+        	return currentGroupChainList;
+    	}
+    	
+    	return null;
+    	
+    }
+    
+    public boolean removeOutGroupBucketsFromGroup(
+    		int innermostGroupId, List<Integer> chainedGroups) {
+        EcmpInfo innermostGroupInfo = userDefinedGroups.get(innermostGroupId);
+        if (innermostGroupInfo == null) {
+            log.warn("removeOutGroupBucketsFromGroup in sw {}: "
+            		+ "with invalid group id", getStringId());
+            return false;
+        }
+        
+        Iterator<BucketInfo> it = innermostGroupInfo.buckets.iterator();
+        log.debug("removeOutGroupBucketsFromGroup: Group {} on Switch {} has {} buckets",
+        		innermostGroupId, getStringId(),
+        		innermostGroupInfo.buckets.size());
+        boolean groupUpdated = false;
+        while (it.hasNext()) {
+            BucketInfo bucket = it.next();
+            if (chainedGroups.contains(bucket.togroupNo)) {
+                it.remove();
+                groupUpdated = true;
+            }
+        }
+        if (groupUpdated) {
+	        log.debug("removeOutGroupBucketsFromGroup: Modifying Group "
+	        		+ "on Switch {} with {}",
+	                getStringId(), innermostGroupInfo);
+	        modifyEcmpGroup(innermostGroupInfo);
+	        return true;
+        }
+        return false;
     }
 
     /**

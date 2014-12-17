@@ -1380,22 +1380,114 @@ public class SegmentRoutingManager implements IFloodlightModule,
         }
     }
     
-    public boolean createTunnelset(String tunnelsetId, 
+    public boolean createUpdateTunnelset(String tunnelsetId, 
 			SegmentRouterTunnelsetRESTParams tunnelsetParams) {
-        SegmentRoutingTunnelset srTunnelset =
-                new SegmentRoutingTunnelset(this, tunnelsetParams);
-        if (srTunnelset.createTunnelSet()) {
-        	tunnelsetTable.put(tunnelsetId, srTunnelset);
-        	HashMap<String,SegmentRoutingTunnel> tunnelsetTunnels = 
-        						srTunnelset.getTunnels();
-        	for (String tunnelId:tunnelsetTunnels.keySet())
-        		tunnelTable.put(tunnelId, tunnelsetTunnels.get(tunnelId));
-            return true;
-        }
-        else {
-            log.warn("Failed to create a tunnel");
+    	SegmentRoutingTunnelset srTunnelset = tunnelsetTable.get(tunnelsetId);
+		if (((tunnelsetParams.getTunnelParams() == null) &&
+			  (tunnelsetParams.getRemove_tunnel_params() == null)) ||
+			((tunnelsetParams.getRemove_tunnel_params() != null) &&
+						(srTunnelset == null))){
+            log.warn("Invalid input to create/update tunnelset");
             return false;
-        }
+		}
+
+		if (tunnelsetParams.getTunnelParams() != null) {
+        	for (SegmentRouterTunnelRESTParams tunnelParams:tunnelsetParams.getTunnelParams()) {
+        		if (tunnelTable.get(tunnelParams.getTunnel_id()) != null) {
+        			/* A tunnel already exists with this Id */
+                    log.warn("Invalid input to create/update tunnelset: "
+                    		+ "A tunnel already exist with the same Id");
+                    return false;
+        		}
+        	}
+		}
+		if (tunnelsetParams.getRemove_tunnel_params() != null) {
+        	for (String tunnelId:tunnelsetParams.getRemove_tunnel_params()) {
+    			if (srTunnelset.getTunnels().get(tunnelId) == null) {
+        			/* tunnel does not exist in this tunnel set */
+                    log.warn("Invalid input to create/update tunnelset: "
+                    		+ "tunnelId {} is not part of tunnelset {}",
+                    		tunnelId, tunnelsetId);
+                    return false;
+        		}
+        	}
+		}
+    	
+    	if (srTunnelset == null) {
+	        srTunnelset =
+	                new SegmentRoutingTunnelset(this, tunnelsetParams);
+	        if (srTunnelset.createTunnelSet()) {
+	        	tunnelsetTable.put(tunnelsetId, srTunnelset);
+	        	HashMap<String,SegmentRoutingTunnel> tunnelsetTunnels = 
+	        						srTunnelset.getTunnels();
+	        	for (String tunnelId:tunnelsetTunnels.keySet())
+	        		tunnelTable.put(tunnelId, tunnelsetTunnels.get(tunnelId));
+	            return true;
+	        }
+	        else {
+	            log.warn("Failed to create a tunnel");
+	            return false;
+	        }
+    	}
+    	else {
+    		/* Verify if this is an update operation on the existing tunnelset 
+    		 * - Check if it is constituent tunnel addition or deletion 
+    		 */
+    		boolean tunnelsetUpdated = false;
+    		if (tunnelsetParams.getTunnelParams() != null) {
+    			/* add new tunnels */
+                HashMap<String,SegmentRoutingTunnel> newTunnelMap = 
+                		srTunnelset.addNewTunnelsToTunnelset(tunnelsetParams);
+                if (newTunnelMap == null) {
+    	            log.warn("Failed to add new tunnels "
+    	            		+ "to tunnelset {}",tunnelsetId);
+    	            return false;
+            	}
+	        	for (String tunnelId:newTunnelMap.keySet())
+	        		tunnelTable.put(tunnelId, newTunnelMap.get(tunnelId));
+	        	tunnelsetUpdated = true;
+    		}
+    		if (tunnelsetParams.getRemove_tunnel_params() != null) {
+    			/* remove tunnels from tunnelset */
+                if (srTunnelset.removeConstituentTunnelFromTunnelset(
+                		tunnelsetParams) == false) {
+    	            log.warn("Failed to remove tunnels "
+    	            		+ "from tunnelset {}",tunnelsetId);
+    	            return false;
+            	}
+	        	tunnelsetUpdated = true;
+    		}
+    		
+            if (tunnelsetUpdated) {
+	        	/* Update the policies pointing to this tunnelset */
+	            Collection<SegmentRoutingPolicy> policies = getPoclicyTable();
+	            Iterator<SegmentRoutingPolicy> piI = policies.iterator();
+	            while(piI.hasNext()){
+	                SegmentRoutingPolicy policy = piI.next();
+	                if(policy.getType() == PolicyType.LOADBALANCE &&
+	                  (((SegmentRoutingPolicyTunnel)policy).isTunnelsetId() &&
+	                   ((SegmentRoutingPolicyTunnel)policy).
+	                   getTunnelId().equals(tunnelsetId))){
+	                	if (((SegmentRoutingPolicyTunnel)policy).
+	                			removePolicy() == true) {
+	                		if (((SegmentRoutingPolicyTunnel)policy).
+	                				createPolicy() != true) {
+		        	            log.warn("Failed to update policies "
+		        	            		+ "pointing to this tunnelset");
+		        	            return false;
+	                		}
+	                	}
+	                	else {
+	        	            log.warn("Failed to update policies "
+	        	            		+ "pointing to this tunnelset");
+	        	            return false;
+	                	}
+	                }
+	            }
+	    		return true;
+            }
+    		return false;
+    	}
     }
 
     /**
@@ -1435,7 +1527,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 srcIp, dstIp, ipProto, srcPort, dstPort);
 
         SegmentRoutingPolicy srPolicy =
-                new SegmentRoutingPolicyTunnel(this,pid, PolicyType.TUNNEL_FLOW,
+                new SegmentRoutingPolicyTunnel(this,pid, 
+                		(isTunnelsetId)?PolicyType.LOADBALANCE:PolicyType.TUNNEL_FLOW,
                         policyMatch, priority, tid);
         ((SegmentRoutingPolicyTunnel)srPolicy).setIsTunnelsetId(isTunnelsetId);
         if (srPolicy.createPolicy()) {
@@ -1583,6 +1676,51 @@ public class SegmentRoutingManager implements IFloodlightModule,
             }
             else {
                 log.warn("Faild in removing the tunnel {}", tunnelId);
+                return removeTunnelMessages.ERROR_DRIVER;
+            }
+        }
+    }
+
+    /**
+     * Remove a tunnelset
+     * It removes all groups for the tunnel if the tunnelset is not used for any
+     * policy.
+     *
+     * @param tunnelId tunnel ID to remove
+     */
+    public removeTunnelMessages removeTunnelset(String tunnelsetId) {
+
+        // Check if the tunnel is used for any policy
+        for (SegmentRoutingPolicy policy: policyTable.values()) {
+            if (policy.getType() == PolicyType.LOADBALANCE) {
+            	if (((SegmentRoutingPolicyTunnel)policy).isTunnelsetId()) {
+	                String tid = ((SegmentRoutingPolicyTunnel)policy).getTunnelId();
+	                if (tid.equals(tunnelsetId)) {
+	                    log.debug("Tunnelset {} is still used for the policy {}.",
+	                    policy.getPolicyId(), tunnelsetId);
+	                    return removeTunnelMessages.ERROR_REFERENCED;
+	                }
+            	}
+            }
+        }
+
+        SegmentRoutingTunnelset tunnelset = tunnelsetTable.get(tunnelsetId);
+        if (tunnelset == null) {
+            log.warn("Tunnulset object does not exist {}", tunnelsetId);
+            return removeTunnelMessages.ERROR_TUNNEL;
+        }
+        else {
+        	HashMap<String, SegmentRoutingTunnel> constituentTunnels = tunnelset.getTunnels();
+            if (tunnelset.removeTunnelset()) {
+            	for (String tunnelId:constituentTunnels.keySet())
+            		tunnelTable.remove(tunnelId);
+                tunnelsetTable.remove(tunnelsetId);
+                log.debug("Tunnelset {} was removed successfully.", tunnelsetId);
+                //tunnelEventChannel.removeEntry(tunnelId);
+                return removeTunnelMessages.SUCCESS;
+            }
+            else {
+                log.warn("Faild in removing the tunnelset {}", tunnelsetId);
                 return removeTunnelMessages.ERROR_DRIVER;
             }
         }

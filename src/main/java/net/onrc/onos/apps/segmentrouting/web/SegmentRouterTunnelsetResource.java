@@ -49,34 +49,34 @@ public class SegmentRouterTunnelsetResource extends ServerResource {
             return "fail";
         }
         log.debug("createTunnelset with tunnelsetId {} tunnel params{}",
-                createParams.getTunnelset_id(), createParams.getTunnelParams().get(0));
+                createParams.getTunnelset_id(), createParams);
         boolean result = true;
-        result = segmentRoutingService.createTunnelset(createParams.getTunnelset_id(),
+        result = segmentRoutingService.createUpdateTunnelset(createParams.getTunnelset_id(),
                 createParams);
         return (result == true) ? "success" : "fail";
     }
-/*
+
     @Delete("json")
-    public String deleteTunnel(String tunnelParams) {
+    public String deleteTunnelset(String tunnelsetParams) {
         ISegmentRoutingService segmentRoutingService =
                 (ISegmentRoutingService) getContext().getAttributes().
                         get(ISegmentRoutingService.class.getCanonicalName());
         ObjectMapper mapper = new ObjectMapper();
-        SegmentRouterTunnelRESTParams createParams = null;
+        SegmentRouterTunnelsetRESTParams createParams = null;
         try {
-            if (tunnelParams != null) {
-                createParams = mapper.readValue(tunnelParams,
-                        SegmentRouterTunnelRESTParams.class);
+            if (tunnelsetParams != null) {
+                createParams = mapper.readValue(tunnelsetParams,
+                        SegmentRouterTunnelsetRESTParams.class);
             }
         } catch (IOException ex) {
             log.error("Exception occurred parsing inbound JSON", ex);
             return "fail";
         }
-        log.debug("deleteTunnel with Id {}", createParams.getTunnel_id());
-        removeTunnelMessages result = segmentRoutingService.removeTunnel(
-                createParams.getTunnel_id());
+        log.debug("deleteTunnelset with Id {}", createParams.getTunnelset_id());
+        removeTunnelMessages result = segmentRoutingService.removeTunnelset(
+                createParams.getTunnelset_id());
         return result.name()+" "+result.toString();
-    }*/
+    }
 
     @Get("json")
     public Object getTunnelset() {
@@ -97,7 +97,7 @@ public class SegmentRouterTunnelsetResource extends ServerResource {
            String policiesId = "";
            while(piI.hasNext()){
                SegmentRoutingPolicy policy = piI.next();
-               if(policy.getType() == PolicyType.TUNNEL_FLOW &&
+               if(policy.getType() == PolicyType.LOADBALANCE &&
                  (((SegmentRoutingPolicyTunnel)policy).isTunnelsetId() &&
                   ((SegmentRoutingPolicyTunnel)policy).getTunnelId().equals(tunnelsetId))){
                    policiesId += (policy.getPolicyId()+",");

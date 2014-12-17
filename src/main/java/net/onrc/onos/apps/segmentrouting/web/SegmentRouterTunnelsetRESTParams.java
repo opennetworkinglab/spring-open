@@ -12,6 +12,7 @@ public class SegmentRouterTunnelsetRESTParams {
     //@JsonDeserialize(contentUsing = SegmentRouterTunnelRESTParams.class)
     private List<SegmentRouterTunnelRESTParams> tunnel_params = 
     				new ArrayList<SegmentRouterTunnelRESTParams>();
+    private List<String> remove_tunnel_params = new ArrayList<String>();
 
     public SegmentRouterTunnelsetRESTParams() {
         //this.tunnelset_id = null;
@@ -31,6 +32,14 @@ public class SegmentRouterTunnelsetRESTParams {
     }
 
     public List<SegmentRouterTunnelRESTParams> getTunnelParams() {
-        return this.tunnel_params;
+        return (this.tunnel_params.size() > 0)?this.tunnel_params:null;
     }
+
+	public List<String> getRemove_tunnel_params() {
+		return (remove_tunnel_params.size()>0)?remove_tunnel_params:null;
+	}
+
+	public void setRemove_tunnel_params(List<String> remove_tunnel_params) {
+		this.remove_tunnel_params = remove_tunnel_params;
+	}
 }

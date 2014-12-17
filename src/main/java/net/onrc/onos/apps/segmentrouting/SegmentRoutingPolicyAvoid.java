@@ -114,7 +114,7 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
     }
 
     @Override
-    public void updatePolicy() {
+	public boolean updatePolicy() {
         Switch srcSwitch = srManager.getSwitch(srcDpid);
         Switch dstSwitch = srManager.getSwitch(dstDpid);
         ECMPShortestPathGraph graph = new ECMPShortestPathGraph(srcSwitch,
@@ -147,6 +147,8 @@ public class SegmentRoutingPolicyAvoid extends SegmentRoutingPolicy {
         else {
             log.debug("No need to update the policy {}, policyId");
         }
+        
+        return true;
     }
 
     private boolean checkIfIncluded(List<Integer> labelStack) {

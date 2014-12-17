@@ -48,11 +48,14 @@ public class SegmentRouterPolicyResource extends ServerResource {
             return "fail";
         }
         
-        String tunnelId = createParams.getTunnel_id();
+        String tunnelId = null;
         boolean isTunnelsetId = false;
-        if (createParams.getTunnelset_id() != null) {
+        if (createParams.getPolicy_type().equals("loadbalance")) {
         	tunnelId = createParams.getTunnelset_id();
         	isTunnelsetId = true;
+        }
+        else if (createParams.getPolicy_type().equals("tunnel-flow")) {
+        	tunnelId = createParams.getTunnel_id();
         }
 
         log.debug("createPolicy of type {} with params id {} src_ip {} dst_ip {}"
@@ -127,8 +130,13 @@ public class SegmentRouterPolicyResource extends ServerResource {
             SegmentRoutingPolicy policy = piI.next();
             String policyId = policy.getPolicyId();
             String tunnelId = null;
+            boolean isTunnelset = false;
             if (policy.getType() == PolicyType.TUNNEL_FLOW) {
                 tunnelId = ((SegmentRoutingPolicyTunnel)policy).getTunnelId();
+            }
+            else if (policy.getType() == PolicyType.LOADBALANCE) {
+                tunnelId = ((SegmentRoutingPolicyTunnel)policy).getTunnelId();
+                isTunnelset = true;
             }
             int priority = policy.getPriority();
             String policyType = policy.getType().name();

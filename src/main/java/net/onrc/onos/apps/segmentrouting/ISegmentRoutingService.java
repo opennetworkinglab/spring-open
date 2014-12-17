@@ -31,12 +31,12 @@ public interface ISegmentRoutingService extends IFloodlightService {
     /**
      * Create a tunnelset for policy routing.
      *
-     * @param tunnelId ID for the tunnel
-     * @param labelIds Node label IDs for the tunnel
+     * @param tunnelsetId ID for the tunnelset
+     * @param tunnelsetParams tunnelset REST params
      *
-     * @return "true/false" depending tunnel creation status
+     * @return "true/false" depending tunnelset creation status
      */
-    public boolean createTunnelset(String tunnelsetId, 
+    public boolean createUpdateTunnelset(String tunnelsetId, 
     			SegmentRouterTunnelsetRESTParams tunnelsetParams);
 
     /**
@@ -47,6 +47,15 @@ public interface ISegmentRoutingService extends IFloodlightService {
      * @return "true/false" depending tunnel deletion status
      */
     public removeTunnelMessages removeTunnel(String tunnelId);
+
+    /**
+     * Remove a Segment Routing tunnelset given a tunnel Id.
+     *
+     * @param tunnelsetId ID for the tunnelset
+     *
+     * @return "true/false" depending tunnelset deletion status
+     */
+    public removeTunnelMessages removeTunnelset(String tunnelsetId);
 
     /**
      * Create a policy for policy based segment routing

@@ -197,8 +197,8 @@ public class SegmentRoutingPolicy {
     /**
      * Update the policy rules if necessary according to the topology changes
      */
-    public void updatePolicy() {
-
+    public boolean updatePolicy() {
+    	return false;
     }
 
 }

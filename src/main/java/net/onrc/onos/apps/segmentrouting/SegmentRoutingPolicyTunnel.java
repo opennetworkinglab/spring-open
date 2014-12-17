@@ -7,6 +7,7 @@ import java.util.List;
 import net.floodlightcontroller.core.IOF13Switch.GroupChain;
 import net.onrc.onos.core.matchaction.MatchAction;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
+import net.onrc.onos.core.matchaction.MatchActionOperations;
 import net.onrc.onos.core.matchaction.MatchActionOperations.Operator;
 import net.onrc.onos.core.matchaction.action.Action;
 import net.onrc.onos.core.matchaction.action.DecNwTtlAction;
@@ -52,7 +53,7 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
     	if (isSetId) {
     		SegmentRoutingTunnelset tunnelset = 
     				srManager.getTunnelsetInfo(tunnelId);
-    		populateAclRuleToTunnelset(tunnelset);
+    		populateAclRuleToTunnelset(tunnelset, Operator.ADD);
     	}
     	else {
 	        SegmentRoutingTunnel tunnelInfo = srManager.getTunnelInfo(tunnelId);
@@ -68,18 +69,40 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
     @Override
     public boolean removePolicy() {
 
-        SegmentRoutingTunnel tunnel = srManager.getTunnelInfo(tunnelId);
-        if (tunnel == null) {
-            log.warn("Cannot find the tunnel {} for the policy {}", tunnelId,
-                    policyId);
-            return false;
-        }
-        List<TunnelRouteInfo> routes = tunnel.getRoutes();
-        removeAclRules(routes);
+    	if (isSetId) {
+    		SegmentRoutingTunnelset tunnelset = 
+    				srManager.getTunnelsetInfo(tunnelId);
+    		/* Remove flow rules pointing to tunnelset */
+    		populateAclRuleToTunnelset(tunnelset, Operator.REMOVE);
+    	}
+    	else {
+	        SegmentRoutingTunnel tunnel = srManager.getTunnelInfo(tunnelId);
+	        if (tunnel == null) {
+	            log.warn("Cannot find the tunnel {} for the policy {}", tunnelId,
+	                    policyId);
+	            return false;
+	        }
+	        List<TunnelRouteInfo> routes = tunnel.getRoutes();
+	        removeAclRules(routes);
+    	}
 
         return true;
     }
 
+    @Override
+    public boolean updatePolicy() {
+    	if (isSetId) {
+    		/* Properties of tunnelset might have been changed. 
+    		 * Update the policy pointing to it 
+    		 */
+    		SegmentRoutingTunnelset tunnelset = 
+    				srManager.getTunnelsetInfo(tunnelId);
+    		populateAclRuleToTunnelset(tunnelset, Operator.ADD);
+    	}
+        return true;
+
+    }
+    
     /**
      * Get the Tunnel ID
      * @return tunnel ID
@@ -96,7 +119,8 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
 		this.isSetId = isSetId;
 	}
 
-    protected void populateAclRuleToTunnelset(SegmentRoutingTunnelset tunnelset) {
+    private void populateAclRuleToTunnelset(SegmentRoutingTunnelset tunnelset, 
+    		MatchActionOperations.Operator operator) {
     	HashMap<String,List<GroupChain>> tunnelsetGroupChain = 
     			tunnelset.getTunnelsetGroupChain();
     	for (String targetSwDpid: tunnelsetGroupChain.keySet()) {
@@ -106,12 +130,15 @@ public class SegmentRoutingPolicyTunnel extends SegmentRoutingPolicy {
             		get(targetSwDpid).get(0).getInnermostGroupId());
             actions.add(groupAction);
     		
+            log.warn("populateAclRuleToTunnelset to tunnelset {} "
+            		+ "in sw {} for the policy {}", tunnelId,
+                    targetSwDpid, policyId);
             MatchAction matchAction = new MatchAction(
                     srManager.getMatchActionId(),
                     new SwitchPort((new Dpid(targetSwDpid)).value(), (long)0), match, priority,
                     actions);
             MatchActionOperationEntry maEntry =
-                    new MatchActionOperationEntry(Operator.ADD, matchAction);
+                    new MatchActionOperationEntry(operator, matchAction);
 
             srManager.executeMatchActionOpEntry(maEntry);
     	}

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.floodlightcontroller.core.IOF13Switch.GroupChain;
+import net.floodlightcontroller.core.IOF13Switch.GroupChainParams;
 import net.onrc.onos.core.matchaction.MatchActionOperationEntry;
 import net.onrc.onos.core.util.Dpid;
 import net.onrc.onos.core.util.PortNumber;
@@ -205,7 +207,7 @@ public interface IOF13Switch extends IOFSwitch {
      * ports. This API can be used by user to create groups for a tunnel based
      * policy routing scenario. NOTE: This API can not be used if a group to be
      * created with different label stacks for each port in the given set of
-     * ports. Use XXX API for this purpose
+     * ports. Use createGroupChain API for this purpose
      *
      * @param labelStack list of router segment Ids to be pushed. Can be empty.
      *        labelStack is processed from left to right with leftmost
@@ -298,7 +300,51 @@ public interface IOF13Switch extends IOFSwitch {
 		}
     }
     
-    public List<GroupChain> createGroupChain(List<GroupChainParams> groupChainParams);
+    /**
+     * Create a group chain with the specified label stack for each given set of
+     * ports. This API can be used by user to create groups for a tunnel based
+     * policy routing scenario. 
+     *
+     * @param groupChainParams list of ports along with label stacks to be 
+     *        applied. label stack can be empty.
+     *        labelStack is processed from left to right with leftmost
+     *        representing the outermost label and rightmost representing
+     *        innermost label to be pushed
+     *        List of ports on this switch to get to the first router in
+     *        the labelStack
+     * @return List of GroupChain objects
+     */
+    public List<GroupChain> createGroupChain(
+    		List<GroupChainParams> groupChainParams);
+    /**
+     * Add a new entry to an existing group chain
+     *
+     * @param currentGroupChainList Existing group chain to which this 
+     *        new entry to be added
+     * @param groupChainParams list of ports along with label stacks to be 
+     *        applied. label stack can be empty.
+     *        labelStack is processed from left to right with leftmost
+     *        representing the outermost label and rightmost representing
+     *        innermost label to be pushed
+     *        List of ports on this switch to get to the first router in
+     *        the labelStack
+     * @return Modified list of GroupChain objects
+     */
+    public List<GroupChain> addNewEntryToGroupChain(
+    		List<GroupChain> currentGroupChainList, 
+    		List<GroupChainParams> groupChainParams);
+    /**
+     * Remove one or more buckes from the given innermost group those 
+     * point to the list of groups specified in chainedGroups list
+     *
+     * @param innermostGroupId The innermost group from which buckets, 
+     *        pointing to the groupIds in the chainedGroups list param, 
+     *        to be deleted
+     * @param chainedGroups list of groupIds
+     * @return True or False depending on the result of the removal
+     */
+    public boolean removeOutGroupBucketsFromGroup(
+    		int innermostGroupId, List<Integer> chainedGroups);
 
     /**
      * Remove the specified group
