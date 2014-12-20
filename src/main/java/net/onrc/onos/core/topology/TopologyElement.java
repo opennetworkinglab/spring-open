@@ -1,13 +1,13 @@
 package net.onrc.onos.core.topology;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import net.onrc.onos.core.util.Dpid;
 
@@ -56,6 +56,8 @@ public abstract class TopologyElement<T extends TopologyElement<T>>
     private boolean isFrozen = false;
 
     private ConcurrentMap<String, String> stringAttributes;
+
+    public static final String ELEMENT_VENDOR = "Vendor";
 
 
 

@@ -40,7 +40,6 @@ import net.onrc.onos.apps.segmentrouting.web.SegmentRoutingWebRoutable;
 import net.onrc.onos.core.datagrid.IDatagridService;
 import net.onrc.onos.core.datagrid.IEventChannel;
 import net.onrc.onos.core.datagrid.IEventChannelListener;
-import net.onrc.onos.core.drivermanager.OFSwitchImplDellOSR;
 import net.onrc.onos.core.flowprogrammer.IFlowPusherService;
 import net.onrc.onos.core.intent.Path;
 import net.onrc.onos.core.main.config.IConfigInfoService;
@@ -682,17 +681,26 @@ public class SegmentRoutingManager implements IFloodlightModule,
                     srcPort.getDpid().value());
             IOF13Switch dstSw = (IOF13Switch) floodlightProvider.getMasterSwitch(
                     dstPort.getDpid().value());
+            /*
             if ((srcSw == null) || (dstSw == null))
-                /* If this link is not between two switches, ignore it */
+                '' If this link is not between two switches, ignore it
                 continue;
+            */
 
-            srcSw.removePortFromGroups(srcPort.getPortNumber());
-            dstSw.removePortFromGroups(dstPort.getPortNumber());
-            log.debug("Remove port {} from switch {}", srcPort, srcSw);
-            log.debug("Remove port {} from switch {}", dstPort, dstSw);
+            if (srcSw != null) {
+                srcSw.removePortFromGroups(srcPort.getPortNumber());
+                log.debug("Remove port {} from switch {}", srcPort, srcSw);
+            }
+            if (dstSw != null) {
+                dstSw.removePortFromGroups(dstPort.getPortNumber());
+                log.debug("Remove port {} from switch {}", dstPort, dstSw);
+            }
 
-            if ((srcSw instanceof OFSwitchImplDellOSR &&
-                    dstSw instanceof OFSwitchImplDellOSR) &&
+
+            //if ((srcSw instanceof OFSwitchImplDellOSR &&
+            //        dstSw instanceof OFSwitchImplDellOSR) &&
+            if (mutableTopology.getSwitch(srcPort.getDpid()).getStringAttribute("Vendor").contains("Dell") &&
+               mutableTopology.getSwitch(dstPort.getDpid()).getStringAttribute("Vendor").contains("Dell") &&
                isTransitRouter(mutableTopology.getSwitch(srcPort.getDpid())) &&
                isTransitRouter(mutableTopology.getSwitch(dstPort.getDpid()))) {
                 populateEcmpRoutingRules(false);
@@ -1379,8 +1387,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             return false;
         }
     }
-    
-    public boolean createUpdateTunnelset(String tunnelsetId, 
+
+    public boolean createUpdateTunnelset(String tunnelsetId,
 			SegmentRouterTunnelsetRESTParams tunnelsetParams) {
     	SegmentRoutingTunnelset srTunnelset = tunnelsetTable.get(tunnelsetId);
 		if (((tunnelsetParams.getTunnelParams() == null) &&
@@ -1388,6 +1396,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 			((tunnelsetParams.getRemove_tunnel_params() != null) &&
 						(srTunnelset == null))){
             log.warn("Invalid input to create/update tunnelset");
+
             return false;
 		}
 
@@ -1412,13 +1421,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
         		}
         	}
 		}
-    	
+
     	if (srTunnelset == null) {
 	        srTunnelset =
 	                new SegmentRoutingTunnelset(this, tunnelsetParams);
 	        if (srTunnelset.createTunnelSet()) {
 	        	tunnelsetTable.put(tunnelsetId, srTunnelset);
-	        	HashMap<String,SegmentRoutingTunnel> tunnelsetTunnels = 
+	        	HashMap<String,SegmentRoutingTunnel> tunnelsetTunnels =
 	        						srTunnelset.getTunnels();
 	        	for (String tunnelId:tunnelsetTunnels.keySet())
 	        		tunnelTable.put(tunnelId, tunnelsetTunnels.get(tunnelId));
@@ -1430,13 +1439,13 @@ public class SegmentRoutingManager implements IFloodlightModule,
 	        }
     	}
     	else {
-    		/* Verify if this is an update operation on the existing tunnelset 
-    		 * - Check if it is constituent tunnel addition or deletion 
+    		/* Verify if this is an update operation on the existing tunnelset
+    		 * - Check if it is constituent tunnel addition or deletion
     		 */
     		boolean tunnelsetUpdated = false;
     		if (tunnelsetParams.getTunnelParams() != null) {
     			/* add new tunnels */
-                HashMap<String,SegmentRoutingTunnel> newTunnelMap = 
+                HashMap<String,SegmentRoutingTunnel> newTunnelMap =
                 		srTunnelset.addNewTunnelsToTunnelset(tunnelsetParams);
                 if (newTunnelMap == null) {
     	            log.warn("Failed to add new tunnels "
@@ -1457,7 +1466,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
             	}
 	        	tunnelsetUpdated = true;
     		}
-    		
+
             if (tunnelsetUpdated) {
 	        	/* Update the policies pointing to this tunnelset */
 	            Collection<SegmentRoutingPolicy> policies = getPoclicyTable();
@@ -1513,7 +1522,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
 	            return false;
 	        }
 	        else {
-	        	/* Check if the tunnel is part of a tunnelset, 
+	        	/* Check if the tunnel is part of a tunnelset,
 	        	 * if so decline the request */
 	        	if (tunnelInfo.getTunnelsetId() != null) {
 		            log.warn("Tunnel {} is part of a tunnelset, "
@@ -1527,7 +1536,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                 srcIp, dstIp, ipProto, srcPort, dstPort);
 
         SegmentRoutingPolicy srPolicy =
-                new SegmentRoutingPolicyTunnel(this,pid, 
+                new SegmentRoutingPolicyTunnel(this,pid,
                 		(isTunnelsetId)?PolicyType.LOADBALANCE:PolicyType.TUNNEL_FLOW,
                         policyMatch, priority, tid);
         ((SegmentRoutingPolicyTunnel)srPolicy).setIsTunnelsetId(isTunnelsetId);
@@ -1915,8 +1924,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
     private MatchActionOperationEntry buildMAEntry(Switch sw,
             String mplsLabel, List<String> fwdSws, boolean php,
             boolean Bos) {
-        IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
-                sw.getDpid().value());
+        //IOF13Switch sw13 = (IOF13Switch) floodlightProvider.getMasterSwitch(
+        //        sw.getDpid().value());
         //if (sw13 == null) {
         //    return null;
         //}
@@ -1944,7 +1953,8 @@ public class SegmentRoutingManager implements IFloodlightModule,
             actions.add(decMplsTtlAction);
         }
 
-        if ((sw13 instanceof OFSwitchImplDellOSR) && isTransitRouter(sw)) {
+        if (mutableTopology.getSwitch(sw.getDpid()).getStringAttribute("Vendor").contains("Dell")
+                && isTransitRouter(sw)) {
             PortNumber port = pickOnePort(sw, fwdSws);
             if (port == null) {
                 log.warn("Failed to get a port from NeightborSet");
@@ -2050,9 +2060,7 @@ public class SegmentRoutingManager implements IFloodlightModule,
                         else {
                             Dpid firstVia = via.get(via.size()-1);
                             fwdSws.add(firstVia);
-                            IOF13Switch targetSw13 = (IOF13Switch)floodlightProvider.getMasterSwitch(
-                                    targetSw.getDpid().value());
-                            if (targetSw13 instanceof OFSwitchImplDellOSR &&
+                            if (mutableTopology.getSwitch(targetSw.getDpid()).getStringAttribute("Vendor").contains("Dell") &&
                                 isTransitRouter(targetSw) &&
                                 isTransitRouter(mutableTopology.getSwitch(firstVia))) {
                                 return fwdSws;

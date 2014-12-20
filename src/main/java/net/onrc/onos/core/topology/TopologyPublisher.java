@@ -400,6 +400,8 @@ public class TopologyPublisher implements IOFSwitchListener,
                     switchData.createStringAttribute(e.getKey(), e.getValue());
                 }
             }
+            switchData.createStringAttribute(TopologyElement.ELEMENT_VENDOR,
+                    sw.getSwitchDescription().getMfrDesc());
             switchData.createStringAttribute(TopologyElement.ELEMENT_CONFIG_STATE,
                     ConfigState.CONFIGURED.toString());
         } else {
