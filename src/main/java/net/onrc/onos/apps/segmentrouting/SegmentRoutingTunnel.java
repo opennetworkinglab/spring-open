@@ -241,6 +241,9 @@ public class SegmentRoutingTunnel {
      */
     private void checkAndSplitLabels(List<TunnelRouteInfo> stitchingRule) {
 
+        if (stitchingRule.size() < 2) {
+            return;
+        }
         TunnelRouteInfo lastSubTunnel = stitchingRule.get(stitchingRule.size()-1);
         if (!lastSubTunnel.getRoute().isEmpty()) {
             return;
