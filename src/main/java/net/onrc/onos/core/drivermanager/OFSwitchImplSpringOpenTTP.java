@@ -2215,23 +2215,37 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
             GroupChain groupChain = new GroupChain(i.getId());
             groupChains.add(groupChain);
             
-    		if (labelStackSize > 0) {
+    		if (labelStackSize > 1) {
 				for (PortNumber sp : activePorts) {
 					int previousGroupId = -1;
 	    			for (int idx=0; idx < i.getLabelStack().size(); idx++) {
 	    				if (idx == (labelStackSize - 1)) {
+	    					/* Innermost Group */
 	                        int label = i.getLabelStack().get(idx).intValue();
 	                        Dpid neighborDpid = portToNeighbors.get(sp);
 	                        BucketInfo b = new BucketInfo(neighborDpid,
-	                                MacAddress.of(srConfig.getRouterMac()),
-	                                getNeighborRouterMacAddress(neighborDpid),
-	                                sp, label, true, previousGroupId);
+	                                null, null, null, 
+	                                label, true, previousGroupId);
 	                        buckets.add(b);
 	    				}
+	    				else if (idx == 0) {
+	    					/* Outermost Group */
+							int currGroupId = getNextFreeGroupId();
+	                        Dpid neighborDpid = portToNeighbors.get(sp);
+							EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
+									MacAddress.of(srConfig.getRouterMac()),
+									getNeighborRouterMacAddress(neighborDpid),
+									sp, previousGroupId,
+									i.getLabelStack().get(idx).intValue(), false);
+							previousGroupId = currGroupId;
+							userDefinedGroups.put(currGroupId, indirectGroup);
+							groupChain.addGroupToChain(sp, currGroupId);
+	    				}
 	    				else {
+	    					/* Intermediate Groups */
 							int currGroupId = getNextFreeGroupId();
 							EcmpInfo indirectGroup = createIndirectGroup(currGroupId,
-									null, null, sp, previousGroupId,
+									null, null, null, previousGroupId,
 									i.getLabelStack().get(idx).intValue(), false);
 							previousGroupId = currGroupId;
 							userDefinedGroups.put(currGroupId, indirectGroup);
@@ -2242,12 +2256,15 @@ public class OFSwitchImplSpringOpenTTP extends OFSwitchImplBase implements IOF13
     		}
     		else
     		{
+    			int label = -1;
+    			if (labelStackSize==1)
+    				label = i.getLabelStack().get(0).intValue();
                 for (PortNumber sp : activePorts) {
                     Dpid neighborDpid = portToNeighbors.get(sp);
                     BucketInfo b = new BucketInfo(neighborDpid,
                             MacAddress.of(srConfig.getRouterMac()),
                             getNeighborRouterMacAddress(neighborDpid),
-                            sp, -1, false, -1);
+                            sp, label, true, -1);
                     buckets.add(b);
                 }
     		}
